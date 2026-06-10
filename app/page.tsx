@@ -4,13 +4,81 @@ import { Film } from "@/types/film";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 
-export default async function HomePage() {
-  const { data, error } = await supabase
+type HomePageProps = {
+  searchParams?: Promise<{
+    filter?: string;
+  }>;
+};
+
+function getRandomItems<T>(items: T[], count: number) {
+  return [...items].sort(() => Math.random() - 0.5).slice(0, count);
+}
+
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  const activeFilter =
+    params?.filter === "saved"
+      ? "saved"
+      : params?.filter === "all"
+        ? "all"
+        : "recommended";
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("slug", "maria")
+    .single();
+
+  const { data: allFilmsData, error } = await supabase
     .from("films")
     .select("*")
     .order("created_at", { ascending: false });
 
-  const films = data as Film[] | null;
+  const allFilms = (allFilmsData as Film[] | null) ?? [];
+
+  let films: Film[] = [];
+
+  if (activeFilter === "all") {
+    films = allFilms;
+  }
+
+  if (activeFilter === "saved" && profile) {
+    const { data: watchlistItems } = await supabase
+      .from("profile_film_lists")
+      .select("film_id")
+      .eq("profile_id", profile.id)
+      .eq("list_type", "to_watch");
+
+    const savedFilmIds = new Set(
+      watchlistItems?.map((item) => item.film_id) ?? []
+    );
+
+    films = allFilms.filter((film) => savedFilmIds.has(film.id));
+  }
+
+  if (activeFilter === "recommended" && profile) {
+    const { data: ratings } = await supabase
+      .from("film_ratings")
+      .select("film_id")
+      .eq("profile_id", profile.id);
+
+    const { data: watchlistItems } = await supabase
+      .from("profile_film_lists")
+      .select("film_id")
+      .eq("profile_id", profile.id)
+      .eq("list_type", "to_watch");
+
+    const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
+    const savedFilmIds = new Set(
+      watchlistItems?.map((item) => item.film_id) ?? []
+    );
+
+    const candidates = allFilms.filter(
+      (film) => !ratedFilmIds.has(film.id) && !savedFilmIds.has(film.id)
+    );
+
+    films = getRandomItems(candidates, 3);
+  }
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -24,32 +92,44 @@ export default async function HomePage() {
 
         <div className="flex gap-3">
 
-  <Link
-
-    href="/admin/import"
-
-    className="rounded-xl bg-black px-4 py-2 text-sm font-medium text-white"
-
-  >
-
-    Import film
-
-  </Link>
-
-  <Link
-
-    href="/admin/new"
-
-    className="rounded-xl border px-4 py-2 text-sm font-medium"
-
-  >
-
-    Add manually
-
-  </Link>
 
 </div>
       </header>
+
+      <div className="mb-6 flex flex-wrap gap-2">
+  <Link
+    href="/"
+    className={`rounded-full border px-4 py-2 text-sm font-medium ${
+      activeFilter === "recommended"
+        ? "border-black bg-black text-white"
+        : "border-gray-300 bg-white text-gray-700"
+    }`}
+  >
+    Recommended
+  </Link>
+
+  <Link
+    href="/?filter=saved"
+    className={`rounded-full border px-4 py-2 text-sm font-medium ${
+      activeFilter === "saved"
+        ? "border-black bg-black text-white"
+        : "border-gray-300 bg-white text-gray-700"
+    }`}
+  >
+    Saved
+  </Link>
+
+  <Link
+    href="/?filter=all"
+    className={`rounded-full border px-4 py-2 text-sm font-medium ${
+      activeFilter === "all"
+        ? "border-black bg-black text-white"
+        : "border-gray-300 bg-white text-gray-700"
+    }`}
+  >
+    All films
+  </Link>
+</div>
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -57,11 +137,15 @@ export default async function HomePage() {
         </div>
       )}
 
-      {!films?.length && !error && (
-        <div className="rounded-2xl border border-dashed p-8 text-gray-500">
-          No films yet. Add your first one.
-        </div>
-      )}
+{!films?.length && !error && (
+  <div className="rounded-2xl border border-dashed p-8 text-gray-500">
+    {activeFilter === "recommended"
+      ? "No recommendations left. Try All films or clear some ratings."
+      : activeFilter === "saved"
+        ? "No saved films yet."
+        : "No films yet. Add your first one."}
+  </div>
+)}
 
       <section className="grid gap-4">
         {films?.map((film) => (
