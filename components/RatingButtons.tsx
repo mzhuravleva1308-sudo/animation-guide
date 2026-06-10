@@ -75,7 +75,7 @@ export default function RatingButtons({
   }
 
   return (
-    <div style={{ marginTop: "28px" }}>
+    <div>
       <p
         className="text-sm text-gray-500"
         style={{ marginBottom: "12px" }}

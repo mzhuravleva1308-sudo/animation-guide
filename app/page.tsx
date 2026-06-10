@@ -2,6 +2,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Film } from "@/types/film";
 import RatingButtons from "@/components/RatingButtons";
+import WatchlistButton from "@/components/WatchlistButton";
 
 export default async function HomePage() {
   const { data, error } = await supabase
@@ -68,17 +69,30 @@ export default async function HomePage() {
           key={film.id}
           className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
         >
-          {film.image_url ? (
-            <img
-              src={film.image_url}
-              alt={film.title}
-              className="h-56 w-full rounded-xl object-cover md:h-60"
-            />
-          ) : (
-            <div className="flex h-56 items-center justify-center rounded-xl bg-gray-100 text-sm text-gray-400 md:h-60">
-              No image
-            </div>
-          )}
+          <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
+  {film.image_url ? (
+    <img
+      src={film.image_url}
+      alt={film.title}
+      className="h-full w-full object-cover"
+    />
+  ) : (
+    <div className="flex h-full items-center justify-center text-sm text-gray-400">
+      No image
+    </div>
+  )}
+
+  {film.trailer_url && (
+    <a
+      href={film.trailer_url}
+      target="_blank"
+      rel="noreferrer"
+      className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium text-black shadow-sm backdrop-blur hover:bg-white"
+    >
+      ▶ Trailer
+    </a>
+  )}
+</div>
         
           <div>
             <div className="flex items-start justify-between gap-4">
@@ -128,9 +142,10 @@ export default async function HomePage() {
                 </span>
               )}
             </div>
-            <div className="mt-auto pt-4">
-           <RatingButtons filmId={film.id} profileSlug="maria" />
-          </div>
+            <div className="mt-auto flex items-end justify-between gap-6 pt-4">
+             <RatingButtons filmId={film.id} profileSlug="maria" />
+            <WatchlistButton filmId={film.id} profileSlug="maria" />
+            </div>
           </div>
           
         </article>
