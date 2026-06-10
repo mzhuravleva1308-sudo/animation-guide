@@ -1,0 +1,30 @@
+export type Film = {
+
+    id: string;
+    title: string;
+    original_title?: string | null;
+    director?: string | null;
+    year?: number | null; 
+    country?: string | null; 
+    duration_minutes?: number | null;
+    festival?: string | null;
+    section?: string | null;
+    source_url?: string | null;
+    watch_url?: string | null;
+    image_url?: string | null;
+    trailer_url?: string | null;
+    availability?: string | null;
+    synopsis?: string | null;
+    technique?: string | null;
+    moods?: string[] | null;
+    themes?: string[] | null;
+    dialogue?: string | null;
+    emotional_intensity?: number | null;
+    weirdness?: number | null;
+    kid_safety?: string | null;
+    why_i_might_like_it?: string | null;
+    personal_note?: string | null;
+    status?: string | null;
+    created_at?: string;
+  
+  };
