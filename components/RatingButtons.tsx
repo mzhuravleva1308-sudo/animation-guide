@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
+
 
 type RatingButtonsProps = {
   filmId: string;
@@ -12,6 +14,7 @@ export default function RatingButtons({
   filmId,
   profileSlug = "maria",
 }: RatingButtonsProps) {
+  const router = useRouter();
   const [profileId, setProfileId] = useState<string | null>(null);
   const [rating, setRating] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -49,28 +52,46 @@ export default function RatingButtons({
     loadRating();
   }, [filmId, profileSlug]);
 
-  async function saveRating(nextRating: number) {
-    if (!profileId) return;
-
+  async function saveRating(value: number) {
+    if (!profileId) {
+      return;
+    }
+  
     setIsSaving(true);
-    setRating(nextRating);
-
+  
+    if (rating === value) {
+      const { error } = await supabase
+        .from("film_ratings")
+        .delete()
+        .eq("film_id", filmId)
+        .eq("profile_id", profileId);
+  
+      if (!error) {
+        setRating(null);
+        router.refresh();
+      }
+  
+      setIsSaving(false);
+      return;
+    }
+  
     const { error } = await supabase.from("film_ratings").upsert(
       {
         film_id: filmId,
         profile_id: profileId,
-        rating: nextRating,
+        rating: value,
         updated_at: new Date().toISOString(),
       },
       {
         onConflict: "film_id,profile_id",
       }
     );
-
-    if (error) {
-      console.error("Rating save error", error);
+  
+    if (!error) {
+      setRating(value);
+      router.refresh();
     }
-
+  
     setIsSaving(false);
   }
 
