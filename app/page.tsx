@@ -17,17 +17,21 @@ function getRandomItems<T>(items: T[], count: number) {
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
   const activeFilter =
-    params?.filter === "saved"
-      ? "saved"
+  params?.filter === "saved"
+    ? "saved"
+    : params?.filter === "rated"
+      ? "rated"
       : params?.filter === "all"
         ? "all"
         : "recommended";
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("slug", "maria")
-    .single();
+const profileSlug = "maria";
+
+const { data: profile } = await supabase
+.from("profiles")
+.select("id")
+.eq("slug", profileSlug)
+.single();
 
   const { data: allFilmsData, error } = await supabase
     .from("films")
@@ -54,6 +58,17 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     );
 
     films = allFilms.filter((film) => savedFilmIds.has(film.id));
+  }
+
+  if (activeFilter === "rated" && profile) {
+    const { data: ratings } = await supabase
+      .from("film_ratings")
+      .select("film_id")
+      .eq("profile_id", profile.id);
+  
+    const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
+  
+    films = allFilms.filter((film) => ratedFilmIds.has(film.id));
   }
 
   if (activeFilter === "recommended" && profile) {
@@ -129,7 +144,24 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   >
     All films
   </Link>
+
+  <Link
+  href="/?filter=rated"
+  className={`rounded-full border px-4 py-2 text-sm font-medium ${
+    activeFilter === "rated"
+      ? "border-black bg-black text-white"
+      : "border-gray-300 bg-white text-gray-700"
+  }`}
+>
+  Watched
+</Link>
 </div>
+
+{activeFilter === "all" && (
+  <p className="mb-6 text-sm text-gray-500">
+    {films.length} films in the database
+  </p>
+)}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -227,8 +259,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               )}
             </div>
             <div className="mt-auto flex items-end justify-between gap-6 pt-4">
-             <RatingButtons filmId={film.id} profileSlug="maria" />
-            <WatchlistButton filmId={film.id} profileSlug="maria" />
+            <RatingButtons filmId={film.id} profileSlug={profileSlug} />
+            <WatchlistButton filmId={film.id} profileSlug={profileSlug} />
             </div>
           </div>
           
