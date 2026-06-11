@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { Film } from "@/types/film";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
+import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 
 type HomePageProps = {
   searchParams?: Promise<{
@@ -23,15 +24,15 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       ? "rated"
       : params?.filter === "all"
         ? "all"
-        : "recommended";
+        : "top picks";
 
 const profileSlug = "maria";
 
 const { data: profile } = await supabase
-.from("profiles")
-.select("id")
-.eq("slug", profileSlug)
-.single();
+  .from("profiles")
+  .select("id, taste_profile, taste_profile_updated_at")
+  .eq("slug", profileSlug)
+  .single();
 
   const { data: allFilmsData, error } = await supabase
     .from("films")
@@ -40,10 +41,116 @@ const { data: profile } = await supabase
 
   const allFilms = (allFilmsData as Film[] | null) ?? [];
 
+  let ratedFilmIds = new Set<string>();
+let ratingByFilmId = new Map<string, number>();
+
+if (profile) {
+  const { data: ratings } = await supabase
+    .from("film_ratings")
+    .select("film_id, rating")
+    .eq("profile_id", profile.id);
+
+  ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
+
+  ratingByFilmId = new Map(
+    ratings
+      ?.filter((item) => item.rating !== null)
+      .map((item) => [item.film_id, item.rating]) ?? []
+  );
+}
+
+const watchedFilms = allFilms.filter((film) => ratedFilmIds.has(film.id));
+
+const watchedTagCounts = watchedFilms.reduce<Record<string, number>>(
+  (acc, film) => {
+    const rating = ratingByFilmId.get(film.id) ?? 0;
+
+    // Low-rated films should not define your taste.
+    if (rating < 6) {
+      return acc;
+    }
+
+    const weight = rating >= 8 ? 2 : 1;
+    const tags = [...(film.moods ?? []), ...(film.themes ?? [])];
+
+    tags.forEach((tag) => {
+      const normalizedTag = tag.trim().toLowerCase();
+
+      if (!normalizedTag) {
+        return;
+      }
+
+      acc[normalizedTag] = (acc[normalizedTag] ?? 0) + weight;
+    });
+
+    return acc;
+  },
+  {}
+);
+
+const watchedTags = Object.entries(watchedTagCounts)
+  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  .slice(0, 20)
+  .map(([tag]) => tag);
+
   let films: Film[] = [];
 
   if (activeFilter === "all") {
-    films = allFilms;
+    films = allFilms
+      .filter((film) => !ratedFilmIds.has(film.id))
+      .sort((a, b) => {
+        const scoreDifference = getTasteMatchScore(b) - getTasteMatchScore(a);
+  
+        if (scoreDifference !== 0) {
+          return scoreDifference;
+        }
+  
+        return (b.year ?? 0) - (a.year ?? 0);
+      });
+  }
+
+  function getTasteMatchScore(film: Film) {
+    const filmTags = [...(film.moods ?? []), ...(film.themes ?? [])].map((tag) =>
+      tag.trim().toLowerCase()
+    );
+  
+    return filmTags.reduce((score, tag) => {
+      return score + (watchedTagCounts[tag] ?? 0);
+    }, 0);
+  }
+
+  function getStyleKey(film: Film) {
+    return film.technique?.trim().toLowerCase() || "unknown";
+  }
+
+  function pickDiverseTopFilms(candidates: Film[], count: number) {
+    const selectedFilms: Film[] = [];
+    const usedStyles = new Set<string>();
+  
+    for (const film of candidates) {
+      const styleKey = getStyleKey(film);
+  
+      if (!usedStyles.has(styleKey)) {
+        selectedFilms.push(film);
+        usedStyles.add(styleKey);
+      }
+  
+      if (selectedFilms.length === count) {
+        return selectedFilms;
+      }
+    }
+  
+    for (const film of candidates) {
+      if (!selectedFilms.some((selectedFilm) => selectedFilm.id === film.id)) {
+        selectedFilms.push(film);
+      }
+  
+      if (selectedFilms.length === count) {
+        return selectedFilms;
+      }
+    }
+  
+    return selectedFilms;
   }
 
   if (activeFilter === "saved" && profile) {
@@ -61,38 +168,36 @@ const { data: profile } = await supabase
   }
 
   if (activeFilter === "rated" && profile) {
-    const { data: ratings } = await supabase
-      .from("film_ratings")
-      .select("film_id")
-      .eq("profile_id", profile.id);
-  
-    const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
-  
+
     films = allFilms.filter((film) => ratedFilmIds.has(film.id));
+  
   }
 
-  if (activeFilter === "recommended" && profile) {
-    const { data: ratings } = await supabase
-      .from("film_ratings")
-      .select("film_id")
-      .eq("profile_id", profile.id);
 
+  if (activeFilter === "top picks" && profile) {
     const { data: watchlistItems } = await supabase
       .from("profile_film_lists")
       .select("film_id")
       .eq("profile_id", profile.id)
       .eq("list_type", "to_watch");
-
-    const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
+  
     const savedFilmIds = new Set(
       watchlistItems?.map((item) => item.film_id) ?? []
     );
-
-    const candidates = allFilms.filter(
-      (film) => !ratedFilmIds.has(film.id) && !savedFilmIds.has(film.id)
-    );
-
-    films = getRandomItems(candidates, 3);
+  
+    const candidates = allFilms
+      .filter((film) => !ratedFilmIds.has(film.id) && !savedFilmIds.has(film.id))
+      .sort((a, b) => {
+        const scoreDifference = getTasteMatchScore(b) - getTasteMatchScore(a);
+  
+        if (scoreDifference !== 0) {
+          return scoreDifference;
+        }
+  
+        return (b.year ?? 0) - (a.year ?? 0);
+      });
+  
+    films = pickDiverseTopFilms(candidates, 3);
   }
 
   return (
@@ -112,16 +217,17 @@ const { data: profile } = await supabase
       </header>
 
       <div className="mb-6 flex flex-wrap gap-2">
+
   <Link
-    href="/"
-    className={`rounded-full border px-4 py-2 text-sm font-medium ${
-      activeFilter === "recommended"
-        ? "border-black bg-black text-white"
-        : "border-gray-300 bg-white text-gray-700"
-    }`}
-  >
-    Recommended
-  </Link>
+  href="/"
+  className={`rounded-full border px-4 py-2 text-sm font-medium ${
+    activeFilter === "top picks"
+      ? "border-black bg-black text-white"
+      : "border-gray-300 bg-white text-gray-700"
+  }`}
+>
+  Top picks
+</Link>
 
   <Link
     href="/?filter=saved"
@@ -163,6 +269,51 @@ const { data: profile } = await supabase
   </p>
 )}
 
+{activeFilter === "rated" && watchedFilms.length > 0 && (
+  <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-5">
+    <p className="mb-1 text-sm font-medium text-gray-500">
+      What the system knows about you
+    </p>
+
+    <h2 className="mb-3 text-xl font-semibold text-gray-900">
+      Maria’s taste profile
+    </h2>
+
+    <p className="max-w-3xl whitespace-pre-line text-sm leading-6 text-gray-700">
+      {profile?.taste_profile ??
+        "No AI taste profile yet. Generate one from your rated films."}
+    </p>
+
+    {profile?.taste_profile_updated_at && (
+      <p className="mt-3 text-xs text-gray-400">
+        Last updated:{" "}
+        {new Date(profile.taste_profile_updated_at).toLocaleDateString()}
+      </p>
+    )}
+
+    <UpdateTasteProfileButton />
+  </section>
+)}
+
+{activeFilter === "all" && watchedTags.length > 0 && (
+  <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
+    <p className="mb-3 text-sm font-medium text-gray-700">
+      Taste signals used for sorting
+    </p>
+
+    <div className="flex flex-wrap gap-2">
+      {watchedTags.map((tag) => (
+        <span
+          key={tag}
+          className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-600"
+        >
+          {tag}
+        </span>
+      ))}
+    </div>
+  </section>
+)}
+
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {error.message}
@@ -171,8 +322,8 @@ const { data: profile } = await supabase
 
 {!films?.length && !error && (
   <div className="rounded-2xl border border-dashed p-8 text-gray-500">
-    {activeFilter === "recommended"
-      ? "No recommendations left. Try All films or clear some ratings."
+    {activeFilter === "top picks"
+  ? "No top picks left. Try All films or clear some ratings."
       : activeFilter === "saved"
         ? "No saved films yet."
         : "No films yet. Add your first one."}
