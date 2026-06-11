@@ -84,9 +84,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <main className="mx-auto max-w-5xl p-8">
       <header className="mb-8 flex items-start justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-semibold">Animation Taste Guide</h1>
+          <h1 className="text-3xl font-semibold">Animation Guide</h1>
           <p className="mt-2 text-gray-600">
-            A personal library for independent animated shorts.
+          Find strange, beautiful, and emotionally resonant animated films to watch next.
           </p>
         </div>
 
