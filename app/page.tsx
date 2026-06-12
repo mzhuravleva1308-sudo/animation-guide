@@ -295,6 +295,13 @@ const watchedTags = Object.entries(watchedTagCounts)
   </section>
 )}
 
+{activeFilter === "rated" && (
+  <p className="mb-6 text-sm text-gray-500">
+    Showing {watchedFilms.length} watched{" "}
+    {watchedFilms.length === 1 ? "film" : "films"}
+  </p>
+)}
+
 {activeFilter === "all" && watchedTags.length > 0 && (
   <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
     <p className="mb-3 text-sm font-medium text-gray-700">
