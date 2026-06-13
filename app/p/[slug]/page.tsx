@@ -857,22 +857,6 @@ if (activeFilter === "top picks") {
                   <p>
                     Balanced total: {getBalancedTotalMatchScore(film).toFixed(4)}
                   </p>
-                    <p>
-                    Emotional nearest:{" "}
-                    {getNearestRatedFilmDebug(
-                      filmMoodEmbeddingByFilmId.get(film.id),
-                      ratedFilms,
-                      filmMoodEmbeddingByFilmId
-                    )?.title ?? "—"}
-                  </p>
-                  <p>
-                    Material nearest:{" "}
-                    {getNearestRatedFilmDebug(
-                      filmAestheticEmbeddingByFilmId.get(film.id),
-                      ratedFilms,
-                      filmAestheticEmbeddingByFilmId
-                    )?.title ?? "—"}
-                  </p>
                   </div>
                 </div>
 
