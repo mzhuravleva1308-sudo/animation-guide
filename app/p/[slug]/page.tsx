@@ -116,7 +116,7 @@ const activeFilter =
       }
 
       const weight = rating >= 8 ? 2 : 1;
-      const tags = [...(film.moods ?? []), ...(film.themes ?? [])];
+      const tags = film.moods ?? [];
 
       tags.forEach((tag) => {
         const normalizedTag = tag.trim().toLowerCase();
@@ -139,7 +139,7 @@ const activeFilter =
     .map(([tag]) => tag);
 
     function getTasteMatchScore(film: Film) {
-      const filmTags = [...(film.moods ?? []), ...(film.themes ?? [])].map((tag) =>
+      const filmTags = (film.moods ?? []).map((tag) =>
         tag.trim().toLowerCase()
       );
     
@@ -352,7 +352,7 @@ const activeFilter =
       {activeFilter === "all" && watchedTags.length > 0 && (
         <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
           <p className="mb-3 text-sm font-medium text-gray-700">
-            Taste signals used for sorting
+            Choose moods to prioritize
           </p>
 
           <div className="flex flex-wrap gap-2">
