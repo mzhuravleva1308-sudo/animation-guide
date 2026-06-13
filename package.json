@@ -6,7 +6,14 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "after-films": "node scripts/after-films.mjs",
+    "taste-cores": "node scripts/build-taste-cores.mjs",
+    "name-taste-cores": "node scripts/name-taste-cores.mjs",
+    "film-mood-embeddings": "node scripts/fill-film-mood-embeddings.mjs",
+    "aesthetic-tags": "node scripts/fill-aesthetic-tags.mjs",
+    "aesthetic-embeddings": "node scripts/fill-film-aesthetic-embeddings.mjs",
+    "aesthetic-cores": "node scripts/build-aesthetic-cores.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",

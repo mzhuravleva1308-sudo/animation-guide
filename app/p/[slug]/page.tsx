@@ -5,6 +5,28 @@ import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 
+type ProfileTasteCore = {
+  id: string;
+  core_index: number;
+  core_type: string | null;
+  name: string | null;
+  strength: number;
+  coverage: number | null;
+  maturity: string | null;
+  nearest_moods: string[] | null;
+  center_embedding: number[] | string | null;
+};
+
+type FilmMoodEmbedding = {
+  film_id: string;
+  embedding: number[] | string | null;
+};
+
+type FilmAestheticEmbedding = {
+  film_id: string;
+  embedding: number[] | string | null;
+};
+
 function getRandomItems<T>(items: T[], count: number) {
   return [...items].sort(() => Math.random() - 0.5).slice(0, count);
 }
@@ -17,47 +39,83 @@ export default async function ProfilePage({
   searchParams?: Promise<{ filter?: string; token?: string; tags?: string }>;
 }) {
   const routeParams = await params;
-const queryParams = await searchParams;
+  const queryParams = await searchParams;
 
-const profileSlug = routeParams.slug;
-const token = queryParams?.token;
-const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(token ?? "")}`;
+  const profileSlug = routeParams.slug;
+  const token = queryParams?.token;
+  const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(token ?? "")}`;
 
-const selectedTags = new Set(
-  (queryParams?.tags ?? "")
-    .split(",")
-    .map((tag) => tag.trim().toLowerCase())
-    .filter(Boolean)
-);
+  const selectedTags = new Set(
+    (queryParams?.tags ?? "")
+      .split(",")
+      .map((tag) => tag.trim().toLowerCase())
+      .filter(Boolean)
+  );
 
-function getTagHref(tag: string) {
-  const normalizedTag = tag.trim().toLowerCase();
-  const nextTags = new Set(selectedTags);
+  function parseEmbedding(value: number[] | string | null | undefined) {
+    if (!value) return null;
 
-  if (nextTags.has(normalizedTag)) {
-    nextTags.delete(normalizedTag);
-  } else {
-    nextTags.add(normalizedTag);
+    if (Array.isArray(value)) {
+      return value.map(Number);
+    }
+
+    if (typeof value === "string") {
+      return value
+        .replace("[", "")
+        .replace("]", "")
+        .split(",")
+        .map((item) => Number(item.trim()));
+    }
+
+    return null;
   }
 
-  const tagsParam = Array.from(nextTags)
-    .sort()
-    .map(encodeURIComponent)
-    .join(",");
+  function cosineSimilarity(a: number[], b: number[]) {
+    let dot = 0;
+    let normA = 0;
+    let normB = 0;
 
-  return tagsParam
-    ? `${profileBasePath}&filter=all&tags=${tagsParam}`
-    : `${profileBasePath}&filter=all`;
-}
+    for (let i = 0; i < a.length; i += 1) {
+      dot += a[i] * b[i];
+      normA += a[i] * a[i];
+      normB += b[i] * b[i];
+    }
 
-const activeFilter =
-  queryParams?.filter === "saved"
-    ? "saved"
-    : queryParams?.filter === "rated"
-      ? "rated"
-      : queryParams?.filter === "all"
-        ? "all"
-        : "top picks";
+    if (normA === 0 || normB === 0) {
+      return 0;
+    }
+
+    return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  function getTagHref(tag: string) {
+    const normalizedTag = tag.trim().toLowerCase();
+    const nextTags = new Set(selectedTags);
+
+    if (nextTags.has(normalizedTag)) {
+      nextTags.delete(normalizedTag);
+    } else {
+      nextTags.add(normalizedTag);
+    }
+
+    const tagsParam = Array.from(nextTags)
+      .sort()
+      .map(encodeURIComponent)
+      .join(",");
+
+    return tagsParam
+      ? `${profileBasePath}&filter=all&tags=${tagsParam}`
+      : `${profileBasePath}&filter=all`;
+  }
+
+  const activeFilter =
+    queryParams?.filter === "saved"
+      ? "saved"
+      : queryParams?.filter === "rated"
+        ? "rated"
+        : queryParams?.filter === "all"
+          ? "all"
+          : "top picks";
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -81,6 +139,32 @@ const activeFilter =
     );
   }
 
+  const { data: tasteCoresData } = await supabase
+    .from("profile_taste_cores")
+    .select(
+      "id, core_type, core_index, name, strength, coverage, maturity, nearest_moods, center_embedding"
+    )
+    .eq("profile_id", profile.id)
+    .order("core_index");
+
+  const tasteCores = ((tasteCoresData as ProfileTasteCore[] | null) ?? [])
+    .map((core) => ({
+      ...core,
+      centerEmbedding: parseEmbedding(core.center_embedding),
+    }))
+    .filter(
+      (core): core is ProfileTasteCore & { centerEmbedding: number[] } =>
+        core.centerEmbedding !== null
+    );
+
+  const emotionalCores = tasteCores.filter(
+    (core) => core.core_type === "emotional"
+  );
+
+  const aestheticCores = tasteCores.filter(
+    (core) => core.core_type === "aesthetic"
+  );
+
   const { data: allFilmsData, error } = await supabase
     .from("films")
     .select("*")
@@ -88,8 +172,41 @@ const activeFilter =
 
   const allFilms = (allFilmsData as Film[] | null) ?? [];
 
+  const filmIds = allFilms.map((film) => film.id);
+
+  const { data: filmMoodEmbeddingsData } = filmIds.length
+    ? await supabase
+      .from("film_mood_embeddings")
+      .select("film_id, embedding")
+      .in("film_id", filmIds)
+    : { data: [] };
+
+  const { data: filmAestheticEmbeddingsData } = filmIds.length
+    ? await supabase
+      .from("film_aesthetic_embeddings")
+      .select("film_id, embedding")
+      .in("film_id", filmIds)
+    : { data: [] };
+
   let ratedFilmIds = new Set<string>();
   let ratingByFilmId = new Map<string, number>();
+
+  const filmMoodEmbeddingByFilmId = new Map(
+    ((filmMoodEmbeddingsData as FilmMoodEmbedding[] | null) ?? [])
+      .map((row) => [row.film_id, parseEmbedding(row.embedding)] as const)
+      .filter(([, embedding]) => embedding)
+  );
+
+  const filmAestheticEmbeddingByFilmId = new Map(
+    ((filmAestheticEmbeddingsData as FilmAestheticEmbedding[] | null) ?? [])
+      .map((row) => [row.film_id, parseEmbedding(row.embedding)] as const)
+      .filter(([, embedding]) => embedding)
+  );
+
+  console.log("emotional cores:", emotionalCores.length);
+  console.log("aesthetic cores:", aestheticCores.length);
+  console.log("film mood embeddings:", filmMoodEmbeddingByFilmId.size);
+  console.log("film aesthetic embeddings:", filmAestheticEmbeddingByFilmId.size);
 
   const { data: ratings } = await supabase
     .from("film_ratings")
@@ -138,23 +255,70 @@ const activeFilter =
     .slice(0, 20)
     .map(([tag]) => tag);
 
-    function getTasteMatchScore(film: Film) {
-      const filmTags = (film.moods ?? []).map((tag) =>
-        tag.trim().toLowerCase()
-      );
-    
-      const baseScore = filmTags.reduce((score, tag) => {
-        return score + (watchedTagCounts[tag] ?? 0);
-      }, 0);
-    
-      const selectedTagMatches = filmTags.filter((tag) =>
-        selectedTags.has(tag)
-      ).length;
-    
-      const selectedTagsBonus = selectedTagMatches * 100;
-    
-      return baseScore + selectedTagsBonus;
+    function getCoreMatchScore(
+      filmEmbedding: number[] | null | undefined,
+      cores: Array<ProfileTasteCore & { centerEmbedding: number[] }>
+    ) {
+    if (!filmEmbedding || cores.length === 0) {
+      return 0;
     }
+
+    const coreScores = cores.map((core) => {
+      const similarity = cosineSimilarity(filmEmbedding, core.centerEmbedding);
+
+      const strength = Number(core.strength ?? 1);
+      const coverage = Number(core.coverage ?? 1);
+      const maturityBonus = core.maturity === "stable" ? 1 : 0.92;
+
+      return similarity * strength * (0.7 + coverage * 0.3) * maturityBonus;
+    });
+
+    const coreScore = Math.max(...coreScores);
+
+    return Math.pow(coreScore, 8);
+  }
+
+  function getEmotionalMatchScore(film: Film) {
+    const filmEmbedding = filmMoodEmbeddingByFilmId.get(film.id);
+
+    const coreScore = getCoreMatchScore(filmEmbedding, emotionalCores);
+
+    const selectedTagMatches = (film.moods ?? []).filter((tag) =>
+      selectedTags.has(tag.trim().toLowerCase())
+    ).length;
+
+    return coreScore + selectedTagMatches * 0.2;
+  }
+
+  function getMaterialMatchScore(film: Film) {
+    const filmEmbedding = filmAestheticEmbeddingByFilmId.get(film.id);
+
+    return getCoreMatchScore(filmEmbedding, aestheticCores);
+  }
+
+  function getTotalMatchScore(film: Film) {
+    return getEmotionalMatchScore(film) + getMaterialMatchScore(film);
+  }
+
+  function normalizeMatchScore(score: number) {
+    const minScore = 0.02;
+    const maxScore = 0.14;
+
+    const normalized = (score - minScore) / (maxScore - minScore);
+
+    return Math.max(0, Math.min(1, normalized));
+  }
+
+  function formatMatchPercent(score: number) {
+    return `${Math.round(normalizeMatchScore(score) * 100)}%`;
+  }
+
+  function getTotalMatchPercent(film: Film) {
+    const emotional = normalizeMatchScore(getEmotionalMatchScore(film));
+    const material = normalizeMatchScore(getMaterialMatchScore(film));
+
+    return `${Math.round(((emotional + material) / 2) * 100)}%`;
+  }
 
   function getStyleKey(film: Film) {
     return film.technique?.trim().toLowerCase() || "unknown";
@@ -196,7 +360,7 @@ const activeFilter =
     films = allFilms
       .filter((film) => !ratedFilmIds.has(film.id))
       .sort((a, b) => {
-        const scoreDifference = getTasteMatchScore(b) - getTasteMatchScore(a);
+        const scoreDifference = getTotalMatchScore(b) - getTotalMatchScore(a);
 
         if (scoreDifference !== 0) {
           return scoreDifference;
@@ -238,7 +402,7 @@ const activeFilter =
     const candidates = allFilms
       .filter((film) => !ratedFilmIds.has(film.id) && !savedFilmIds.has(film.id))
       .sort((a, b) => {
-        const scoreDifference = getTasteMatchScore(b) - getTasteMatchScore(a);
+        const scoreDifference = getTotalMatchScore(b) - getTotalMatchScore(a);
 
         if (scoreDifference !== 0) {
           return scoreDifference;
@@ -267,47 +431,45 @@ const activeFilter =
       <div className="mb-6 flex flex-wrap gap-2">
         <Link
           href={profileBasePath}
-          className={`rounded-full border px-4 py-2 text-sm font-medium ${
-            activeFilter === "top picks"
-              ? "border-black bg-black text-white"
-              : "border-gray-300 bg-white text-gray-700"
-          }`}
+          className={`rounded-full border px-4 py-2 text-sm font-medium ${activeFilter === "top picks"
+            ? "border-black bg-black text-white"
+            : "border-gray-300 bg-white text-gray-700"
+            }`}
         >
           Top picks
         </Link>
 
         <Link
           href={`${profileBasePath}&filter=saved`}
-          className={`rounded-full border px-4 py-2 text-sm font-medium ${
-            activeFilter === "saved"
-              ? "border-black bg-black text-white"
-              : "border-gray-300 bg-white text-gray-700"
-          }`}
+          className={`rounded-full border px-4 py-2 text-sm font-medium ${activeFilter === "saved"
+            ? "border-black bg-black text-white"
+            : "border-gray-300 bg-white text-gray-700"
+            }`}
         >
           Saved
         </Link>
 
         <Link
           href={`${profileBasePath}&filter=all`}
-          className={`rounded-full border px-4 py-2 text-sm font-medium ${
-            activeFilter === "all"
-              ? "border-black bg-black text-white"
-              : "border-gray-300 bg-white text-gray-700"
-          }`}
+          className={`rounded-full border px-4 py-2 text-sm font-medium ${activeFilter === "all"
+            ? "border-black bg-black text-white"
+            : "border-gray-300 bg-white text-gray-700"
+            }`}
         >
           All films
         </Link>
 
         <Link
           href={`${profileBasePath}&filter=rated`}
-          className={`rounded-full border px-4 py-2 text-sm font-medium ${
-            activeFilter === "rated"
-              ? "border-black bg-black text-white"
-              : "border-gray-300 bg-white text-gray-700"
-          }`}
+          className={`rounded-full border px-4 py-2 text-sm font-medium ${activeFilter === "rated"
+            ? "border-black bg-black text-white"
+            : "border-gray-300 bg-white text-gray-700"
+            }`}
         >
           Watched
         </Link>
+
+
       </div>
 
       {activeFilter === "all" && (
@@ -345,44 +507,46 @@ const activeFilter =
             </p>
           )}
 
-            <UpdateTasteProfileButton profileSlug={profileSlug} token={token ?? ""} />  
+          <UpdateTasteProfileButton profileSlug={profileSlug} token={token ?? ""} />
         </section>
       )}
 
-      {activeFilter === "all" && watchedTags.length > 0 && (
+      {activeFilter === "all" && tasteCores.length > 0 && (
         <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
-          <p className="mb-3 text-sm font-medium text-gray-700">
-            Choose moods to prioritize
+          <p className="mb-4 text-sm font-medium text-gray-700">
+            Taste cores detected from your ratings
           </p>
 
-          <div className="flex flex-wrap gap-2">
-  {watchedTags.map((tag) => {
-    const isSelected = selectedTags.has(tag);
+          <div className="space-y-4">
+            {[...tasteCores]
+              .sort((a, b) => {
+                const order = { emotional: 0, aesthetic: 1 };
 
-    return (
-      <Link
-        key={tag}
-        href={getTagHref(tag)}
-        className={`rounded-full border px-3 py-1 text-sm transition ${
-          isSelected
-            ? "border-black bg-black text-white"
-            : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
-        }`}
-      >
-        {tag}
-      </Link>
-    );
-  })}
-</div>
-
-{selectedTags.size > 0 && (
-  <Link
-    href={`${profileBasePath}&filter=all`}
-    className="mt-3 inline-block text-sm text-gray-500 underline"
-  >
-    Clear selected tags
-  </Link>
-)}
+                return (
+                  (order[a.core_type as "emotional" | "aesthetic"] ?? 99) -
+                  (order[b.core_type as "emotional" | "aesthetic"] ?? 99)
+                );
+              })
+              .map((core) => (
+                <div key={`${core.core_type}-${core.core_index}`}>
+                  {core.nearest_moods?.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {core.nearest_moods.slice(0, 10).map((tag) => (
+                        <span
+                          key={tag}
+                          className={`rounded-full border px-3 py-1 text-sm ${core.core_type === "aesthetic"
+                              ? "border-stone-200 bg-stone-100 text-stone-700"
+                              : "border-gray-200 bg-gray-50 text-gray-600"
+                            }`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+          </div>
         </section>
       )}
 
@@ -451,6 +615,17 @@ const activeFilter =
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
+                  <div className="mt-2 space-y-0.5 text-xs text-gray-400">
+                    <p>
+                      Emotional match: {formatMatchPercent(getEmotionalMatchScore(film))}
+                    </p>
+                    <p>
+                      Material match: {formatMatchPercent(getMaterialMatchScore(film))}
+                    </p>
+                    <p>
+                      Total match: {getTotalMatchPercent(film)}
+                    </p>
+                  </div>
                 </div>
 
                 {film.availability && film.availability !== "unknown" && (
@@ -464,20 +639,43 @@ const activeFilter =
                 <p className="mt-4 text-gray-700">{film.synopsis}</p>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {film.moods?.map((mood) => (
-                  <span
-                    key={mood}
-                    className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-                  >
-                    {mood}
-                  </span>
-                ))}
+              <div className="mt-4 space-y-3">
+                {film.moods?.length ? (
+                  <div>
+                    <div className="flex flex-wrap gap-2">
+                      {film.moods.map((mood) => (
+                        <span
+                          key={mood}
+                          className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+                        >
+                          {mood}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {film.aesthetic_tags?.length ? (
+                  <div>
+                    <div className="flex flex-wrap gap-2">
+                      {film.aesthetic_tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-stone-100 px-3 py-1 text-sm text-gray-700"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
 
                 {film.technique && (
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700">
-                    {film.technique}
-                  </span>
+                  <div>
+                    <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
+                      {film.technique}
+                    </span>
+                  </div>
                 )}
               </div>
 

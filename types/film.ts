@@ -17,6 +17,7 @@ export type Film = {
     synopsis?: string | null;
     technique?: string | null;
     moods?: string[] | null;
+    aesthetic_tags: string[] | null;
     themes?: string[] | null;
     dialogue?: string | null;
     emotional_intensity?: number | null;
@@ -26,5 +27,4 @@ export type Film = {
     personal_note?: string | null;
     status?: string | null;
     created_at?: string;
-  
   };
