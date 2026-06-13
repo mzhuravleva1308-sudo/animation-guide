@@ -464,13 +464,6 @@ const activeFilter =
                 <p className="mt-4 text-gray-700">{film.synopsis}</p>
               )}
 
-              {film.why_i_might_like_it && (
-                <p className="mt-4 rounded-xl bg-gray-50 p-4 text-gray-700">
-                  <span className="font-medium"></span>
-                  {film.why_i_might_like_it}
-                </p>
-              )}
-
               <div className="mt-4 flex flex-wrap gap-2">
                 {film.moods?.map((mood) => (
                   <span
