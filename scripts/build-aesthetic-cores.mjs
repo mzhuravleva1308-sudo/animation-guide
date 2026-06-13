@@ -266,6 +266,7 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
             film_titles: cluster.map((film) => film.title),
             nearest_moods: nearestMoods,
             center_embedding: centerEmbedding,
+            aesthetic_profile_tags: nearestMoods,
             updated_at: new Date().toISOString(),
         };
 

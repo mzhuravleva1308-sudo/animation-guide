@@ -232,6 +232,10 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
 
   const clusters = buildClusters(filmsWithEmbeddings);
 
+  if (clusters.length === 0 && filmsWithEmbeddings.length > 0) {
+    clusters.push(filmsWithEmbeddings);
+  }
+  
   console.log(`Cores found: ${clusters.length}`);
 
   for (let index = 0; index < clusters.length; index += 1) {
@@ -266,6 +270,7 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
       film_titles: cluster.map((film) => film.title),
       nearest_moods: nearestMoods,
       center_embedding: centerEmbedding,
+      emotional_profile_tags: nearestMoods,
       updated_at: new Date().toISOString(),
     };
 
