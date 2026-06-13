@@ -14,25 +14,50 @@ export default async function ProfilePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ filter?: string; token?: string }>;
+  searchParams?: Promise<{ filter?: string; token?: string; tags?: string }>;
 }) {
   const routeParams = await params;
-  const queryParams = await searchParams;
+const queryParams = await searchParams;
 
-  const profileSlug = routeParams.slug;
-  const token = queryParams?.token;
-  const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(
-    token ?? ""
-  )}`;
+const profileSlug = routeParams.slug;
+const token = queryParams?.token;
+const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(token ?? "")}`;
 
-  const activeFilter =
-    queryParams?.filter === "saved"
-      ? "saved"
-      : queryParams?.filter === "rated"
-        ? "rated"
-        : queryParams?.filter === "all"
-          ? "all"
-          : "top picks";
+const selectedTags = new Set(
+  (queryParams?.tags ?? "")
+    .split(",")
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean)
+);
+
+function getTagHref(tag: string) {
+  const normalizedTag = tag.trim().toLowerCase();
+  const nextTags = new Set(selectedTags);
+
+  if (nextTags.has(normalizedTag)) {
+    nextTags.delete(normalizedTag);
+  } else {
+    nextTags.add(normalizedTag);
+  }
+
+  const tagsParam = Array.from(nextTags)
+    .sort()
+    .map(encodeURIComponent)
+    .join(",");
+
+  return tagsParam
+    ? `${profileBasePath}&filter=all&tags=${tagsParam}`
+    : `${profileBasePath}&filter=all`;
+}
+
+const activeFilter =
+  queryParams?.filter === "saved"
+    ? "saved"
+    : queryParams?.filter === "rated"
+      ? "rated"
+      : queryParams?.filter === "all"
+        ? "all"
+        : "top picks";
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -113,15 +138,23 @@ export default async function ProfilePage({
     .slice(0, 20)
     .map(([tag]) => tag);
 
-  function getTasteMatchScore(film: Film) {
-    const filmTags = [...(film.moods ?? []), ...(film.themes ?? [])].map((tag) =>
-      tag.trim().toLowerCase()
-    );
-
-    return filmTags.reduce((score, tag) => {
-      return score + (watchedTagCounts[tag] ?? 0);
-    }, 0);
-  }
+    function getTasteMatchScore(film: Film) {
+      const filmTags = [...(film.moods ?? []), ...(film.themes ?? [])].map((tag) =>
+        tag.trim().toLowerCase()
+      );
+    
+      const baseScore = filmTags.reduce((score, tag) => {
+        return score + (watchedTagCounts[tag] ?? 0);
+      }, 0);
+    
+      const selectedTagMatches = filmTags.filter((tag) =>
+        selectedTags.has(tag)
+      ).length;
+    
+      const selectedTagsBonus = selectedTagMatches * 100;
+    
+      return baseScore + selectedTagsBonus;
+    }
 
   function getStyleKey(film: Film) {
     return film.technique?.trim().toLowerCase() || "unknown";
@@ -323,15 +356,33 @@ export default async function ProfilePage({
           </p>
 
           <div className="flex flex-wrap gap-2">
-            {watchedTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-sm text-gray-600"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+  {watchedTags.map((tag) => {
+    const isSelected = selectedTags.has(tag);
+
+    return (
+      <Link
+        key={tag}
+        href={getTagHref(tag)}
+        className={`rounded-full border px-3 py-1 text-sm transition ${
+          isSelected
+            ? "border-black bg-black text-white"
+            : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"
+        }`}
+      >
+        {tag}
+      </Link>
+    );
+  })}
+</div>
+
+{selectedTags.size > 0 && (
+  <Link
+    href={`${profileBasePath}&filter=all`}
+    className="mt-3 inline-block text-sm text-gray-500 underline"
+  >
+    Clear selected tags
+  </Link>
+)}
         </section>
       )}
 
