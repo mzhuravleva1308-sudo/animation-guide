@@ -9,6 +9,7 @@ const supabase = createClient(
 );
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+const TMDB_ANIMATION_GENRE_ID = 16;
 
 if (!TMDB_API_KEY) {
   throw new Error("Missing TMDB_API_KEY");
@@ -48,8 +49,17 @@ function getTitleSimilarity(a, b) {
   return (sharedWords.length / Math.max(wordsA.size, wordsB.size)) * 60;
 }
 
+function isShortOrAmbiguousTitle(film) {
+  const title = normalizeTitle(film.title);
+  return title.length <= 10 || title.split(" ").length === 1;
+}
+
+function isAnimationResult(result) {
+  return result.genre_ids?.includes(TMDB_ANIMATION_GENRE_ID);
+}
+
 function scoreTmdbResult(film, result) {
-  const filmYear = film.year;
+  const filmYear = Number(film.year);
   const resultYear = getYearFromDate(result.release_date);
 
   const titleScore = Math.max(
@@ -64,13 +74,59 @@ function scoreTmdbResult(film, result) {
       ? filmYear === resultYear
         ? 35
         : Math.abs(filmYear - resultYear) === 1
-          ? 15
-          : -40
+          ? 10
+          : -80
       : 0;
 
-  const posterScore = result.poster_path ? 10 : -20;
+  const posterScore = result.poster_path ? 10 : -30;
 
-  return titleScore + yearScore + posterScore;
+  const overview = normalizeTitle(result.overview ?? "");
+const director = normalizeTitle(film.director ?? "");
+
+const animationScore = isAnimationResult(result) ? 30 : -80;
+
+  const directorScore =
+    director && overview.includes(director)
+      ? 25
+      : 0;
+
+  const ambiguousPenalty =
+    isShortOrAmbiguousTitle(film) && titleScore < 100 ? -35 : 0;
+
+  return (
+    titleScore +
+    yearScore +
+    posterScore +
+    animationScore +
+    directorScore +
+    ambiguousPenalty
+  );
+}
+
+function isConfidentTmdbMatch(film, result, score) {
+  const filmYear = Number(film.year);
+  const resultYear = getYearFromDate(result.release_date);
+
+  const titleScore = Math.max(
+    getTitleSimilarity(film.title, result.title),
+    getTitleSimilarity(film.title, result.original_title),
+    getTitleSimilarity(film.original_title, result.title),
+    getTitleSimilarity(film.original_title, result.original_title)
+  );
+
+  if (!result.poster_path) return false;
+
+  if (!isAnimationResult(result)) return false;
+  
+  if (filmYear && resultYear && filmYear !== resultYear) {
+    return false;
+  }
+
+  if (isShortOrAmbiguousTitle(film)) {
+    return titleScore >= 100 && score >= 95;
+  }
+
+  return score >= 80;
 }
 
 async function searchTmdb(query, year) {
@@ -116,19 +172,30 @@ async function findBestTmdbMatch(film) {
   );
 
   const scoredResults = uniqueResults
-    .map((result) => ({
-      result,
-      score: scoreTmdbResult(film, result),
-    }))
-    .filter((item) => item.result.poster_path)
-    .sort((a, b) => b.score - a.score);
+  .map((result) => ({
+    result,
+    score: scoreTmdbResult(film, result),
+  }))
+  .sort((a, b) => b.score - a.score);
 
-  const bestMatch = scoredResults[0];
+  const bestMatch = scoredResults.find((item) =>
+    isConfidentTmdbMatch(film, item.result, item.score)
+  );
 
-  if (!bestMatch || bestMatch.score < 80) {
+  if (!bestMatch) {
     console.log(
       `Skipped: ${film.title} (${film.year}) — no confident poster match`
     );
+
+    console.log(
+      scoredResults.slice(0, 5).map((item) => ({
+        title: item.result.title,
+        original_title: item.result.original_title,
+        year: getYearFromDate(item.result.release_date),
+        score: item.score,
+      }))
+    );
+
     return null;
   }
 
@@ -138,7 +205,7 @@ async function findBestTmdbMatch(film) {
 async function main() {
   const { data: films, error } = await supabase
     .from("films")
-    .select("id, title, original_title, year, image_url")
+    .select("id, title, original_title, director, year, image_url")
     .is("image_url", null);
 
   if (error) {
