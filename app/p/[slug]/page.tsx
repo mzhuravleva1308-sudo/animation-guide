@@ -345,7 +345,7 @@ const activeFilter =
             </p>
           )}
 
-          <UpdateTasteProfileButton />
+            <UpdateTasteProfileButton profileSlug={profileSlug} token={token ?? ""} />  
         </section>
       )}
 

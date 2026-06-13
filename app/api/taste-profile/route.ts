@@ -12,13 +12,24 @@ type RatingRow = {
   rating: number | null;
 };
 
-export async function POST() {
-  const profileSlug = "maria";
+export async function POST(request: Request) {
+  const { searchParams } = new URL(request.url);
+
+  const slug = searchParams.get("slug");
+  const token = searchParams.get("token");
+
+  if (!slug || !token) {
+    return NextResponse.json(
+      { error: "Missing profile slug or token" },
+      { status: 400 }
+    );
+  }
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id")
-    .eq("slug", profileSlug)
+    .select("id, name, slug")
+    .eq("slug", slug)
+    .eq("share_token", token)
     .single();
 
   if (profileError || !profile) {
@@ -42,7 +53,9 @@ export async function POST() {
 
   const ratings = (ratingsData as RatingRow[] | null) ?? [];
 
-  const ratedFilmIds = ratings.map((item) => item.film_id);
+  const ratedFilmIds = ratings
+    .filter((item) => item.rating !== null)
+    .map((item) => item.film_id);
 
   if (ratedFilmIds.length < 3) {
     return NextResponse.json(
@@ -85,41 +98,42 @@ export async function POST() {
     .filter((film) => film.rating !== undefined)
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 
-    const prompt = `
-    You are generating a taste profile for Maria based on her rated animated films.
-    
-    Write as if the app is gently reflecting what it has learned about her taste.
-    Do not mention film titles.
-    Do not quote evidence.
-    Do not sound academic, analytical, formal, or like a professor.
-    Do not use phrases like "reveals", "showcases", "demonstrates", "deep appreciation", "narratives", "themes of", or "as seen in".
-    Do not write a list of tags.
-    
-    Write in a warm, intimate, clear voice.
-    Make it feel like quiet knowledge, not a report.
-    
-    Be specific, but do not overclaim.
-    Focus on:
-    - emotional tone
-    - visual feeling
-    - what kind of worlds she seems drawn to
-    - what may be less central to her taste
-    
-    Use 2 short paragraphs, 3-5 sentences total.
-    Mention once that this is a living hypothesis based on her ratings.
-    
-    Rated films:
-    ${JSON.stringify(ratedFilms, null, 2)}
-    `;
+  const prompt = `
+You are generating a taste profile for ${profile.name} based on their rated animated films.
+
+Write as if the app is gently reflecting what it has learned about their taste.
+Do not mention film titles.
+Do not quote evidence.
+Do not sound academic, analytical, formal, or like a professor.
+Do not use phrases like "reveals", "showcases", "demonstrates", "deep appreciation", "narratives", "themes of", or "as seen in".
+Do not write a list of tags.
+
+Write in a warm, intimate, clear voice.
+Make it feel like quiet knowledge, not a report.
+
+Be specific, but do not overclaim.
+Focus on:
+- emotional tone
+- visual feeling
+- what kind of worlds they seem drawn to
+- what may be less central to their taste
+
+Use 2 short paragraphs, 3-5 sentences total.
+Mention once that this is a living hypothesis based on their ratings.
+
+Rated films:
+${JSON.stringify(ratedFilms, null, 2)}
+`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
-     {
-        role: "system",            content:
-            "You write warm, concise taste insights for a personal animation guide. Your tone is human, observant, and soft — never academic, never formal, never like a review.",
-        },
-    {
+      {
+        role: "system",
+        content:
+          "You write warm, concise taste insights for a personal animation guide. Your tone is human, observant, and soft — never academic, never formal, never like a review.",
+      },
+      {
         role: "user",
         content: prompt,
       },

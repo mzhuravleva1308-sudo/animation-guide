@@ -3,7 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function UpdateTasteProfileButton() {
+type UpdateTasteProfileButtonProps = {
+  profileSlug: string;
+  token: string;
+};
+
+export default function UpdateTasteProfileButton({
+  profileSlug,
+  token,
+}: UpdateTasteProfileButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -12,9 +20,12 @@ export default function UpdateTasteProfileButton() {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const response = await fetch("/api/taste-profile", {
-      method: "POST",
-    });
+    const response = await fetch(
+      `/api/taste-profile?slug=${encodeURIComponent(
+        profileSlug
+      )}&token=${encodeURIComponent(token)}`,
+      { method: "POST" }
+    );
 
     if (!response.ok) {
       const data = await response.json().catch(() => null);
