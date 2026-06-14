@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { logProfileActivity } from "@/lib/log-profile-activity";
 import { ProfileActivityEventType } from "@/lib/profile-activity-types";
 
@@ -23,24 +23,37 @@ export async function POST(request: Request) {
 
   try {
     body = (await request.json()) as ActivityRequestBody;
-  } catch {
+  } catch (error) {
+    console.error("Profile activity log request parse failed:", error);
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
   const { profileId, filmId, eventType, eventData } = body;
 
-  if (!profileId || !eventType || !CLIENT_EVENT_TYPES.has(eventType as ProfileActivityEventType)) {
+  if (
+    !profileId ||
+    !eventType ||
+    !CLIENT_EVENT_TYPES.has(eventType as ProfileActivityEventType)
+  ) {
+    console.error("Profile activity log request rejected:", {
+      profileId,
+      eventType,
+    });
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  void logProfileActivity({
+  const logInput = {
     profileId,
     filmId: filmId ?? null,
     eventType: eventType as ProfileActivityEventType,
     eventData,
     userAgent: request.headers.get("user-agent"),
     referrer: request.headers.get("referer"),
+  };
+
+  after(async () => {
+    await logProfileActivity(logInput);
   });
 
-  return NextResponse.json({ ok: true });
+  return new NextResponse(null, { status: 204 });
 }

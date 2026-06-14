@@ -1,7 +1,5 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { supabase } from "@/lib/supabase";
-import { logProfileActivity } from "@/lib/log-profile-activity";
 import {
   buildBalancedScores,
   FilmScore,
@@ -36,7 +34,6 @@ export default async function ProfilePage({
     token?: string;
     tags?: string;
     page?: string;
-    nav?: string;
   }>;
 }) {
   const routeParams = await params;
@@ -51,9 +48,8 @@ export default async function ProfilePage({
   const currentPage =
     Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
 
-  function buildAllFilmsPageUrl(page: number, nav?: "next" | "prev") {
-    const navParam = nav ? `&nav=${nav}` : "";
-    return `${profileBasePath}&filter=all&page=${page}${navParam}`;
+  function buildAllFilmsPageUrl(page: number) {
+    return `${profileBasePath}&filter=all&page=${page}`;
   }
 
   const activeFilter =
@@ -218,58 +214,6 @@ export default async function ProfilePage({
 
       films = films.slice(start, end);
     }
-  }
-
-  const headerList = await headers();
-  const activityRequestMeta = {
-    userAgent: headerList.get("user-agent"),
-    referrer: headerList.get("referer"),
-  };
-
-  void logProfileActivity({
-    profileId: profile.id,
-    eventType: "profile_view",
-    eventData: {
-      slug: profileSlug,
-      filter: activeFilter,
-    },
-    ...activityRequestMeta,
-  });
-
-  if (queryParams?.filter && queryParams.nav !== "next" && queryParams.nav !== "prev") {
-    void logProfileActivity({
-      profileId: profile.id,
-      eventType: "tab_view",
-      eventData: {
-        filter: activeFilter,
-        page: activeFilter === "all" ? allFilmsCurrentPage : null,
-      },
-      ...activityRequestMeta,
-    });
-  }
-
-  if (activeFilter === "all" && queryParams?.nav === "next") {
-    void logProfileActivity({
-      profileId: profile.id,
-      eventType: "pagination_next",
-      eventData: {
-        page: allFilmsCurrentPage,
-        totalPages: allFilmsTotalPages,
-      },
-      ...activityRequestMeta,
-    });
-  }
-
-  if (activeFilter === "all" && queryParams?.nav === "prev") {
-    void logProfileActivity({
-      profileId: profile.id,
-      eventType: "pagination_prev",
-      eventData: {
-        page: allFilmsCurrentPage,
-        totalPages: allFilmsTotalPages,
-      },
-      ...activityRequestMeta,
-    });
   }
 
   return (
@@ -573,7 +517,7 @@ export default async function ProfilePage({
         >
           {allFilmsCurrentPage > 1 ? (
             <Link
-              href={buildAllFilmsPageUrl(allFilmsCurrentPage - 1, "prev")}
+              href={buildAllFilmsPageUrl(allFilmsCurrentPage - 1)}
               className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Previous
@@ -590,7 +534,7 @@ export default async function ProfilePage({
 
           {allFilmsCurrentPage < allFilmsTotalPages ? (
             <Link
-              href={buildAllFilmsPageUrl(allFilmsCurrentPage + 1, "next")}
+              href={buildAllFilmsPageUrl(allFilmsCurrentPage + 1)}
               className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Next

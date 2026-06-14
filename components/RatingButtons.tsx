@@ -69,6 +69,8 @@ export default function RatingButtons({
   
       if (!error) {
         setRating(null);
+        setIsSaving(false);
+        router.refresh();
         logProfileActivityClient({
           profileId,
           filmId,
@@ -79,10 +81,10 @@ export default function RatingButtons({
           filmId,
           eventType: "film_unwatched",
         });
-        router.refresh();
+      } else {
+        setIsSaving(false);
       }
-  
-      setIsSaving(false);
+
       return;
     }
   
@@ -100,6 +102,8 @@ export default function RatingButtons({
   
     if (!error) {
       setRating(value);
+      setIsSaving(false);
+      router.refresh();
       logProfileActivityClient({
         profileId,
         filmId,
@@ -112,10 +116,9 @@ export default function RatingButtons({
         eventType: "film_watched",
         eventData: { rating: value },
       });
-      router.refresh();
+    } else {
+      setIsSaving(false);
     }
-  
-    setIsSaving(false);
   }
 
   return (

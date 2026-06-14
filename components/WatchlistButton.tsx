@@ -74,12 +74,12 @@ export default function WatchlistButton({
       }
 
       setIsInWatchlist(false);
+      setIsLoading(false);
       logProfileActivityClient({
         profileId,
         filmId,
         eventType: "film_unsaved",
       });
-      setIsLoading(false);
       return;
     }
 
@@ -96,12 +96,12 @@ export default function WatchlistButton({
     }
 
     setIsInWatchlist(true);
+    setIsLoading(false);
     logProfileActivityClient({
       profileId,
       filmId,
       eventType: "film_saved",
     });
-    setIsLoading(false);
   }
 
   return (
