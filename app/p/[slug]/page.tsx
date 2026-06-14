@@ -1,5 +1,11 @@
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import {
+  buildBalancedScores,
+  FilmScore,
+  RawFilmScore,
+  sortFilmsByScore,
+} from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
@@ -14,25 +20,8 @@ type ProfileTasteCore = {
   coverage: number | null;
   maturity: string | null;
   nearest_moods: string[] | null;
-  center_embedding: number[] | string | null;
   emotional_profile_tags?: string[] | null;
   aesthetic_profile_tags?: string[] | null;
-};
-
-type FilmMoodEmbedding = {
-  film_id: string;
-  embedding: number[] | string | null;
-};
-
-type FilmAestheticEmbedding = {
-  film_id: string;
-  embedding: number[] | string | null;
-};
-
-type FilmScore = {
-  emotional: number;
-  material: number;
-  balanced: number;
 };
 
 export default async function ProfilePage({
@@ -48,65 +37,6 @@ export default async function ProfilePage({
   const profileSlug = routeParams.slug;
   const token = queryParams?.token;
   const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(token ?? "")}`;
-
-  function parseEmbedding(value: number[] | string | null | undefined) {
-    if (!value) return null;
-
-    if (Array.isArray(value)) {
-      return value.map(Number);
-    }
-
-    if (typeof value === "string") {
-      return value
-        .replace("[", "")
-        .replace("]", "")
-        .split(",")
-        .map((item) => Number(item.trim()));
-    }
-
-    return null;
-  }
-
-  function cosineSimilarity(a: number[], b: number[]) {
-    let dot = 0;
-    let normA = 0;
-    let normB = 0;
-
-    for (let i = 0; i < a.length; i += 1) {
-      dot += a[i] * b[i];
-      normA += a[i] * a[i];
-      normB += b[i] * b[i];
-    }
-
-    if (normA === 0 || normB === 0) {
-      return 0;
-    }
-
-    return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-  }
-
-  function getCoreMatchScore(
-    filmEmbedding: number[] | null | undefined,
-    cores: Array<ProfileTasteCore & { centerEmbedding: number[] }>
-  ) {
-    if (!filmEmbedding || cores.length === 0) {
-      return 0;
-    }
-
-    const coreScores = cores.map((core) => {
-      const similarity = cosineSimilarity(filmEmbedding, core.centerEmbedding);
-
-      const strength = Number(core.strength ?? 1);
-      const coverage = Number(core.coverage ?? 1);
-      const maturityBonus = core.maturity === "stable" ? 1 : 0.92;
-
-      return similarity * strength * (0.7 + coverage * 0.3) * maturityBonus;
-    });
-
-    const coreScore = Math.max(...coreScores);
-
-    return Math.pow(coreScore, 8);
-  }
 
   const activeFilter =
     queryParams?.filter === "saved"
@@ -141,39 +71,13 @@ export default async function ProfilePage({
 
   const { data: tasteCoresData } = await supabase
     .from("profile_taste_cores")
-    .select("*")
+    .select(
+      "id, core_index, core_type, name, strength, coverage, maturity, nearest_moods, emotional_profile_tags, aesthetic_profile_tags"
+    )
     .eq("profile_id", profile.id)
     .order("core_index");
 
-  const tasteCores = ((tasteCoresData as ProfileTasteCore[] | null) ?? [])
-    .map((core) => ({
-      ...core,
-      centerEmbedding: parseEmbedding(core.center_embedding),
-    }))
-    .filter(
-      (core): core is ProfileTasteCore & { centerEmbedding: number[] } =>
-        core.centerEmbedding !== null
-    );
-
-  const emotionalCores = tasteCores.filter(
-    (core) => core.core_type === "emotional"
-  );
-
-  const aestheticCores = tasteCores.filter(
-    (core) => core.core_type === "aesthetic"
-  );
-
-  const emotionalProfileTags = emotionalCores
-    .flatMap((core) => core.emotional_profile_tags ?? [])
-    .map((tag) => tag.trim().toLowerCase())
-    .filter(Boolean);
-
-  const emotionalProfileTagWeights = new Map(
-    emotionalProfileTags.map((tag, index) => [
-      tag,
-      Math.max(0.55, 1 - index * 0.05),
-    ])
-  );
+  const tasteCores = (tasteCoresData as ProfileTasteCore[] | null) ?? [];
 
   const { data: allFilmsData, error } = await supabase
     .from("films")
@@ -189,106 +93,7 @@ export default async function ProfilePage({
 
   const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
 
-  const ratingByFilmId = new Map(
-    ratings
-      ?.filter((item) => item.rating !== null)
-      .map((item) => [item.film_id, item.rating]) ?? []
-  );
-
-  const ratedFilms = allFilms
-    .map((film) => ({
-      ...film,
-      rating: ratingByFilmId.get(film.id) ?? null,
-    }))
-    .filter((film) => Number(film.rating ?? 0) >= 7);
-
   const watchedFilms = allFilms.filter((film) => ratedFilmIds.has(film.id));
-
-  function getRatingWeight(rating: number) {
-    if (rating >= 10) return 1;
-    if (rating >= 9) return 0.9;
-    if (rating >= 8) return 0.8;
-    if (rating >= 7) return 0.55;
-
-    return 0;
-  }
-
-  function getEffectiveSimilarity(similarity: number) {
-    const minSimilarity = 0.72;
-
-    if (similarity <= minSimilarity) {
-      return 0;
-    }
-
-    return (similarity - minSimilarity) / (1 - minSimilarity);
-  }
-
-  function getCentralityWeight(
-    ratedFilm: Film,
-    ratedFilmsForCentrality: Film[],
-    embeddingByFilmId: Map<string, number[] | null>
-  ) {
-    const ratedEmbedding = embeddingByFilmId.get(ratedFilm.id);
-
-    if (!ratedEmbedding) {
-      return 0.55;
-    }
-
-    const neighborSignals = ratedFilmsForCentrality
-      .filter((otherFilm) => otherFilm.id !== ratedFilm.id)
-      .map((otherFilm) => {
-        const otherEmbedding = embeddingByFilmId.get(otherFilm.id);
-
-        if (!otherEmbedding) {
-          return 0;
-        }
-
-        const similarity = cosineSimilarity(ratedEmbedding, otherEmbedding);
-
-        return getEffectiveSimilarity(similarity);
-      })
-      .filter((signal) => signal > 0)
-      .sort((a, b) => b - a)
-      .slice(0, 3);
-
-    if (neighborSignals.length === 0) {
-      return 0.55;
-    }
-
-    const densityScore =
-      neighborSignals.reduce((sum, signal) => sum + signal, 0) /
-      neighborSignals.length;
-
-    return 0.55 + densityScore * 0.45;
-  }
-
-  function normalizeMatchScore(
-    score: number,
-    range: { min: number; max: number }
-  ) {
-    const normalized = (score - range.min) / (range.max - range.min);
-
-    return Math.max(0, Math.min(1, normalized));
-  }
-
-  function getScoreRange(scores: number[]) {
-    const sortedScores = scores
-      .filter((score) => Number.isFinite(score))
-      .sort((a, b) => a - b);
-
-    if (sortedScores.length === 0) {
-      return { min: 0, max: 1 };
-    }
-
-    const min = sortedScores[0] ?? 0;
-    const max = sortedScores[sortedScores.length - 1] ?? 1;
-
-    if (max <= min) {
-      return { min: 0, max: 1 };
-    }
-
-    return { min, max };
-  }
 
   function getCoreProfileTags(core: ProfileTasteCore) {
     if (core.core_type === "emotional") {
@@ -352,179 +157,28 @@ export default async function ProfilePage({
   }
 
   if (needsRecommendationScoring) {
-    const filmIds = allFilms.map((film) => film.id);
+    const { data: scoreRows } = await supabase
+      .from("profile_film_scores")
+      .select("film_id, emotional_score, material_score")
+      .eq("profile_id", profile.id);
 
-    const { data: filmMoodEmbeddingsData } = filmIds.length
-      ? await supabase
-          .from("film_mood_embeddings")
-          .select("film_id, embedding")
-          .in("film_id", filmIds)
-      : { data: [] };
-
-    const { data: filmAestheticEmbeddingsData } = filmIds.length
-      ? await supabase
-          .from("film_aesthetic_embeddings")
-          .select("film_id, embedding")
-          .in("film_id", filmIds)
-      : { data: [] };
-
-    const filmMoodEmbeddingByFilmId = new Map(
-      ((filmMoodEmbeddingsData as FilmMoodEmbedding[] | null) ?? [])
-        .map((row) => [row.film_id, parseEmbedding(row.embedding)] as const)
-        .filter(([, embedding]) => embedding)
-    );
-
-    const filmAestheticEmbeddingByFilmId = new Map(
-      ((filmAestheticEmbeddingsData as FilmAestheticEmbedding[] | null) ?? [])
-        .map((row) => [row.film_id, parseEmbedding(row.embedding)] as const)
-        .filter(([, embedding]) => embedding)
-    );
-
-    const moodCentralityWeightByFilmId = new Map(
-      ratedFilms.map((ratedFilm) => [
-        ratedFilm.id,
-        getCentralityWeight(
-          ratedFilm,
-          ratedFilms,
-          filmMoodEmbeddingByFilmId
-        ),
+    const rawScoresByFilmId = new Map<string, RawFilmScore>(
+      (scoreRows ?? []).map((row) => [
+        row.film_id,
+        {
+          emotional: Number(row.emotional_score ?? 0),
+          material: Number(row.material_score ?? 0),
+        },
       ])
     );
 
-    const aestheticCentralityWeightByFilmId = new Map(
-      ratedFilms.map((ratedFilm) => [
-        ratedFilm.id,
-        getCentralityWeight(
-          ratedFilm,
-          ratedFilms,
-          filmAestheticEmbeddingByFilmId
-        ),
-      ])
-    );
+    const balancedScores = buildBalancedScores(films, rawScoresByFilmId);
 
-    function getNearestRatedFilmsScore(
-      candidateEmbedding: number[] | null | undefined,
-      embeddingByFilmId: Map<string, number[] | null>,
-      centralityWeightByFilmId: Map<string, number>
-    ) {
-      if (!candidateEmbedding) {
-        return 0;
-      }
-
-      const signals = ratedFilms
-        .map((ratedFilm) => {
-          const rating = Number(ratedFilm.rating ?? 0);
-          const ratingWeight = getRatingWeight(rating);
-
-          if (ratingWeight <= 0) {
-            return 0;
-          }
-
-          const ratedEmbedding = embeddingByFilmId.get(ratedFilm.id);
-
-          if (!ratedEmbedding) {
-            return 0;
-          }
-
-          const similarity = cosineSimilarity(
-            candidateEmbedding,
-            ratedEmbedding
-          );
-          const effectiveSimilarity = getEffectiveSimilarity(similarity);
-          const centralityWeight =
-            centralityWeightByFilmId.get(ratedFilm.id) ?? 0.55;
-
-          return effectiveSimilarity * ratingWeight * centralityWeight;
-        })
-        .filter((signal) => signal > 0)
-        .sort((a, b) => b - a);
-
-      const bestSignal = signals[0] ?? 0;
-      const secondSignal = signals[1] ?? 0;
-      const thirdSignal = signals[2] ?? 0;
-
-      return bestSignal + secondSignal * 0.15 + thirdSignal * 0.05;
-    }
-
-    function getProfileTagMatchScore(film: Film) {
-      const filmTags = (film.moods ?? [])
-        .map((tag) => tag.trim().toLowerCase())
-        .filter(Boolean);
-
-      if (!filmTags.length || emotionalProfileTagWeights.size === 0) {
-        return 0;
-      }
-
-      const matchedScore = filmTags.reduce((sum, tag) => {
-        return sum + (emotionalProfileTagWeights.get(tag) ?? 0);
-      }, 0);
-
-      return Math.min(1, matchedScore / 6);
-    }
-
-    function getEmotionalMatchScore(film: Film) {
-      const filmEmbedding = filmMoodEmbeddingByFilmId.get(film.id);
-
-      const nearestScore = getNearestRatedFilmsScore(
-        filmEmbedding,
-        filmMoodEmbeddingByFilmId,
-        moodCentralityWeightByFilmId
-      );
-
-      const profileScore = getProfileTagMatchScore(film);
-
-      return profileScore * 0.5 + nearestScore * 0.5;
-    }
-
-    function getMaterialMatchScore(film: Film) {
-      const filmEmbedding = filmAestheticEmbeddingByFilmId.get(film.id);
-
-      const coreScore = getCoreMatchScore(filmEmbedding, aestheticCores);
-
-      const nearestScore = getNearestRatedFilmsScore(
-        filmEmbedding,
-        filmAestheticEmbeddingByFilmId,
-        aestheticCentralityWeightByFilmId
-      );
-
-      return coreScore * 0.5 + nearestScore * 0.5;
-    }
-
-    const emotionalScores = films.map((film) => getEmotionalMatchScore(film));
-    const materialScores = films.map((film) => getMaterialMatchScore(film));
-
-    const emotionalScoreRange = getScoreRange(emotionalScores);
-    const materialScoreRange = getScoreRange(materialScores);
-
-    films.forEach((film, index) => {
-      const emotional = emotionalScores[index] ?? 0;
-      const material = materialScores[index] ?? 0;
-      const normalizedEmotional = normalizeMatchScore(
-        emotional,
-        emotionalScoreRange
-      );
-      const normalizedMaterial = normalizeMatchScore(
-        material,
-        materialScoreRange
-      );
-
-      filmScoresById.set(film.id, {
-        emotional,
-        material,
-        balanced: normalizedEmotional * 0.5 + normalizedMaterial * 0.5,
-      });
+    balancedScores.forEach((score, filmId) => {
+      filmScoresById.set(filmId, score);
     });
 
-    films = [...films].sort((a, b) => {
-      const scoreDifference =
-        (getFilmScore(b.id)?.balanced ?? 0) - (getFilmScore(a.id)?.balanced ?? 0);
-
-      if (scoreDifference !== 0) {
-        return scoreDifference;
-      }
-
-      return (b.year ?? 0) - (a.year ?? 0);
-    });
+    films = sortFilmsByScore(films, filmScoresById);
 
     if (activeFilter === "top picks") {
       films = films.slice(0, 3);
