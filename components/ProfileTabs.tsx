@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FilmScore,
 } from "@/lib/profile-film-scoring";
@@ -86,6 +86,30 @@ export default function ProfileTabs({
 }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>("top picks");
   const [allFilmsPage, setAllFilmsPage] = useState(1);
+  const [localSavedFilms, setLocalSavedFilms] = useState(savedFilms);
+
+  useEffect(() => {
+    setLocalSavedFilms(savedFilms);
+  }, [savedFilms]);
+
+  const savedFilmIds = useMemo(
+    () => new Set(localSavedFilms.map((film) => film.id)),
+    [localSavedFilms]
+  );
+
+  const handleSavedChange = useCallback((film: Film, saved: boolean) => {
+    setLocalSavedFilms((prev) => {
+      if (saved) {
+        if (prev.some((item) => item.id === film.id)) {
+          return prev;
+        }
+
+        return [...prev, film];
+      }
+
+      return prev.filter((item) => item.id !== film.id);
+    });
+  }, []);
 
   const totalAllFilmsCount = allFilmsSorted.length;
   const allFilmsTotalPages = Math.max(
@@ -100,7 +124,7 @@ export default function ProfileTabs({
     }
 
     if (activeTab === "saved") {
-      return { films: savedFilms, scores: {} as Record<string, FilmScore> };
+      return { films: localSavedFilms, scores: {} as Record<string, FilmScore> };
     }
 
     if (activeTab === "rated") {
@@ -120,7 +144,7 @@ export default function ProfileTabs({
     allFilmsPageSize,
     allFilmsSorted,
     allFilmsScores,
-    savedFilms,
+    localSavedFilms,
     topPicksFilms,
     topPicksScores,
     watchedFilms,
@@ -373,7 +397,12 @@ export default function ProfileTabs({
 
                 <div className="mt-auto flex items-end justify-between gap-6 pt-4">
                   <RatingButtons filmId={film.id} profileSlug={profileSlug} />
-                  <WatchlistButton filmId={film.id} profileSlug={profileSlug} />
+                  <WatchlistButton
+                    filmId={film.id}
+                    profileSlug={profileSlug}
+                    isSaved={savedFilmIds.has(film.id)}
+                    onSavedChange={(saved) => handleSavedChange(film, saved)}
+                  />
                 </div>
               </div>
             </article>

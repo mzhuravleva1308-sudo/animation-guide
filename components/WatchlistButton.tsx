@@ -7,15 +7,26 @@ import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 type WatchlistButtonProps = {
   filmId: string;
   profileSlug?: string;
+  isSaved?: boolean;
+  onSavedChange?: (saved: boolean) => void;
 };
 
 export default function WatchlistButton({
   filmId,
   profileSlug = "maria",
+  isSaved,
+  onSavedChange,
 }: WatchlistButtonProps) {
   const [profileId, setProfileId] = useState<string | null>(null);
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(isSaved ?? false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    if (isSaved !== undefined) {
+      setIsInWatchlist(isSaved);
+    }
+  }, [isSaved]);
 
   useEffect(() => {
     async function loadWatchlistStatus() {
@@ -32,6 +43,11 @@ export default function WatchlistButton({
       }
 
       setProfileId(profile.id);
+
+      if (isSaved !== undefined) {
+        setIsLoading(false);
+        return;
+      }
 
       const { data: existingItem, error: itemError } = await supabase
         .from("profile_film_lists")
@@ -52,55 +68,62 @@ export default function WatchlistButton({
     }
 
     loadWatchlistStatus();
-  }, [filmId, profileSlug]);
+  }, [filmId, profileSlug, isSaved]);
 
   async function toggleWatchlist() {
-    if (!profileId || isLoading) return;
+    if (!profileId || isLoading || isSaving) return;
 
-    setIsLoading(true);
+    const previousSaved = isInWatchlist;
+    const nextSaved = !previousSaved;
 
-    if (isInWatchlist) {
-      const { error } = await supabase
-        .from("profile_film_lists")
-        .delete()
-        .eq("film_id", filmId)
-        .eq("profile_id", profileId)
-        .eq("list_type", "to_watch");
+    setIsSaving(true);
+    setIsInWatchlist(nextSaved);
+    onSavedChange?.(nextSaved);
+
+    if (nextSaved) {
+      const { error } = await supabase.from("profile_film_lists").insert({
+        film_id: filmId,
+        profile_id: profileId,
+        list_type: "to_watch",
+      });
 
       if (error) {
-        console.error("Watchlist remove error", error);
-        setIsLoading(false);
+        console.error("Watchlist add error", error);
+        setIsInWatchlist(previousSaved);
+        onSavedChange?.(previousSaved);
+        setIsSaving(false);
         return;
       }
 
-      setIsInWatchlist(false);
-      setIsLoading(false);
+      setIsSaving(false);
       logProfileActivityClient({
         profileId,
         filmId,
-        eventType: "film_unsaved",
+        eventType: "film_saved",
       });
       return;
     }
 
-    const { error } = await supabase.from("profile_film_lists").insert({
-      film_id: filmId,
-      profile_id: profileId,
-      list_type: "to_watch",
-    });
+    const { error } = await supabase
+      .from("profile_film_lists")
+      .delete()
+      .eq("film_id", filmId)
+      .eq("profile_id", profileId)
+      .eq("list_type", "to_watch");
 
     if (error) {
-      console.error("Watchlist add error", error);
-      setIsLoading(false);
+      console.error("Watchlist remove error", error);
+      setIsInWatchlist(previousSaved);
+      onSavedChange?.(previousSaved);
+      setIsSaving(false);
       return;
     }
 
-    setIsInWatchlist(true);
-    setIsLoading(false);
+    setIsSaving(false);
     logProfileActivityClient({
       profileId,
       filmId,
-      eventType: "film_saved",
+      eventType: "film_unsaved",
     });
   }
 
@@ -108,7 +131,7 @@ export default function WatchlistButton({
     <button
       type="button"
       onClick={toggleWatchlist}
-      disabled={isLoading || !profileId}
+      disabled={isLoading || isSaving || !profileId}
       title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
       aria-label={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
       className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
