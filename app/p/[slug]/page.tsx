@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { supabase } from "@/lib/supabase";
+import { logProfileActivity } from "@/lib/log-profile-activity";
 import {
   buildBalancedScores,
   FilmScore,
@@ -29,7 +31,13 @@ export default async function ProfilePage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams?: Promise<{ filter?: string; token?: string; tags?: string }>;
+  searchParams?: Promise<{
+    filter?: string;
+    token?: string;
+    tags?: string;
+    page?: string;
+    nav?: string;
+  }>;
 }) {
   const routeParams = await params;
   const queryParams = await searchParams;
@@ -37,6 +45,16 @@ export default async function ProfilePage({
   const profileSlug = routeParams.slug;
   const token = queryParams?.token;
   const profileBasePath = `/p/${profileSlug}?token=${encodeURIComponent(token ?? "")}`;
+  const allFilmsPageSize = 50;
+
+  const parsedPage = Number.parseInt(queryParams?.page ?? "1", 10);
+  const currentPage =
+    Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
+  function buildAllFilmsPageUrl(page: number, nav?: "next" | "prev") {
+    const navParam = nav ? `&nav=${nav}` : "";
+    return `${profileBasePath}&filter=all&page=${page}${navParam}`;
+  }
 
   const activeFilter =
     queryParams?.filter === "saved"
@@ -151,6 +169,9 @@ export default async function ProfilePage({
     activeFilter === "top picks" || activeFilter === "all";
 
   const filmScoresById = new Map<string, FilmScore>();
+  let totalAllFilmsCount = 0;
+  let allFilmsCurrentPage = currentPage;
+  let allFilmsTotalPages = 1;
 
   function getFilmScore(filmId: string) {
     return filmScoresById.get(filmId) ?? null;
@@ -185,8 +206,70 @@ export default async function ProfilePage({
     }
 
     if (activeFilter === "all") {
-      films = films.slice(0, 50);
+      totalAllFilmsCount = films.length;
+      allFilmsTotalPages = Math.max(
+        1,
+        Math.ceil(totalAllFilmsCount / allFilmsPageSize)
+      );
+      allFilmsCurrentPage = Math.min(currentPage, allFilmsTotalPages);
+
+      const start = (allFilmsCurrentPage - 1) * allFilmsPageSize;
+      const end = start + allFilmsPageSize;
+
+      films = films.slice(start, end);
     }
+  }
+
+  const headerList = await headers();
+  const activityRequestMeta = {
+    userAgent: headerList.get("user-agent"),
+    referrer: headerList.get("referer"),
+  };
+
+  void logProfileActivity({
+    profileId: profile.id,
+    eventType: "profile_view",
+    eventData: {
+      slug: profileSlug,
+      filter: activeFilter,
+    },
+    ...activityRequestMeta,
+  });
+
+  if (queryParams?.filter && queryParams.nav !== "next" && queryParams.nav !== "prev") {
+    void logProfileActivity({
+      profileId: profile.id,
+      eventType: "tab_view",
+      eventData: {
+        filter: activeFilter,
+        page: activeFilter === "all" ? allFilmsCurrentPage : null,
+      },
+      ...activityRequestMeta,
+    });
+  }
+
+  if (activeFilter === "all" && queryParams?.nav === "next") {
+    void logProfileActivity({
+      profileId: profile.id,
+      eventType: "pagination_next",
+      eventData: {
+        page: allFilmsCurrentPage,
+        totalPages: allFilmsTotalPages,
+      },
+      ...activityRequestMeta,
+    });
+  }
+
+  if (activeFilter === "all" && queryParams?.nav === "prev") {
+    void logProfileActivity({
+      profileId: profile.id,
+      eventType: "pagination_prev",
+      eventData: {
+        page: allFilmsCurrentPage,
+        totalPages: allFilmsTotalPages,
+      },
+      ...activityRequestMeta,
+    });
   }
 
   return (
@@ -247,9 +330,9 @@ export default async function ProfilePage({
 
       </div>
 
-      {activeFilter === "all" && (
+      {activeFilter === "all" && totalAllFilmsCount > 0 && (
         <p className="mb-6 text-sm text-gray-500">
-          {films.length} films in the database
+          {totalAllFilmsCount} films in the guide
         </p>
       )}
 
@@ -482,6 +565,43 @@ export default async function ProfilePage({
           );
         })}
       </section>
+
+      {activeFilter === "all" && totalAllFilmsCount > 0 && (
+        <nav
+          aria-label="All films pagination"
+          className="mt-8 flex items-center justify-center gap-4"
+        >
+          {allFilmsCurrentPage > 1 ? (
+            <Link
+              href={buildAllFilmsPageUrl(allFilmsCurrentPage - 1, "prev")}
+              className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Previous
+            </Link>
+          ) : (
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400">
+              Previous
+            </span>
+          )}
+
+          <span className="text-sm text-gray-600">
+            Page {allFilmsCurrentPage} of {allFilmsTotalPages}
+          </span>
+
+          {allFilmsCurrentPage < allFilmsTotalPages ? (
+            <Link
+              href={buildAllFilmsPageUrl(allFilmsCurrentPage + 1, "next")}
+              className="rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Next
+            </Link>
+          ) : (
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-400">
+              Next
+            </span>
+          )}
+        </nav>
+      )}
     </main>
   );
 }

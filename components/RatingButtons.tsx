@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 import { useRouter } from "next/navigation";
 
 
@@ -68,6 +69,16 @@ export default function RatingButtons({
   
       if (!error) {
         setRating(null);
+        logProfileActivityClient({
+          profileId,
+          filmId,
+          eventType: "rating_removed",
+        });
+        logProfileActivityClient({
+          profileId,
+          filmId,
+          eventType: "film_unwatched",
+        });
         router.refresh();
       }
   
@@ -89,6 +100,18 @@ export default function RatingButtons({
   
     if (!error) {
       setRating(value);
+      logProfileActivityClient({
+        profileId,
+        filmId,
+        eventType: "rating_set",
+        eventData: { rating: value },
+      });
+      logProfileActivityClient({
+        profileId,
+        filmId,
+        eventType: "film_watched",
+        eventData: { rating: value },
+      });
       router.refresh();
     }
   

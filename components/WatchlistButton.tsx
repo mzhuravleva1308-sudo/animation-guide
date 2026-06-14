@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 
 type WatchlistButtonProps = {
   filmId: string;
@@ -73,6 +74,11 @@ export default function WatchlistButton({
       }
 
       setIsInWatchlist(false);
+      logProfileActivityClient({
+        profileId,
+        filmId,
+        eventType: "film_unsaved",
+      });
       setIsLoading(false);
       return;
     }
@@ -90,6 +96,11 @@ export default function WatchlistButton({
     }
 
     setIsInWatchlist(true);
+    logProfileActivityClient({
+      profileId,
+      filmId,
+      eventType: "film_saved",
+    });
     setIsLoading(false);
   }
 
