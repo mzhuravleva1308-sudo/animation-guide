@@ -1,5 +1,9 @@
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
+import {
+  buildBalancedScores,
+  sortFilmsByScore,
+} from "../lib/profile-film-scoring.mjs";
 
 dotenv.config({ path: ".env.local" });
 
@@ -110,16 +114,26 @@ function getCentralityWeight(
       const otherEmbedding = embeddingByFilmId.get(otherFilm.id);
 
       if (!otherEmbedding) {
-        return 0;
+        return { signal: 0, filmId: otherFilm.id };
       }
 
       const similarity = cosineSimilarity(ratedEmbedding, otherEmbedding);
 
-      return getEffectiveSimilarity(similarity);
+      return {
+        signal: getEffectiveSimilarity(similarity),
+        filmId: otherFilm.id,
+      };
     })
-    .filter((signal) => signal > 0)
-    .sort((a, b) => b - a)
-    .slice(0, 3);
+    .filter((entry) => entry.signal > 0)
+    .sort((a, b) => {
+      if (b.signal !== a.signal) {
+        return b.signal - a.signal;
+      }
+
+      return a.filmId.localeCompare(b.filmId);
+    })
+    .slice(0, 3)
+    .map((entry) => entry.signal);
 
   if (neighborSignals.length === 0) {
     return 0.55;
@@ -148,13 +162,13 @@ function getNearestRatedFilmsScore(
       const ratingWeight = getRatingWeight(rating);
 
       if (ratingWeight <= 0) {
-        return 0;
+        return { signal: 0, filmId: ratedFilm.id };
       }
 
       const ratedEmbedding = embeddingByFilmId.get(ratedFilm.id);
 
       if (!ratedEmbedding) {
-        return 0;
+        return { signal: 0, filmId: ratedFilm.id };
       }
 
       const similarity = cosineSimilarity(candidateEmbedding, ratedEmbedding);
@@ -162,16 +176,58 @@ function getNearestRatedFilmsScore(
       const centralityWeight =
         centralityWeightByFilmId.get(ratedFilm.id) ?? 0.55;
 
-      return effectiveSimilarity * ratingWeight * centralityWeight;
+      return {
+        signal: effectiveSimilarity * ratingWeight * centralityWeight,
+        filmId: ratedFilm.id,
+      };
     })
-    .filter((signal) => signal > 0)
-    .sort((a, b) => b - a);
+    .filter((entry) => entry.signal > 0)
+    .sort((a, b) => {
+      if (b.signal !== a.signal) {
+        return b.signal - a.signal;
+      }
+
+      return a.filmId.localeCompare(b.filmId);
+    })
+    .map((entry) => entry.signal);
 
   const bestSignal = signals[0] ?? 0;
   const secondSignal = signals[1] ?? 0;
   const thirdSignal = signals[2] ?? 0;
 
   return bestSignal + secondSignal * 0.15 + thirdSignal * 0.05;
+}
+
+function getMatchedSignalCount(
+  candidateEmbedding,
+  ratedFilms,
+  embeddingByFilmId
+) {
+  if (!candidateEmbedding) {
+    return 0;
+  }
+
+  return ratedFilms.filter((ratedFilm) => {
+    const ratingWeight = getRatingWeight(Number(ratedFilm.rating ?? 0));
+
+    if (ratingWeight <= 0) {
+      return false;
+    }
+
+    const ratedEmbedding = embeddingByFilmId.get(ratedFilm.id);
+
+    if (!ratedEmbedding) {
+      return false;
+    }
+
+    const similarity = cosineSimilarity(candidateEmbedding, ratedEmbedding);
+
+    return getEffectiveSimilarity(similarity) > 0;
+  }).length;
+}
+
+function compareFilmsById(a, b) {
+  return a.id.localeCompare(b.id);
 }
 
 const GENERIC_MATERIAL_TOKENS = new Set([
@@ -378,7 +434,7 @@ async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
     .select("id, title, moods, aesthetic_tags, technique, year")
-    .order("created_at", { ascending: false });
+    .order("id");
 
   if (error) {
     throw error;
@@ -391,7 +447,8 @@ async function getRatings(profileId) {
   const { data, error } = await supabase
     .from("film_ratings")
     .select("film_id, rating")
-    .eq("profile_id", profileId);
+    .eq("profile_id", profileId)
+    .order("film_id");
 
   if (error) {
     throw error;
@@ -408,7 +465,8 @@ async function getFilmEmbeddings(tableName, filmIds) {
   const { data, error } = await supabase
     .from(tableName)
     .select("film_id, embedding")
-    .in("film_id", filmIds);
+    .in("film_id", filmIds)
+    .order("film_id");
 
   if (error) {
     throw error;
@@ -492,9 +550,12 @@ async function rebuildProfileScores(profile, allFilms) {
       ...film,
       rating: ratingByFilmId.get(film.id) ?? null,
     }))
-    .filter((film) => Number(film.rating ?? 0) >= 7);
+    .filter((film) => Number(film.rating ?? 0) >= 7)
+    .sort(compareFilmsById);
 
-  const candidateFilms = allFilms.filter((film) => !ratedFilmIds.has(film.id));
+  const candidateFilms = allFilms
+    .filter((film) => !ratedFilmIds.has(film.id))
+    .sort(compareFilmsById);
 
   if (!candidateFilms.length) {
     await upsertScores(profile.id, []);
@@ -555,6 +616,49 @@ async function rebuildProfileScores(profile, allFilms) {
   await upsertScores(profile.id, scoreRows);
 
   console.log(`  Stored ${scoreRows.length} film scores.`);
+
+  const rawScoresByFilmId = new Map(
+    scoreRows.map((row) => [
+      row.film_id,
+      {
+        emotional: row.emotional_score,
+        material: row.material_score,
+      },
+    ])
+  );
+
+  const balancedScores = buildBalancedScores(candidateFilms, rawScoresByFilmId);
+
+  for (const film of candidateFilms) {
+    const emotionalMatchedCount = getMatchedSignalCount(
+      filmMoodEmbeddingByFilmId.get(film.id),
+      ratedFilms,
+      filmMoodEmbeddingByFilmId
+    );
+    const materialMatchedCount = getMatchedSignalCount(
+      filmAestheticEmbeddingByFilmId.get(film.id),
+      ratedFilms,
+      filmAestheticEmbeddingByFilmId
+    );
+    const existingScore = balancedScores.get(film.id);
+
+    if (existingScore) {
+      existingScore.matchedSignalCount =
+        emotionalMatchedCount + materialMatchedCount;
+    }
+  }
+
+  const topFilms = sortFilmsByScore(candidateFilms, balancedScores).slice(0, 10);
+
+  console.log("  Top 10 films:");
+
+  topFilms.forEach((film, index) => {
+    const score = balancedScores.get(film.id)?.balanced ?? 0;
+
+    console.log(
+      `    ${index + 1}. ${film.title} — ${score.toFixed(4)}`
+    );
+  });
 }
 
 async function main() {

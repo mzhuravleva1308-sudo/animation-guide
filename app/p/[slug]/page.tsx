@@ -108,14 +108,15 @@ export default async function ProfilePage({
   const { data: allFilmsData, error } = await supabase
     .from("films")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("id");
 
   const allFilms = (allFilmsData as Film[] | null) ?? [];
 
   const { data: ratings } = await supabase
     .from("film_ratings")
     .select("film_id, rating")
-    .eq("profile_id", profile.id);
+    .eq("profile_id", profile.id)
+    .order("film_id");
 
   const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
 
@@ -123,7 +124,8 @@ export default async function ProfilePage({
     .from("profile_film_lists")
     .select("film_id")
     .eq("profile_id", profile.id)
-    .eq("list_type", "to_watch");
+    .eq("list_type", "to_watch")
+    .order("film_id");
 
   const savedFilmIds = new Set(
     watchlistItems?.map((item) => item.film_id) ?? []
@@ -141,7 +143,9 @@ export default async function ProfilePage({
     .select(
       "id, profile_id, film_id, category, rank, reason, created_at, films (*)"
     )
-    .eq("profile_id", profile.id);
+    .eq("profile_id", profile.id)
+    .order("category")
+    .order("rank");
 
   const topPicks = sortTopPicks(
     ((topPicksData as TopPickRow[] | null) ?? [])
@@ -161,7 +165,8 @@ export default async function ProfilePage({
   const { data: scoreRows } = await supabase
     .from("profile_film_scores")
     .select("film_id, emotional_score, material_score")
-    .eq("profile_id", profile.id);
+    .eq("profile_id", profile.id)
+    .order("film_id");
 
   const rawScoresByFilmId = new Map<string, RawFilmScore>(
     (scoreRows ?? []).map((row) => [
