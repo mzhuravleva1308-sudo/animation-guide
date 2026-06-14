@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  FilmScore,
-} from "@/lib/profile-film-scoring";
+import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
+import {
+  TOP_PICK_CATEGORY_LABELS,
+  TOP_PICK_CATEGORY_ORDER,
+  TopPickWithFilm,
+} from "@/types/top-pick";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
@@ -31,8 +34,7 @@ type ProfileTabsProps = {
   tasteProfile: string | null;
   tasteProfileUpdatedAt: string | null;
   tasteCores: ProfileTasteCore[];
-  topPicksFilms: Film[];
-  topPicksScores: Record<string, FilmScore>;
+  topPicks: TopPickWithFilm[];
   allFilmsSorted: Film[];
   allFilmsScores: Record<string, FilmScore>;
   savedFilms: Film[];
@@ -68,6 +70,154 @@ function tabButtonClass(isActive: boolean) {
   }`;
 }
 
+type FilmCardProps = {
+  film: Film;
+  profileSlug: string;
+  savedFilmIds: Set<string>;
+  onSavedChange: (film: Film, saved: boolean) => void;
+  score?: FilmScore | null;
+  reason?: string;
+};
+
+function FilmCard({
+  film,
+  profileSlug,
+  savedFilmIds,
+  onSavedChange,
+  score = null,
+  reason,
+}: FilmCardProps) {
+  return (
+    <article className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]">
+      <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
+        {film.image_url ? (
+          <img
+            src={film.image_url}
+            alt={film.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">
+            No image
+          </div>
+        )}
+
+        {film.trailer_url && (
+          <a
+            href={film.trailer_url}
+            target="_blank"
+            rel="noreferrer"
+            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium text-black shadow-sm backdrop-blur hover:bg-white"
+          >
+            ▶ Trailer
+          </a>
+        )}
+      </div>
+
+      <div>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-medium">{film.title}</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              {[film.director, film.year, film.country, film.duration_minutes ? `${film.duration_minutes} min` : null]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            {score && (
+              <div className="mt-2 space-y-0.5 text-xs text-gray-400">
+                <p>Raw emotional: {score.emotional.toFixed(4)}</p>
+                <p>Raw material: {score.material.toFixed(4)}</p>
+                <p>Balanced total: {score.balanced.toFixed(4)}</p>
+              </div>
+            )}
+          </div>
+
+          {film.availability && film.availability !== "unknown" && (
+            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+              {film.availability}
+            </span>
+          )}
+        </div>
+
+        {reason && (
+          <p className="mt-4 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
+            {reason}
+          </p>
+        )}
+
+        {!reason && film.synopsis && (
+          <p className="mt-4 text-gray-700">{film.synopsis}</p>
+        )}
+
+        <div className="mt-4 space-y-3">
+          {film.moods?.length ? (
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {film.moods.map((mood) => (
+                  <span
+                    key={mood}
+                    className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+                  >
+                    {mood}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {film.aesthetic_tags?.length ? (
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {film.aesthetic_tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {film.narrative_tags?.length ? (
+            <div>
+              <div className="flex flex-wrap gap-2">
+                {film.narrative_tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {film.technique && (
+            <div>
+              <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
+                {film.technique}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-auto flex items-end justify-between gap-6 pt-4">
+          <RatingButtons filmId={film.id} profileSlug={profileSlug} />
+          <WatchlistButton
+            filmId={film.id}
+            profileSlug={profileSlug}
+            isSaved={savedFilmIds.has(film.id)}
+            onSavedChange={(saved) => onSavedChange(film, saved)}
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
 export default function ProfileTabs({
   profileSlug,
   token,
@@ -75,8 +225,7 @@ export default function ProfileTabs({
   tasteProfile,
   tasteProfileUpdatedAt,
   tasteCores,
-  topPicksFilms,
-  topPicksScores,
+  topPicks,
   allFilmsSorted,
   allFilmsScores,
   savedFilms,
@@ -119,16 +268,16 @@ export default function ProfileTabs({
   const allFilmsCurrentPage = Math.min(allFilmsPage, allFilmsTotalPages);
 
   const { films, scores } = useMemo(() => {
-    if (activeTab === "top picks") {
-      return { films: topPicksFilms, scores: topPicksScores };
-    }
-
     if (activeTab === "saved") {
       return { films: localSavedFilms, scores: {} as Record<string, FilmScore> };
     }
 
     if (activeTab === "rated") {
       return { films: watchedFilms, scores: {} as Record<string, FilmScore> };
+    }
+
+    if (activeTab === "top picks") {
+      return { films: [], scores: {} as Record<string, FilmScore> };
     }
 
     const start = (allFilmsCurrentPage - 1) * allFilmsPageSize;
@@ -145,10 +294,31 @@ export default function ProfileTabs({
     allFilmsSorted,
     allFilmsScores,
     localSavedFilms,
-    topPicksFilms,
-    topPicksScores,
     watchedFilms,
   ]);
+
+  const topPicksByCategory = useMemo(() => {
+    const grouped = new Map<string, TopPickWithFilm[]>();
+
+    for (const category of TOP_PICK_CATEGORY_ORDER) {
+      grouped.set(category, []);
+    }
+
+    for (const pick of topPicks) {
+      const items = grouped.get(pick.category) ?? [];
+      items.push(pick);
+      grouped.set(pick.category, items);
+    }
+
+    for (const [category, items] of grouped) {
+      grouped.set(
+        category,
+        [...items].sort((a, b) => a.rank - b.rank)
+      );
+    }
+
+    return grouped;
+  }, [topPicks]);
 
   function handleTabChange(tab: ProfileTab) {
     setActiveTab(tab);
@@ -258,157 +428,74 @@ export default function ProfileTabs({
         </div>
       )}
 
-      {!films.length && !loadError && (
+      {!loadError && activeTab === "top picks" && topPicks.length === 0 && (
         <div className="rounded-2xl border border-dashed p-8 text-gray-500">
-          {activeTab === "top picks"
-            ? "No top picks left. Try All films or clear some ratings."
-            : activeTab === "saved"
-              ? "No saved films yet."
-              : activeTab === "rated"
-                ? "No watched films yet."
-                : "No films yet. Add your first one."}
+          No top picks yet. Run the recommendation script to generate a
+          personalized selection.
         </div>
       )}
 
-      <section className="grid gap-4">
-        {films.map((film) => {
-          const score = scores[film.id] ?? null;
+      {!loadError && activeTab !== "top picks" && !films.length && (
+        <div className="rounded-2xl border border-dashed p-8 text-gray-500">
+          {activeTab === "saved"
+            ? "No saved films yet."
+            : activeTab === "rated"
+              ? "No watched films yet."
+              : "No films yet. Add your first one."}
+        </div>
+      )}
 
-          return (
-            <article
-              key={film.id}
-              className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
-            >
-              <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
-                {film.image_url ? (
-                  <img
-                    src={film.image_url}
-                    alt={film.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-gray-400">
-                    No image
-                  </div>
-                )}
+      {activeTab === "top picks" && topPicks.length > 0 && (
+        <div className="space-y-10">
+          {TOP_PICK_CATEGORY_ORDER.map((category) => {
+            const picks = topPicksByCategory.get(category) ?? [];
 
-                {film.trailer_url && (
-                  <a
-                    href={film.trailer_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium text-black shadow-sm backdrop-blur hover:bg-white"
-                  >
-                    ▶ Trailer
-                  </a>
-                )}
-              </div>
+            if (!picks.length) {
+              return null;
+            }
 
-              <div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-medium">{film.title}</h2>
-                    <p className="mt-1 text-sm text-gray-500">
-                      {[
-                        film.director,
-                        film.year,
-                        film.country,
-                        film.duration_minutes
-                          ? `${film.duration_minutes} min`
-                          : null,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </p>
-                    {score && (
-                      <div className="mt-2 space-y-0.5 text-xs text-gray-400">
-                        <p>Raw emotional: {score.emotional.toFixed(4)}</p>
-                        <p>Raw material: {score.material.toFixed(4)}</p>
-                        <p>Balanced total: {score.balanced.toFixed(4)}</p>
-                      </div>
-                    )}
-                  </div>
+            return (
+              <section key={category}>
+                <h2 className="mb-4 text-lg font-semibold text-gray-900">
+                  {TOP_PICK_CATEGORY_LABELS[category]}
+                </h2>
 
-                  {film.availability && film.availability !== "unknown" && (
-                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-                      {film.availability}
-                    </span>
-                  )}
+                <div className="grid gap-4">
+                  {picks.map((pick) => (
+                    <FilmCard
+                      key={pick.id}
+                      film={pick.film}
+                      profileSlug={profileSlug}
+                      savedFilmIds={savedFilmIds}
+                      onSavedChange={handleSavedChange}
+                      reason={pick.reason}
+                    />
+                  ))}
                 </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
 
-                {film.synopsis && (
-                  <p className="mt-4 text-gray-700">{film.synopsis}</p>
-                )}
+      {activeTab !== "top picks" && (
+        <section className="grid gap-4">
+          {films.map((film) => {
+            const score = scores[film.id] ?? null;
 
-                <div className="mt-4 space-y-3">
-                  {film.moods?.length ? (
-                    <div>
-                      <div className="flex flex-wrap gap-2">
-                        {film.moods.map((mood) => (
-                          <span
-                            key={mood}
-                            className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-                          >
-                            {mood}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {film.aesthetic_tags?.length ? (
-                    <div>
-                      <div className="flex flex-wrap gap-2">
-                        {film.aesthetic_tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-stone-100 px-3 py-1 text-sm text-gray-700"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {film.narrative_tags?.length ? (
-                    <div>
-                      <div className="flex flex-wrap gap-2">
-                        {film.narrative_tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {film.technique && (
-                    <div>
-                      <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
-                        {film.technique}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-auto flex items-end justify-between gap-6 pt-4">
-                  <RatingButtons filmId={film.id} profileSlug={profileSlug} />
-                  <WatchlistButton
-                    filmId={film.id}
-                    profileSlug={profileSlug}
-                    isSaved={savedFilmIds.has(film.id)}
-                    onSavedChange={(saved) => handleSavedChange(film, saved)}
-                  />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </section>
+            return (
+              <FilmCard
+                key={film.id}
+                film={film}
+                profileSlug={profileSlug}
+                savedFilmIds={savedFilmIds}
+                onSavedChange={handleSavedChange}
+                score={score}
+              />
+            );
+          })}
+        </section>
+      )}
 
       {activeTab === "all" && totalAllFilmsCount > 0 && (
         <nav

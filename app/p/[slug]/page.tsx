@@ -6,6 +6,11 @@ import {
   sortFilmsByScore,
 } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
+import {
+  TOP_PICK_CATEGORY_ORDER,
+  TopPickCategory,
+  TopPickWithFilm,
+} from "@/types/top-pick";
 import ProfileTabs from "@/components/ProfileTabs";
 
 type ProfileTasteCore = {
@@ -22,6 +27,34 @@ type ProfileTasteCore = {
 };
 
 const ALL_FILMS_PAGE_SIZE = 50;
+
+type TopPickRow = {
+  id: string;
+  profile_id: string;
+  film_id: string;
+  category: TopPickCategory;
+  rank: number;
+  reason: string;
+  created_at: string;
+  films: Film | null;
+};
+
+function sortTopPicks(rows: TopPickWithFilm[]) {
+  const categoryOrder = new Map(
+    TOP_PICK_CATEGORY_ORDER.map((category, index) => [category, index])
+  );
+
+  return [...rows].sort((a, b) => {
+    const categoryDiff =
+      (categoryOrder.get(a.category) ?? 99) - (categoryOrder.get(b.category) ?? 99);
+
+    if (categoryDiff !== 0) {
+      return categoryDiff;
+    }
+
+    return a.rank - b.rank;
+  });
+}
 
 function scoresMapToRecord(scores: Map<string, FilmScore>) {
   return Object.fromEntries(scores);
@@ -99,12 +132,30 @@ export default async function ProfilePage({
   const savedFilms = allFilms.filter((film) => savedFilmIds.has(film.id));
   const watchedFilms = allFilms.filter((film) => ratedFilmIds.has(film.id));
 
-  const topPicksCandidates = allFilms.filter(
-    (film) => !ratedFilmIds.has(film.id) && !savedFilmIds.has(film.id)
-  );
-
   const allFilmsCandidates = allFilms.filter(
     (film) => !ratedFilmIds.has(film.id)
+  );
+
+  const { data: topPicksData, error: topPicksError } = await supabase
+    .from("top_picks")
+    .select(
+      "id, profile_id, film_id, category, rank, reason, created_at, films (*)"
+    )
+    .eq("profile_id", profile.id);
+
+  const topPicks = sortTopPicks(
+    ((topPicksData as TopPickRow[] | null) ?? [])
+      .filter((row) => row.films)
+      .map((row) => ({
+        id: row.id,
+        profile_id: row.profile_id,
+        film_id: row.film_id,
+        category: row.category,
+        rank: row.rank,
+        reason: row.reason,
+        created_at: row.created_at,
+        film: row.films as Film,
+      }))
   );
 
   const { data: scoreRows } = await supabase
@@ -122,23 +173,6 @@ export default async function ProfilePage({
     ])
   );
 
-  const topPicksBalancedScores = buildBalancedScores(
-    topPicksCandidates,
-    rawScoresByFilmId
-  );
-  const topPicksSorted = sortFilmsByScore(
-    topPicksCandidates,
-    topPicksBalancedScores
-  );
-  const topPicksFilms = topPicksSorted.slice(0, 3);
-  const topPicksScores = Object.fromEntries(
-    topPicksFilms.flatMap((film) => {
-      const score = topPicksBalancedScores.get(film.id);
-
-      return score ? [[film.id, score]] : [];
-    })
-  );
-
   const allFilmsBalancedScores = buildBalancedScores(
     allFilmsCandidates,
     rawScoresByFilmId
@@ -148,6 +182,9 @@ export default async function ProfilePage({
     allFilmsBalancedScores
   );
   const allFilmsScores = scoresMapToRecord(allFilmsBalancedScores);
+
+  const loadError =
+    [error?.message, topPicksError?.message].filter(Boolean).join(" ") || null;
 
   return (
     <main className="mx-auto max-w-5xl p-8">
@@ -170,14 +207,13 @@ export default async function ProfilePage({
         tasteProfile={profile.taste_profile}
         tasteProfileUpdatedAt={profile.taste_profile_updated_at}
         tasteCores={tasteCores}
-        topPicksFilms={topPicksFilms}
-        topPicksScores={topPicksScores}
+        topPicks={topPicks}
         allFilmsSorted={allFilmsSorted}
         allFilmsScores={allFilmsScores}
         savedFilms={savedFilms}
         watchedFilms={watchedFilms}
         allFilmsPageSize={ALL_FILMS_PAGE_SIZE}
-        loadError={error?.message ?? null}
+        loadError={loadError}
       />
     </main>
   );
