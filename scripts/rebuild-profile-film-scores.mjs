@@ -174,6 +174,15 @@ function getNearestRatedFilmsScore(
   return bestSignal + secondSignal * 0.15 + thirdSignal * 0.05;
 }
 
+const GENERIC_MATERIAL_TOKENS = new Set([
+  "world",
+  "animation",
+  "anime",
+  "film",
+  "story",
+  "style",
+]);
+
 function getProfileTagMatchScore(film, emotionalProfileTagWeights) {
   const filmTags = (film.moods ?? [])
     .map((tag) => tag.trim().toLowerCase())
@@ -186,6 +195,101 @@ function getProfileTagMatchScore(film, emotionalProfileTagWeights) {
   const matchedScore = filmTags.reduce((sum, tag) => {
     return sum + (emotionalProfileTagWeights.get(tag) ?? 0);
   }, 0);
+
+  return Math.min(1, matchedScore / 6);
+}
+
+function getFilmMaterialTags(film) {
+  const filmTags = (film.aesthetic_tags ?? [])
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (film.technique?.trim()) {
+    filmTags.push(film.technique.trim().toLowerCase());
+  }
+
+  return filmTags;
+}
+
+function tokenizeMaterialTag(tag) {
+  return tag
+    .trim()
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(
+      (token) => token.length > 1 && !GENERIC_MATERIAL_TOKENS.has(token)
+    );
+}
+
+function getMaterialTagMatchStrength(profileTag, filmTags) {
+  const normalizedProfile = profileTag.trim().toLowerCase();
+
+  for (const filmTag of filmTags) {
+    if (filmTag.trim().toLowerCase() === normalizedProfile) {
+      return 1;
+    }
+  }
+
+  const profileTokens = tokenizeMaterialTag(normalizedProfile);
+
+  if (profileTokens.length === 0) {
+    return 0;
+  }
+
+  let bestMatch = 0;
+
+  for (const filmTag of filmTags) {
+    const normalizedFilm = filmTag.trim().toLowerCase();
+
+    if (
+      normalizedFilm.includes(normalizedProfile) ||
+      normalizedProfile.includes(normalizedFilm)
+    ) {
+      bestMatch = Math.max(bestMatch, 0.85);
+      continue;
+    }
+
+    const filmTokens = tokenizeMaterialTag(normalizedFilm);
+
+    if (filmTokens.length === 0) {
+      continue;
+    }
+
+    const sharedTokens = profileTokens.filter((token) =>
+      filmTokens.includes(token)
+    );
+
+    if (sharedTokens.length === 0) {
+      continue;
+    }
+
+    const overlapRatio =
+      sharedTokens.length / Math.min(profileTokens.length, filmTokens.length);
+
+    if (overlapRatio >= 0.5) {
+      bestMatch = Math.max(bestMatch, overlapRatio);
+    }
+  }
+
+  return bestMatch;
+}
+
+function getMaterialProfileTagMatchScore(film, aestheticProfileTagWeights) {
+  const filmTags = getFilmMaterialTags(film);
+
+  if (!filmTags.length || aestheticProfileTagWeights.size === 0) {
+    return 0;
+  }
+
+  let matchedScore = 0;
+
+  for (const [profileTag, weight] of aestheticProfileTagWeights) {
+    const matchStrength = getMaterialTagMatchStrength(profileTag, filmTags);
+
+    if (matchStrength > 0) {
+      matchedScore += weight * matchStrength;
+    }
+  }
 
   return Math.min(1, matchedScore / 6);
 }
@@ -216,11 +320,14 @@ function getMaterialMatchScore(
   filmAestheticEmbeddingByFilmId,
   aestheticCentralityWeightByFilmId,
   ratedFilms,
-  aestheticCores
+  aestheticProfileTagWeights
 ) {
   const filmEmbedding = filmAestheticEmbeddingByFilmId.get(film.id);
 
-  const coreScore = getCoreMatchScore(filmEmbedding, aestheticCores);
+  const profileScore = getMaterialProfileTagMatchScore(
+    film,
+    aestheticProfileTagWeights
+  );
 
   const nearestScore = getNearestRatedFilmsScore(
     filmEmbedding,
@@ -229,7 +336,7 @@ function getMaterialMatchScore(
     aestheticCentralityWeightByFilmId
   );
 
-  return coreScore * 0.5 + nearestScore * 0.5;
+  return profileScore * 0.5 + nearestScore * 0.5;
 }
 
 async function getProfiles(profileSlug) {
@@ -270,7 +377,7 @@ async function getTasteCores(profileId) {
 async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
-    .select("id, title, moods, year")
+    .select("id, title, moods, aesthetic_tags, technique, year")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -359,6 +466,18 @@ async function rebuildProfileScores(profile, allFilms) {
     ])
   );
 
+  const aestheticProfileTags = aestheticCores
+    .flatMap((core) => core.aesthetic_profile_tags ?? [])
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+
+  const aestheticProfileTagWeights = new Map(
+    aestheticProfileTags.map((tag, index) => [
+      tag,
+      Math.max(0.55, 1 - index * 0.05),
+    ])
+  );
+
   const ratings = await getRatings(profile.id);
   const ratedFilmIds = new Set(ratings.map((item) => item.film_id));
 
@@ -428,7 +547,7 @@ async function rebuildProfileScores(profile, allFilms) {
       filmAestheticEmbeddingByFilmId,
       aestheticCentralityWeightByFilmId,
       ratedFilms,
-      aestheticCores
+      aestheticProfileTagWeights
     ),
     computed_at: computedAt,
   }));
