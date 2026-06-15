@@ -3,16 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
-import {
-  TOP_PICK_CATEGORY_LABELS,
-  TOP_PICK_CATEGORY_ORDER,
-  TopPickWithFilm,
-} from "@/types/top-pick";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 
-export type ProfileTab = "top picks" | "saved" | "all" | "rated";
+export type ProfileTab = "all" | "saved" | "rated";
 
 type ProfileTasteCore = {
   id: string;
@@ -34,7 +29,6 @@ type ProfileTabsProps = {
   tasteProfile: string | null;
   tasteProfileUpdatedAt: string | null;
   tasteCores: ProfileTasteCore[];
-  topPicks: TopPickWithFilm[];
   allFilmsSorted: Film[];
   allFilmsScores: Record<string, FilmScore>;
   isColdStartMode: boolean;
@@ -45,9 +39,8 @@ type ProfileTabsProps = {
 };
 
 const TAB_LABELS: Array<{ id: ProfileTab; label: string }> = [
-  { id: "top picks", label: "Top picks" },
-  { id: "saved", label: "Saved" },
   { id: "all", label: "All films" },
+  { id: "saved", label: "Saved" },
   { id: "rated", label: "Watched" },
 ];
 
@@ -226,7 +219,6 @@ export default function ProfileTabs({
   tasteProfile,
   tasteProfileUpdatedAt,
   tasteCores,
-  topPicks,
   allFilmsSorted,
   allFilmsScores,
   isColdStartMode,
@@ -235,7 +227,7 @@ export default function ProfileTabs({
   allFilmsPageSize,
   loadError,
 }: ProfileTabsProps) {
-  const [activeTab, setActiveTab] = useState<ProfileTab>("top picks");
+  const [activeTab, setActiveTab] = useState<ProfileTab>("all");
   const [allFilmsPage, setAllFilmsPage] = useState(1);
   const [localSavedFilms, setLocalSavedFilms] = useState(savedFilms);
 
@@ -278,10 +270,6 @@ export default function ProfileTabs({
       return { films: watchedFilms, scores: {} as Record<string, FilmScore> };
     }
 
-    if (activeTab === "top picks") {
-      return { films: [], scores: {} as Record<string, FilmScore> };
-    }
-
     const start = (allFilmsCurrentPage - 1) * allFilmsPageSize;
     const end = start + allFilmsPageSize;
 
@@ -298,29 +286,6 @@ export default function ProfileTabs({
     localSavedFilms,
     watchedFilms,
   ]);
-
-  const topPicksByCategory = useMemo(() => {
-    const grouped = new Map<string, TopPickWithFilm[]>();
-
-    for (const category of TOP_PICK_CATEGORY_ORDER) {
-      grouped.set(category, []);
-    }
-
-    for (const pick of topPicks) {
-      const items = grouped.get(pick.category) ?? [];
-      items.push(pick);
-      grouped.set(pick.category, items);
-    }
-
-    for (const [category, items] of grouped) {
-      grouped.set(
-        category,
-        [...items].sort((a, b) => a.rank - b.rank)
-      );
-    }
-
-    return grouped;
-  }, [topPicks]);
 
   function handleTabChange(tab: ProfileTab) {
     setActiveTab(tab);
@@ -430,14 +395,7 @@ export default function ProfileTabs({
         </div>
       )}
 
-      {!loadError && activeTab === "top picks" && topPicks.length === 0 && (
-        <div className="rounded-2xl border border-dashed p-8 text-gray-500">
-          No top picks yet. Run the recommendation script to generate a
-          personalized selection.
-        </div>
-      )}
-
-      {!loadError && activeTab !== "top picks" && !films.length && (
+      {!loadError && !films.length && (
         <div className="rounded-2xl border border-dashed p-8 text-gray-500">
           {activeTab === "saved"
             ? "No saved films yet."
@@ -447,62 +405,27 @@ export default function ProfileTabs({
         </div>
       )}
 
-      {activeTab === "top picks" && topPicks.length > 0 && (
-        <div className="space-y-10">
-          {TOP_PICK_CATEGORY_ORDER.map((category) => {
-            const picks = topPicksByCategory.get(category) ?? [];
+      <section className="grid gap-4">
+        {films.map((film) => {
+          const score = scores[film.id] ?? null;
+          const reason =
+            activeTab === "all" && isColdStartMode
+              ? film.cold_start_note ?? undefined
+              : undefined;
 
-            if (!picks.length) {
-              return null;
-            }
-
-            return (
-              <section key={category}>
-                <h2 className="mb-4 text-lg font-semibold text-gray-900">
-                  {TOP_PICK_CATEGORY_LABELS[category]}
-                </h2>
-
-                <div className="grid gap-4">
-                  {picks.map((pick) => (
-                    <FilmCard
-                      key={pick.id}
-                      film={pick.film}
-                      profileSlug={profileSlug}
-                      savedFilmIds={savedFilmIds}
-                      onSavedChange={handleSavedChange}
-                      reason={pick.reason}
-                    />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      )}
-
-      {activeTab !== "top picks" && (
-        <section className="grid gap-4">
-          {films.map((film) => {
-            const score = scores[film.id] ?? null;
-            const reason =
-              activeTab === "all" && isColdStartMode
-                ? film.cold_start_note ?? undefined
-                : undefined;
-
-            return (
-              <FilmCard
-                key={film.id}
-                film={film}
-                profileSlug={profileSlug}
-                savedFilmIds={savedFilmIds}
-                onSavedChange={handleSavedChange}
-                score={score}
-                reason={reason}
-              />
-            );
-          })}
-        </section>
-      )}
+          return (
+            <FilmCard
+              key={film.id}
+              film={film}
+              profileSlug={profileSlug}
+              savedFilmIds={savedFilmIds}
+              onSavedChange={handleSavedChange}
+              score={score}
+              reason={reason}
+            />
+          );
+        })}
+      </section>
 
       {activeTab === "all" && totalAllFilmsCount > 0 && (
         <nav
