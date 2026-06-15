@@ -15,6 +15,9 @@ import {
 } from "@/types/top-pick";
 import ProfileTabs from "@/components/ProfileTabs";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type ProfileTasteCore = {
   id: string;
   core_index: number;
@@ -216,6 +219,14 @@ export default async function ProfilePage({
   const likedHighRatedCount =
     ratings?.filter((item) => Number(item.rating) >= 7).length ?? 0;
   const isColdStartMode = likedHighRatedCount === 0;
+  const ratingsCount = ratings?.length ?? 0;
+
+  console.info("[profile-page]", {
+    slug: profileSlug,
+    ratingsCount,
+    likedHighRatedCount,
+    isColdStartMode,
+  });
 
   let allFilmsSorted: Film[];
   let allFilmsScores: Record<string, FilmScore>;
