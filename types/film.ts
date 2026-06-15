@@ -28,5 +28,7 @@ export type Film = {
     personal_note?: string | null;
     status?: string | null;
     rating?: number | null;
+    cold_start_score?: number | null;
+    cold_start_note?: string | null;
     created_at?: string;
   };

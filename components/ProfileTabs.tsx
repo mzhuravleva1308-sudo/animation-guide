@@ -37,6 +37,7 @@ type ProfileTabsProps = {
   topPicks: TopPickWithFilm[];
   allFilmsSorted: Film[];
   allFilmsScores: Record<string, FilmScore>;
+  isColdStartMode: boolean;
   savedFilms: Film[];
   watchedFilms: Film[];
   allFilmsPageSize: number;
@@ -228,6 +229,7 @@ export default function ProfileTabs({
   topPicks,
   allFilmsSorted,
   allFilmsScores,
+  isColdStartMode,
   savedFilms,
   watchedFilms,
   allFilmsPageSize,
@@ -482,6 +484,10 @@ export default function ProfileTabs({
         <section className="grid gap-4">
           {films.map((film) => {
             const score = scores[film.id] ?? null;
+            const reason =
+              activeTab === "all" && isColdStartMode
+                ? film.cold_start_note ?? undefined
+                : undefined;
 
             return (
               <FilmCard
@@ -491,6 +497,7 @@ export default function ProfileTabs({
                 savedFilmIds={savedFilmIds}
                 onSavedChange={handleSavedChange}
                 score={score}
+                reason={reason}
               />
             );
           })}

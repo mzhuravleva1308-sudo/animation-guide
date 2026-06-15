@@ -2,7 +2,9 @@ import { supabase } from "@/lib/supabase";
 import {
   buildBalancedScores,
   FilmScore,
+  logColdStartDiagnostics,
   RawFilmScore,
+  sortFilmsByColdStart,
   sortFilmsByScore,
 } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
@@ -27,6 +29,39 @@ type ProfileTasteCore = {
 };
 
 const ALL_FILMS_PAGE_SIZE = 50;
+
+const FILM_SELECT_FIELDS = [
+  "id",
+  "title",
+  "original_title",
+  "director",
+  "year",
+  "country",
+  "duration_minutes",
+  "festival",
+  "section",
+  "source_url",
+  "watch_url",
+  "image_url",
+  "trailer_url",
+  "availability",
+  "synopsis",
+  "technique",
+  "moods",
+  "aesthetic_tags",
+  "narrative_tags",
+  "themes",
+  "dialogue",
+  "emotional_intensity",
+  "weirdness",
+  "kid_safety",
+  "why_i_might_like_it",
+  "personal_note",
+  "status",
+  "cold_start_score",
+  "cold_start_note",
+  "created_at",
+].join(", ");
 
 type TopPickRow = {
   id: string;
@@ -107,7 +142,7 @@ export default async function ProfilePage({
 
   const { data: allFilmsData, error } = await supabase
     .from("films")
-    .select("*")
+    .select(FILM_SELECT_FIELDS)
     .order("id");
 
   const allFilms = (allFilmsData as Film[] | null) ?? [];
@@ -178,15 +213,33 @@ export default async function ProfilePage({
     ])
   );
 
-  const allFilmsBalancedScores = buildBalancedScores(
-    allFilmsCandidates,
-    rawScoresByFilmId
-  );
-  const allFilmsSorted = sortFilmsByScore(
-    allFilmsCandidates,
-    allFilmsBalancedScores
-  );
-  const allFilmsScores = scoresMapToRecord(allFilmsBalancedScores);
+  const likedHighRatedCount =
+    ratings?.filter((item) => Number(item.rating) >= 7).length ?? 0;
+  const isColdStartMode = likedHighRatedCount === 0;
+
+  let allFilmsSorted: Film[];
+  let allFilmsScores: Record<string, FilmScore>;
+
+  if (isColdStartMode) {
+    allFilmsSorted = sortFilmsByColdStart(allFilmsCandidates);
+    allFilmsScores = {};
+    logColdStartDiagnostics(
+      profile,
+      ratings ?? [],
+      allFilmsCandidates,
+      allFilmsSorted
+    );
+  } else {
+    const allFilmsBalancedScores = buildBalancedScores(
+      allFilmsCandidates,
+      rawScoresByFilmId
+    );
+    allFilmsSorted = sortFilmsByScore(
+      allFilmsCandidates,
+      allFilmsBalancedScores
+    );
+    allFilmsScores = scoresMapToRecord(allFilmsBalancedScores);
+  }
 
   const loadError =
     [error?.message, topPicksError?.message].filter(Boolean).join(" ") || null;
@@ -215,6 +268,7 @@ export default async function ProfilePage({
         topPicks={topPicks}
         allFilmsSorted={allFilmsSorted}
         allFilmsScores={allFilmsScores}
+        isColdStartMode={isColdStartMode}
         savedFilms={savedFilms}
         watchedFilms={watchedFilms}
         allFilmsPageSize={ALL_FILMS_PAGE_SIZE}
