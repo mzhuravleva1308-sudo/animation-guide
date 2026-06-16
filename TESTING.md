@@ -64,7 +64,7 @@ Set both in `.env.local` (see `.env.example`). They must come from a **dedicated
 
 Tests that do **not** need these vars:
 
-- Home, admin, and invalid-profile-link smoke tests
+- Home, deprecated admin routes, and invalid-profile-link smoke tests
 
 If slug/token or reset prerequisites are missing, authenticated profile tests **skip** (they do not fail the rest of the suite).
 

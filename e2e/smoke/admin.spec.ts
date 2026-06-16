@@ -1,25 +1,21 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Admin pages", () => {
-  test("import page renders the form shell", async ({ page }) => {
+  test("import route shows deprecation notice", async ({ page }) => {
     await page.goto("/admin/import");
 
     await expect(
-      page.getByRole("heading", { name: "Import film" })
+      page.getByRole("heading", { name: "Manual film import disabled" })
     ).toBeVisible();
-    await expect(page.getByLabel("Source text")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Generate draft" })
-    ).toBeVisible();
+    await expect(page.getByText("controlled import pipeline")).toBeVisible();
   });
 
-  test("new film page renders the manual entry form", async ({ page }) => {
+  test("new film route shows deprecation notice", async ({ page }) => {
     await page.goto("/admin/new");
 
-    await expect(page.getByRole("heading", { name: "Add film" })).toBeVisible();
     await expect(
-      page.getByRole("textbox", { name: "Title", exact: true })
+      page.getByRole("heading", { name: "Manual film import disabled" })
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Save film" })).toBeVisible();
+    await expect(page.getByText("deprecated")).toBeVisible();
   });
 });

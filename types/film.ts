@@ -32,5 +32,9 @@ export type Film = {
     rating?: number | null;
     cold_start_score?: number | null;
     cold_start_note?: string | null;
+    tmdb_id?: number | null;
+    imdb_id?: string | null;
+    normalized_title?: string | null;
+    normalized_original_title?: string | null;
     created_at?: string;
   };
