@@ -9,6 +9,8 @@ import {
 } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import ProfileTabs from "@/components/ProfileTabs";
+import { buildFilmRatings } from "@/lib/film-ratings";
+import { normalizeFilms } from "@/lib/normalize-film";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -27,6 +29,7 @@ type ProfileTasteCore = {
 };
 
 const ALL_FILMS_PAGE_SIZE = 50;
+const SHOW_DEBUG_SCORES = process.env.NEXT_PUBLIC_SHOW_DEBUG_SCORES === "true";
 
 const FILM_SELECT_FIELDS = [
   "id",
@@ -115,15 +118,17 @@ export default async function ProfilePage({
     .select(FILM_SELECT_FIELDS)
     .order("id");
 
-  const allFilms = (allFilmsData as Film[] | null) ?? [];
+  const allFilms = normalizeFilms((allFilmsData as Film[] | null) ?? []);
 
-  const { data: ratings } = await supabase
+  const { data: ratings, error: ratingsError } = await supabase
     .from("film_ratings")
     .select("film_id, rating")
     .eq("profile_id", profile.id)
     .order("film_id");
 
-  const ratedFilmIds = new Set(ratings?.map((item) => item.film_id) ?? []);
+  const safeRatings = ratings ?? [];
+  const ratedFilmIds = new Set(safeRatings.map((item) => item.film_id).filter(Boolean));
+  const filmRatings = buildFilmRatings(safeRatings);
 
   const { data: watchlistItems } = await supabase
     .from("profile_film_lists")
@@ -160,9 +165,13 @@ export default async function ProfilePage({
   );
 
   const likedHighRatedCount =
-    ratings?.filter((item) => Number(item.rating) >= 7).length ?? 0;
+    safeRatings.filter((item) => Number(item.rating) >= 7).length;
   const isColdStartMode = likedHighRatedCount === 0;
-  const ratingsCount = ratings?.length ?? 0;
+  const ratingsCount = safeRatings.length;
+
+  if (ratingsError) {
+    console.error("[profile-page] ratings load error", ratingsError);
+  }
 
   console.info("[profile-page]", {
     slug: profileSlug,
@@ -179,7 +188,7 @@ export default async function ProfilePage({
     allFilmsScores = {};
     logColdStartDiagnostics(
       profile,
-      ratings ?? [],
+      safeRatings,
       allFilmsCandidates,
       allFilmsSorted
     );
@@ -213,6 +222,7 @@ export default async function ProfilePage({
 
       <ProfileTabs
         profileSlug={profileSlug}
+        profileId={profile.id ?? ""}
         token={token ?? ""}
         profileName={profile.name}
         tasteProfile={profile.taste_profile}
@@ -224,6 +234,8 @@ export default async function ProfilePage({
         savedFilms={savedFilms}
         watchedFilms={watchedFilms}
         allFilmsPageSize={ALL_FILMS_PAGE_SIZE}
+        filmRatings={filmRatings}
+        showDebugScores={SHOW_DEBUG_SCORES}
         loadError={loadError}
       />
     </main>
