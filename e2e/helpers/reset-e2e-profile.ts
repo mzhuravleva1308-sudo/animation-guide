@@ -13,13 +13,11 @@ function requireEnv(name: string): string {
 /**
  * Resets mutable state on the dedicated E2E test profile only.
  *
- * SECURITY / CONVENTION (see TESTING.md):
- * - Uses SUPABASE_SERVICE_ROLE_KEY from process.env — Playwright Node process only.
- * - Never import this module from app/, components/, or other client code.
- * - Never prefix the service role key with NEXT_PUBLIC_.
- * - Never commit the real key (.env.local only).
- * - Refuses to run unless credentials match both E2E_PROFILE_SLUG and
- *   E2E_PROFILE_TOKEN, and the DB row matches that slug/token pair.
+ * See TESTING.md for the full project testing convention (profile mutation,
+ * cleanup hooks, and SUPABASE_SERVICE_ROLE_KEY rules).
+ *
+ * Safety: refuses to run unless credentials match E2E_PROFILE_SLUG and
+ * E2E_PROFILE_TOKEN and the DB row matches that slug/token pair.
  */
 export async function resetE2eProfile(
   credentials: ProfileTestCredentials
