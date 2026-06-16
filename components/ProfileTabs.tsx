@@ -113,7 +113,10 @@ function FilmCard({
   const narrativeTags = normalizeFilmTagList(film.narrative_tags);
 
   return (
-    <article className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]">
+    <article
+      data-testid="film-card"
+      className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
+    >
       <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
         {film.image_url ? (
           <img
@@ -239,6 +242,7 @@ function FilmCard({
           <WatchlistButton
             filmId={film.id}
             profileSlug={profileSlug}
+            profileId={profileId}
             isSaved={savedFilmIds.has(film.id)}
             onSavedChange={(saved) => onSavedChange(film, saved)}
           />
@@ -531,7 +535,10 @@ export default function ProfileTabs({
       )}
 
       {!loadError && !films.length && (
-        <div className="rounded-2xl border border-dashed p-8 text-gray-500">
+        <div
+          data-testid="profile-tab-empty"
+          className="rounded-2xl border border-dashed p-8 text-gray-500"
+        >
           {activeTab === "saved"
             ? "No saved films yet."
             : activeTab === "rated"
@@ -540,7 +547,7 @@ export default function ProfileTabs({
         </div>
       )}
 
-      <section className="grid gap-4">
+      <section data-testid="film-list" className="grid gap-4">
         {films.map((film) => {
           const score = scores[film.id] ?? null;
           const reason =

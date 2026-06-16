@@ -16,6 +16,18 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Testing
+
+**Convention:** see [TESTING.md](./TESTING.md).
+
+Full local verification before presenting UI work:
+
+```bash
+npm test
+```
+
+That runs unit tests plus Playwright E2E (production server on port **3100**, not `next dev`). E2E profile tests use only `E2E_PROFILE_SLUG` / `E2E_PROFILE_TOKEN` from `.env.local`.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

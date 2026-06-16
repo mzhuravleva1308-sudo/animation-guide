@@ -7,6 +7,7 @@ import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 type WatchlistButtonProps = {
   filmId: string;
   profileSlug?: string;
+  profileId?: string;
   isSaved?: boolean;
   onSavedChange?: (saved: boolean) => void;
 };
@@ -14,6 +15,7 @@ type WatchlistButtonProps = {
 export default function WatchlistButton({
   filmId,
   profileSlug = "maria",
+  profileId: profileIdFromProps,
   isSaved,
   onSavedChange,
 }: WatchlistButtonProps) {
@@ -30,19 +32,25 @@ export default function WatchlistButton({
 
   useEffect(() => {
     async function loadWatchlistStatus() {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("slug", profileSlug)
-        .single();
+      let resolvedProfileId = profileIdFromProps ?? null;
 
-      if (profileError || !profile) {
-        console.error("Profile not found", profileError);
-        setIsLoading(false);
-        return;
+      if (!resolvedProfileId) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("slug", profileSlug)
+          .single();
+
+        if (profileError || !profile) {
+          console.error("Profile not found", profileError);
+          setIsLoading(false);
+          return;
+        }
+
+        resolvedProfileId = profile.id;
       }
 
-      setProfileId(profile.id);
+      setProfileId(resolvedProfileId);
 
       if (isSaved !== undefined) {
         setIsLoading(false);
@@ -53,7 +61,7 @@ export default function WatchlistButton({
         .from("profile_film_lists")
         .select("id")
         .eq("film_id", filmId)
-        .eq("profile_id", profile.id)
+        .eq("profile_id", resolvedProfileId)
         .eq("list_type", "to_watch")
         .maybeSingle();
 
@@ -68,7 +76,7 @@ export default function WatchlistButton({
     }
 
     loadWatchlistStatus();
-  }, [filmId, profileSlug, isSaved]);
+  }, [filmId, profileSlug, profileIdFromProps, isSaved]);
 
   async function toggleWatchlist() {
     if (!profileId || isLoading || isSaving) return;

@@ -7,6 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "node --test lib/**/*.test.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "after-films": "node scripts/after-films.mjs",
     "taste-cores": "node scripts/build-taste-cores.mjs",
     "name-taste-cores": "node scripts/name-taste-cores.mjs",
@@ -30,6 +34,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
