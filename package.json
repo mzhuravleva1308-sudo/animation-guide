@@ -23,7 +23,8 @@
     "narrative-tags": "node scripts/fill-narrative-tags.mjs",
     "profile-tags": "node scripts/build-profile-tags.mjs",
     "rebuild-profile-scores": "node scripts/rebuild-profile-film-scores.mjs",
-    "generate-top-picks": "node scripts/generate-top-picks.mjs"
+    "generate-top-picks": "node scripts/generate-top-picks.mjs",
+    "cache-posters": "node scripts/cache-posters.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",

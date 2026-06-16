@@ -12,6 +12,8 @@ export type Film = {
     source_url?: string | null;
     watch_url?: string | null;
     image_url?: string | null;
+    poster_url?: string | null;
+    external_image_url?: string | null;
     trailer_url?: string | null;
     availability?: string | null;
     synopsis?: string | null;

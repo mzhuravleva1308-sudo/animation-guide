@@ -44,6 +44,7 @@ const FILM_SELECT_FIELDS = [
   "source_url",
   "watch_url",
   "image_url",
+  "poster_url",
   "trailer_url",
   "availability",
   "synopsis",

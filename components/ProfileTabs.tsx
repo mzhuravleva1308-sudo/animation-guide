@@ -8,6 +8,7 @@ import { normalizeFilmTagList } from "@/lib/film-tags";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
+import { getFilmPosterUrl } from "@/lib/film-poster";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -111,6 +112,7 @@ function FilmCard({
   const moods = normalizeFilmTagList(film.moods);
   const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
   const narrativeTags = normalizeFilmTagList(film.narrative_tags);
+  const posterUrl = getFilmPosterUrl(film);
 
   return (
     <article
@@ -118,9 +120,9 @@ function FilmCard({
       className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
     >
       <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
-        {film.image_url ? (
+        {posterUrl ? (
           <img
-            src={film.image_url}
+            src={posterUrl}
             alt={film.title}
             className="h-full w-full object-cover"
           />

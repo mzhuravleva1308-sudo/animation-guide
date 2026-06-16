@@ -10,6 +10,7 @@ function run(command) {
 
 try {
   run("node scripts/fill-images.mjs");
+  run("node scripts/cache-posters.mjs");
   run("node scripts/fill-trailers.mjs");
   run("node scripts/fill-mood-distances.mjs");
 
