@@ -95,6 +95,7 @@ type FilmCardProps = {
   score?: FilmScore | null;
   reason?: string;
   showDebugScores?: boolean;
+  lazyLoadPoster?: boolean;
 };
 
 function FilmCard({
@@ -108,6 +109,7 @@ function FilmCard({
   score = null,
   reason,
   showDebugScores = false,
+  lazyLoadPoster = false,
 }: FilmCardProps) {
   const moods = normalizeFilmTagList(film.moods);
   const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
@@ -124,6 +126,8 @@ function FilmCard({
           <img
             src={posterUrl}
             alt={film.title}
+            loading={lazyLoadPoster ? "lazy" : "eager"}
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (
@@ -550,7 +554,7 @@ export default function ProfileTabs({
       )}
 
       <section data-testid="film-list" className="grid gap-4">
-        {films.map((film) => {
+        {films.map((film, index) => {
           const score = scores[film.id] ?? null;
           const reason =
             activeTab === "all" && isColdStartMode
@@ -570,6 +574,7 @@ export default function ProfileTabs({
               score={score}
               reason={reason}
               showDebugScores={showDebugScores}
+              lazyLoadPoster={index >= 3}
             />
           );
         })}

@@ -11,6 +11,7 @@ import { Film } from "@/types/film";
 import ProfileTabs from "@/components/ProfileTabs";
 import { buildFilmRatings } from "@/lib/film-ratings";
 import { normalizeFilms } from "@/lib/normalize-film";
+import { createProfilePageLoadTimer } from "@/lib/profile-page-load-log";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -104,40 +105,46 @@ export default async function ProfilePage({
     );
   }
 
-  const { data: tasteCoresData } = await supabase
-    .from("profile_taste_cores")
-    .select(
-      "id, core_index, core_type, name, strength, coverage, maturity, nearest_moods, emotional_profile_tags, aesthetic_profile_tags"
-    )
-    .eq("profile_id", profile.id)
-    .order("core_index");
+  const logProfilePageLoad = createProfilePageLoadTimer();
+
+  const [
+    { data: tasteCoresData },
+    { data: allFilmsData, error },
+    { data: ratings, error: ratingsError },
+    { data: watchlistItems },
+    { data: scoreRows },
+  ] = await Promise.all([
+    supabase
+      .from("profile_taste_cores")
+      .select(
+        "id, core_index, core_type, name, strength, coverage, maturity, nearest_moods, emotional_profile_tags, aesthetic_profile_tags"
+      )
+      .eq("profile_id", profile.id)
+      .order("core_index"),
+    supabase.from("films").select(FILM_SELECT_FIELDS).order("id"),
+    supabase
+      .from("film_ratings")
+      .select("film_id, rating")
+      .eq("profile_id", profile.id)
+      .order("film_id"),
+    supabase
+      .from("profile_film_lists")
+      .select("film_id")
+      .eq("profile_id", profile.id)
+      .eq("list_type", "to_watch")
+      .order("film_id"),
+    supabase
+      .from("profile_film_scores")
+      .select("film_id, emotional_score, material_score")
+      .eq("profile_id", profile.id)
+      .order("film_id"),
+  ]);
 
   const tasteCores = (tasteCoresData as ProfileTasteCore[] | null) ?? [];
-
-  const { data: allFilmsData, error } = await supabase
-    .from("films")
-    .select(FILM_SELECT_FIELDS)
-    .order("id");
-
   const allFilms = normalizeFilms((allFilmsData as Film[] | null) ?? []);
-
-  const { data: ratings, error: ratingsError } = await supabase
-    .from("film_ratings")
-    .select("film_id, rating")
-    .eq("profile_id", profile.id)
-    .order("film_id");
-
   const safeRatings = ratings ?? [];
   const ratedFilmIds = new Set(safeRatings.map((item) => item.film_id).filter(Boolean));
   const filmRatings = buildFilmRatings(safeRatings);
-
-  const { data: watchlistItems } = await supabase
-    .from("profile_film_lists")
-    .select("film_id")
-    .eq("profile_id", profile.id)
-    .eq("list_type", "to_watch")
-    .order("film_id");
-
   const savedFilmIds = new Set(
     watchlistItems?.map((item) => item.film_id) ?? []
   );
@@ -148,12 +155,6 @@ export default async function ProfilePage({
   const allFilmsCandidates = allFilms.filter(
     (film) => !ratedFilmIds.has(film.id)
   );
-
-  const { data: scoreRows } = await supabase
-    .from("profile_film_scores")
-    .select("film_id, emotional_score, material_score")
-    .eq("profile_id", profile.id)
-    .order("film_id");
 
   const rawScoresByFilmId = new Map<string, RawFilmScore>(
     (scoreRows ?? []).map((row) => [
@@ -174,11 +175,12 @@ export default async function ProfilePage({
     console.error("[profile-page] ratings load error", ratingsError);
   }
 
-  console.info("[profile-page]", {
+  logProfilePageLoad({
     slug: profileSlug,
     ratingsCount,
     likedHighRatedCount,
     isColdStartMode,
+    filmsCount: allFilms.length,
   });
 
   let allFilmsSorted: Film[];
