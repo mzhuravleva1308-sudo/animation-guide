@@ -18,6 +18,10 @@ import {
   waitForWatchlistButton,
 } from "../helpers/profile-page";
 import { resetE2eProfile } from "../helpers/reset-e2e-profile";
+import {
+  expectTrailerOverlayLayout,
+  firstFilmCardWithTrailer,
+} from "../helpers/film-card-layout";
 
 test.describe("Profile page", () => {
   test("shows a friendly message for invalid share links", async ({ page }) => {
@@ -180,6 +184,58 @@ test.describe("Profile page", () => {
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "Saved");
       await expectTabIsEmpty(page);
+    });
+
+    test("shows film database search UI only on All films tab", async ({ page }) => {
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+
+      const searchInput = page.getByTestId("film-search-input");
+      await expect(searchInput).toBeVisible();
+
+      await openProfileTab(page, "Saved");
+      await expect(searchInput).not.toBeVisible();
+
+      await openProfileTab(page, "All films");
+      await expect(searchInput).toBeVisible();
+
+      await searchInput.fill("a");
+      await expect(page.getByTestId("film-search-hint")).toBeVisible();
+
+      const firstTitle = await firstFilmCard(page)
+        .getByRole("heading", { level: 2 })
+        .innerText();
+      const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+
+      await searchInput.fill(partialTitle);
+      await expect(page.getByTestId("film-search-results")).toBeVisible();
+      await expect(
+        page.getByTestId("film-search-results").getByRole("heading", {
+          level: 2,
+          name: firstTitle,
+        })
+      ).toBeVisible();
+    });
+
+    test("keeps trailer overlay compact and centered on the poster", async ({
+      page,
+    }) => {
+      await gotoProfilePage(page, credentials);
+
+      const cardWithTrailer = firstFilmCardWithTrailer(page, filmCards(page));
+      await expect(cardWithTrailer).toBeVisible();
+
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await expectTrailerOverlayLayout(cardWithTrailer, {
+        maxWidthRatio: 0.45,
+        maxHeight: 32,
+      });
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expectTrailerOverlayLayout(cardWithTrailer, {
+        maxWidthRatio: 0.35,
+        maxHeight: 32,
+      });
     });
   });
 });

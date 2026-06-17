@@ -8,7 +8,9 @@ import { normalizeFilmTagList } from "@/lib/film-tags";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
+import FilmSearch from "@/components/FilmSearch";
 import { getFilmPosterUrl } from "@/lib/film-poster";
+import { filmSearchConstants } from "@/lib/film-search.mjs";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -121,7 +123,10 @@ function FilmCard({
       data-testid="film-card"
       className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
     >
-      <div className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60">
+      <div
+        data-testid="film-poster"
+        className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60"
+      >
         {posterUrl ? (
           <img
             src={posterUrl}
@@ -137,14 +142,24 @@ function FilmCard({
         )}
 
         {film.trailer_url && (
-          <a
-            href={film.trailer_url}
-            target="_blank"
-            rel="noreferrer"
-            className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-white/90 px-3 py-1.5 text-sm font-medium text-black shadow-sm backdrop-blur hover:bg-white"
-          >
-            ▶ Trailer
-          </a>
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
+            <a
+              href={film.trailer_url}
+              target="_blank"
+              rel="noreferrer"
+              data-testid="film-trailer-link"
+              className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium leading-none text-black shadow-sm backdrop-blur hover:bg-white"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="h-3 w-3 shrink-0 fill-current"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              <span>Trailer</span>
+            </a>
+          </div>
         )}
       </div>
 
@@ -283,7 +298,27 @@ export default function ProfileTabs({
   const [localRatingOrder, setLocalRatingOrder] = useState<Record<string, number>>(
     () => buildInitialRatingOrder(watchedFilms)
   );
+  const [searchState, setSearchState] = useState({
+    query: "",
+    films: [] as Film[],
+    isLoading: false,
+    isActive: false,
+    error: null as string | null,
+  });
   const lastRatingOrderRef = useRef<Record<string, number>>({});
+
+  const handleSearchResultsChange = useCallback(
+    (nextState: {
+      query: string;
+      films: Film[];
+      isLoading: boolean;
+      isActive: boolean;
+      error: string | null;
+    }) => {
+      setSearchState(nextState);
+    },
+    []
+  );
 
   useEffect(() => {
     setLocalSavedFilms(savedFilms);
@@ -406,7 +441,20 @@ export default function ProfileTabs({
   );
   const allFilmsCurrentPage = Math.min(allFilmsPage, allFilmsTotalPages);
 
+  const isSearchActive = searchState.isActive;
+  const isSearchReady =
+    searchState.query.length >= filmSearchConstants.MIN_QUERY_LENGTH;
+  const isAllFilmsSearchActive =
+    activeTab === "all" && isSearchActive && isSearchReady;
+
   const { films, scores } = useMemo(() => {
+    if (isAllFilmsSearchActive) {
+      return {
+        films: searchState.films,
+        scores: {} as Record<string, FilmScore>,
+      };
+    }
+
     if (activeTab === "saved") {
       return { films: localSavedFilms, scores: {} as Record<string, FilmScore> };
     }
@@ -426,10 +474,12 @@ export default function ProfileTabs({
     activeTab,
     allFilmsCurrentPage,
     allFilmsPageSize,
+    isAllFilmsSearchActive,
     localAllFilmsSorted,
     allFilmsScores,
     localSavedFilms,
     localWatchedFilms,
+    searchState.films,
   ]);
 
   function handleTabChange(tab: ProfileTab) {
@@ -451,7 +501,7 @@ export default function ProfileTabs({
         ))}
       </div>
 
-      {activeTab === "all" && totalAllFilmsCount > 0 && (
+      {activeTab === "all" && !isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
         <p className="mb-6 text-sm text-gray-500">
           {totalAllFilmsCount} films in the guide
         </p>
@@ -534,30 +584,76 @@ export default function ProfileTabs({
         </section>
       )}
 
+      {activeTab === "all" && (
+        <>
+          <FilmSearch
+            onResultsChange={handleSearchResultsChange}
+            isLoading={searchState.isLoading}
+          />
+
+          {searchState.error && isAllFilmsSearchActive && (
+            <p className="mb-6 text-sm text-red-600" data-testid="film-search-error">
+              {searchState.error}
+            </p>
+          )}
+
+          {isAllFilmsSearchActive &&
+            !searchState.isLoading &&
+            !searchState.error &&
+            films.length > 0 && (
+            <p
+              className="mb-6 text-sm text-gray-500"
+              data-testid="film-search-results-count"
+            >
+              {films.length} {films.length === 1 ? "film" : "films"} matched “
+              {searchState.query}”.
+            </p>
+          )}
+
+          {isSearchActive &&
+            searchState.query.length > 0 &&
+            searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
+            <p className="mb-6 text-sm text-gray-500" data-testid="film-search-hint">
+              Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to search.
+            </p>
+          )}
+        </>
+      )}
+
       {loadError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
           {loadError}
         </div>
       )}
 
-      {!loadError && !films.length && (
+      {!loadError &&
+        !searchState.isLoading &&
+        !films.length &&
+        !(activeTab === "all" && isSearchActive && !isSearchReady) && (
         <div
-          data-testid="profile-tab-empty"
+          data-testid={
+            isAllFilmsSearchActive ? "film-search-empty" : "profile-tab-empty"
+          }
           className="rounded-2xl border border-dashed p-8 text-gray-500"
         >
-          {activeTab === "saved"
-            ? "No saved films yet."
-            : activeTab === "rated"
-              ? "No watched films yet."
-              : "No films yet. Add your first one."}
+          {isAllFilmsSearchActive
+            ? `No films matched “${searchState.query}”. Try a partial title, director name, year, country, or mood tag.`
+            : activeTab === "saved"
+              ? "No saved films yet."
+              : activeTab === "rated"
+                ? "No watched films yet."
+                : "No films yet. Add your first one."}
         </div>
       )}
 
-      <section data-testid="film-list" className="grid gap-4">
+      <section
+        data-testid={isAllFilmsSearchActive ? "film-search-results" : "film-list"}
+        className="grid gap-4"
+      >
         {films.map((film, index) => {
           const score = scores[film.id] ?? null;
           const reason =
-            activeTab === "all" && isColdStartMode
+            !isAllFilmsSearchActive && activeTab === "all" && isColdStartMode
               ? film.cold_start_note ?? undefined
               : undefined;
 
@@ -580,7 +676,7 @@ export default function ProfileTabs({
         })}
       </section>
 
-      {activeTab === "all" && totalAllFilmsCount > 0 && (
+      {activeTab === "all" && !isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
         <nav
           aria-label="All films pagination"
           className="mt-8 flex items-center justify-center gap-4"
