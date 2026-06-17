@@ -217,6 +217,40 @@ test.describe("Profile page", () => {
       ).toBeVisible();
     });
 
+    test("shows typeahead suggestions while typing and runs search on click", async ({
+      page,
+    }) => {
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+
+      const searchInput = page.getByTestId("film-search-input");
+      const firstTitle = await firstFilmCard(page)
+        .getByRole("heading", { level: 2 })
+        .innerText();
+      const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+
+      await searchInput.fill(partialTitle);
+
+      const dropdown = page.getByTestId("film-search-suggestions-dropdown");
+      await expect(dropdown).toBeVisible({ timeout: 10_000 });
+      await expect(page.getByTestId("film-search-suggestion-item").first()).toBeVisible();
+
+      await page
+        .getByTestId("film-search-suggestion-item")
+        .filter({ hasText: firstTitle })
+        .first()
+        .click();
+
+      await expect(searchInput).toHaveValue(firstTitle);
+      await expect(dropdown).not.toBeVisible();
+      await expect(page.getByTestId("film-search-results")).toBeVisible({
+        timeout: 10_000,
+      });
+
+      await searchInput.fill("");
+      await expect(dropdown).not.toBeVisible();
+    });
+
     test("keeps trailer overlay compact and centered on the poster", async ({
       page,
     }) => {

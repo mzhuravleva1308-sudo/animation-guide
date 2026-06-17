@@ -12,8 +12,9 @@ import path from "path";
  */
 dotenv.config({ path: path.resolve(__dirname, ".env.local") });
 
-const e2ePort = 3100;
+const e2ePort = Number(process.env.E2E_PORT ?? 3100);
 const baseURL = `http://127.0.0.1:${e2ePort}`;
+const skipWebServer = process.env.E2E_SKIP_WEBSERVER === "1";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -32,10 +33,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: {
-    command: `npm run build && npm run start -- -p ${e2ePort}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: `npm run build && npm run start -- -p ${e2ePort}`,
+        url: baseURL,
+        reuseExistingServer: !process.env.CI,
+        timeout: 180_000,
+      },
 });
