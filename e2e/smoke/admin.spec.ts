@@ -18,4 +18,17 @@ test.describe("Admin pages", () => {
     ).toBeVisible();
     await expect(page.getByText("deprecated")).toBeVisible();
   });
+
+  test("catalog analytics route renders coverage dashboard", async ({ page }) => {
+    await page.goto("/admin/catalog-analytics");
+
+    await expect(
+      page.getByRole("heading", { name: "Catalog analytics" })
+    ).toBeVisible();
+    await expect(page.getByText("Total films")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Country coverage" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Suggested curation gaps" })
+    ).toBeVisible();
+  });
 });
