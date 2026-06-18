@@ -1,6 +1,6 @@
 # Film Catalog Analysis
 
-Generated: 2026-06-18T11:59:45.268Z
+Generated: 2026-06-18T17:08:14.481Z
 
 ## Catalog overview
 
@@ -30,16 +30,16 @@ Generated: 2026-06-18T11:59:45.268Z
 
 ## Country coverage
 
-- Unique values: 43
+- Unique values: 41
 - Top represented:
   - France: 67
   - Japan: 52
   - United States: 38
   - Belgium: 26
   - Luxembourg: 17
+  - Germany: 15
   - United Kingdom: 15
   - Canada: 12
-  - Germany: 12
   - Spain: 10
   - Ireland: 7
 - Low coverage:
@@ -53,6 +53,22 @@ Generated: 2026-06-18T11:59:45.268Z
   - Sweden: 2
   - Chile: 1
   - Colombia: 1
+
+## Curation region coverage
+
+Curation regions are macro programming basins derived from country metadata — not stored production fields. Each film is counted once using its first listed country as the primary region; use country coverage for full co-production detail.
+
+- Unique values: 8
+- Coverage by region:
+  - Western Europe (France, Germany, Spain, Italy, Belgium, …): 64
+  - Japan: 49
+  - Anglophone North Atlantic (United States, Canada, Australia, …): 42
+  - Central & Eastern Europe (Czech Republic, Poland, Romania, …): 15
+  - British Isles (United Kingdom, Ireland, …): 9
+  - Asia excl. Japan (China, South Korea, India, Singapore, …): 5
+  - Latin America (Brazil, Mexico, Argentina, Chile, …): 4
+  - Middle East & Turkey (Iran, Israel, Turkey, Lebanon, …): 3
+- Low coverage:
 
 ## Period coverage
 

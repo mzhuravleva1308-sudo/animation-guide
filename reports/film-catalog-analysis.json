@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-18T11:59:45.268Z",
+  "generatedAt": "2026-06-18T17:08:14.481Z",
   "overview": {
     "totalFilms": 191,
     "withPoster": 190,
@@ -2829,23 +2829,21 @@
       "United States": 38,
       "Belgium": 26,
       "Luxembourg": 17,
+      "Germany": 15,
       "United Kingdom": 15,
       "Canada": 12,
-      "Germany": 12,
       "Spain": 10,
       "Ireland": 7,
       "Switzerland": 7,
+      "Czech Republic": 6,
       "Hungary": 6,
       "Italy": 6,
       "Latvia": 5,
       "Netherlands": 4,
       "Australia": 3,
       "China": 3,
-      "Czech Republic": 3,
-      "Czechoslovakia": 3,
       "Denmark": 3,
       "Poland": 3,
-      "West Germany": 3,
       "Brazil": 2,
       "Finland": 2,
       "Iran": 2,
@@ -2890,15 +2888,15 @@
         "count": 17
       },
       {
+        "label": "Germany",
+        "count": 15
+      },
+      {
         "label": "United Kingdom",
         "count": 15
       },
       {
         "label": "Canada",
-        "count": 12
-      },
-      {
-        "label": "Germany",
         "count": 12
       },
       {
@@ -2996,7 +2994,56 @@
         "count": 1
       }
     ],
-    "uniqueValues": 43,
+    "uniqueValues": 41,
+    "totalFilms": 191
+  },
+  "curationRegionCoverage": {
+    "counts": {
+      "Western Europe (France, Germany, Spain, Italy, Belgium, …)": 64,
+      "Japan": 49,
+      "Anglophone North Atlantic (United States, Canada, Australia, …)": 42,
+      "Central & Eastern Europe (Czech Republic, Poland, Romania, …)": 15,
+      "British Isles (United Kingdom, Ireland, …)": 9,
+      "Asia excl. Japan (China, South Korea, India, Singapore, …)": 5,
+      "Latin America (Brazil, Mexico, Argentina, Chile, …)": 4,
+      "Middle East & Turkey (Iran, Israel, Turkey, Lebanon, …)": 3
+    },
+    "top": [
+      {
+        "label": "Western Europe (France, Germany, Spain, Italy, Belgium, …)",
+        "count": 64
+      },
+      {
+        "label": "Japan",
+        "count": 49
+      },
+      {
+        "label": "Anglophone North Atlantic (United States, Canada, Australia, …)",
+        "count": 42
+      },
+      {
+        "label": "Central & Eastern Europe (Czech Republic, Poland, Romania, …)",
+        "count": 15
+      },
+      {
+        "label": "British Isles (United Kingdom, Ireland, …)",
+        "count": 9
+      },
+      {
+        "label": "Asia excl. Japan (China, South Korea, India, Singapore, …)",
+        "count": 5
+      },
+      {
+        "label": "Latin America (Brazil, Mexico, Argentina, Chile, …)",
+        "count": 4
+      },
+      {
+        "label": "Middle East & Turkey (Iran, Israel, Turkey, Lebanon, …)",
+        "count": 3
+      }
+    ],
+    "lowCoverage": [],
+    "uniqueValues": 8,
     "totalFilms": 191
   },
   "decadeCoverage": {

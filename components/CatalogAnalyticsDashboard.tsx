@@ -75,6 +75,7 @@ export type CatalogAnalytics = {
     unusuallyManyTags: Array<FilmRef & { totalTags: number }>;
   };
   countryCoverage: CoverageSection;
+  curationRegionCoverage: CoverageSection;
   decadeCoverage: CoverageSection & {
     oldestFilms: FilmRef[];
     newestFilms: FilmRef[];
@@ -286,6 +287,17 @@ export function CatalogAnalyticsDashboard({
       <div className="grid gap-6 lg:grid-cols-2">
         <Section title="Country coverage">
           <HorizontalBars items={analytics.countryCoverage.top ?? []} />
+        </Section>
+        <Section title="Curation region coverage">
+          <p className="mb-4 text-sm text-gray-600">
+            Macro programming basins from country metadata — each film counts once
+            using its first listed country. Use country coverage for co-production
+            detail.
+          </p>
+          <HorizontalBars
+            items={analytics.curationRegionCoverage.top ?? []}
+            maxItems={analytics.curationRegionCoverage.top?.length ?? 10}
+          />
         </Section>
         <Section title="Decade coverage">
           <HorizontalBars items={analytics.decadeCoverage.top ?? []} />
