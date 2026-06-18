@@ -4,12 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import { getFilmRating } from "@/lib/film-ratings";
-import { normalizeFilmTagList } from "@/lib/film-tags";
-import RatingButtons from "@/components/RatingButtons";
-import WatchlistButton from "@/components/WatchlistButton";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import FilmSearch from "@/components/FilmSearch";
-import { getFilmPosterUrl } from "@/lib/film-poster";
+import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 
 export type ProfileTab = "all" | "saved" | "rated";
@@ -80,197 +77,6 @@ function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
   });
 
   return order;
-}
-
-type FilmCardProps = {
-  film: Film;
-  profileId: string;
-  profileSlug: string;
-  initialRating: number | null;
-  savedFilmIds: Set<string>;
-  onSavedChange: (film: Film, saved: boolean) => void;
-  onRatingChange: (
-    filmId: string,
-    rating: number | null,
-    options?: { skipOrderUpdate?: boolean }
-  ) => void;
-  score?: FilmScore | null;
-  reason?: string;
-  showDebugScores?: boolean;
-  lazyLoadPoster?: boolean;
-};
-
-function FilmCard({
-  film,
-  profileId,
-  profileSlug,
-  initialRating,
-  savedFilmIds,
-  onSavedChange,
-  onRatingChange,
-  score = null,
-  reason,
-  showDebugScores = false,
-  lazyLoadPoster = false,
-}: FilmCardProps) {
-  const moods = normalizeFilmTagList(film.moods);
-  const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
-  const narrativeTags = normalizeFilmTagList(film.narrative_tags);
-  const posterUrl = getFilmPosterUrl(film);
-
-  return (
-    <article
-      data-testid="film-card"
-      className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
-    >
-      <div
-        data-testid="film-poster"
-        className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60"
-      >
-        {posterUrl ? (
-          <img
-            src={posterUrl}
-            alt={film.title}
-            loading={lazyLoadPoster ? "lazy" : "eager"}
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-400">
-            No image
-          </div>
-        )}
-
-        {film.trailer_url && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
-            <a
-              href={film.trailer_url}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="film-trailer-link"
-              className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium leading-none text-black shadow-sm backdrop-blur hover:bg-white"
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="h-3 w-3 shrink-0 fill-current"
-              >
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <span>Trailer</span>
-            </a>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-medium">{film.title}</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {[film.director, film.year, film.country, film.duration_minutes ? `${film.duration_minutes} min` : null]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-            {showDebugScores && score && (
-              <div className="mt-2 space-y-0.5 text-xs text-gray-400">
-                <p>Raw emotional: {score.emotional.toFixed(4)}</p>
-                <p>Raw material: {score.material.toFixed(4)}</p>
-                <p>Balanced total: {score.balanced.toFixed(4)}</p>
-              </div>
-            )}
-          </div>
-
-          {film.availability && film.availability !== "unknown" && (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-              {film.availability}
-            </span>
-          )}
-        </div>
-
-        {reason && (
-          <p className="mt-4 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
-            {reason}
-          </p>
-        )}
-
-        {!reason && film.synopsis && (
-          <p className="mt-4 text-gray-700">{film.synopsis}</p>
-        )}
-
-        <div className="mt-4 space-y-3">
-          {moods.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {moods.map((mood) => (
-                  <span
-                    key={mood}
-                    className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-                  >
-                    {mood}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {aestheticTags.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {aestheticTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {narrativeTags.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {narrativeTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {film.technique && (
-            <div>
-              <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
-                {film.technique}
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-auto flex items-end justify-between gap-6 pt-4">
-          <RatingButtons
-            filmId={film.id}
-            profileId={profileId}
-            initialRating={initialRating}
-            onRatingChange={onRatingChange}
-          />
-          <WatchlistButton
-            filmId={film.id}
-            profileSlug={profileSlug}
-            profileId={profileId}
-            isSaved={savedFilmIds.has(film.id)}
-            onSavedChange={(saved) => onSavedChange(film, saved)}
-          />
-        </div>
-      </div>
-    </article>
-  );
 }
 
 export default function ProfileTabs({
@@ -501,10 +307,14 @@ export default function ProfileTabs({
         ))}
       </div>
 
-      {activeTab === "all" && !isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
-        <p className="mb-6 text-sm text-gray-500">
-          {totalAllFilmsCount} films in the guide
-        </p>
+      {activeTab === "all" && (
+        <div className="mb-6 min-h-5">
+          {!isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
+            <p className="text-sm text-gray-500">
+              {totalAllFilmsCount} films in the guide
+            </p>
+          )}
+        </div>
       )}
 
       {activeTab === "rated" && (
@@ -591,32 +401,34 @@ export default function ProfileTabs({
             isLoading={searchState.isLoading}
           />
 
-          {searchState.error && isAllFilmsSearchActive && (
-            <p className="mb-6 text-sm text-red-600" data-testid="film-search-error">
-              {searchState.error}
-            </p>
-          )}
+          <div className="mb-6 min-h-5" aria-live="polite">
+            {searchState.error && isAllFilmsSearchActive && (
+              <p className="text-sm text-red-600" data-testid="film-search-error">
+                {searchState.error}
+              </p>
+            )}
 
-          {isAllFilmsSearchActive &&
-            !searchState.isLoading &&
-            !searchState.error &&
-            films.length > 0 && (
-            <p
-              className="mb-6 text-sm text-gray-500"
-              data-testid="film-search-results-count"
-            >
-              {films.length} {films.length === 1 ? "film" : "films"} matched “
-              {searchState.query}”.
-            </p>
-          )}
+            {isAllFilmsSearchActive &&
+              !searchState.isLoading &&
+              !searchState.error &&
+              films.length > 0 && (
+              <p
+                className="text-sm text-gray-500"
+                data-testid="film-search-results-count"
+              >
+                {films.length} {films.length === 1 ? "film" : "films"} matched “
+                {searchState.query}”.
+              </p>
+            )}
 
-          {isSearchActive &&
-            searchState.query.length > 0 &&
-            searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-            <p className="mb-6 text-sm text-gray-500" data-testid="film-search-hint">
-              Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to search.
-            </p>
-          )}
+            {isSearchActive &&
+              searchState.query.length > 0 &&
+              searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
+              <p className="text-sm text-gray-500" data-testid="film-search-hint">
+                Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to search.
+              </p>
+            )}
+          </div>
         </>
       )}
 
@@ -660,6 +472,7 @@ export default function ProfileTabs({
           return (
             <FilmCard
               key={film.id}
+              mode="profile"
               film={film}
               profileId={profileId}
               profileSlug={profileSlug}
