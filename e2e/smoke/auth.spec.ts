@@ -13,9 +13,7 @@ test.describe("Login page", () => {
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
     await expect(page.getByTestId("login-create-account")).toBeVisible();
     await expect(page.getByTestId("login-use-magic-link")).toBeVisible();
-    await expect(
-      page.getByTestId("auth-status").getByRole("link", { name: "Log in" })
-    ).toBeVisible();
+    await expect(page.getByTestId("auth-status")).toHaveCount(0);
   });
 
   test("switches email sign-in to magic link mode", async ({ page }) => {
@@ -31,10 +29,11 @@ test.describe("Login page", () => {
   });
 });
 
-test.describe("Auth header", () => {
-  test("shows login link when signed out", async ({ page }) => {
+test.describe("Account control", () => {
+  test("shows login link on the home page when signed out", async ({ page }) => {
     await page.goto("/");
 
+    await expect(page.getByRole("heading", { name: "Animation Guide" })).toBeVisible();
     await expect(page.getByTestId("auth-status")).toContainText("Log in");
     await expect(page.getByTestId("auth-email")).toHaveCount(0);
   });

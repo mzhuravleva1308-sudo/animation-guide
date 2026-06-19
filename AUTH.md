@@ -13,11 +13,13 @@ Sign-in via Supabase Auth: magic link, email/password, and optional OAuth (Apple
 
 All callback-based flows share `app/auth/callback/route.ts`. Magic links use `verifyOtp({ token_hash, type })`, which works across browsers/devices. OAuth and legacy PKCE email links still use `exchangeCodeForSession(code)`. Password sign-in creates the session directly in the browser.
 
-After any successful sign-in, the header resolves the linked profile via `profiles.user_id`. Users without a linked profile still show as signed in (`email · no profile linked`).
+After any successful sign-in, the account menu resolves the linked profile via `profiles.user_id`. Users without a linked profile still see their email in the menu.
 
 Logout is always `POST /auth/logout` regardless of how the user signed in.
 
-Unauthenticated browsing (home, `/films`, share-link profiles) is unchanged.
+Unauthenticated browsing (home, `/films`, share-link profiles) is unchanged. Signed-in users with a linked profile are redirected from `/` to `/my-profile`, which opens their guide when `slug` and `share_token` are present.
+
+After any successful sign-in (password, magic link, OAuth), the default destination is `/my-profile` — not the public home page. Callback-based flows pass `next=/my-profile` on `/auth/callback`; password sign-in navigates there directly.
 
 ## Environment variables
 
@@ -215,7 +217,9 @@ The app does **not** link profiles by email address. It resolves guides only thr
 |------|----------|
 | Session | Supabase Auth session cookie (any method) |
 | Profile lookup | `SELECT ... FROM profiles WHERE user_id = <auth.users.id>` |
-| Header | Shows email + linked profile name, or `no profile linked` |
+| Header | No global nav bar; guide pages show a compact account menu beside the title |
+| `/` (signed in + linked profile) | Redirects to `/my-profile` |
+| `/` (signed out, or signed in without linked profile) | Public home page |
 | `/my-profile` | Redirects to guide if linked; otherwise empty state |
 
 Setting `profiles.user_id` is a **manual, out-of-band** step today (SQL or Supabase dashboard). The app never writes `user_id` during login.
@@ -273,7 +277,7 @@ For each real user:
 1. Ask them to sign in once with the method and email they plan to use going forward.
 2. In **Supabase Dashboard → Authentication → Users**, copy that user’s **UUID** and confirm the email shown.
 3. Set `profiles.user_id` to that UUID (see `supabase/queries/profile-auth-linking.sql`).
-4. Have them sign out and back in (any linked method with the **same email**) → header should show their profile name; `/my-profile` should open their guide.
+4. Have them sign out and back in (any linked method with the **same email**) → account menu should show their profile name; `/my-profile` should open their guide.
 
 Do **not** set `profiles.user_id` from email alone — always use the UUID after a real sign-in.
 
@@ -307,8 +311,8 @@ Cannot be fully automated in CI without real Google/Apple credentials and per-us
 2. **Magic link**: `/login` → email → open link from email (or Inbucket locally)
 3. **Password**: create account or sign in with email + password
 4. **OAuth** (after provider + `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS` configured): click provider button → complete provider login
-5. Confirm header shows email (and profile name if `profiles.user_id` is set, or `no profile linked` otherwise)
-6. Click **Log out** → header returns to **Log in**
+5. Open the account menu (initials button beside the guide title) → confirm profile name and email
+6. Click **Log out** → **Log in** link appears on pages that show account controls
 7. Confirm `/p/{slug}?token=...` still works without signing in
 
 ## Automated tests
@@ -316,7 +320,7 @@ Cannot be fully automated in CI without real Google/Apple credentials and per-us
 | Layer | Coverage |
 |-------|----------|
 | **Unit** | `lib/auth/callback-url.test.mjs`, `lib/auth/callback-params.test.mjs`, `lib/auth/callback-error.test.mjs`, `lib/auth/oauth-providers.test.mjs`, `lib/auth/user-display.test.mjs` |
-| **E2E** | `e2e/smoke/auth.spec.ts` — unified login page structure + signed-out header |
+| **E2E** | `e2e/smoke/auth.spec.ts` — unified login page + signed-out account control on home |
 
 **Not automated** (requires real email or provider credentials):
 

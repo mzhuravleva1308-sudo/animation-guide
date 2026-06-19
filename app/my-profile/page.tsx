@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import AccountMenuSlot from "@/components/AccountMenuSlot";
 import { createClient } from "@/lib/supabase/server";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
 
@@ -31,7 +32,10 @@ export default async function MyProfilePage() {
 
   return (
     <main className="mx-auto max-w-md p-8" data-testid="my-profile-empty">
-      <h1 className="text-2xl font-semibold">My profile</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="min-w-0 text-2xl font-semibold">My profile</h1>
+        <AccountMenuSlot />
+      </div>
       <p className="mt-3 text-sm text-gray-600">
         No animation guide is linked to your account yet.
       </p>

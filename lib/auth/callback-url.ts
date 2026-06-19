@@ -1,6 +1,10 @@
+import { POST_AUTH_PATH } from "./post-auth-path";
+
 export function getAuthCallbackUrl(siteUrl: string): string {
   const base = siteUrl.replace(/\/$/, "");
-  return `${base}/auth/callback`;
+  const url = new URL("/auth/callback", `${base}/`);
+  url.searchParams.set("next", POST_AUTH_PATH);
+  return url.toString();
 }
 
 export function resolveSiteUrl(

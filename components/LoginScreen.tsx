@@ -8,6 +8,7 @@ import {
   getOAuthSignInLabel,
   type OAuthProvider,
 } from "@/lib/auth/oauth-providers";
+import { POST_AUTH_PATH } from "@/lib/auth/post-auth-path";
 
 type LoginScreenProps = {
   oauthProviders: OAuthProvider[];
@@ -101,7 +102,7 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
       return;
     }
 
-    window.location.assign("/");
+    window.location.assign(POST_AUTH_PATH);
   }
 
   async function handlePasswordSignUp() {
@@ -134,7 +135,7 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
     }
 
     if (data.session) {
-      window.location.assign("/");
+      window.location.assign(POST_AUTH_PATH);
       return;
     }
 

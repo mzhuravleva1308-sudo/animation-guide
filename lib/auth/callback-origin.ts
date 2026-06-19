@@ -1,6 +1,8 @@
+import { POST_AUTH_PATH } from "./post-auth-path";
+
 export function sanitizeNextPath(next?: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
-    return "/";
+    return POST_AUTH_PATH;
   }
 
   return next;

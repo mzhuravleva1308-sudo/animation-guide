@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import AccountMenuSlot from "@/components/AccountMenuSlot";
 import {
   buildBalancedScores,
   FilmScore,
@@ -211,8 +212,8 @@ export default async function ProfilePage({
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
-      <header className="mb-8 flex items-start justify-between gap-6">
-        <div>
+      <header className="mb-8 flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <h1 className="text-3xl font-semibold">
             {profile.name}’s Animation Guide
           </h1>
@@ -221,6 +222,7 @@ export default async function ProfilePage({
             watch next.
           </p>
         </div>
+        <AccountMenuSlot />
       </header>
 
       <ProfileTabs

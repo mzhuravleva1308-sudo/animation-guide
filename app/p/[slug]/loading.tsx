@@ -30,9 +30,12 @@ function FilmCardSkeleton() {
 export default function ProfileLoading() {
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8" aria-busy="true" aria-label="Loading profile">
-      <header className="mb-8">
-        <SkeletonBlock className="mb-3 h-9 w-72 max-w-full" />
-        <SkeletonBlock className="h-5 w-full max-w-lg" />
+      <header className="mb-8 flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <SkeletonBlock className="mb-3 h-9 w-72 max-w-full" />
+          <SkeletonBlock className="h-5 w-full max-w-lg" />
+        </div>
+        <SkeletonBlock className="h-9 w-9 shrink-0 rounded-full" />
       </header>
 
       <div className="mb-6 flex flex-wrap gap-2">

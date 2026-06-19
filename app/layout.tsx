@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
-import AuthStatus from "@/components/AuthStatus";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,17 +27,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full w-full flex flex-col font-sans antialiased">
-        <header className="border-b border-gray-200 px-8 py-3">
-          <div className="mx-auto flex max-w-3xl items-center justify-between">
-            <Link href="/" className="text-sm font-medium">
-              Animation Guide
-            </Link>
-            <AuthStatus />
-          </div>
-        </header>
-        {children}
-      </body>
+      <body className="min-h-full w-full font-sans antialiased">{children}</body>
     </html>
   );
 }
