@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import EmailOtpAuthForm from "@/components/EmailOtpAuthForm";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/auth/callback-url";
 import { resolveAuthOrigin } from "@/lib/auth/callback-origin";
@@ -14,14 +15,9 @@ type LoginScreenProps = {
   oauthProviders: OAuthProvider[];
 };
 
-type EmailMode = "password" | "magic-link";
+type EmailMode = "password" | "email-otp";
 
-type LoadingAction =
-  | "magic-link"
-  | "sign-in"
-  | "sign-up"
-  | OAuthProvider
-  | null;
+type LoadingAction = "sign-in" | "sign-up" | OAuthProvider | null;
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -58,25 +54,6 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
     );
 
     return getAuthCallbackUrl(authOrigin);
-  }
-
-  async function handleMagicLink(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading("magic-link");
-    setMessage(null);
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: getAuthRedirectUrl(),
-      },
-    });
-
-    setMessage(
-      error ? error.message : "Check your email for the sign-in link."
-    );
-    setLoading(null);
   }
 
   async function handlePasswordSignIn(event: React.FormEvent<HTMLFormElement>) {
@@ -199,15 +176,17 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
       ) : null}
 
       <section
-        aria-labelledby="login-email-heading"
+        aria-labelledby={
+          isPasswordMode ? "login-email-heading" : "login-email-code-heading"
+        }
         className="rounded-lg border border-gray-200 bg-white p-4"
       >
-        <h2 id="login-email-heading" className="text-sm font-medium text-gray-900">
-          Email sign-in
-        </h2>
-
         {isPasswordMode ? (
-          <form className="mt-4 space-y-3" onSubmit={handlePasswordSignIn}>
+          <>
+            <h2 id="login-email-heading" className="text-sm font-medium text-gray-900">
+              Email sign-in
+            </h2>
+            <form className="mt-4 space-y-3" onSubmit={handlePasswordSignIn}>
             <div>
               <label htmlFor="login-email" className="sr-only">
                 Email
@@ -255,13 +234,13 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
                 type="button"
                 disabled={isBusy}
                 onClick={() => {
-                  setEmailMode("magic-link");
+                  setEmailMode("email-otp");
                   setMessage(null);
                 }}
                 className="text-gray-600 hover:text-gray-900 disabled:opacity-60"
-                data-testid="login-use-magic-link"
+                data-testid="login-use-email-code"
               >
-                Email me a sign-in link
+                Email me a sign-in code
               </button>
               <button
                 type="button"
@@ -274,32 +253,13 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
               </button>
             </div>
           </form>
+          </>
         ) : (
-          <form className="mt-4 space-y-3" onSubmit={handleMagicLink}>
-            <div>
-              <label htmlFor="login-email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Email address"
-                data-testid="login-email"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isBusy}
-              className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-            >
-              {loading === "magic-link" ? "Sending link..." : "Send sign-in link"}
-            </button>
+          <>
+            <h2 id="login-email-code-heading" className="text-sm font-medium text-gray-900">
+              Email code
+            </h2>
+            <EmailOtpAuthForm testIdPrefix="login" postAuthPath={POST_AUTH_PATH} />
             <button
               type="button"
               disabled={isBusy}
@@ -307,12 +267,12 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
                 setEmailMode("password");
                 setMessage(null);
               }}
-              className="text-sm text-gray-600 hover:text-gray-900 disabled:opacity-60"
+              className="mt-3 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-60"
               data-testid="login-use-password"
             >
               Sign in with password instead
             </button>
-          </form>
+          </>
         )}
       </section>
 

@@ -8,6 +8,7 @@ import path from "path";
  * - npm test = full local verification (unit + e2e)
  * - webServer: production build && start on port 3100 (not next dev)
  * - Profile tests: E2E_PROFILE_SLUG + E2E_PROFILE_TOKEN only (.env.local)
+ * - Email OTP tests: local Supabase + Mailpit (see TESTING.md)
  * - Reset: SUPABASE_SERVICE_ROLE_KEY — server-side cleanup only; never client, never commit
  */
 dotenv.config({ path: path.resolve(__dirname, ".env.local") });

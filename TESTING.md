@@ -111,6 +111,42 @@ Required **only** for server-side E2E cleanup (`reset-e2e-profile.ts`), not for 
 
 Offline `scripts/` may also use this key; same rules apply.
 
+## Email OTP E2E (local Supabase + Mailpit)
+
+Films auth E2E tests that send and verify OTP codes require:
+
+1. **Local Supabase CLI stack** running (`supabase start`)
+2. **`.env.local` pointed at local Supabase** — `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321` and keys from `supabase status -o env`
+3. **Mailpit reachable** at `MAILPIT_URL` (default `http://127.0.0.1:54324`)
+
+### Setup commands
+
+```bash
+supabase start
+supabase status          # human-readable; note Mailpit URL
+supabase status -o env     # export API_URL, ANON_KEY, SERVICE_ROLE_KEY, MAILPIT_URL
+```
+
+Copy the env vars into `.env.local`, then run E2E:
+
+```bash
+npm run test:e2e -- e2e/smoke/films-auth.spec.ts
+```
+
+### How E2E retrieves codes
+
+Tests use `e2e/helpers/mailpit.ts`:
+
+1. UI requests an OTP through the real app (`signInWithOtp`)
+2. Helper polls Mailpit: `GET /api/v1/search?query=to:{email}`
+3. Fetches the message body: `GET /api/v1/message/{ID}`
+4. Extracts the 6-digit code with `lib/auth/extract-otp-from-email.mjs`
+5. UI submits the code; Supabase verifies it normally (`verifyOtp`)
+
+There are **no hard-coded OTP values** and **no production auth bypasses**. If local Supabase or Mailpit is unavailable, Mailpit-dependent tests **skip** with an explicit reason.
+
+UI-only auth tests (modal open/close, login link visibility) still run without Mailpit.
+
 ## Stable UI selectors
 
 Profile E2E tests prefer:

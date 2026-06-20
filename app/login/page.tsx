@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     <main className="mx-auto max-w-md p-8">
       <h1 className="text-2xl font-semibold">Sign in</h1>
       <p className="mt-2 text-sm text-gray-600">
-        Sign in with email and password, or request a magic link.
+        Sign in with email and password, or request a one-time email code.
       </p>
 
       {error ? (
