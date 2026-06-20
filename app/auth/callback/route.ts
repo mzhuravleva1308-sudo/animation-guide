@@ -6,14 +6,20 @@ import {
   hasPkceVerifierCookie,
   logAuthCallbackError,
 } from "@/lib/auth/callback-error";
+import { resolveAuthOriginFromRequest } from "@/lib/auth/callback-origin";
 import {
-  resolveAuthOriginFromRequest,
-  sanitizeNextPath,
-} from "@/lib/auth/callback-origin";
+  AUTH_NEXT_PATH_COOKIE_NAME,
+  resolveAuthCallbackNextPath,
+} from "@/lib/auth/auth-next-path";
 import {
   normalizeEmailOtpType,
   resolveCallbackMethod,
 } from "@/lib/auth/callback-params";
+import { ensureAuthProfileForUser } from "@/lib/auth/ensure-auth-profile";
+import {
+  appendAuthCallbackErrorToPath,
+  resolvePostAuthRedirectPath,
+} from "@/lib/auth/resolve-post-auth-redirect";
 import {
   PENDING_FILM_ACTION_COOKIE_NAME,
   readPendingFilmActionFromCookies,
@@ -25,60 +31,109 @@ import {
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
-async function applyPendingFilmActionFromCallbackRequest(
+type AuthCallbackFinalizeResult =
+  | {
+      kind: "success";
+      redirectPath: string;
+      clearPendingCookie: boolean;
+    }
+  | {
+      kind: "profile_error";
+      redirectPath: string;
+    }
+  | {
+      kind: "pending_apply_error";
+      redirectPath: string;
+    };
+
+async function finalizeAuthenticatedCallback(
   request: NextRequest,
   requestUrl: URL,
-  response: NextResponse,
+  nextPath: string,
+  authCallbackType: string | null,
   supabase: ReturnType<typeof createCallbackClient>
-) {
-  const pendingAction =
-    decodePendingFilmActionFromCallback(
-      requestUrl.searchParams.get(PENDING_FILM_ACTION_QUERY_PARAM)
-    ) ?? readPendingFilmActionFromCookies(request.cookies.getAll());
-
-  if (!pendingAction) {
-    return;
-  }
-
+): Promise<AuthCallbackFinalizeResult | null> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return;
+    return null;
   }
 
   await autoLinkE2eProfileForAuthUser(user);
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (!profile?.id) {
-    return;
-  }
-
-  const result = await applyPendingFilmActionWithClient(
-    supabase,
-    profile.id,
-    pendingAction
-  );
-
-  if (result.error) {
-    console.error("[auth/callback] failed to apply pending film action", {
-      actionId: pendingAction.id,
-      actionType: pendingAction.type,
-      message: result.error,
+  let profile;
+  try {
+    ({ profile } = await ensureAuthProfileForUser(supabase, user));
+  } catch (error) {
+    console.error("[auth/callback] failed to ensure auth profile", {
+      userId: user.id,
+      message: error instanceof Error ? error.message : "unknown error",
     });
-    return;
+
+    return {
+      kind: "profile_error",
+      redirectPath: appendAuthCallbackErrorToPath(
+        nextPath,
+        "We signed you in, but couldn't set up your personal guide. Please try again.",
+        "profile_provision_failed"
+      ),
+    };
   }
 
-  response.cookies.set(PENDING_FILM_ACTION_COOKIE_NAME, "", {
-    path: "/",
-    maxAge: 0,
-  });
+  if (!profile?.id || !profile.slug || !profile.share_token) {
+    return {
+      kind: "profile_error",
+      redirectPath: appendAuthCallbackErrorToPath(
+        nextPath,
+        "We signed you in, but couldn't set up your personal guide. Please try again.",
+        "profile_provision_failed"
+      ),
+    };
+  }
+
+  const pendingAction =
+    decodePendingFilmActionFromCallback(
+      requestUrl.searchParams.get(PENDING_FILM_ACTION_QUERY_PARAM)
+    ) ?? readPendingFilmActionFromCookies(request.cookies.getAll());
+  const hadPendingAction = Boolean(pendingAction);
+
+  if (pendingAction) {
+    const result = await applyPendingFilmActionWithClient(
+      supabase,
+      profile.id,
+      pendingAction
+    );
+
+    if (result.error) {
+      console.error("[auth/callback] failed to apply pending film action", {
+        actionId: pendingAction.id,
+        actionType: pendingAction.type,
+        message: result.error,
+      });
+
+      return {
+        kind: "pending_apply_error",
+        redirectPath: appendAuthCallbackErrorToPath(
+          nextPath,
+          "We signed you in, but couldn't save your film action. Please try again from the catalog.",
+          "pending_action_failed"
+        ),
+      };
+    }
+  }
+
+  return {
+    kind: "success",
+    redirectPath: resolvePostAuthRedirectPath({
+      profile,
+      nextPath,
+      hadPendingAction,
+      authCallbackType,
+    }),
+    clearPendingCookie: hadPendingAction,
+  };
 }
 
 function buildLoginErrorRedirect(
@@ -96,9 +151,30 @@ function buildLoginErrorRedirect(
   return NextResponse.redirect(loginUrl);
 }
 
+function applyFinalizeResultToResponse(
+  response: NextResponse,
+  origin: string,
+  nextPath: string,
+  result: AuthCallbackFinalizeResult | null
+) {
+  const redirectPath = result?.redirectPath ?? nextPath;
+
+  response.headers.set("Location", new URL(redirectPath, origin).toString());
+
+  if (result?.kind === "success" && result.clearPendingCookie) {
+    response.cookies.set(PENDING_FILM_ACTION_COOKIE_NAME, "", {
+      path: "/",
+      maxAge: 0,
+    });
+  }
+}
+
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
-  const next = sanitizeNextPath(requestUrl.searchParams.get("next"));
+  const next = resolveAuthCallbackNextPath(
+    requestUrl.searchParams.get("next"),
+    request.cookies.getAll()
+  );
   const origin = resolveAuthOriginFromRequest(
     request,
     process.env.NEXT_PUBLIC_SITE_URL
@@ -122,6 +198,10 @@ export async function GET(request: NextRequest) {
   }
 
   const successRedirect = NextResponse.redirect(new URL(next, origin));
+  successRedirect.cookies.set(AUTH_NEXT_PATH_COOKIE_NAME, "", {
+    path: "/",
+    maxAge: 0,
+  });
   const supabase = createCallbackClient(request, successRedirect);
 
   if (callback.method === "verify_otp") {
@@ -155,12 +235,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    await applyPendingFilmActionFromCallbackRequest(
+    const finalizeResult = await finalizeAuthenticatedCallback(
       request,
       requestUrl,
-      successRedirect,
+      next,
+      otpType,
       supabase
     );
+    applyFinalizeResultToResponse(successRedirect, origin, next, finalizeResult);
 
     return successRedirect;
   }
@@ -183,12 +265,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  await applyPendingFilmActionFromCallbackRequest(
+  const finalizeResult = await finalizeAuthenticatedCallback(
     request,
     requestUrl,
-    successRedirect,
+    next,
+    null,
     supabase
   );
+  applyFinalizeResultToResponse(successRedirect, origin, next, finalizeResult);
 
   return successRedirect;
 }

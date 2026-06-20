@@ -33,12 +33,20 @@ export async function requestFilmsMagicLink(
 export async function completeFilmsMagicLinkSignIn(
   page: Page,
   email: string,
-  sentAfter: Date
+  sentAfter: Date,
+  options?: { waitForUrl?: RegExp }
 ): Promise<string> {
   const confirmationUrl = await waitForMailpitMagicLink({ email, sentAfter });
 
   await page.goto(confirmationUrl);
-  await page.waitForURL(/\/films(?:\?|$)/, { timeout: 20_000 });
+  await page.waitForURL(
+    options?.waitForUrl ?? /\/(p\/[^/?#]+|films)(?:\?|$)/,
+    { timeout: 20_000 }
+  );
 
   return confirmationUrl;
+}
+
+export function profileGuideUrlPattern(slug: string): RegExp {
+  return new RegExp(`/p/${slug}(?:\\?|$)`);
 }

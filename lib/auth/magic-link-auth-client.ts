@@ -1,5 +1,6 @@
 import { getAuthCallbackUrl } from "@/lib/auth/callback-url";
 import { resolveAuthOrigin } from "@/lib/auth/callback-origin";
+import { storeAuthNextPathCookie } from "@/lib/auth/auth-next-path";
 import {
   isValidAuthEmail,
   normalizeAuthEmail,
@@ -36,6 +37,7 @@ export async function requestMagicLink(
     process.env.NEXT_PUBLIC_SITE_URL
   );
   const emailRedirectTo = getAuthCallbackUrl(authOrigin, nextPath);
+  storeAuthNextPathCookie(nextPath);
 
   const supabase = createClient();
   const { error } = await supabase.auth.signInWithOtp({

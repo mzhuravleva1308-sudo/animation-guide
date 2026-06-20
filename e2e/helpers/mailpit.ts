@@ -1,4 +1,8 @@
-import { extractMagicLinkFromEmailContent } from "../../lib/auth/extract-magic-link-from-email.mjs";
+import {
+  extractMagicLinkFromEmailContent,
+  isMalformedAuthEmailLink,
+  isSignInMagicLink,
+} from "../../lib/auth/extract-magic-link-from-email.mjs";
 
 const DEFAULT_MAILPIT_URL = "http://127.0.0.1:54324";
 
@@ -112,6 +116,12 @@ export type WaitForMailpitMagicLinkOptions = {
 export async function waitForMailpitMagicLink(
   options: WaitForMailpitMagicLinkOptions
 ): Promise<string> {
+  return waitForMailpitAuthLink(options);
+}
+
+export async function waitForMailpitAuthLink(
+  options: WaitForMailpitMagicLinkOptions
+): Promise<string> {
   const mailpitUrl = options.mailpitUrl ?? getMailpitUrl();
   const timeoutMs = options.timeoutMs ?? 20_000;
   const pollIntervalMs = options.pollIntervalMs ?? 500;
@@ -135,11 +145,17 @@ export async function waitForMailpitMagicLink(
         );
 
         if (confirmationUrl) {
+          if (isMalformedAuthEmailLink(confirmationUrl)) {
+            throw new Error(
+              `Mailpit message ${candidate.ID} contained a malformed sign-in link: ${confirmationUrl}`
+            );
+          }
+
           return confirmationUrl;
         }
 
         lastError = new Error(
-          `Mailpit message ${candidate.ID} did not contain a sign-in link.`
+          `Mailpit message ${candidate.ID} did not contain an auth callback link.`
         );
       }
     } catch (error) {
@@ -157,7 +173,7 @@ export async function waitForMailpitMagicLink(
   throw (
     lastError ??
     new Error(
-      `Timed out waiting for a sign-in link email to ${options.email} in Mailpit.`
+      `Timed out waiting for an auth email to ${options.email} in Mailpit.`
     )
   );
 }

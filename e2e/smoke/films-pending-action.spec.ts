@@ -4,15 +4,26 @@ import {
   assertFilmSavedInProfile,
   countRatingRowsForFilm,
   countSavedListRowsForFilm,
+  linkAuthUserEmailToE2eProfile,
   prepareE2eFilmsAuthProfile,
 } from "../helpers/e2e-auth-profile";
 import {
   completeFilmsMagicLinkSignIn,
   getMagicLinkFlowSkipReason,
+  profileGuideUrlPattern,
+  requestFilmsMagicLink,
   uniqueMagicLinkTestEmail,
 } from "../helpers/magic-link-auth";
-import { getProfileTestCredentials } from "../helpers/profile-credentials";
-import { firstFilmCard, waitForWatchlistButton } from "../helpers/profile-page";
+import {
+  getProfileTestCredentials,
+  profilePagePath,
+  requireProfileTestCredentials,
+} from "../helpers/profile-credentials";
+import {
+  firstFilmCard,
+  openProfileTab,
+  waitForWatchlistButton,
+} from "../helpers/profile-page";
 
 async function openAuthModalFromSaveAction(page: import("@playwright/test").Page) {
   const card = firstFilmCard(page);
@@ -56,11 +67,12 @@ test.describe("Films pending actions with Mailpit", () => {
     );
   });
 
-  test("signed-out save opens auth, persists to the authenticated profile, and stays on /films", async ({
+  test("signed-out save opens auth, persists to the authenticated profile, and opens the personal guide", async ({
     page,
   }) => {
     const email = uniqueMagicLinkTestEmail("films-save");
     const profileId = await prepareE2eFilmsAuthProfile(email);
+    const credentials = requireProfileTestCredentials();
 
     await page.goto("/films");
     const firstCard = firstFilmCard(page);
@@ -70,27 +82,30 @@ test.describe("Films pending actions with Mailpit", () => {
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+    expect(page.url()).toContain(profilePagePath(credentials));
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
 
-    const signedInCard = firstFilmCard(page);
+    await openProfileTab(page, "Saved");
+    const savedCard = firstFilmCard(page);
     await expect
       .poll(async () => countSavedListRowsForFilm(profileId, filmId!))
       .toBe(1);
     await expect(
-      signedInCard.getByRole("button", { name: "Remove from watchlist" })
+      savedCard.getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
 
     await assertFilmSavedInProfile(profileId, filmId!, true);
     expect(await countSavedListRowsForFilm(profileId, filmId!)).toBe(1);
   });
 
-  test("signed-out rating opens auth and persists the selected rating", async ({
+  test("signed-out rating opens auth, persists the selected rating, and opens the personal guide", async ({
     page,
   }) => {
     const email = uniqueMagicLinkTestEmail("films-rate");
     const profileId = await prepareE2eFilmsAuthProfile(email);
+    const credentials = requireProfileTestCredentials();
     const rating = 8;
 
     await page.goto("/films");
@@ -103,14 +118,17 @@ test.describe("Films pending actions with Mailpit", () => {
 
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+    expect(page.url()).toContain(profilePagePath(credentials));
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
 
-    const signedInCard = firstFilmCard(page);
     await expect
       .poll(async () => countRatingRowsForFilm(profileId, filmId!))
       .toBe(1);
-    await expect(signedInCard).toContainText(`My rating: ${rating}/10`);
+
+    await openProfileTab(page, "Watched");
+    const ratedCard = page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`);
+    await expect(ratedCard).toContainText(`My rating: ${rating}/10`);
     await assertFilmRatingInProfile(profileId, filmId!, rating);
     expect(await countRatingRowsForFilm(profileId, filmId!)).toBe(1);
   });
@@ -147,6 +165,7 @@ test.describe("Films pending actions with Mailpit", () => {
   }) => {
     const email = uniqueMagicLinkTestEmail("films-idempotent");
     const profileId = await prepareE2eFilmsAuthProfile(email);
+    const credentials = requireProfileTestCredentials();
     const rating = 9;
 
     await page.goto("/films");
@@ -157,31 +176,57 @@ test.describe("Films pending actions with Mailpit", () => {
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
 
-    const signedInCard = firstFilmCard(page);
+    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+
+    await openProfileTab(page, "Saved");
     await expect
       .poll(async () => countSavedListRowsForFilm(profileId, filmId!))
       .toBe(1);
     await expect(
-      signedInCard.getByRole("button", { name: "Remove from watchlist" })
+      firstFilmCard(page).getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
 
     await page.reload();
-    await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
+    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+    await openProfileTab(page, "Saved");
     await expect(
       firstFilmCard(page).getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
     expect(await countSavedListRowsForFilm(profileId, filmId!)).toBe(1);
 
-    const reloadedCard = firstFilmCard(page);
-    await reloadedCard.getByRole("button", { name: `Rate ${rating} out of 10` }).click();
+    await openProfileTab(page, "All films");
+    const allFilmsCard = page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`);
+    await allFilmsCard.getByRole("button", { name: `Rate ${rating} out of 10` }).click();
     await expect
       .poll(async () => countRatingRowsForFilm(profileId, filmId!))
       .toBe(1);
-    await expect(reloadedCard).toContainText(`My rating: ${rating}/10`);
+
+    await openProfileTab(page, "Watched");
+    await expect(
+      page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`)
+    ).toContainText(`My rating: ${rating}/10`);
 
     await page.reload();
-    await expect(firstFilmCard(page)).toContainText(`My rating: ${rating}/10`);
+    await openProfileTab(page, "Watched");
+    await expect(
+      page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`)
+    ).toContainText(`My rating: ${rating}/10`);
     await assertFilmRatingInProfile(profileId, filmId!, rating);
     expect(await countRatingRowsForFilm(profileId, filmId!)).toBe(1);
+  });
+
+  test("existing user login without onboarding returns to the original page", async ({
+    page,
+  }) => {
+    const email = uniqueMagicLinkTestEmail("existing-login");
+    await linkAuthUserEmailToE2eProfile(email);
+
+    const sentAfter = await requestFilmsMagicLink(page, email);
+    await completeFilmsMagicLinkSignIn(page, email, sentAfter, {
+      waitForUrl: /\/films(?:\?|$)/,
+    });
+
+    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
   });
 });

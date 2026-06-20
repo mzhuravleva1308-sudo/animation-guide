@@ -2,9 +2,14 @@ import { test, expect } from "@playwright/test";
 import {
   completeFilmsMagicLinkSignIn,
   getMagicLinkFlowSkipReason,
+  profileGuideUrlPattern,
   requestFilmsMagicLink,
   uniqueMagicLinkTestEmail,
 } from "../helpers/magic-link-auth";
+import {
+  getProfileTestCredentials,
+  profilePagePath,
+} from "../helpers/profile-credentials";
 
 test.describe("Films magic-link auth", () => {
   test("shows a subtle login control when signed out", async ({ page }) => {
@@ -244,9 +249,27 @@ test.describe("Films magic-link auth with Mailpit", () => {
     await expect(page.getByTestId("email-auth-otp")).toHaveCount(0);
   });
 
+  test("emails a valid auth callback link via Mailpit", async ({ page }) => {
+    const email = uniqueMagicLinkTestEmail("films-link-shape");
+    const sentAfter = await requestFilmsMagicLink(page, email);
+    const { waitForMailpitMagicLink } = await import("../helpers/mailpit");
+    const confirmationUrl = await waitForMailpitMagicLink({ email, sentAfter });
+
+    expect(confirmationUrl).not.toMatch(/^https?:\/\/[^/?#]+&/);
+    expect(confirmationUrl).toMatch(/\/auth\/callback\?/);
+    expect(confirmationUrl).toMatch(/token_hash=/);
+    expect(confirmationUrl).toMatch(/type=(email|signup)/);
+  });
+
   test("retrieves the magic link from Mailpit and completes sign-in", async ({
     page,
   }) => {
+    const credentials = getProfileTestCredentials();
+    test.skip(
+      credentials === null,
+      "Missing E2E_PROFILE_SLUG and E2E_PROFILE_TOKEN (see ENV.md)."
+    );
+
     const email = uniqueMagicLinkTestEmail("films-sign-in");
     const sentAfter = await requestFilmsMagicLink(page, email);
     const confirmationUrl = await completeFilmsMagicLinkSignIn(
@@ -255,8 +278,9 @@ test.describe("Films magic-link auth with Mailpit", () => {
       sentAfter
     );
 
-    expect(confirmationUrl).toMatch(/\/auth\/v1\/verify|token_hash=/i);
-    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    expect(confirmationUrl).toMatch(/\/auth\/callback\?.*token_hash=.*type=(email|signup)/);
+    await expect(page).toHaveURL(profileGuideUrlPattern(credentials!.slug));
+    expect(page.url()).toContain(profilePagePath(credentials!));
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     await expect(page.getByTestId("auth-status")).not.toContainText("Log in");
   });

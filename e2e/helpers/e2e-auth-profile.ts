@@ -63,6 +63,115 @@ async function findAuthUserByEmail(email: string) {
   return null;
 }
 
+export async function deleteAuthUserByEmailForTests(email: string): Promise<void> {
+  await deleteAuthUserByEmail(email);
+}
+
+export async function findAuthUserIdByEmail(email: string): Promise<string | null> {
+  const user = await findAuthUserByEmail(email);
+  return user?.id ?? null;
+}
+
+export async function findProfileByUserId(userId: string) {
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, slug, name, user_id, share_token")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to load profile for user ${userId}: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function countProfilesForUserId(userId: string): Promise<number> {
+  const supabase = createServiceRoleClient();
+
+  const { count, error } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+
+  if (error) {
+    throw new Error(`Failed to count profiles for user ${userId}: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
+
+export function uniquePersonalGuideTestEmail(prefix = "personal-guide"): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@personal-guide.test`;
+}
+
+export const E2E_SEED_FILM_ID = "11111111-1111-4111-8111-111111111102";
+
+export type E2eProfileSnapshot = {
+  id: string;
+  slug: string;
+  name: string | null;
+  share_token: string;
+  user_id: string | null;
+};
+
+export async function getE2eProfileSnapshot(): Promise<E2eProfileSnapshot> {
+  const credentials = requireProfileTestCredentials();
+  const supabase = createServiceRoleClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, slug, name, share_token, user_id")
+    .eq("slug", credentials.slug)
+    .eq("share_token", credentials.token)
+    .single();
+
+  if (error || !data) {
+    throw new Error(
+      `Failed to load E2E profile snapshot: ${error?.message ?? "not found"}`
+    );
+  }
+
+  return data;
+}
+
+export async function seedE2eProfileRating(
+  profileId: string,
+  filmId: string,
+  rating: number
+): Promise<void> {
+  const supabase = createServiceRoleClient();
+
+  const { error } = await supabase.from("film_ratings").upsert(
+    {
+      profile_id: profileId,
+      film_id: filmId,
+      rating,
+    },
+    { onConflict: "profile_id,film_id" }
+  );
+
+  if (error) {
+    throw new Error(`Failed to seed E2E profile rating: ${error.message}`);
+  }
+}
+
+export async function countAllProfiles(): Promise<number> {
+  const supabase = createServiceRoleClient();
+
+  const { count, error } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
+
+  if (error) {
+    throw new Error(`Failed to count profiles: ${error.message}`);
+  }
+
+  return count ?? 0;
+}
+
 export async function unlinkE2eProfileUser(): Promise<void> {
   const credentials = requireProfileTestCredentials();
   const supabase = createServiceRoleClient();

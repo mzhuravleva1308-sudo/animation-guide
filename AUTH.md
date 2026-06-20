@@ -56,9 +56,10 @@ In the [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication
 | Setting | Value |
 |---------|--------|
 | **Site URL** | `http://127.0.0.1:3000` (or `http://localhost:3000` — pick one and use it consistently) |
-| **Redirect URLs** | `http://127.0.0.1:3000/auth/callback` |
-| | `http://localhost:3000/auth/callback` |
-| | `https://127.0.0.1:3000/auth/callback` (if using HTTPS locally) |
+| **Redirect URLs** | `http://127.0.0.1:3000/**` |
+| | `http://localhost:3000/**` |
+| | `http://127.0.0.1:3100/**` (Playwright E2E) |
+| | `http://localhost:3100/**` (Playwright E2E) |
 
 The app sets OAuth `redirectTo`, password sign-up `emailRedirectTo`, and magic-link `emailRedirectTo` to `{origin}/auth/callback?next=…`. The `{origin}` is the **browser’s current host** (not `NEXT_PUBLIC_SITE_URL`), so both `localhost` and `127.0.0.1` variants must be allowlisted if you use either.
 
@@ -78,12 +79,12 @@ Complete these in **Supabase Dashboard** for the hosted project. Repo changes al
 
 | Step | Dashboard location | Required setting |
 |------|-------------------|------------------|
-| 1 | **Authentication → Providers → Email** | **Confirm email** → **OFF**. When ON, new emails receive the separate “Confirm your email address” signup template instead of the magic-link flow, and the user is not signed in after clicking the link. |
+| 1 | **Authentication → Providers → Email** | **Confirm email** → **ON** (required for password sign-up confirmation). Magic-link sign-in still uses the **Magic Link** template; password sign-up uses the **Confirm signup** template — both must use the PKCE `token_hash` format below. |
 | 2 | **Authentication → URL configuration** | Add every callback URL the app uses (localhost, 127.0.0.1, production). |
-| 3 | **Authentication → Email Templates → Magic Link** | Use the PKCE-compatible template below (not the default `{{ .ConfirmationURL }}` alone). |
+| 3 | **Authentication → Email Templates** | Update **Magic Link** and **Confirm signup** templates (see below). |
 | 4 | Deployment env | Set `NEXT_PUBLIC_SITE_URL` to the production domain. |
 
-Without step 1 **and** step 3, new users on hosted Supabase typically see “Confirm your email address”, land on `/auth/callback?code=…` without a PKCE verifier cookie, and remain signed out.
+Without PKCE-compatible templates, email links route through Supabase verify with a PKCE `code` and fail when opened from email (no verifier cookie).
 
 ## Email magic-link template
 
@@ -109,14 +110,20 @@ Implemented in `lib/auth/magic-link-auth-client.ts`. The `/films` modal passes `
 
 Subject: **Your sign-in link** (or similar neutral copy)
 
+The app passes `emailRedirectTo` as `{origin}/auth/callback?next=…`. That value must be on the Supabase redirect allowlist (use `http://127.0.0.1:3000/**` locally so query strings are accepted). When allowlisted, `{{ .RedirectTo }}` in the template is the full callback URL and the link appends `token_hash` with `&`. If Supabase falls back to `{{ .SiteURL }}` only, the template below still routes through `/auth/callback?token_hash=…`; the app stores the intended `next` path in a short-lived cookie before sending the link.
+
 ```html
 <h2>Sign in to Animation Guide</h2>
 <p>Click the button below to continue. This link expires shortly and can only be used once.</p>
+{{ if eq .RedirectTo .SiteURL }}
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email">Sign in</a></p>
+{{ else }}
 <p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Sign in</a></p>
+{{ end }}
 <p>If you did not request this email, you can ignore it.</p>
 ```
 
-`{{ .RedirectTo }}` is the `emailRedirectTo` URL (`/auth/callback?next=…`) passed by the app. The callback route calls `verifyOtp({ token_hash, type: 'email' })` server-side and sets session cookies before redirecting to `next`.
+Do **not** append `&token_hash=…` directly to the bare site root (`http://127.0.0.1:3000&token_hash=…`) — that skips `/auth/callback` and breaks sign-in. The callback route calls `verifyOtp({ token_hash, type: 'email' })` server-side and sets session cookies before redirecting to `next`.
 
 ### Where templates are managed
 
@@ -143,7 +150,7 @@ Link expiry is configured under `[auth.email]` (`otp_expiry = 3600`).
 
 1. **Disable Confirm email** under **Authentication → Providers → Email** so new and existing users share one magic-link flow via `signInWithOtp`.
 2. Paste the PKCE-compatible Magic Link template above into **Authentication → Email Templates → Magic Link**.
-3. Allowlist all `/auth/callback` URLs under **Authentication → URL configuration**.
+3. Allowlist callback URLs with wildcards under **Authentication → URL configuration** (for example `https://your-production-domain.com/**`).
 
 Copy is intentionally neutral — it does not say whether the email already has an account.
 
@@ -218,7 +225,7 @@ Request a sign-in link on `/films` or `/login`, then open Mailpit and click the 
 | **Config file key** | `[inbucket]` in `supabase/config.toml` — legacy name; the CLI runs **Mailpit** on `port = 54324`. |
 | **SMTP block** | Leave `[auth.email.smtp]` commented out locally. Mailpit capture is automatic. |
 | **Production** | Configure real SMTP in the hosted Supabase Dashboard. Do not point production at Mailpit. |
-| **Templates** | Local template: `supabase/templates/email-magic-link.html` via `[auth.email.template.magic_link]`. |
+| **Templates** | Local: `supabase/templates/email-magic-link.html` (magic link) and `supabase/templates/email-confirmation.html` (password sign-up). |
 
 See [TESTING.md](./TESTING.md) for E2E retrieval of magic links through Mailpit’s API.
 
@@ -231,12 +238,47 @@ Playwright runs `next start` on port **3100**. If you test callback flows agains
 
 ## Password sign-in / sign-up
 
+Password sign-up (`signUp` on `/login`) sends **one** confirmation email when **Confirm email** is enabled. The link confirms the address and establishes a session via `/auth/callback` — no second email and no separate login step.
+
+The app passes:
+
+```typescript
+await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: getAuthCallbackUrl(origin), // → /auth/callback?next=/my-profile
+  },
+});
+```
+
+### Signup confirmation email template (PKCE)
+
+Like magic links, `@supabase/ssr` requires the **Confirm signup** template to send users directly to `/auth/callback` with `token_hash` and `type=signup` (not `{{ .ConfirmationURL }}` alone).
+
+Local template: `supabase/templates/email-confirmation.html` via `[auth.email.template.confirmation]`.
+
+Hosted: **Authentication → Email Templates → Confirm signup** — paste the same pattern as the magic-link template, with `type=signup`:
+
+```html
+<h2>Confirm your email address</h2>
+<p>Click the button below to confirm your email and sign in. This link expires shortly and can only be used once.</p>
+{{ if eq .RedirectTo .SiteURL }}
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup">Confirm email address</a></p>
+{{ else }}
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=signup">Confirm email address</a></p>
+{{ end }}
+<p>If you did not create an account, you can ignore this email.</p>
+```
+
+The callback route calls `verifyOtp({ token_hash, type: 'signup' })`, sets session cookies, and redirects to `next` (default `/my-profile`).
+
 ### Supabase Dashboard
 
 **Authentication → Providers → Email**
 
 - Enable Email provider (on by default).
-- **Confirm email**: if enabled, new sign-ups must confirm via email before signing in. The confirmation link also uses `/auth/callback`.
+- **Confirm email**: should be **ON** for production password sign-up. Local CLI sets `enable_confirmations = true` in `supabase/config.toml` so Mailpit captures the same single confirmation email.
 - **Minimum password length**: defaults to 6 characters (matches the login form).
 
 No extra app env vars are required beyond the standard Supabase URL and anon key.
@@ -316,7 +358,8 @@ Common causes:
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| New email gets **“Confirm your email address”** (signup template) | **Confirm email** enabled on hosted Supabase | Turn **Confirm email** OFF under **Authentication → Providers → Email**. The magic-link UI uses `signInWithOtp` only — not `signUp`. |
+| New email gets **“Confirm your email address”** after **password sign-up** but session is not established | Default **Confirm signup** template uses `{{ .ConfirmationURL }}` with PKCE client | Paste the PKCE **Confirm signup** template from the Password sign-in / sign-up section above. |
+| Magic-link email works but password sign-up confirmation does not | Only Magic Link template updated | Update **both** Magic Link and Confirm signup templates on hosted Supabase. |
 | Link opens but session is not established | Default Magic Link template uses `{{ .ConfirmationURL }}` with PKCE client; email opens without PKCE verifier cookie | Use the PKCE template with `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email` (see above). |
 | Link opens but session is not established | `/auth/callback` not on Supabase redirect allowlist, or host mismatch (127.0.0.1 vs localhost) | Add the exact callback URL to **Authentication → URL configuration**. Use one host consistently, or allowlist both. |
 | `pkce_code_verifier_not_found` on callback | Same as above — PKCE code exchange without verifier | Update Magic Link template to token_hash flow; restart not required on hosted. |
@@ -336,13 +379,14 @@ The app does **not** link profiles by email address. It resolves guides only thr
 | Step | Behavior |
 |------|----------|
 | Session | Supabase Auth session cookie (any method) |
+| Profile provisioning | `/auth/callback` calls `ensureAuthProfileForUser` after successful `verifyOtp` or `exchangeCodeForSession` — idempotent, one guide per `auth.users.id` |
 | Profile lookup | `SELECT ... FROM profiles WHERE user_id = <auth.users.id>` |
 | Header | No global nav bar; guide pages show a compact account menu beside the title |
 | `/` (signed in + linked profile) | Redirects to `/my-profile` |
 | `/` (signed out, or signed in without linked profile) | Public home page |
 | `/my-profile` | Redirects to guide if linked; otherwise empty state |
 
-Setting `profiles.user_id` is a **manual, out-of-band** step today (SQL or Supabase dashboard). The app never writes `user_id` during login.
+Hosted and local environments still support manual `profiles.user_id` linking for legacy data, but new sign-ups receive a personal guide automatically during auth callback completion.
 
 ### Supabase Auth: when different sign-in methods share one user
 
