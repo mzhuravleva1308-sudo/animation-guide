@@ -9,6 +9,7 @@ import {
 type AuthActionError = {
   code?: string | null;
   message?: string | null;
+  status?: number | null;
 };
 
 type AuthActionResult = {
@@ -35,7 +36,15 @@ export async function requestEmailOtp(email: string): Promise<AuthActionResult> 
     },
   });
 
-  return { error };
+  return {
+    error: error
+      ? {
+          code: error.code ?? null,
+          message: error.message ?? null,
+          status: error.status ?? null,
+        }
+      : null,
+  };
 }
 
 export async function verifyEmailOtp(
@@ -70,5 +79,13 @@ export async function verifyEmailOtp(
     type: "email",
   });
 
-  return { error };
+  return {
+    error: error
+      ? {
+          code: error.code ?? null,
+          message: error.message ?? null,
+          status: error.status ?? null,
+        }
+      : null,
+  };
 }

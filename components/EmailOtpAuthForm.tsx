@@ -5,11 +5,14 @@ import {
   canResendEmailOtp,
   formatCodeSentMessage,
   formatEmailOtpError,
+  formatExistingCodeMessage,
+  formatResendCooldownMessage,
   getEmailOtpResendDelayMs,
   isCompleteOtpCode,
   isValidAuthEmail,
   normalizeAuthEmail,
   normalizeOtpCode,
+  resolveEmailOtpSendOutcome,
 } from "@/lib/auth/email-otp";
 import {
   requestEmailOtp,
@@ -26,6 +29,7 @@ type EmailOtpAuthFormProps = {
 
 type AuthStep = "email" | "code";
 type LoadingAction = "send" | "verify" | "resend" | null;
+type CodeDeliveryHint = "sent" | "existing";
 
 export default function EmailOtpAuthForm({
   postAuthPath = POST_AUTH_PATH,
@@ -46,6 +50,8 @@ export default function EmailOtpAuthForm({
   const [loading, setLoading] = useState<LoadingAction>(null);
   const [lastSentAt, setLastSentAt] = useState<number | null>(null);
   const [resendDelayMs, setResendDelayMs] = useState(0);
+  const [codeDeliveryHint, setCodeDeliveryHint] =
+    useState<CodeDeliveryHint>("sent");
 
   const emailInputTestId =
     testIdPrefix === "login" ? "login-email" : "email-auth-email";
@@ -99,6 +105,27 @@ export default function EmailOtpAuthForm({
     };
   }, [lastSentAt, step]);
 
+  function openCodeStep({
+    normalizedEmail,
+    deliveryHint,
+    statusMessage,
+    preserveCode,
+  }: {
+    normalizedEmail: string;
+    deliveryHint: CodeDeliveryHint;
+    statusMessage: string | null;
+    preserveCode: boolean;
+  }) {
+    setEmail(normalizedEmail);
+    if (!preserveCode) {
+      setCode("");
+    }
+    setStep("code");
+    setCodeDeliveryHint(deliveryHint);
+    setLastSentAt(Date.now());
+    setMessage(statusMessage);
+  }
+
   async function sendCode(targetEmail: string, action: "send" | "resend") {
     const normalizedEmail = normalizeAuthEmail(targetEmail);
 
@@ -107,8 +134,12 @@ export default function EmailOtpAuthForm({
       return;
     }
 
-    if (action === "resend" && !canResendEmailOtp(lastSentAt)) {
-      setMessage("Please wait a moment before requesting another code.");
+    if (
+      action === "resend" &&
+      step === "code" &&
+      !canResendEmailOtp(lastSentAt)
+    ) {
+      setMessage(formatResendCooldownMessage());
       return;
     }
 
@@ -116,17 +147,32 @@ export default function EmailOtpAuthForm({
     setMessage(null);
 
     const { error } = await requestEmailOtp(normalizedEmail);
+    const outcome = resolveEmailOtpSendOutcome(error);
 
-    if (error) {
-      setMessage(formatEmailOtpError(error));
+    if (outcome === "success") {
+      openCodeStep({
+        normalizedEmail,
+        deliveryHint: "sent",
+        statusMessage: null,
+        preserveCode: action === "resend",
+      });
       setLoading(null);
       return;
     }
 
-    setEmail(normalizedEmail);
-    setCode("");
-    setStep("code");
-    setLastSentAt(Date.now());
+    if (outcome === "rate_limited") {
+      const enteringFromEmail = step === "email" && action === "send";
+      openCodeStep({
+        normalizedEmail,
+        deliveryHint: "existing",
+        statusMessage: enteringFromEmail ? null : formatResendCooldownMessage(),
+        preserveCode: action === "resend",
+      });
+      setLoading(null);
+      return;
+    }
+
+    setMessage(formatEmailOtpError(error));
     setLoading(null);
   }
 
@@ -181,11 +227,21 @@ export default function EmailOtpAuthForm({
     setCode("");
     setMessage(null);
     setLoading(null);
+    setCodeDeliveryHint("sent");
   }
 
   const isBusy = loading !== null;
   const resendAvailable = canResendEmailOtp(lastSentAt);
   const resendSeconds = Math.ceil(resendDelayMs / 1000);
+
+  const codeStepMessageTestId =
+    testIdPrefix === "login"
+      ? codeDeliveryHint === "sent"
+        ? "login-code-sent-message"
+        : "login-code-existing-message"
+      : codeDeliveryHint === "sent"
+        ? "email-auth-code-sent-message"
+        : "email-auth-code-existing-message";
 
   if (step === "email") {
     return (
@@ -252,13 +308,11 @@ export default function EmailOtpAuthForm({
     <>
       <p
         className="mt-4 text-sm text-gray-600"
-        data-testid={
-          testIdPrefix === "login"
-            ? "login-code-sent-message"
-            : "email-auth-code-sent-message"
-        }
+        data-testid={codeStepMessageTestId}
       >
-        {formatCodeSentMessage(email)}
+        {codeDeliveryHint === "sent"
+          ? formatCodeSentMessage(email)
+          : formatExistingCodeMessage(email)}
       </p>
 
       <form
