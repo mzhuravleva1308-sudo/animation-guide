@@ -253,8 +253,8 @@ otp_expiry = 3600
 
 # Uncomment to customize email template
 [auth.email.template.magic_link]
-subject = "Your sign-in code"
-content_path = "./supabase/templates/email-otp.html"
+subject = "Your sign-in link"
+content_path = "./supabase/templates/email-magic-link.html"
 
 # [auth.email.template.invite]
 # subject = "You have been invited"

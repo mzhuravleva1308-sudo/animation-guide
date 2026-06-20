@@ -7,10 +7,10 @@ import {
   prepareE2eFilmsAuthProfile,
 } from "../helpers/e2e-auth-profile";
 import {
-  completeFilmsEmailOtpSignIn,
-  getEmailOtpFlowSkipReason,
-  uniqueOtpTestEmail,
-} from "../helpers/email-otp-auth";
+  completeFilmsMagicLinkSignIn,
+  getMagicLinkFlowSkipReason,
+  uniqueMagicLinkTestEmail,
+} from "../helpers/magic-link-auth";
 import { getProfileTestCredentials } from "../helpers/profile-credentials";
 import { firstFilmCard, waitForWatchlistButton } from "../helpers/profile-page";
 
@@ -28,25 +28,27 @@ async function completeFilmsAuthFromOpenModal(
   await page.getByTestId("email-auth-email").fill(email);
   const sentAfter = new Date();
   await page.getByTestId("email-auth-continue").click();
-  await page.getByTestId("email-auth-otp").waitFor({ timeout: 10_000 });
-  await completeFilmsEmailOtpSignIn(page, email, sentAfter);
+  await page.getByTestId("email-auth-sent-heading").waitFor({ timeout: 10_000 });
+  await completeFilmsMagicLinkSignIn(page, email, sentAfter);
 }
 
+test.describe.configure({ mode: "serial" });
+
 test.describe("Films pending actions with Mailpit", () => {
-  let otpFlowSkipReason: string | null = null;
+  let magicLinkFlowSkipReason: string | null = null;
   let profileSkipReason: string | null = null;
 
   test.beforeAll(async () => {
-    otpFlowSkipReason = await getEmailOtpFlowSkipReason();
+    magicLinkFlowSkipReason = await getMagicLinkFlowSkipReason();
     profileSkipReason = getProfileTestCredentials()
       ? null
-      : "Missing E2E_PROFILE_SLUG and E2E_PROFILE_TOKEN in .env.local.";
+      : "Missing E2E_PROFILE_SLUG and E2E_PROFILE_TOKEN (see ENV.md).";
   });
 
   test.beforeEach(async () => {
     test.skip(
-      otpFlowSkipReason !== null,
-      otpFlowSkipReason ?? "Mailpit OTP prerequisites missing."
+      magicLinkFlowSkipReason !== null,
+      magicLinkFlowSkipReason ?? "Mailpit magic-link prerequisites missing."
     );
     test.skip(
       profileSkipReason !== null,
@@ -57,7 +59,7 @@ test.describe("Films pending actions with Mailpit", () => {
   test("signed-out save opens auth, persists to the authenticated profile, and stays on /films", async ({
     page,
   }) => {
-    const email = uniqueOtpTestEmail("films-save");
+    const email = uniqueMagicLinkTestEmail("films-save");
     const profileId = await prepareE2eFilmsAuthProfile(email);
 
     await page.goto("/films");
@@ -68,11 +70,16 @@ test.describe("Films pending actions with Mailpit", () => {
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(/\/films$/);
+    await expect(page).toHaveURL(/\/films(?:\?|$)/);
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
+
+    const signedInCard = firstFilmCard(page);
+    await expect
+      .poll(async () => countSavedListRowsForFilm(profileId, filmId!))
+      .toBe(1);
     await expect(
-      firstCard.getByRole("button", { name: "Remove from watchlist" })
+      signedInCard.getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
 
     await assertFilmSavedInProfile(profileId, filmId!, true);
@@ -82,7 +89,7 @@ test.describe("Films pending actions with Mailpit", () => {
   test("signed-out rating opens auth and persists the selected rating", async ({
     page,
   }) => {
-    const email = uniqueOtpTestEmail("films-rate");
+    const email = uniqueMagicLinkTestEmail("films-rate");
     const profileId = await prepareE2eFilmsAuthProfile(email);
     const rating = 8;
 
@@ -96,9 +103,14 @@ test.describe("Films pending actions with Mailpit", () => {
 
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(/\/films$/);
+    await expect(page).toHaveURL(/\/films(?:\?|$)/);
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
-    await expect(firstCard).toContainText(`My rating: ${rating}/10`);
+
+    const signedInCard = firstFilmCard(page);
+    await expect
+      .poll(async () => countRatingRowsForFilm(profileId, filmId!))
+      .toBe(1);
+    await expect(signedInCard).toContainText(`My rating: ${rating}/10`);
     await assertFilmRatingInProfile(profileId, filmId!, rating);
     expect(await countRatingRowsForFilm(profileId, filmId!)).toBe(1);
   });
@@ -106,7 +118,7 @@ test.describe("Films pending actions with Mailpit", () => {
   test("closing the auth modal does not write pending save or rating actions", async ({
     page,
   }) => {
-    const email = uniqueOtpTestEmail("films-cancel");
+    const email = uniqueMagicLinkTestEmail("films-cancel");
     const profileId = await prepareE2eFilmsAuthProfile(email);
 
     await page.goto("/films");
@@ -133,7 +145,7 @@ test.describe("Films pending actions with Mailpit", () => {
   test("reloading after post-auth completion does not duplicate saved-list or rating writes", async ({
     page,
   }) => {
-    const email = uniqueOtpTestEmail("films-idempotent");
+    const email = uniqueMagicLinkTestEmail("films-idempotent");
     const profileId = await prepareE2eFilmsAuthProfile(email);
     const rating = 9;
 
@@ -144,22 +156,31 @@ test.describe("Films pending actions with Mailpit", () => {
 
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
+
+    const signedInCard = firstFilmCard(page);
+    await expect
+      .poll(async () => countSavedListRowsForFilm(profileId, filmId!))
+      .toBe(1);
     await expect(
-      firstCard.getByRole("button", { name: "Remove from watchlist" })
+      signedInCard.getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
 
     await page.reload();
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     await expect(
-      firstCard.getByRole("button", { name: "Remove from watchlist" })
+      firstFilmCard(page).getByRole("button", { name: "Remove from watchlist" })
     ).toBeVisible();
     expect(await countSavedListRowsForFilm(profileId, filmId!)).toBe(1);
 
-    await firstCard.getByRole("button", { name: `Rate ${rating} out of 10` }).click();
-    await expect(firstCard).toContainText(`My rating: ${rating}/10`);
+    const reloadedCard = firstFilmCard(page);
+    await reloadedCard.getByRole("button", { name: `Rate ${rating} out of 10` }).click();
+    await expect
+      .poll(async () => countRatingRowsForFilm(profileId, filmId!))
+      .toBe(1);
+    await expect(reloadedCard).toContainText(`My rating: ${rating}/10`);
 
     await page.reload();
-    await expect(firstCard).toContainText(`My rating: ${rating}/10`);
+    await expect(firstFilmCard(page)).toContainText(`My rating: ${rating}/10`);
     await assertFilmRatingInProfile(profileId, filmId!, rating);
     expect(await countRatingRowsForFilm(profileId, filmId!)).toBe(1);
   });

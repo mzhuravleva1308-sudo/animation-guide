@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
 import {
   FILM_POSTERS_BUCKET,
@@ -9,7 +9,7 @@ import {
   isCachedPosterUrl,
 } from "../lib/film-poster.mjs";
 
-dotenv.config({ path: ".env.local" });
+applyAppEnv();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

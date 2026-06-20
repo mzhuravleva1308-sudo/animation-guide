@@ -26,9 +26,9 @@ Full local verification before presenting UI work:
 npm test
 ```
 
-That runs unit tests plus Playwright E2E (production server on port **3100**, not `next dev`). E2E profile tests use only `E2E_PROFILE_SLUG` / `E2E_PROFILE_TOKEN` from `.env.local`.
+That runs unit tests plus Playwright E2E (production server on port **3100**, not `next dev`). E2E profile tests use `E2E_PROFILE_SLUG` / `E2E_PROFILE_TOKEN` from `.env.development` (see [ENV.md](./ENV.md)).
 
-**Authentication:** passwordless email OTP and password sign-in via Supabase Auth — see [AUTH.md](./AUTH.md) for email template setup, redirect URL configuration, identity linking, and profile `user_id` linking procedure.
+**Authentication:** passwordless email magic link and password sign-in via Supabase Auth — see [AUTH.md](./AUTH.md) for email template setup, redirect URL configuration, identity linking, and profile `user_id` linking procedure.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

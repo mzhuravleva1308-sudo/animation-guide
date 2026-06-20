@@ -19,7 +19,7 @@ export function requireProfileTestCredentials(): ProfileTestCredentials {
 
   if (!credentials) {
     throw new Error(
-      "Missing E2E_PROFILE_SLUG and E2E_PROFILE_TOKEN in .env.local."
+      "Missing E2E_PROFILE_SLUG and E2E_PROFILE_TOKEN (see ENV.md)."
     );
   }
 

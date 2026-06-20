@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import { applyAppEnv } from "./load-app-env.mjs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -9,7 +9,7 @@ import {
 } from "../lib/catalog-analytics.mjs";
 import { loadFilmsForCatalogAnalytics } from "../lib/load-films-catalog.mjs";
 
-dotenv.config({ path: ".env.local" });
+applyAppEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const reportsDir = path.join(__dirname, "..", "reports");

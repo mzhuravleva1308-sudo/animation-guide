@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
 
 export type LinkedProfile = {
+  id: string;
   name: string;
   slug: string;
 };
@@ -23,12 +24,18 @@ export async function getAuthUserSummary(): Promise<AuthUserSummary | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("name, slug")
+    .select("id, name, slug")
     .eq("user_id", user.id)
     .maybeSingle();
 
   return {
     email: getUserDisplayEmail(user),
-    profile: profile ?? null,
+    profile: profile?.id && profile.slug
+      ? {
+          id: profile.id,
+          name: profile.name ?? profile.slug,
+          slug: profile.slug,
+        }
+      : null,
   };
 }

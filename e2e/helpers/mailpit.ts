@@ -1,4 +1,4 @@
-import { extractOtpFromEmailContent } from "../../lib/auth/extract-otp-from-email.mjs";
+import { extractMagicLinkFromEmailContent } from "../../lib/auth/extract-magic-link-from-email.mjs";
 
 const DEFAULT_MAILPIT_URL = "http://127.0.0.1:54324";
 
@@ -101,7 +101,7 @@ async function searchRecipientMessages(
   );
 }
 
-export type WaitForMailpitOtpOptions = {
+export type WaitForMailpitMagicLinkOptions = {
   email: string;
   mailpitUrl?: string;
   timeoutMs?: number;
@@ -109,8 +109,8 @@ export type WaitForMailpitOtpOptions = {
   sentAfter?: Date;
 };
 
-export async function waitForMailpitOtpCode(
-  options: WaitForMailpitOtpOptions
+export async function waitForMailpitMagicLink(
+  options: WaitForMailpitMagicLinkOptions
 ): Promise<string> {
   const mailpitUrl = options.mailpitUrl ?? getMailpitUrl();
   const timeoutMs = options.timeoutMs ?? 20_000;
@@ -130,16 +130,16 @@ export async function waitForMailpitOtpCode(
 
       if (candidate?.ID) {
         const fullMessage = await fetchMailpitMessage(mailpitUrl, candidate.ID);
-        const code = extractOtpFromEmailContent(
+        const confirmationUrl = extractMagicLinkFromEmailContent(
           fullMessage.HTML ?? fullMessage.Text ?? ""
         );
 
-        if (code) {
-          return code;
+        if (confirmationUrl) {
+          return confirmationUrl;
         }
 
         lastError = new Error(
-          `Mailpit message ${candidate.ID} did not contain a 6-digit OTP.`
+          `Mailpit message ${candidate.ID} did not contain a sign-in link.`
         );
       }
     } catch (error) {
@@ -157,12 +157,12 @@ export async function waitForMailpitOtpCode(
   throw (
     lastError ??
     new Error(
-      `Timed out waiting for an OTP email to ${options.email} in Mailpit.`
+      `Timed out waiting for a sign-in link email to ${options.email} in Mailpit.`
     )
   );
 }
 
-export async function getMailpitOtpSkipReason(): Promise<string | null> {
+export async function getMailpitMagicLinkSkipReason(): Promise<string | null> {
   const reachable = await isMailpitReachable();
 
   if (!reachable) {

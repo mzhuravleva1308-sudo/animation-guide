@@ -1,9 +1,13 @@
+import { sanitizeNextPath } from "./callback-origin";
 import { POST_AUTH_PATH } from "./post-auth-path";
 
-export function getAuthCallbackUrl(siteUrl: string): string {
+export function getAuthCallbackUrl(
+  siteUrl: string,
+  nextPath: string = POST_AUTH_PATH
+): string {
   const base = siteUrl.replace(/\/$/, "");
   const url = new URL("/auth/callback", `${base}/`);
-  url.searchParams.set("next", POST_AUTH_PATH);
+  url.searchParams.set("next", sanitizeNextPath(nextPath));
   return url.toString();
 }
 

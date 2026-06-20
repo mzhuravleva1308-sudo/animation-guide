@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCatalog from "@/components/FilmCatalog";
@@ -48,17 +47,24 @@ export default function FilmsPageClient({
   pageSize,
   loadError,
 }: FilmsPageClientProps) {
-  const router = useRouter();
   const [auth, setAuth] = useState(initialAuth);
   const [modalOpen, setModalOpen] = useState(false);
-  const [profileId, setProfileId] = useState<string | undefined>(undefined);
-  const [profileSlug, setProfileSlug] = useState<string | undefined>(undefined);
+  const [modalLockScrollY, setModalLockScrollY] = useState(0);
+  const [modalRestoreFocusElement, setModalRestoreFocusElement] =
+    useState<HTMLElement | null>(null);
+  const [profileId, setProfileId] = useState<string | undefined>(
+    initialAuth?.profile?.id
+  );
+  const [profileSlug, setProfileSlug] = useState<string | undefined>(
+    initialAuth?.profile?.slug
+  );
   const [savedFilmIds, setSavedFilmIds] = useState<Set<string>>(new Set());
   const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
     {}
   );
   const preAuthSnapshotRef = useRef<InteractionSnapshot | null>(null);
   const applyInFlightRef = useRef<Promise<void> | null>(null);
+  const authTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const syncAuthenticatedInteractionState = useCallback(async () => {
     const profile = await resolveAuthenticatedProfile();
@@ -124,6 +130,8 @@ export default function FilmsPageClient({
 
   useEffect(() => {
     setAuth(initialAuth);
+    setProfileId(initialAuth?.profile?.id);
+    setProfileSlug(initialAuth?.profile?.slug);
   }, [initialAuth]);
 
   useEffect(() => {
@@ -138,12 +146,21 @@ export default function FilmsPageClient({
         return;
       }
 
-      const resolvedProfileId = await syncAuthenticatedInteractionState();
-      if (cancelled || !resolvedProfileId) {
-        return;
-      }
+      for (let attempt = 0; attempt < 10; attempt += 1) {
+        if (cancelled) {
+          return;
+        }
 
-      await applyPendingActionForProfile(resolvedProfileId);
+        const resolvedProfileId = await syncAuthenticatedInteractionState();
+        if (resolvedProfileId) {
+          await applyPendingActionForProfile(resolvedProfileId);
+          return;
+        }
+
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 300);
+        });
+      }
     }
 
     void initializeAuthenticatedState();
@@ -152,6 +169,56 @@ export default function FilmsPageClient({
       cancelled = true;
     };
   }, [auth, applyPendingActionForProfile, syncAuthenticatedInteractionState]);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function handleAuthSessionEstablished() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        return;
+      }
+
+      preAuthSnapshotRef.current = null;
+
+      const profile = await resolveAuthenticatedProfile();
+      if (profile) {
+        setProfileId(profile.profileId);
+        setProfileSlug(profile.profileSlug);
+        await applyPendingActionForProfile(profile.profileId);
+
+        const state = await loadAuthenticatedProfileFilmState(profile.profileId);
+        setSavedFilmIds(state.savedFilmIds);
+        setFilmRatings(state.filmRatings);
+      }
+
+    setAuth({
+      email: getUserDisplayEmail(user),
+      profile: profile
+        ? {
+            id: profile.profileId,
+            slug: profile.profileSlug,
+            name: profile.profileName ?? profile.profileSlug,
+          }
+        : null,
+    });
+    }
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        void handleAuthSessionEstablished();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [applyPendingActionForProfile]);
 
   const handleSavedChange = useCallback((film: Film, saved: boolean) => {
     setSavedFilmIds((current) => {
@@ -177,6 +244,9 @@ export default function FilmsPageClient({
 
   const handleAuthRequired = useCallback(
     (action: PendingFilmActionInput) => {
+      setModalLockScrollY(window.scrollY);
+      setModalRestoreFocusElement(null);
+
       if (!preAuthSnapshotRef.current) {
         preAuthSnapshotRef.current = cloneInteractionSnapshot(
           savedFilmIds,
@@ -207,44 +277,6 @@ export default function FilmsPageClient({
     setModalOpen(false);
   }, [revertPreAuthSnapshot]);
 
-  const handleVerifySuccess = useCallback(async () => {
-    preAuthSnapshotRef.current = null;
-
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setModalOpen(false);
-      return;
-    }
-
-    const profile = await resolveAuthenticatedProfile();
-    if (profile) {
-      setProfileId(profile.profileId);
-      setProfileSlug(profile.profileSlug);
-      await applyPendingActionForProfile(profile.profileId);
-
-      const state = await loadAuthenticatedProfileFilmState(profile.profileId);
-      setSavedFilmIds(state.savedFilmIds);
-      setFilmRatings(state.filmRatings);
-    }
-
-    setAuth({
-      email: getUserDisplayEmail(user),
-      profile: profile
-        ? {
-            slug: profile.profileSlug,
-            name: profile.profileName ?? profile.profileSlug,
-          }
-        : null,
-    });
-
-    router.refresh();
-    setModalOpen(false);
-  }, [applyPendingActionForProfile, router]);
-
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
       <header className="mb-8">
@@ -264,8 +296,16 @@ export default function FilmsPageClient({
             />
           ) : (
             <button
+              ref={authTriggerRef}
               type="button"
-              onClick={() => setModalOpen(true)}
+              onMouseDown={(event) => {
+                event.preventDefault();
+              }}
+              onClick={() => {
+                setModalLockScrollY(window.scrollY);
+                setModalRestoreFocusElement(authTriggerRef.current);
+                setModalOpen(true);
+              }}
               className="shrink-0 text-sm text-gray-500 transition hover:text-gray-900"
               data-testid="auth-status"
             >
@@ -293,7 +333,9 @@ export default function FilmsPageClient({
       <EmailAuthModal
         open={modalOpen}
         onClose={handleModalClose}
-        onVerifySuccess={handleVerifySuccess}
+        postAuthPath="/films"
+        lockScrollY={modalLockScrollY}
+        restoreFocusElement={modalRestoreFocusElement}
       />
     </main>
   );

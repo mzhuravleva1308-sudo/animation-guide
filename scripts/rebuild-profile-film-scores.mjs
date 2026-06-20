@@ -1,11 +1,11 @@
-import dotenv from "dotenv";
+import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
 import {
   buildBalancedScores,
   sortFilmsByScore,
 } from "../lib/profile-film-scoring.mjs";
 
-dotenv.config({ path: ".env.local" });
+applyAppEnv();
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

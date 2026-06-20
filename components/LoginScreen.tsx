@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import EmailOtpAuthForm from "@/components/EmailOtpAuthForm";
+import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/auth/callback-url";
 import { resolveAuthOrigin } from "@/lib/auth/callback-origin";
@@ -15,7 +15,7 @@ type LoginScreenProps = {
   oauthProviders: OAuthProvider[];
 };
 
-type EmailMode = "password" | "email-otp";
+type EmailMode = "password" | "email-link";
 
 type LoadingAction = "sign-in" | "sign-up" | OAuthProvider | null;
 
@@ -177,7 +177,7 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
 
       <section
         aria-labelledby={
-          isPasswordMode ? "login-email-heading" : "login-email-code-heading"
+          isPasswordMode ? "login-email-heading" : "login-email-link-heading"
         }
         className="rounded-lg border border-gray-200 bg-white p-4"
       >
@@ -234,13 +234,13 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
                 type="button"
                 disabled={isBusy}
                 onClick={() => {
-                  setEmailMode("email-otp");
+                  setEmailMode("email-link");
                   setMessage(null);
                 }}
                 className="text-gray-600 hover:text-gray-900 disabled:opacity-60"
-                data-testid="login-use-email-code"
+                data-testid="login-use-email-link"
               >
-                Email me a sign-in code
+                Email me a sign-in link
               </button>
               <button
                 type="button"
@@ -256,10 +256,10 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
           </>
         ) : (
           <>
-            <h2 id="login-email-code-heading" className="text-sm font-medium text-gray-900">
-              Email code
+            <h2 id="login-email-link-heading" className="text-sm font-medium text-gray-900">
+              Email link
             </h2>
-            <EmailOtpAuthForm testIdPrefix="login" postAuthPath={POST_AUTH_PATH} />
+            <EmailMagicLinkAuthForm testIdPrefix="login" postAuthPath={POST_AUTH_PATH} />
             <button
               type="button"
               disabled={isBusy}

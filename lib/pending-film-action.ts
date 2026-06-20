@@ -2,6 +2,8 @@ export const PENDING_FILM_ACTION_STORAGE_KEY =
   "animationpre:pending-film-action";
 export const PENDING_FILM_ACTION_APPLIED_ID_STORAGE_KEY =
   "animationpre:pending-film-action-applied-id";
+export const PENDING_FILM_ACTION_COOKIE_NAME =
+  "animationpre-pending-film-action";
 
 export type PendingSaveAction = {
   id: string;
@@ -130,6 +132,7 @@ export function markPendingFilmActionApplied(
 
   storage.setItem(PENDING_FILM_ACTION_APPLIED_ID_STORAGE_KEY, actionId);
   storage.removeItem(PENDING_FILM_ACTION_STORAGE_KEY);
+  clearPendingFilmActionCookie();
 }
 
 export function shouldApplyPendingFilmAction(
@@ -149,13 +152,48 @@ export function clonePendingFilmAction(
   return { ...action };
 }
 
-function getSessionStorage(): Storage | null {
+function getPendingActionStorage(): Storage | null {
   if (typeof window === "undefined") {
     return null;
   }
 
   try {
-    return window.sessionStorage;
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+function storePendingFilmActionCookie(action: PendingFilmAction): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  const value = encodeURIComponent(JSON.stringify(action));
+  document.cookie = `${PENDING_FILM_ACTION_COOKIE_NAME}=${value}; Path=/; Max-Age=3600; SameSite=Lax`;
+}
+
+function clearPendingFilmActionCookie(): void {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.cookie = `${PENDING_FILM_ACTION_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+export function readPendingFilmActionFromCookies(
+  cookies: Array<{ name: string; value: string }>
+): PendingFilmAction | null {
+  const cookie = cookies.find(
+    (entry) => entry.name === PENDING_FILM_ACTION_COOKIE_NAME
+  );
+
+  if (!cookie?.value) {
+    return null;
+  }
+
+  try {
+    return parsePendingFilmAction(JSON.parse(decodeURIComponent(cookie.value)));
   } catch {
     return null;
   }
@@ -165,14 +203,16 @@ export function storePendingFilmActionForSession(
   action: PendingFilmActionInput
 ): PendingFilmAction {
   const pendingAction = createPendingFilmAction(action);
-  storePendingFilmAction(getSessionStorage(), pendingAction);
+  storePendingFilmAction(getPendingActionStorage(), pendingAction);
+  storePendingFilmActionCookie(pendingAction);
   return pendingAction;
 }
 
 export function readPendingFilmActionFromSession(): PendingFilmAction | null {
-  return readPendingFilmAction(getSessionStorage());
+  return readPendingFilmAction(getPendingActionStorage());
 }
 
 export function clearPendingFilmActionFromSession(): void {
-  clearPendingFilmAction(getSessionStorage());
+  clearPendingFilmAction(getPendingActionStorage());
+  clearPendingFilmActionCookie();
 }

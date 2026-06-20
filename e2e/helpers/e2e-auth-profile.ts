@@ -24,6 +24,20 @@ function createServiceRoleClient() {
   );
 }
 
+async function deleteAuthUserByEmail(email: string) {
+  const supabase = createServiceRoleClient();
+  const user = await findAuthUserByEmail(email);
+
+  if (!user) {
+    return;
+  }
+
+  const { error } = await supabase.auth.admin.deleteUser(user.id);
+  if (error) {
+    throw new Error(`Failed to delete auth user for ${email}: ${error.message}`);
+  }
+}
+
 async function findAuthUserByEmail(email: string) {
   const supabase = createServiceRoleClient();
   const normalizedEmail = email.trim().toLowerCase();
@@ -134,10 +148,25 @@ export async function linkAuthUserEmailToE2eProfile(
 
 export async function prepareE2eFilmsAuthProfile(email: string): Promise<string> {
   const credentials = requireProfileTestCredentials();
+  await deleteAuthUserByEmail(email);
   await resetE2eProfile(credentials);
   await unlinkE2eProfileUser();
-  const { profileId } = await linkAuthUserEmailToE2eProfile(email);
-  return profileId;
+
+  const supabase = createServiceRoleClient();
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("slug", credentials.slug)
+    .eq("share_token", credentials.token)
+    .single();
+
+  if (error || !profile) {
+    throw new Error(
+      `Failed to load E2E profile for pending-action setup: ${error?.message ?? "not found"}`
+    );
+  }
+
+  return profile.id;
 }
 
 export async function assertFilmSavedInProfile(

@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
 import {
-  completeFilmsEmailOtpSignIn,
-  getEmailOtpFlowSkipReason,
-  requestFilmsEmailOtp,
-  uniqueOtpTestEmail,
-} from "../helpers/email-otp-auth";
+  completeFilmsMagicLinkSignIn,
+  getMagicLinkFlowSkipReason,
+  requestFilmsMagicLink,
+  uniqueMagicLinkTestEmail,
+} from "../helpers/magic-link-auth";
 
-test.describe("Films email OTP auth", () => {
+test.describe("Films magic-link auth", () => {
   test("shows a subtle login control when signed out", async ({ page }) => {
     await page.goto("/films");
 
@@ -31,11 +31,59 @@ test.describe("Films email OTP auth", () => {
     });
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
   });
+
+  test("preserves scroll position when the auth modal closes", async ({ page }) => {
+    await page.goto("/films");
+    await expect(page.getByTestId("film-card").first()).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await page.waitForFunction(() => window.scrollY >= 800);
+
+    const scrollBeforeOpen = await page.evaluate(() => window.scrollY);
+
+    await page
+      .getByRole("button", { name: "Add to watchlist" })
+      .nth(2)
+      .click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+
+    await page.getByTestId("email-auth-modal-close").click();
+    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
+
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY), { timeout: 10_000 })
+      .toBe(scrollBeforeOpen);
+  });
+
+  test("preserves scroll after closing auth opened from a film card action", async ({
+    page,
+  }) => {
+    await page.goto("/films");
+    await expect(page.getByTestId("film-card").first()).toBeVisible();
+
+    await page.evaluate(() => window.scrollTo(0, 900));
+    await page.waitForFunction(() => window.scrollY >= 800);
+
+    const scrollBeforeOpen = await page.evaluate(() => window.scrollY);
+
+    await page
+      .getByRole("button", { name: "Add to watchlist" })
+      .nth(2)
+      .click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+
+    await page.getByTestId("email-auth-modal-close").click();
+    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
+
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBe(scrollBeforeOpen);
+  });
 });
 
-test.describe("Films email OTP send handling", () => {
+test.describe("Films magic-link send handling", () => {
   const otpRoute = "**/auth/v1/otp*";
-  const testEmail = "otp-flow@example.test";
+  const testEmail = "magic-link-flow@example.test";
 
   async function openFilmsAuthModal(page: import("@playwright/test").Page) {
     await page.goto("/films");
@@ -51,7 +99,7 @@ test.describe("Films email OTP send handling", () => {
     await page.getByTestId("email-auth-continue").click();
   }
 
-  test("advances to the code step when signInWithOtp succeeds", async ({
+  test("advances to the confirmation step when signInWithOtp succeeds", async ({
     page,
   }) => {
     let requestCount = 0;
@@ -67,14 +115,16 @@ test.describe("Films email OTP send handling", () => {
     await openFilmsAuthModal(page);
     await submitFilmsAuthEmail(page, testEmail);
 
-    await expect(page.getByTestId("email-auth-otp")).toBeVisible();
-    await expect(page.getByTestId("email-auth-code-sent-message")).toContainText(
-      "We sent a 6-digit code"
+    await expect(page.getByTestId("email-auth-sent-heading")).toHaveText(
+      "Check your inbox"
+    );
+    await expect(page.getByTestId("email-auth-link-sent-message")).toContainText(
+      "We sent a sign-in link"
     );
     expect(requestCount).toBe(1);
   });
 
-  test("rate-limited send opens code step without claiming a new send", async ({
+  test("rate-limited send opens confirmation without claiming a new send", async ({
     page,
   }) => {
     let requestCount = 0;
@@ -94,9 +144,9 @@ test.describe("Films email OTP send handling", () => {
     await openFilmsAuthModal(page);
     await submitFilmsAuthEmail(page, testEmail);
 
-    await expect(page.getByTestId("email-auth-otp")).toBeVisible();
-    await expect(page.getByTestId("email-auth-code-existing-message")).toBeVisible();
-    await expect(page.getByTestId("email-auth-code-sent-message")).toHaveCount(0);
+    await expect(page.getByTestId("email-auth-sent-heading")).toBeVisible();
+    await expect(page.getByTestId("email-auth-link-existing-message")).toBeVisible();
+    await expect(page.getByTestId("email-auth-link-sent-message")).toHaveCount(0);
     await expect(page.getByTestId("email-auth-change-email")).toBeVisible();
     expect(requestCount).toBe(1);
   });
@@ -117,13 +167,13 @@ test.describe("Films email OTP send handling", () => {
     await submitFilmsAuthEmail(page, testEmail);
 
     await expect(page.getByTestId("email-auth-email")).toBeVisible();
-    await expect(page.getByTestId("email-auth-otp")).toHaveCount(0);
+    await expect(page.getByTestId("email-auth-sent-heading")).toHaveCount(0);
     await expect(page.getByTestId("email-auth-message")).toContainText(
       /wrong|try again/i
     );
   });
 
-  test("rate-limited resend stays on the code step with a cooldown message", async ({
+  test("rate-limited resend stays on the confirmation step with a cooldown message", async ({
     page,
   }) => {
     await page.clock.install();
@@ -153,68 +203,60 @@ test.describe("Films email OTP send handling", () => {
 
     await openFilmsAuthModal(page);
     await submitFilmsAuthEmail(page, testEmail);
-    await expect(page.getByTestId("email-auth-otp")).toBeVisible();
+    await expect(page.getByTestId("email-auth-sent-heading")).toBeVisible();
 
     await page.clock.fastForward(31_000);
     await page.getByTestId("email-auth-resend").click();
-    await expect(page.getByTestId("email-auth-otp")).toBeVisible();
+    await expect(page.getByTestId("email-auth-sent-heading")).toBeVisible();
     await expect(page.getByTestId("email-auth-message")).toContainText(
       /wait before resending/i
     );
-    await expect(page.getByTestId("email-auth-code-existing-message")).toBeVisible();
+    await expect(page.getByTestId("email-auth-link-existing-message")).toBeVisible();
     expect(requestCount).toBe(2);
   });
 });
 
-test.describe("Films email OTP auth with Mailpit", () => {
-  let otpFlowSkipReason: string | null = null;
+test.describe("Films magic-link auth with Mailpit", () => {
+  let magicLinkFlowSkipReason: string | null = null;
 
   test.beforeAll(async () => {
-    otpFlowSkipReason = await getEmailOtpFlowSkipReason();
+    magicLinkFlowSkipReason = await getMagicLinkFlowSkipReason();
   });
 
   test.beforeEach(async () => {
     test.skip(
-      otpFlowSkipReason !== null,
-      otpFlowSkipReason ?? "Mailpit OTP prerequisites missing."
+      magicLinkFlowSkipReason !== null,
+      magicLinkFlowSkipReason ?? "Mailpit magic-link prerequisites missing."
     );
   });
 
-  test("opens the auth modal and requests a code", async ({ page }) => {
-    const email = uniqueOtpTestEmail("films-ui");
+  test("opens the auth modal and requests a sign-in link", async ({ page }) => {
+    const email = uniqueMagicLinkTestEmail("films-ui");
 
-    await requestFilmsEmailOtp(page, email);
+    await requestFilmsMagicLink(page, email);
 
-    await expect(page.getByTestId("email-auth-otp")).toBeFocused();
-    await expect(page.getByText(/We sent a 6-digit code to/)).toBeVisible();
+    await expect(page.getByTestId("email-auth-sent-heading")).toHaveText(
+      "Check your inbox"
+    );
+    await expect(page.getByText(/We sent a sign-in link to/)).toBeVisible();
     await expect(page.getByTestId("email-auth-change-email")).toBeVisible();
     await expect(page.getByTestId("email-auth-resend")).toBeVisible();
+    await expect(page.getByTestId("email-auth-otp")).toHaveCount(0);
   });
 
-  test("shows a safe error for an invalid code", async ({ page }) => {
-    const email = uniqueOtpTestEmail("films-invalid");
-
-    await requestFilmsEmailOtp(page, email);
-    await page.getByTestId("email-auth-otp").fill("000000");
-    await page.getByTestId("email-auth-verify").click();
-
-    await expect(page.getByTestId("email-auth-message")).toContainText(
-      /incorrect|try again/i
-    );
-    await expect(page.getByTestId("email-auth-message")).not.toContainText(
-      /registered|account exists|not found/i
-    );
-  });
-
-  test("retrieves the OTP from Mailpit and completes sign-in", async ({
+  test("retrieves the magic link from Mailpit and completes sign-in", async ({
     page,
   }) => {
-    const email = uniqueOtpTestEmail("films-sign-in");
-    const sentAfter = await requestFilmsEmailOtp(page, email);
-    const code = await completeFilmsEmailOtpSignIn(page, email, sentAfter);
+    const email = uniqueMagicLinkTestEmail("films-sign-in");
+    const sentAfter = await requestFilmsMagicLink(page, email);
+    const confirmationUrl = await completeFilmsMagicLinkSignIn(
+      page,
+      email,
+      sentAfter
+    );
 
-    expect(code).toMatch(/^\d{6}$/);
-    await expect(page).toHaveURL(/\/films$/);
+    expect(confirmationUrl).toMatch(/\/auth\/v1\/verify|token_hash=/i);
+    await expect(page).toHaveURL(/\/films(?:\?|$)/);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     await expect(page.getByTestId("auth-status")).not.toContainText("Log in");
   });

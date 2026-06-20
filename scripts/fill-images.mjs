@@ -1,7 +1,7 @@
-import dotenv from "dotenv";
+import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
 
-dotenv.config({ path: ".env.local" });
+applyAppEnv();
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

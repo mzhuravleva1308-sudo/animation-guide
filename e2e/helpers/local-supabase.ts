@@ -22,7 +22,7 @@ export function isLocalSupabaseConfigured(): boolean {
   return url ? isLocalSupabaseUrl(url) : false;
 }
 
-export function getLocalOtpAuthSkipReason(): string | null {
+export function getLocalMagicLinkAuthSkipReason(): string | null {
   if (!isLocalSupabaseConfigured()) {
     return "Requires local Supabase (NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 from `supabase status -o env`).";
   }

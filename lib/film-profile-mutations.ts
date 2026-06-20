@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 
 type MutationError = {
@@ -18,6 +18,8 @@ export async function persistFilmRating({
   filmId: string;
   rating: number | null;
 }): Promise<MutationResult> {
+  const supabase = createClient();
+
   if (rating === null) {
     const { error } = await supabase
       .from("film_ratings")
@@ -84,6 +86,8 @@ export async function persistFilmSave({
   filmId: string;
   saved: boolean;
 }): Promise<MutationResult> {
+  const supabase = createClient();
+
   if (saved) {
     const { data: existingItem, error: existingError } = await supabase
       .from("profile_film_lists")

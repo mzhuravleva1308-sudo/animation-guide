@@ -12,17 +12,17 @@ test.describe("Login page", () => {
     await expect(page.getByTestId("login-password")).toBeVisible();
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
     await expect(page.getByTestId("login-create-account")).toBeVisible();
-    await expect(page.getByTestId("login-use-email-code")).toBeVisible();
+    await expect(page.getByTestId("login-use-email-link")).toBeVisible();
     await expect(page.getByTestId("auth-status")).toHaveCount(0);
   });
 
-  test("switches email sign-in to email code mode", async ({ page }) => {
+  test("switches email sign-in to email link mode", async ({ page }) => {
     await page.goto("/login");
 
-    await page.getByTestId("login-use-email-code").click();
+    await page.getByTestId("login-use-email-link").click();
 
     await expect(
-      page.getByRole("button", { name: "Send sign-in code" })
+      page.getByRole("button", { name: "Send sign-in link" })
     ).toBeVisible();
     await expect(page.getByTestId("login-password")).toHaveCount(0);
     await expect(page.getByTestId("login-use-password")).toBeVisible();

@@ -1,4 +1,6 @@
 import { createCallbackClient } from "@/lib/supabase/callback";
+import { applyPendingFilmActionWithClient } from "@/lib/apply-pending-film-action-callback";
+import { autoLinkE2eProfileForAuthUser } from "@/lib/e2e/auto-link-auth-profile";
 import {
   formatAuthCallbackError,
   hasPkceVerifierCookie,
@@ -12,8 +14,72 @@ import {
   normalizeEmailOtpType,
   resolveCallbackMethod,
 } from "@/lib/auth/callback-params";
+import {
+  PENDING_FILM_ACTION_COOKIE_NAME,
+  readPendingFilmActionFromCookies,
+} from "@/lib/pending-film-action";
+import {
+  decodePendingFilmActionFromCallback,
+  PENDING_FILM_ACTION_QUERY_PARAM,
+} from "@/lib/pending-film-action-callback";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+
+async function applyPendingFilmActionFromCallbackRequest(
+  request: NextRequest,
+  requestUrl: URL,
+  response: NextResponse,
+  supabase: ReturnType<typeof createCallbackClient>
+) {
+  const pendingAction =
+    decodePendingFilmActionFromCallback(
+      requestUrl.searchParams.get(PENDING_FILM_ACTION_QUERY_PARAM)
+    ) ?? readPendingFilmActionFromCookies(request.cookies.getAll());
+
+  if (!pendingAction) {
+    return;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return;
+  }
+
+  await autoLinkE2eProfileForAuthUser(user);
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!profile?.id) {
+    return;
+  }
+
+  const result = await applyPendingFilmActionWithClient(
+    supabase,
+    profile.id,
+    pendingAction
+  );
+
+  if (result.error) {
+    console.error("[auth/callback] failed to apply pending film action", {
+      actionId: pendingAction.id,
+      actionType: pendingAction.type,
+      message: result.error,
+    });
+    return;
+  }
+
+  response.cookies.set(PENDING_FILM_ACTION_COOKIE_NAME, "", {
+    path: "/",
+    maxAge: 0,
+  });
+}
 
 function buildLoginErrorRedirect(
   origin: string,
@@ -89,6 +155,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await applyPendingFilmActionFromCallbackRequest(
+      request,
+      requestUrl,
+      successRedirect,
+      supabase
+    );
+
     return successRedirect;
   }
 
@@ -109,6 +182,13 @@ export async function GET(request: NextRequest) {
       error.code
     );
   }
+
+  await applyPendingFilmActionFromCallbackRequest(
+    request,
+    requestUrl,
+    successRedirect,
+    supabase
+  );
 
   return successRedirect;
 }

@@ -1,28 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef } from "react";
-import EmailOtpAuthForm from "@/components/EmailOtpAuthForm";
+import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
+import { lockBodyScroll } from "@/lib/modal-body-scroll-lock";
 
 type EmailAuthModalProps = {
   open: boolean;
   onClose: () => void;
   postAuthPath?: string;
-  onVerifySuccess?: () => void | Promise<void>;
+  lockScrollY?: number;
+  restoreFocusElement?: HTMLElement | null;
 };
 
 export default function EmailAuthModal({
   open,
   onClose,
   postAuthPath = "/",
-  onVerifySuccess,
+  lockScrollY,
+  restoreFocusElement = null,
 }: EmailAuthModalProps) {
   const dialogTitleId = useId();
   const dialogDescriptionId = useId();
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
+  const wasOpenRef = useRef(false);
 
   const handleClose = useCallback(() => {
     onClose();
-    lastActiveElementRef.current?.focus();
   }, [onClose]);
 
   useEffect(() => {
@@ -31,9 +34,30 @@ export default function EmailAuthModal({
     }
 
     lastActiveElementRef.current =
-      document.activeElement instanceof HTMLElement
+      restoreFocusElement ??
+      (document.activeElement instanceof HTMLElement
         ? document.activeElement
-        : null;
+        : null);
+
+    return lockBodyScroll(lockScrollY ?? window.scrollY);
+  }, [lockScrollY, open, restoreFocusElement]);
+
+  useEffect(() => {
+    if (open) {
+      wasOpenRef.current = true;
+      return;
+    }
+
+    if (!wasOpenRef.current) {
+      return;
+    }
+
+    wasOpenRef.current = false;
+
+    const element = lastActiveElementRef.current;
+    if (element && document.contains(element)) {
+      element.focus({ preventScroll: true });
+    }
   }, [open]);
 
   useEffect(() => {
@@ -91,7 +115,7 @@ export default function EmailAuthModal({
               id={dialogDescriptionId}
               className="mt-1 text-sm text-gray-600"
             >
-              We’ll email you a one-time sign-in code.
+              Enter your email and we&apos;ll send you a sign-in link.
             </p>
           </div>
 
@@ -106,10 +130,9 @@ export default function EmailAuthModal({
           </button>
         </div>
 
-        <EmailOtpAuthForm
+        <EmailMagicLinkAuthForm
           postAuthPath={postAuthPath}
           testIdPrefix="email-auth"
-          onVerifySuccess={onVerifySuccess}
         />
       </div>
     </div>

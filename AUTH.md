@@ -1,19 +1,28 @@
 # Authentication (Supabase)
 
-Sign-in via Supabase Auth: email OTP, email/password, and optional OAuth (Apple, Google). No route protection, RLS, or admin roles in this layer.
+Sign-in via Supabase Auth: email magic link, email/password, and optional OAuth (Apple, Google). No route protection, RLS, or admin roles in this layer.
 
 ## Supported methods
 
 | Method | Client API | Session path |
 |--------|------------|--------------|
-| Email OTP | `signInWithOtp` (no `emailRedirectTo`) → `verifyOtp({ email, token, type: 'email' })` | Immediate browser session |
+| Email magic link | `signInWithOtp` with `emailRedirectTo` → user clicks link → `/auth/callback` | Callback session |
 | Password sign-in | `signInWithPassword` | Immediate browser session |
 | Password sign-up | `signUp` | Immediate session, or email confirmation → `/auth/callback` |
 | OAuth (Apple, Google) | `signInWithOAuth` | Provider → `/auth/callback?code=...` |
 
-Passwordless sign-in uses a **6-digit email code**, not a clickable magic link. The app calls `signInWithOtp` without `emailRedirectTo`, then verifies the code in the browser with `verifyOtp({ email, token: code, type: 'email' })`.
+Passwordless sign-in for this MVP uses **Supabase’s default magic-link email flow**. The app calls `signInWithOtp` with `emailRedirectTo` pointing at `/auth/callback?next=…`. The user opens the link in email; the shared callback route establishes the session.
 
-OAuth and legacy email-confirmation links still use `app/auth/callback/route.ts` (`exchangeCodeForSession` or `verifyOtp` with `token_hash`). Password sign-in creates the session directly in the browser.
+Password sign-in creates the session directly in the browser. OAuth and legacy email-confirmation links also use `app/auth/callback/route.ts` (`exchangeCodeForSession` or `verifyOtp` with `token_hash`).
+
+### Passwordless codes vs magic links (MVP choice)
+
+| Flow | Email content | Hosted Supabase (no custom SMTP) | Custom SMTP required? |
+|------|---------------|----------------------------------|------------------------|
+| **Magic link (current MVP)** | Clickable `{{ .ConfirmationURL }}` | Works with Supabase’s built-in email provider | No |
+| **6-digit email OTP** | `{{ .Token }}` entered in the app | Not supported reliably without template + delivery control | **Yes** — configure SMTP and a Magic Link template that exposes `{{ .Token }}` without `emailRedirectTo` |
+
+This repo intentionally uses magic links for the MVP. Do not add OTP input UI unless you also configure custom SMTP and update the hosted Magic Link template accordingly.
 
 After any successful sign-in, the account menu resolves the linked profile via `profiles.user_id`. Users without a linked profile still see their email in the menu.
 
@@ -21,16 +30,16 @@ Logout is always `POST /auth/logout` regardless of how the user signed in.
 
 Unauthenticated browsing (home, `/films`, share-link profiles) is unchanged. Signed-in users with a linked profile are redirected from `/` to `/my-profile`, which opens their guide when `slug` and `share_token` are present.
 
-After any successful sign-in (password, email OTP, OAuth), the default destination is `/my-profile` — not the public home page. Callback-based flows pass `next=/my-profile` on `/auth/callback`; password and email OTP sign-in navigate there directly (except the `/films` modal, which redirects to `/`).
+After any successful sign-in (password, magic link, OAuth), the default destination is `/my-profile`. Callback-based flows pass `next=/my-profile` on `/auth/callback` (or `/films` when auth started from the films modal). Password sign-in navigates to `/my-profile` directly.
 
 ## Environment variables
 
-Add to `.env.local` (see `.env.example`):
+Add personal secrets to `.env.local` (see `.env.example`). Local Supabase and Mailpit are automatic — see [ENV.md](./ENV.md).
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Browser + server auth client |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes (automatic locally) | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes (automatic locally) | Browser + server auth client |
 | `NEXT_PUBLIC_SITE_URL` | Recommended for production | Canonical app URL when building redirects outside the browser |
 | `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS` | No | OAuth buttons on `/login`. Hidden by default; set to `apple,google` (or a subset) when provider credentials are ready. Empty string also hides OAuth. |
 
@@ -38,7 +47,7 @@ Add to `.env.local` (see `.env.example`):
 
 ## Supabase redirect URL configuration
 
-Callback-based flows (OAuth, email confirmation) only work when `/auth/callback` is on the Supabase Auth allowlist.
+Callback-based flows (OAuth, magic link) only work when `/auth/callback` is on the Supabase Auth allowlist.
 
 ### Local development (`npm run dev` on port 3000)
 
@@ -51,7 +60,7 @@ In the [Supabase Dashboard](https://supabase.com/dashboard) → **Authentication
 | | `http://localhost:3000/auth/callback` |
 | | `https://127.0.0.1:3000/auth/callback` (if using HTTPS locally) |
 
-The app sets OAuth `redirectTo` (and password sign-up `emailRedirectTo`) to `{origin}/auth/callback`, so the host in the provider redirect must match an allowed URL. Email OTP does **not** use a redirect URL.
+The app sets OAuth `redirectTo`, password sign-up `emailRedirectTo`, and magic-link `emailRedirectTo` to `{origin}/auth/callback?next=…`. The `{origin}` is the **browser’s current host** (not `NEXT_PUBLIC_SITE_URL`), so both `localhost` and `127.0.0.1` variants must be allowlisted if you use either.
 
 ### Production
 
@@ -59,70 +68,97 @@ The app sets OAuth `redirectTo` (and password sign-up `emailRedirectTo`) to `{or
 |---------|--------|
 | **Site URL** | `https://your-production-domain.com` |
 | **Redirect URLs** | `https://your-production-domain.com/auth/callback` |
+| | Include staging/preview domains if applicable |
 
-Set `NEXT_PUBLIC_SITE_URL=https://your-production-domain.com` if you add server-side redirects that need a fixed origin.
+Set `NEXT_PUBLIC_SITE_URL=https://your-production-domain.com` as a fallback when no request/browser origin is available (server-only redirects). Client-side magic-link requests always prefer the live browser origin.
 
-## Email OTP template (required for 6-digit codes)
+### Hosted Supabase checklist (required for magic-link MVP)
 
-Supabase sends passwordless sign-in emails through the **Magic Link** template type (even when the email contains a code, not a link). The template must expose `{{ .Token }}` — the 6-digit OTP — and must **not** rely on `{{ .ConfirmationURL }}` or clickable sign-in links.
+Complete these in **Supabase Dashboard** for the hosted project. Repo changes alone do not update hosted Auth settings.
 
-The app requests codes with `signInWithOtp({ email, options: { shouldCreateUser: true } })` and **without** `emailRedirectTo`. Passing `emailRedirectTo` switches Supabase back to link-based delivery.
+| Step | Dashboard location | Required setting |
+|------|-------------------|------------------|
+| 1 | **Authentication → Providers → Email** | **Confirm email** → **OFF**. When ON, new emails receive the separate “Confirm your email address” signup template instead of the magic-link flow, and the user is not signed in after clicking the link. |
+| 2 | **Authentication → URL configuration** | Add every callback URL the app uses (localhost, 127.0.0.1, production). |
+| 3 | **Authentication → Email Templates → Magic Link** | Use the PKCE-compatible template below (not the default `{{ .ConfirmationURL }}` alone). |
+| 4 | Deployment env | Set `NEXT_PUBLIC_SITE_URL` to the production domain. |
+
+Without step 1 **and** step 3, new users on hosted Supabase typically see “Confirm your email address”, land on `/auth/callback?code=…` without a PKCE verifier cookie, and remain signed out.
+
+## Email magic-link template
+
+Supabase sends passwordless sign-in emails through the **Magic Link** template type. Because `@supabase/ssr` uses PKCE, the template must send users **directly to `/auth/callback` with `token_hash` and `type=email`**. The default `{{ .ConfirmationURL }}` alone routes through Supabase’s verify endpoint and redirects with a PKCE `code` that cannot be exchanged when the link is opened from email (no verifier cookie).
+
+The MVP does **not** use `{{ .Token }}` (6-digit codes) in production UI.
+
+The app requests links with:
+
+```typescript
+await supabase.auth.signInWithOtp({
+  email,
+  options: {
+    shouldCreateUser: true,
+    emailRedirectTo: getAuthCallbackUrl(origin, nextPath),
+  },
+});
+```
+
+Implemented in `lib/auth/magic-link-auth-client.ts`. The `/films` modal passes `next=/films` so users return to the catalog after clicking the link; pending save/rating actions are stored in a cookie + `localStorage` and applied in `app/auth/callback/route.ts` after the session is established.
+
+### Required Magic Link template (local + hosted)
+
+Subject: **Your sign-in link** (or similar neutral copy)
+
+```html
+<h2>Sign in to Animation Guide</h2>
+<p>Click the button below to continue. This link expires shortly and can only be used once.</p>
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Sign in</a></p>
+<p>If you did not request this email, you can ignore it.</p>
+```
+
+`{{ .RedirectTo }}` is the `emailRedirectTo` URL (`/auth/callback?next=…`) passed by the app. The callback route calls `verifyOtp({ token_hash, type: 'email' })` server-side and sets session cookies before redirecting to `next`.
 
 ### Where templates are managed
 
 | Environment | Managed via | Notes |
 |-------------|-------------|-------|
-| **Local Supabase CLI** (`supabase start`) | Repo files | `supabase/config.toml` → `[auth.email.template.magic_link]` points at `supabase/templates/email-otp.html`. Restart the local Auth stack after template changes (`supabase stop && supabase start`, or restart the stack). |
-| **Hosted Supabase (production / staging)** | **Supabase Dashboard only** | Go to **Authentication → Email Templates → Magic Link**. Paste the same HTML as `supabase/templates/email-otp.html` and set the subject to **Your sign-in code**. Dashboard edits are **not** synced from this repo automatically — you must update the hosted project manually (or via the Supabase Management API) whenever the template file changes. |
+| **Local Supabase CLI** (`supabase start`) | Repo files | `supabase/config.toml` → `[auth.email.template.magic_link]` points at `supabase/templates/email-magic-link.html`. Restart the local Auth stack after template changes (`supabase stop && supabase start`). |
+| **Hosted Supabase (production / staging)** | **Supabase Dashboard only** | **Authentication → Email Templates → Magic Link**. Paste the PKCE-compatible template above. Also disable **Confirm email** under **Providers → Email**. Dashboard edits are **not** synced from this repo automatically. |
 
-There is no deploy step that pushes email templates from this repo to a hosted Supabase project. Treat `supabase/templates/email-otp.html` as the source of truth and copy it to the dashboard for hosted environments.
+There is no deploy step that pushes email templates from this repo to a hosted Supabase project. Treat `supabase/templates/email-magic-link.html` as the local source of truth.
 
 ### Local CLI configuration (already in repo)
 
 ```toml
 [auth.email.template.magic_link]
-subject = "Your sign-in code"
-content_path = "./supabase/templates/email-otp.html"
+subject = "Your sign-in link"
+content_path = "./supabase/templates/email-magic-link.html"
 ```
 
-Template file: `supabase/templates/email-otp.html`
+Template file: `supabase/templates/email-magic-link.html`
 
-OTP length and expiry are configured under `[auth.email]` (`otp_length = 6`, `otp_expiry = 3600`).
+Link expiry is configured under `[auth.email]` (`otp_expiry = 3600`).
 
-### Hosted dashboard template
+### Hosted dashboard (MVP)
 
-In **Authentication → Email Templates → Magic Link**, use:
-
-```html
-<h2>Your sign-in code</h2>
-<p>Use this one-time code to continue. It expires shortly and can only be used once.</p>
-<p style="font-size: 28px; font-weight: 700; letter-spacing: 0.35em; margin: 24px 0;">
-  {{ .Token }}
-</p>
-<p>If you did not request this email, you can ignore it.</p>
-```
-
-Subject: **Your sign-in code**
+1. **Disable Confirm email** under **Authentication → Providers → Email** so new and existing users share one magic-link flow via `signInWithOtp`.
+2. Paste the PKCE-compatible Magic Link template above into **Authentication → Email Templates → Magic Link**.
+3. Allowlist all `/auth/callback` URLs under **Authentication → URL configuration**.
 
 Copy is intentionally neutral — it does not say whether the email already has an account.
 
-### Client verification
+### Product UI after sending a link
 
-Both `/login` and the `/films` auth modal verify codes with:
+Both `/login` and the `/films` auth modal show:
 
-```typescript
-await supabase.auth.verifyOtp({
-  email,
-  token: code,
-  type: "email",
-});
-```
+1. Email step → **Send sign-in link**
+2. Confirmation step → **Check your inbox** with resend cooldown and **Change email**
 
-Implemented in `lib/auth/email-otp-client.ts`.
+There is no OTP input in the production UI.
 
-## Local email OTP testing (Mailpit)
+## Local magic-link testing (Mailpit)
 
-The Supabase CLI captures **all local Auth emails in Mailpit**. Nothing is delivered externally during local development or local-stack E2E runs. Use any synthetic address (`otp-test-1@example.com`, `new-user@example.test`, etc.).
+The Supabase CLI captures **all local Auth emails in Mailpit**. Nothing is delivered externally during local development or local-stack E2E runs. Use any synthetic address (`magic-link-test-1@example.com`, `new-user@example.test`, etc.).
 
 ### Start the local stack
 
@@ -148,7 +184,7 @@ supabase status
 
 Look for **Mailpit URL** (default `http://127.0.0.1:54324`).
 
-Machine-readable env vars for `.env.local`:
+Machine-readable env vars from `supabase status -o env` (for updating `.env.development` if JWT secrets change):
 
 ```bash
 supabase status -o env
@@ -163,27 +199,17 @@ Relevant keys:
 | `SERVICE_ROLE_KEY` | Set as `SUPABASE_SERVICE_ROLE_KEY` (server/E2E only) |
 | `MAILPIT_URL` | Mailpit web UI + API (override with env in E2E helpers) |
 
-Open Mailpit in a browser to read OTP emails manually, or use the API (`/api/v1/search`, `/api/v1/message/{ID}`).
+Open Mailpit in a browser to read magic-link emails manually, or use the API (`/api/v1/search`, `/api/v1/message/{ID}`).
 
 ### Point the app at local Supabase
 
-In `.env.local` (see `.env.example`):
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<from supabase status -o env>
-SUPABASE_SERVICE_ROLE_KEY=<from supabase status -o env>
-MAILPIT_URL=http://127.0.0.1:54324
-NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3000
-```
-
-Then run the app:
+Local values are in committed `.env.development` and applied automatically by `npm run dev` (see [ENV.md](./ENV.md)). After `supabase start`:
 
 ```bash
 npm run dev
 ```
 
-Request an OTP on `/films` or `/login`, then open Mailpit to copy the 6-digit code from the captured email.
+Request a sign-in link on `/films` or `/login`, then open Mailpit and click the confirmation URL from the captured email.
 
 ### Configuration notes
 
@@ -192,9 +218,9 @@ Request an OTP on `/films` or `/login`, then open Mailpit to copy the 6-digit co
 | **Config file key** | `[inbucket]` in `supabase/config.toml` — legacy name; the CLI runs **Mailpit** on `port = 54324`. |
 | **SMTP block** | Leave `[auth.email.smtp]` commented out locally. Mailpit capture is automatic. |
 | **Production** | Configure real SMTP in the hosted Supabase Dashboard. Do not point production at Mailpit. |
-| **Templates** | Local template: `supabase/templates/email-otp.html` via `[auth.email.template.magic_link]`. |
+| **Templates** | Local template: `supabase/templates/email-magic-link.html` via `[auth.email.template.magic_link]`. |
 
-See [TESTING.md](./TESTING.md) for E2E retrieval of OTP codes through Mailpit’s API.
+See [TESTING.md](./TESTING.md) for E2E retrieval of magic links through Mailpit’s API.
 
 ### E2E (port 3100)
 
@@ -282,20 +308,24 @@ Required in [Google Cloud Console](https://console.cloud.google.com/):
 
 For local Google sign-in with the Supabase CLI, you may need `skip_nonce_check = true` under `[auth.external.google]` in `config.toml` (see Supabase local-dev docs).
 
-## Troubleshooting email OTP failures
+## Troubleshooting magic-link failures
 
-If sign-in fails after entering a code, check browser network errors for the `verifyOtp` call.
+If sign-in fails after clicking the email link, check browser network errors on `/auth/callback`.
 
 Common causes:
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| Email contains a **Sign in link** instead of a 6-digit code | Hosted dashboard still uses default magic-link template, or app passed `emailRedirectTo` | Update **Magic Link** template to use `{{ .Token }}` (see above). Ensure client calls `signInWithOtp` without `emailRedirectTo`. |
-| `invalid_otp` | Wrong code, expired code, or code already used | Request a new code. Each code is single-use. |
+| New email gets **“Confirm your email address”** (signup template) | **Confirm email** enabled on hosted Supabase | Turn **Confirm email** OFF under **Authentication → Providers → Email**. The magic-link UI uses `signInWithOtp` only — not `signUp`. |
+| Link opens but session is not established | Default Magic Link template uses `{{ .ConfirmationURL }}` with PKCE client; email opens without PKCE verifier cookie | Use the PKCE template with `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email` (see above). |
+| Link opens but session is not established | `/auth/callback` not on Supabase redirect allowlist, or host mismatch (127.0.0.1 vs localhost) | Add the exact callback URL to **Authentication → URL configuration**. Use one host consistently, or allowlist both. |
+| `pkce_code_verifier_not_found` on callback | Same as above — PKCE code exchange without verifier | Update Magic Link template to token_hash flow; restart not required on hosted. |
+| Email contains a **6-digit code** instead of a link | Hosted template exposes `{{ .Token }}` only | Use Magic Link template with `token_hash` link as above. |
 | `over_email_send_rate_limit` | Too many resend requests | Wait for the cooldown (app enforces 30s client-side; Supabase also rate-limits). |
 | `validation_failed` | Malformed email | Enter a valid email address. |
+| Pending save/rating not applied after sign-in | Pending action cookie cleared before profile link exists | Callback applies pending actions server-side when profile exists; client retries on `SIGNED_IN`. |
 
-The `/auth/callback` route is still used for OAuth and email confirmation, not for email OTP sign-in.
+The `/auth/callback` route handles magic links (`verifyOtp` with `token_hash`), OAuth (`exchangeCodeForSession`), and legacy email confirmation.
 
 ## Profile linking and identity resolution
 
@@ -320,12 +350,12 @@ Supabase [automatic identity linking](https://supabase.com/docs/guides/auth/auth
 
 | First sign-in | Later sign-in (same person) | Same `auth.users.id`? | Notes |
 |---------------|----------------------------|------------------------|-------|
-| Email OTP | Password (same email) | **Yes** | Both use the email identity |
-| Password sign-up | Email OTP (same email) | **Yes** | Signs into the existing email user |
-| Email OTP / password | Google (same verified email) | **Yes** | OAuth identity auto-linked |
-| Email OTP / password | Apple (same verified email) | **Yes** | OAuth identity auto-linked |
+| Email magic link | Password (same email) | **Yes** | Both use the email identity |
+| Password sign-up | Email magic link (same email) | **Yes** | Signs into the existing email user |
+| Email magic link / password | Google (same verified email) | **Yes** | OAuth identity auto-linked |
+| Email magic link / password | Apple (same verified email) | **Yes** | OAuth identity auto-linked |
 | Google | Apple (same verified email) | **Yes** | OAuth ↔ OAuth auto-linked |
-| Google | Email OTP (same email) | **Yes** | Email OTP targets linked user |
+| Google | Email magic link (same email) | **Yes** | Magic link targets linked user |
 
 Requirements for automatic linking:
 
@@ -337,7 +367,7 @@ Requirements for automatic linking:
 
 | Scenario | Same `auth.users.id`? | Impact on linked profile |
 |----------|------------------------|---------------------------|
-| Apple **Hide My Email** (`@privaterelay.appleid.com`) vs real email used for email OTP / Google | **No** | `profiles.user_id` stays on the first user; Apple relay sign-in shows **no profile linked** |
+| Apple **Hide My Email** (`@privaterelay.appleid.com`) vs real email used for magic link / Google | **No** | `profiles.user_id` stays on the first user; Apple relay sign-in shows **no profile linked** |
 | OAuth / email use **different email addresses** | **No** | Separate users; only the linked UUID sees the guide |
 | User clicks **Create account** with a new email while an existing auth user already owns the guide email | **No** (new user) | New auth row; profile remains on old `user_id` |
 | Second email sign-up after OAuth with same email via **Create account** | N/A (blocked) | Supabase returns an obfuscated response; no second user (anti-enumeration) |
@@ -373,9 +403,9 @@ Do **not** set `profiles.user_id` from email alone — always use the UUID after
 
 **3. User guidance (reduces split-account risk)**
 
-- Use the **same email** for email OTP, password, Google, and Apple when possible.
+- Use the **same email** for magic link, password, Google, and Apple when possible.
 - For Apple: prefer sharing the real email, or standardize on the private relay address and use that consistently (including when linking).
-- For the first invited users, consider starting with **one** method (email OTP or Google) until `profiles.user_id` is set, then add other methods.
+- For the first invited users, consider starting with **one** method (magic link or Google) until `profiles.user_id` is set, then add other methods.
 
 **4. Not in scope yet (defer)**
 
@@ -398,7 +428,7 @@ Cannot be fully automated in CI without real Google/Apple credentials and per-us
 ## Manual verification
 
 1. Start the app: `npm run dev`
-2. **Email OTP**: `/login` or `/films` → enter email → copy the 6-digit code from Mailpit (`supabase status` → Mailpit URL)
+2. **Magic link**: `/login` or `/films` → enter email → open the confirmation link from Mailpit (`supabase status` → Mailpit URL)
 3. **Password**: create account or sign in with email + password
 4. **OAuth** (after provider + `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS` configured): click provider button → complete provider login
 5. Open the account menu (initials button beside the guide title) → confirm profile name and email
@@ -409,12 +439,12 @@ Cannot be fully automated in CI without real Google/Apple credentials and per-us
 
 | Layer | Coverage |
 |-------|----------|
-| **Unit** | `lib/auth/callback-url.test.mjs`, `lib/auth/callback-params.test.mjs`, `lib/auth/callback-error.test.mjs`, `lib/auth/email-otp.test.mjs`, `lib/auth/extract-otp-from-email.test.mjs`, `lib/auth/oauth-providers.test.mjs`, `lib/auth/user-display.test.mjs` |
-| **E2E** | `e2e/smoke/auth.spec.ts`, `e2e/smoke/films-auth.spec.ts` — login UI + real Mailpit OTP verification against local Supabase |
+| **Unit** | `lib/auth/callback-url.test.mjs`, `lib/auth/callback-params.test.mjs`, `lib/auth/callback-error.test.mjs`, `lib/auth/magic-link-auth.test.mjs`, `lib/auth/extract-magic-link-from-email.test.mjs`, `lib/auth/oauth-providers.test.mjs`, `lib/auth/user-display.test.mjs` |
+| **E2E** | `e2e/smoke/auth.spec.ts`, `e2e/smoke/films-auth.spec.ts`, `e2e/smoke/films-pending-action.spec.ts` — login UI + real Mailpit magic-link verification against local Supabase |
 
 **Not automated** (requires real email delivery or provider credentials):
 
-- Email OTP against hosted Supabase without Mailpit
+- Magic-link sign-in against hosted Supabase without Mailpit
 - Password sign-in against a real Supabase user
 - OAuth redirects with Apple/Google credentials
 
