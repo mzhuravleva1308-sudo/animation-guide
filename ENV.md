@@ -56,13 +56,49 @@ APP_ENV=hosted node scripts/cache-posters.mjs
 
 Requires `.env.hosted.local` (copy from `.env.hosted.example`).
 
-### Production deployment
+### Production deployment (Vercel / hosting)
 
-Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and other secrets in the **hosting provider’s environment UI**. Do not rely on committed env files for production.
+**Required in Production *and* Preview** (hosting dashboard — not repo files):
+
+| Variable | Example shape | Notes |
+|----------|---------------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://<project-ref>.supabase.co` | Hosted Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | JWT anon key from Supabase Dashboard | Baked into client bundle at build time |
+| `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` | Canonical public origin (https, no trailing slash) |
+| `SUPABASE_SERVICE_ROLE_KEY` | service role JWT | Server-only; optional for some features, required for admin scripts |
+
+**Do not set** `ALLOW_LOCAL_STACK_ENV` in Production or Preview. That flag exists only in `.env.e2e` for Playwright builds.
+
+**Build guard:** `npm run build` and `next.config.ts` call `validateProductionBuildEnv`. A production build **fails** if:
+
+- any required var above is missing;
+- `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SITE_URL` points at `localhost` / `127.0.0.1`;
+- hosted URLs are not `https://`.
+
+Inspect what the current shell would use (no secrets printed):
+
+```bash
+NODE_ENV=production npm run env:inspect
+```
+
+#### Why local values leaked before
+
+1. **Committed `.env.development`** contains local Supabase/Mailpit URLs — safe for dev/E2E only. Next.js **does not** load it when `NODE_ENV=production`, but values copied into the **Vercel env UI** or baked from a **local `npm run build`** without hosted vars will still reach users.
+2. **E2E** intentionally runs `next build` with local env via `scripts/run-e2e-webserver.mjs` + `scripts/load-app-env.mjs` — never deploy that artifact.
+3. **Missing `NEXT_PUBLIC_SITE_URL`** on the host caused code paths to fall back to `http://localhost:3000` when no request origin exists (see `lib/auth/callback-origin.mjs`).
+4. **Supabase Dashboard → Authentication → URL configuration**: Site URL and Redirect URLs must list your **production domain**, not `http://127.0.0.1:3000`. Otherwise auth emails can ignore `emailRedirectTo` and point at localhost even when the app env is correct.
+
+#### What cannot reach production after this change
+
+| Source | Production build |
+|--------|------------------|
+| `.env.development` | Not loaded by Next.js (`NODE_ENV=production`) |
+| `.env.e2e` | Not loaded (E2E only via `loadAppEnv`) |
+| `.env.local` | Gitignored; not on Vercel unless manually uploaded |
+| `scripts/load-app-env.mjs` | Not invoked by `next build` on Vercel |
+| Localhost fallbacks | Build fails unless `ALLOW_LOCAL_STACK_ENV=1` (E2E only) |
 
 Production SMTP lives in the **Supabase Dashboard** (Authentication → SMTP). It is never loaded from this repo.
-
-Committed `.env.development` is not used when `NODE_ENV=production` unless those variables are already absent and Next.js loads files — on Vercel/CI, platform env vars are set explicitly and take precedence over files.
 
 ## `.env.local` (secrets only)
 

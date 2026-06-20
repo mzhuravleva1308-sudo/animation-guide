@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node scripts/run-dev.mjs",
     "dev:clean": "rm -rf .next && next dev --webpack",
-    "build": "next build",
+    "build": "node scripts/validate-production-build-env.mjs && next build",
+    "env:inspect": "node scripts/inspect-build-env.mjs",
     "start": "next start",
     "lint": "eslint",
     "test": "npm run test:unit && npm run test:e2e",
