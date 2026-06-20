@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
+import { persistFilmRating } from "@/lib/film-profile-mutations";
+import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 
 type RatingChangeOptions = {
   skipOrderUpdate?: boolean;
@@ -17,6 +17,7 @@ type RatingButtonsProps = {
     rating: number | null,
     options?: RatingChangeOptions
   ) => void;
+  onAuthRequired?: (action: PendingFilmActionInput) => void;
 };
 
 function normalizeRating(value: number | null | undefined): number | null {
@@ -32,6 +33,7 @@ export default function RatingButtons({
   profileId,
   initialRating = null,
   onRatingChange,
+  onAuthRequired,
 }: RatingButtonsProps) {
   const normalizedInitialRating = normalizeRating(initialRating);
   const [rating, setRating] = useState<number | null>(normalizedInitialRating);
@@ -49,40 +51,37 @@ export default function RatingButtons({
   }, [rating]);
 
   async function saveRating(value: number) {
+    const previousRating = ratingRef.current;
+    const nextRating = previousRating === value ? null : value;
+
     if (!profileId) {
-      console.error("Rating save skipped: missing profileId");
+      if (!onAuthRequired) {
+        console.error("Rating save skipped: missing profileId");
+        return;
+      }
+
+      setRating(nextRating);
+      ratingRef.current = nextRating;
+      onRatingChange?.(filmId, nextRating);
+      onAuthRequired({
+        type: "rating",
+        filmId,
+        rating: nextRating,
+      });
       return;
     }
 
-    const previousRating = ratingRef.current;
-    const nextRating = previousRating === value ? null : value;
     const requestId = ++saveRequestIdRef.current;
 
     setRating(nextRating);
     ratingRef.current = nextRating;
     onRatingChange?.(filmId, nextRating);
 
-    let error: { message?: string } | null = null;
-
-    if (nextRating === null) {
-      ({ error } = await supabase
-        .from("film_ratings")
-        .delete()
-        .eq("film_id", filmId)
-        .eq("profile_id", profileId));
-    } else {
-      ({ error } = await supabase.from("film_ratings").upsert(
-        {
-          film_id: filmId,
-          profile_id: profileId,
-          rating: nextRating,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "film_id,profile_id",
-        }
-      ));
-    }
+    const { error } = await persistFilmRating({
+      profileId,
+      filmId,
+      rating: nextRating,
+    });
 
     if (requestId !== saveRequestIdRef.current) {
       return;
@@ -93,35 +92,7 @@ export default function RatingButtons({
       setRating(previousRating);
       ratingRef.current = previousRating;
       onRatingChange?.(filmId, previousRating, { skipOrderUpdate: true });
-      return;
     }
-
-    if (nextRating === null) {
-      logProfileActivityClient({
-        profileId,
-        filmId,
-        eventType: "rating_removed",
-      });
-      logProfileActivityClient({
-        profileId,
-        filmId,
-        eventType: "film_unwatched",
-      });
-      return;
-    }
-
-    logProfileActivityClient({
-      profileId,
-      filmId,
-      eventType: "rating_set",
-      eventData: { rating: nextRating },
-    });
-    logProfileActivityClient({
-      profileId,
-      filmId,
-      eventType: "film_watched",
-      eventData: { rating: nextRating },
-    });
   }
 
   return (

@@ -20,7 +20,7 @@ async function getVisibleFilmTitles(page: import("@playwright/test").Page) {
 }
 
 test.describe("Public films catalog", () => {
-  test("loads without a profile token and shows read-only film cards", async ({
+  test("loads without a profile token and shows interactive film cards", async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
@@ -34,11 +34,10 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("film-search-input")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
     await expect(page.getByTestId("film-card").first()).toBeVisible();
-
-    await expect(page.getByText("My rating:")).toHaveCount(0);
+    await expect(page.getByText("My rating:").first()).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "Add to watchlist" })
-    ).toHaveCount(0);
+      page.getByRole("button", { name: "Add to watchlist" }).first()
+    ).toBeVisible();
     await expect(page.getByRole("button", { name: "All films" })).toHaveCount(
       0
     );

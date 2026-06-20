@@ -7,12 +7,14 @@ type EmailAuthModalProps = {
   open: boolean;
   onClose: () => void;
   postAuthPath?: string;
+  onVerifySuccess?: () => void | Promise<void>;
 };
 
 export default function EmailAuthModal({
   open,
   onClose,
   postAuthPath = "/",
+  onVerifySuccess,
 }: EmailAuthModalProps) {
   const dialogTitleId = useId();
   const dialogDescriptionId = useId();
@@ -107,6 +109,7 @@ export default function EmailAuthModal({
         <EmailOtpAuthForm
           postAuthPath={postAuthPath}
           testIdPrefix="email-auth"
+          onVerifySuccess={onVerifySuccess}
         />
       </div>
     </div>

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
+import { persistFilmSave } from "@/lib/film-profile-mutations";
+import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 
 type WatchlistButtonProps = {
   filmId: string;
@@ -10,6 +11,7 @@ type WatchlistButtonProps = {
   profileId?: string;
   isSaved?: boolean;
   onSavedChange?: (saved: boolean) => void;
+  onAuthRequired?: (action: PendingFilmActionInput) => void;
 };
 
 export default function WatchlistButton({
@@ -18,6 +20,7 @@ export default function WatchlistButton({
   profileId: profileIdFromProps,
   isSaved,
   onSavedChange,
+  onAuthRequired,
 }: WatchlistButtonProps) {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [isInWatchlist, setIsInWatchlist] = useState(isSaved ?? false);
@@ -32,6 +35,12 @@ export default function WatchlistButton({
 
   useEffect(() => {
     async function loadWatchlistStatus() {
+      if (onAuthRequired && !profileIdFromProps) {
+        setProfileId(null);
+        setIsLoading(false);
+        return;
+      }
+
       let resolvedProfileId = profileIdFromProps ?? null;
 
       if (!resolvedProfileId) {
@@ -76,70 +85,56 @@ export default function WatchlistButton({
     }
 
     loadWatchlistStatus();
-  }, [filmId, profileSlug, profileIdFromProps, isSaved]);
+  }, [filmId, profileSlug, profileIdFromProps, isSaved, onAuthRequired]);
 
   async function toggleWatchlist() {
-    if (!profileId || isLoading || isSaving) return;
+    if (isLoading || isSaving) return;
 
     const previousSaved = isInWatchlist;
     const nextSaved = !previousSaved;
 
-    setIsSaving(true);
-    setIsInWatchlist(nextSaved);
-    onSavedChange?.(nextSaved);
-
-    if (nextSaved) {
-      const { error } = await supabase.from("profile_film_lists").insert({
-        film_id: filmId,
-        profile_id: profileId,
-        list_type: "to_watch",
-      });
-
-      if (error) {
-        console.error("Watchlist add error", error);
-        setIsInWatchlist(previousSaved);
-        onSavedChange?.(previousSaved);
-        setIsSaving(false);
+    if (!profileId) {
+      if (!onAuthRequired) {
         return;
       }
 
-      setIsSaving(false);
-      logProfileActivityClient({
-        profileId,
+      setIsInWatchlist(nextSaved);
+      onSavedChange?.(nextSaved);
+      onAuthRequired({
+        type: "save",
         filmId,
-        eventType: "film_saved",
+        saved: nextSaved,
       });
       return;
     }
 
-    const { error } = await supabase
-      .from("profile_film_lists")
-      .delete()
-      .eq("film_id", filmId)
-      .eq("profile_id", profileId)
-      .eq("list_type", "to_watch");
+    setIsSaving(true);
+    setIsInWatchlist(nextSaved);
+
+    const { error } = await persistFilmSave({
+      profileId,
+      filmId,
+      saved: nextSaved,
+    });
 
     if (error) {
-      console.error("Watchlist remove error", error);
+      console.error(nextSaved ? "Watchlist add error" : "Watchlist remove error", error);
       setIsInWatchlist(previousSaved);
-      onSavedChange?.(previousSaved);
       setIsSaving(false);
       return;
     }
 
+    onSavedChange?.(nextSaved);
     setIsSaving(false);
-    logProfileActivityClient({
-      profileId,
-      filmId,
-      eventType: "film_unsaved",
-    });
   }
+
+  const isDisabled = isLoading || isSaving || (!profileId && !onAuthRequired);
 
   return (
     <button
       type="button"
       onClick={toggleWatchlist}
-      disabled={isLoading || isSaving || !profileId}
+      disabled={isDisabled}
       title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
       aria-label={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
       className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${

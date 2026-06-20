@@ -95,11 +95,13 @@ export async function unsaveAllVisibleFilms(page: Page) {
       break;
     }
 
-    const removeButton = filmCards(page)
-      .first()
-      .getByRole("button", { name: "Remove from watchlist" });
+    const removeButton = await waitForWatchlistButton(
+      filmCards(page).first(),
+      "Remove from watchlist"
+    );
 
     await removeButton.click();
+    await expect(filmCards(page)).toHaveCount(0, { timeout: 10_000 });
   }
 
   await expectTabIsEmpty(page);

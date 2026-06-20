@@ -21,6 +21,7 @@ type EmailOtpAuthFormProps = {
   postAuthPath?: string;
   testIdPrefix?: "login" | "email-auth";
   autoFocus?: boolean;
+  onVerifySuccess?: () => void | Promise<void>;
 };
 
 type AuthStep = "email" | "code";
@@ -30,6 +31,7 @@ export default function EmailOtpAuthForm({
   postAuthPath = POST_AUTH_PATH,
   testIdPrefix = "email-auth",
   autoFocus = true,
+  onVerifySuccess,
 }: EmailOtpAuthFormProps) {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
@@ -150,6 +152,12 @@ export default function EmailOtpAuthForm({
 
     if (error) {
       setMessage(formatEmailOtpError(error));
+      setLoading(null);
+      return;
+    }
+
+    if (onVerifySuccess) {
+      await onVerifySuccess();
       setLoading(null);
       return;
     }

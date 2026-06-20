@@ -81,7 +81,7 @@ test.describe("Films email OTP auth with Mailpit", () => {
     const code = await completeFilmsEmailOtpSignIn(page, email, sentAfter);
 
     expect(code).toMatch(/^\d{6}$/);
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/films$/);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     await expect(page.getByTestId("auth-status")).not.toContainText("Log in");
   });

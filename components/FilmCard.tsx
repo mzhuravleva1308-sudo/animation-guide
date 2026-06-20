@@ -4,6 +4,7 @@ import { normalizeFilmTagList } from "@/lib/film-tags";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
+import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 
 type FilmCardBaseProps = {
   film: Film;
@@ -31,7 +32,25 @@ type FilmCardPublicProps = FilmCardBaseProps & {
   mode: "public";
 };
 
-export type FilmCardProps = FilmCardProfileProps | FilmCardPublicProps;
+type FilmCardCatalogProps = FilmCardBaseProps & {
+  mode: "catalog";
+  profileId?: string;
+  profileSlug?: string;
+  initialRating: number | null;
+  savedFilmIds: Set<string>;
+  onSavedChange: (film: Film, saved: boolean) => void;
+  onRatingChange: (
+    filmId: string,
+    rating: number | null,
+    options?: { skipOrderUpdate?: boolean }
+  ) => void;
+  onAuthRequired?: (action: PendingFilmActionInput) => void;
+};
+
+export type FilmCardProps =
+  | FilmCardProfileProps
+  | FilmCardPublicProps
+  | FilmCardCatalogProps;
 
 export default function FilmCard(props: FilmCardProps) {
   const {
@@ -46,11 +65,13 @@ export default function FilmCard(props: FilmCardProps) {
   const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
   const narrativeTags = normalizeFilmTagList(film.narrative_tags);
   const posterUrl = getFilmPosterUrl(film);
-  const isPublic = props.mode === "public";
+  const showInteractionControls =
+    props.mode === "profile" || props.mode === "catalog";
 
   return (
     <article
       data-testid="film-card"
+      data-film-id={film.id}
       className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
     >
       <div
@@ -183,13 +204,16 @@ export default function FilmCard(props: FilmCardProps) {
           )}
         </div>
 
-        {!isPublic && (
+        {showInteractionControls && (
           <div className="mt-auto flex items-end justify-between gap-6 pt-4">
             <RatingButtons
               filmId={film.id}
               profileId={props.profileId}
               initialRating={props.initialRating}
               onRatingChange={props.onRatingChange}
+              onAuthRequired={
+                props.mode === "catalog" ? props.onAuthRequired : undefined
+              }
             />
             <WatchlistButton
               filmId={film.id}
@@ -197,6 +221,9 @@ export default function FilmCard(props: FilmCardProps) {
               profileId={props.profileId}
               isSaved={props.savedFilmIds.has(film.id)}
               onSavedChange={(saved) => props.onSavedChange(film, saved)}
+              onAuthRequired={
+                props.mode === "catalog" ? props.onAuthRequired : undefined
+              }
             />
           </div>
         )}

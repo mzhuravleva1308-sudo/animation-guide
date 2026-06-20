@@ -1,0 +1,300 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import AccountMenu from "@/components/AccountMenu";
+import EmailAuthModal from "@/components/EmailAuthModal";
+import FilmCatalog from "@/components/FilmCatalog";
+import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
+import {
+  loadAuthenticatedProfileFilmState,
+  resolveAuthenticatedProfile,
+} from "@/lib/auth/resolve-auth-profile";
+import type { AuthUserSummary } from "@/lib/auth/session";
+import { getUserDisplayEmail } from "@/lib/auth/user-display";
+import { createClient } from "@/lib/supabase/client";
+import {
+  clearPendingFilmActionFromSession,
+  storePendingFilmActionForSession,
+  type PendingFilmActionInput,
+} from "@/lib/pending-film-action";
+import { Film } from "@/types/film";
+
+type FilmsPageClientProps = {
+  auth: AuthUserSummary | null;
+  films: Film[];
+  pageSize: number;
+  loadError: string | null;
+};
+
+type InteractionSnapshot = {
+  savedFilmIds: Set<string>;
+  filmRatings: Record<string, number | null>;
+};
+
+function cloneInteractionSnapshot(
+  savedFilmIds: Set<string>,
+  filmRatings: Record<string, number | null>
+): InteractionSnapshot {
+  return {
+    savedFilmIds: new Set(savedFilmIds),
+    filmRatings: { ...filmRatings },
+  };
+}
+
+export default function FilmsPageClient({
+  auth: initialAuth,
+  films,
+  pageSize,
+  loadError,
+}: FilmsPageClientProps) {
+  const router = useRouter();
+  const [auth, setAuth] = useState(initialAuth);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [profileId, setProfileId] = useState<string | undefined>(undefined);
+  const [profileSlug, setProfileSlug] = useState<string | undefined>(undefined);
+  const [savedFilmIds, setSavedFilmIds] = useState<Set<string>>(new Set());
+  const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
+    {}
+  );
+  const preAuthSnapshotRef = useRef<InteractionSnapshot | null>(null);
+  const applyInFlightRef = useRef<Promise<void> | null>(null);
+
+  const syncAuthenticatedInteractionState = useCallback(async () => {
+    const profile = await resolveAuthenticatedProfile();
+    if (!profile) {
+      setProfileId(undefined);
+      setProfileSlug(undefined);
+      setSavedFilmIds(new Set());
+      setFilmRatings({});
+      return null;
+    }
+
+    const state = await loadAuthenticatedProfileFilmState(profile.profileId);
+    setProfileId(profile.profileId);
+    setProfileSlug(profile.profileSlug);
+    setSavedFilmIds(state.savedFilmIds);
+    setFilmRatings(state.filmRatings);
+    return profile.profileId;
+  }, []);
+
+  const applyPendingActionForProfile = useCallback(
+    async (resolvedProfileId: string) => {
+      if (applyInFlightRef.current) {
+        await applyInFlightRef.current;
+        return;
+      }
+
+      applyInFlightRef.current = (async () => {
+        const result = await applyPendingFilmAction({
+          profileId: resolvedProfileId,
+        });
+
+        if (result.status === "applied") {
+          const appliedAction = result.action;
+          if (appliedAction.type === "save") {
+            setSavedFilmIds((current) => {
+              const next = new Set(current);
+              if (appliedAction.saved) {
+                next.add(appliedAction.filmId);
+              } else {
+                next.delete(appliedAction.filmId);
+              }
+              return next;
+            });
+          } else {
+            setFilmRatings((current) => ({
+              ...current,
+              [appliedAction.filmId]: appliedAction.rating,
+            }));
+          }
+        } else if (result.status === "error") {
+          console.error("Failed to apply pending film action:", result.message);
+        }
+      })();
+
+      try {
+        await applyInFlightRef.current;
+      } finally {
+        applyInFlightRef.current = null;
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    setAuth(initialAuth);
+  }, [initialAuth]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function initializeAuthenticatedState() {
+      if (!auth) {
+        setProfileId(undefined);
+        setProfileSlug(undefined);
+        setSavedFilmIds(new Set());
+        setFilmRatings({});
+        return;
+      }
+
+      const resolvedProfileId = await syncAuthenticatedInteractionState();
+      if (cancelled || !resolvedProfileId) {
+        return;
+      }
+
+      await applyPendingActionForProfile(resolvedProfileId);
+    }
+
+    void initializeAuthenticatedState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth, applyPendingActionForProfile, syncAuthenticatedInteractionState]);
+
+  const handleSavedChange = useCallback((film: Film, saved: boolean) => {
+    setSavedFilmIds((current) => {
+      const next = new Set(current);
+      if (saved) {
+        next.add(film.id);
+      } else {
+        next.delete(film.id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleRatingChange = useCallback(
+    (filmId: string, rating: number | null) => {
+      setFilmRatings((current) => ({
+        ...current,
+        [filmId]: rating,
+      }));
+    },
+    []
+  );
+
+  const handleAuthRequired = useCallback(
+    (action: PendingFilmActionInput) => {
+      if (!preAuthSnapshotRef.current) {
+        preAuthSnapshotRef.current = cloneInteractionSnapshot(
+          savedFilmIds,
+          filmRatings
+        );
+      }
+
+      storePendingFilmActionForSession(action);
+      setModalOpen(true);
+    },
+    [filmRatings, savedFilmIds]
+  );
+
+  const revertPreAuthSnapshot = useCallback(() => {
+    const snapshot = preAuthSnapshotRef.current;
+    if (!snapshot) {
+      return;
+    }
+
+    setSavedFilmIds(snapshot.savedFilmIds);
+    setFilmRatings(snapshot.filmRatings);
+    preAuthSnapshotRef.current = null;
+  }, []);
+
+  const handleModalClose = useCallback(() => {
+    clearPendingFilmActionFromSession();
+    revertPreAuthSnapshot();
+    setModalOpen(false);
+  }, [revertPreAuthSnapshot]);
+
+  const handleVerifySuccess = useCallback(async () => {
+    preAuthSnapshotRef.current = null;
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      setModalOpen(false);
+      return;
+    }
+
+    const profile = await resolveAuthenticatedProfile();
+    if (profile) {
+      setProfileId(profile.profileId);
+      setProfileSlug(profile.profileSlug);
+      await applyPendingActionForProfile(profile.profileId);
+
+      const state = await loadAuthenticatedProfileFilmState(profile.profileId);
+      setSavedFilmIds(state.savedFilmIds);
+      setFilmRatings(state.filmRatings);
+    }
+
+    setAuth({
+      email: getUserDisplayEmail(user),
+      profile: profile
+        ? {
+            slug: profile.profileSlug,
+            name: profile.profileName ?? profile.profileSlug,
+          }
+        : null,
+    });
+
+    router.refresh();
+    setModalOpen(false);
+  }, [applyPendingActionForProfile, router]);
+
+  return (
+    <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
+      <header className="mb-8">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-3xl font-semibold">Animation Guide</h1>
+            <p className="mt-2 text-gray-600">
+              Find strange, beautiful, and emotionally resonant animated films to
+              watch next.
+            </p>
+          </div>
+
+          {auth ? (
+            <AccountMenu
+              email={auth.email}
+              profileName={auth.profile?.name ?? null}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setModalOpen(true)}
+              className="shrink-0 text-sm text-gray-500 transition hover:text-gray-900"
+              data-testid="auth-status"
+            >
+              Log in
+            </button>
+          )}
+        </div>
+      </header>
+
+      <FilmCatalog
+        films={films}
+        pageSize={pageSize}
+        loadError={loadError}
+        interaction={{
+          profileId,
+          profileSlug,
+          savedFilmIds,
+          filmRatings,
+          onSavedChange: handleSavedChange,
+          onRatingChange: handleRatingChange,
+          onAuthRequired: auth ? undefined : handleAuthRequired,
+        }}
+      />
+
+      <EmailAuthModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        onVerifySuccess={handleVerifySuccess}
+      />
+    </main>
+  );
+}

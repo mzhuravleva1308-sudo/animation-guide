@@ -5,17 +5,34 @@ import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
+import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+
+type FilmCatalogInteractionProps = {
+  profileId?: string;
+  profileSlug?: string;
+  savedFilmIds: Set<string>;
+  filmRatings: Record<string, number | null>;
+  onSavedChange: (film: Film, saved: boolean) => void;
+  onRatingChange: (
+    filmId: string,
+    rating: number | null,
+    options?: { skipOrderUpdate?: boolean }
+  ) => void;
+  onAuthRequired?: (action: PendingFilmActionInput) => void;
+};
 
 type FilmCatalogProps = {
   films: Film[];
   pageSize: number;
   loadError?: string | null;
+  interaction?: FilmCatalogInteractionProps;
 };
 
 export default function FilmCatalog({
   films,
   pageSize,
   loadError,
+  interaction,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const [searchState, setSearchState] = useState({
@@ -140,9 +157,26 @@ export default function FilmCatalog({
         {visibleFilms.map((film, index) => (
           <FilmCard
             key={film.id}
-            mode="public"
+            mode={interaction ? "catalog" : "public"}
             film={film}
             lazyLoadPoster={index >= 3}
+            profileId={interaction?.profileId}
+            profileSlug={interaction?.profileSlug}
+            initialRating={interaction?.filmRatings[film.id] ?? null}
+            savedFilmIds={interaction?.savedFilmIds ?? new Set()}
+            onSavedChange={
+              interaction?.onSavedChange ??
+              (() => {
+                /* no-op */
+              })
+            }
+            onRatingChange={
+              interaction?.onRatingChange ??
+              (() => {
+                /* no-op */
+              })
+            }
+            onAuthRequired={interaction?.onAuthRequired}
           />
         ))}
       </section>
