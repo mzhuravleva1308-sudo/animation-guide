@@ -8,12 +8,17 @@ AS $$
 DECLARE
   result text;
 BEGIN
-  IF input IS NULL OR btrim(input) = '' THEN
+  IF input IS NULL OR length(btrim(input)) = 0 THEN
     RETURN NULL;
   END IF;
 
   result := lower(btrim(input));
-  result := regexp_replace(result, '[''']', '', 'g');
+  result := regexp_replace(
+    result,
+    E'[\u0027\u2018\u2019\u201C\u201D]',
+    '',
+    'g'
+  );
   result := regexp_replace(result, '\s*&\s*', ' and ', 'g');
   result := regexp_replace(result, '[^a-z0-9\s]+', ' ', 'g');
   result := regexp_replace(result, '\s+', ' ', 'g');
@@ -21,7 +26,8 @@ BEGIN
   result := regexp_replace(
     result,
     '^(the|a|an|le|la|les|l|el|los|las|un|une|des|der|die|das)\s+',
-    ''
+    '',
+    'g'
   );
   result := btrim(result);
 
