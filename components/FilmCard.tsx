@@ -5,6 +5,7 @@ import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import { FestivalBadgeList } from "@/components/FestivalBadge";
 
 type FilmCardBaseProps = {
   film: Film;
@@ -72,7 +73,7 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="grid gap-5 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
+      className="grid gap-4 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
     >
       <div
         data-testid="film-poster"
@@ -115,8 +116,8 @@ export default function FilmCard(props: FilmCardProps) {
       </div>
 
       <div>
-        <div className="flex items-start justify-between gap-4">
-          <div>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
             <h2 className="text-xl font-medium">{film.title}</h2>
             <p className="mt-1 text-sm text-gray-500">
               {[film.director, film.year, film.country, film.duration_minutes ? `${film.duration_minutes} min` : null]
@@ -132,8 +133,14 @@ export default function FilmCard(props: FilmCardProps) {
             )}
           </div>
 
+          {film.festival_badges?.length ? (
+            <div className="shrink-0 pt-0.5">
+              <FestivalBadgeList badges={film.festival_badges} />
+            </div>
+          ) : null}
+
           {film.availability && film.availability !== "unknown" && (
-            <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+            <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
               {film.availability}
             </span>
           )}

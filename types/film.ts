@@ -36,5 +36,7 @@ export type Film = {
     imdb_id?: string | null;
     normalized_title?: string | null;
     normalized_original_title?: string | null;
+    festival_recognitions?: import("@/types/film-festival-recognition").FilmFestivalRecognition[] | null;
+    festival_badges?: import("@/types/festival-badge").FestivalBadge[] | null;
     created_at?: string;
   };

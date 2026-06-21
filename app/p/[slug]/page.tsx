@@ -12,6 +12,7 @@ import { Film } from "@/types/film";
 import ProfileTabs from "@/components/ProfileTabs";
 import { buildFilmRatings } from "@/lib/film-ratings";
 import { normalizeFilms } from "@/lib/normalize-film";
+import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges";
 import { createProfilePageLoadTimer } from "@/lib/profile-page-load-log";
 
 export const dynamic = "force-dynamic";
@@ -142,7 +143,10 @@ export default async function ProfilePage({
   ]);
 
   const tasteCores = (tasteCoresData as ProfileTasteCore[] | null) ?? [];
-  const allFilms = normalizeFilms((allFilmsData as Film[] | null) ?? []);
+  const allFilms = await attachPublicFestivalBadges(
+    supabase,
+    normalizeFilms((allFilmsData as Film[] | null) ?? [])
+  );
   const safeRatings = ratings ?? [];
   const ratedFilmIds = new Set(safeRatings.map((item) => item.film_id).filter(Boolean));
   const filmRatings = buildFilmRatings(safeRatings);

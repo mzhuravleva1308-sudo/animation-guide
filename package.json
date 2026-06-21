@@ -27,7 +27,9 @@
     "rebuild-profile-scores": "node scripts/rebuild-profile-film-scores.mjs",
     "generate-top-picks": "node scripts/generate-top-picks.mjs",
     "cache-posters": "node scripts/cache-posters.mjs",
-    "analyze:films": "node scripts/analyze-film-catalog.mjs"
+    "analyze:films": "node scripts/analyze-film-catalog.mjs",
+    "sync:local-from-hosted": "node scripts/sync-hosted-catalog-to-local.mjs",
+    "sync:local-festival-claims": "node scripts/ensure-local-festival-schema.mjs && node scripts/sync-hosted-catalog-to-local.mjs --claims-only"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

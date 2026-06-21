@@ -31,4 +31,22 @@ test.describe("Admin pages", () => {
       page.getByRole("heading", { name: "Suggested curation gaps" })
     ).toBeVisible();
   });
+
+  test("festival recognitions route renders festival QA tabs", async ({ page }) => {
+    await page.goto("/admin/festival-recognitions");
+
+    await expect(
+      page.getByRole("heading", { name: "Festival recognitions" })
+    ).toBeVisible();
+    await expect(page.getByText("film_festival_claims")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /All candidates/i })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Annecy candidates/i })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Confirmed Annecy/i })
+    ).toBeVisible();
+  });
 });

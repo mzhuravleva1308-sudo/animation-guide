@@ -1,4 +1,5 @@
 import FilmsPageClient from "@/components/FilmsPageClient";
+import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { normalizeFilms } from "@/lib/normalize-film";
 import { sortFilmsByColdStart } from "@/lib/profile-film-scoring";
@@ -18,6 +19,7 @@ const PUBLIC_CATALOG_FILM_FIELDS = [
   "year",
   "country",
   "duration_minutes",
+  "festival",
   "poster_url",
   "image_url",
   "external_image_url",
@@ -38,7 +40,10 @@ export default async function FilmsPage() {
   ]);
 
   const films = sortFilmsByColdStart(
-    normalizeFilms((filmsData as Film[] | null) ?? [])
+    await attachPublicFestivalBadges(
+      supabase,
+      normalizeFilms((filmsData as Film[] | null) ?? [])
+    )
   );
   const loadError = error?.message ?? null;
 

@@ -1,0 +1,42 @@
+[
+  {
+    "film_match": {
+      "title": "Example Film Title",
+      "year": 2024,
+      "original_title": "Original Title"
+    },
+    "import_source": "enrichment_pipeline",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animated Film Festival",
+        "festival_year": 2024,
+        "section": "Official Competition",
+        "recognition_type": "winner",
+        "award_name": "Crystal for Best Short Film",
+        "award_level": "grand_prize",
+        "source_url": "https://www.annecy.org/winners/2024",
+        "import_key": "annecy-2024-crystal"
+      },
+      {
+        "festival_name": "Ottawa International Animation Festival",
+        "festival_year": 2023,
+        "section": "Official Selection",
+        "recognition_type": "official_selection",
+        "source_url": "https://www.animationfestival.ca/films/example"
+      }
+    ]
+  },
+  {
+    "film_id": "00000000-0000-4000-8000-000000000001",
+    "import_source": "manual_backfill",
+    "recognitions": [
+      {
+        "festival_name": "Sundance Film Festival",
+        "festival_year": 2022,
+        "recognition_type": "screening",
+        "section": "Short Film Program",
+        "source_url": "https://festival.sundance.org/program/example"
+      }
+    ]
+  }
+]

@@ -27,10 +27,21 @@ export default async function CatalogAnalyticsPage() {
         ← Back to library
       </Link>
 
-      <h1 className="text-3xl font-semibold">Catalog analytics</h1>
-      <p className="mt-2 text-gray-600">
-        Coverage and metadata health for the curated film database.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold">Catalog analytics</h1>
+          <p className="mt-2 text-gray-600">
+            Coverage and metadata health for the curated film database.
+          </p>
+        </div>
+
+        <Link
+          href="/admin/festival-recognitions"
+          className="text-sm text-gray-500 hover:text-black"
+        >
+          Festival recognitions →
+        </Link>
+      </div>
 
       <div className="mt-8">
         <CatalogAnalyticsDashboard analytics={analytics} />
