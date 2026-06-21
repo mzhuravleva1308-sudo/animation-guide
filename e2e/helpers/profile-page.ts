@@ -41,7 +41,7 @@ export function firstFilmCard(page: Page) {
 
 export function firstUnratedFilmCard(page: Page) {
   return filmCards(page)
-    .filter({ hasText: "My rating: not rated yet" })
+    .filter({ hasNotText: /My rating: \d+\/10/ })
     .first();
 }
 

@@ -101,9 +101,9 @@ export default function RatingButtons({
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <p className="mb-3 text-sm text-gray-500">
-        My rating: {rating ? `${rating}/10` : "not rated yet"}
-      </p>
+      {rating != null && (
+        <p className="mb-3 text-sm text-gray-500">My rating: {rating}/10</p>
+      )}
 
       <div className="flex flex-wrap gap-2">
         {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (

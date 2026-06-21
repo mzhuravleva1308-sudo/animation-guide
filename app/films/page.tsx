@@ -26,6 +26,8 @@ const PUBLIC_CATALOG_FILM_FIELDS = [
   "trailer_url",
   "availability",
   "synopsis",
+  "what_it_is",
+  "the_mood",
   "technique",
   "moods",
   "aesthetic_tags",

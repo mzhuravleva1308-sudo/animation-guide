@@ -156,7 +156,7 @@ test.describe("Films pending actions with Mailpit", () => {
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
-    await expect(firstCard).toContainText("My rating: not rated yet");
+    await expect(firstCard.getByText(/My rating: \d+\/10/)).toHaveCount(0);
     await assertFilmRatingInProfile(profileId, filmId!, null);
   });
 

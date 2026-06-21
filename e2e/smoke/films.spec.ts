@@ -34,7 +34,15 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("film-search-input")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
     await expect(page.getByTestId("film-card").first()).toBeVisible();
-    await expect(page.getByText("My rating:").first()).toBeVisible();
+    await expect(
+      page
+        .getByTestId("film-card")
+        .filter({ has: page.getByTestId("film-technique-pill") })
+        .first()
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Rate 1 out of 10" }).first()
+    ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Add to watchlist" }).first()
     ).toBeVisible();

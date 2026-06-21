@@ -1,6 +1,7 @@
 import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import { normalizeFilmTagList } from "@/lib/film-tags";
+import { getFilmTechniquePills } from "@/lib/film-technique";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
@@ -66,6 +67,15 @@ export default function FilmCard(props: FilmCardProps) {
   const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
   const narrativeTags = normalizeFilmTagList(film.narrative_tags);
   const posterUrl = getFilmPosterUrl(film);
+  const techniquePills = getFilmTechniquePills(film.technique);
+  const metadataLine = [
+    film.director,
+    film.year,
+    film.country,
+    film.duration_minutes ? `${film.duration_minutes} min` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const showInteractionControls =
     props.mode === "profile" || props.mode === "catalog";
 
@@ -73,7 +83,7 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="grid gap-4 rounded-2xl border p-5 md:grid-cols-[160px_1fr]"
+      className="grid gap-4 rounded-2xl border p-5 md:grid-cols-[160px_1fr] md:items-stretch"
     >
       <div
         data-testid="film-poster"
@@ -115,15 +125,33 @@ export default function FilmCard(props: FilmCardProps) {
         )}
       </div>
 
-      <div>
+      <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-medium">{film.title}</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              {[film.director, film.year, film.country, film.duration_minutes ? `${film.duration_minutes} min` : null]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+            {(metadataLine || techniquePills.length > 0) && (
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5">
+                {metadataLine ? (
+                  <p className="text-sm text-gray-500">{metadataLine}</p>
+                ) : null}
+                {techniquePills.length > 0 ? (
+                  <span
+                    className="inline-flex flex-wrap items-center gap-1"
+                    data-testid="film-technique-pills"
+                  >
+                    {techniquePills.map((technique) => (
+                      <span
+                        key={technique}
+                        data-testid="film-technique-pill"
+                        className="inline-flex items-center rounded-full border border-gray-200/80 bg-gray-50 px-2 py-0.5 text-[10px] font-medium leading-none text-gray-600"
+                      >
+                        {technique}
+                      </span>
+                    ))}
+                  </span>
+                ) : null}
+              </div>
+            )}
             {showDebugScores && score && (
               <div className="mt-2 space-y-0.5 text-xs text-gray-400">
                 <p>Raw emotional: {score.emotional.toFixed(4)}</p>
@@ -152,64 +180,80 @@ export default function FilmCard(props: FilmCardProps) {
           </p>
         )}
 
-        {!reason && film.synopsis && (
-          <p className="mt-4 text-gray-700">{film.synopsis}</p>
+        {!reason && (film.what_it_is || film.the_mood) && (
+          <div className="mt-3 space-y-2.5">
+            {film.what_it_is && (
+              <p className="text-sm leading-6 text-gray-900">{film.what_it_is}</p>
+            )}
+            {film.the_mood && (
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-gray-400">
+                  The mood
+                </p>
+                <p className="mt-0.5 text-sm leading-6 text-gray-600">
+                  {film.the_mood}
+                </p>
+              </div>
+            )}
+          </div>
         )}
 
-        <div className="mt-4 space-y-3">
-          {moods.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {moods.map((mood) => (
-                  <span
-                    key={mood}
-                    className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-                  >
-                    {mood}
-                  </span>
-                ))}
+        {showDebugScores && (
+          <div className="mt-4 space-y-3">
+            {moods.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {moods.map((mood) => (
+                    <span
+                      key={mood}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+                    >
+                      {mood}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {aestheticTags.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {aestheticTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            {aestheticTags.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {aestheticTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {narrativeTags.length ? (
-            <div>
-              <div className="flex flex-wrap gap-2">
-                {narrativeTags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
-                  >
-                    {tag}
-                  </span>
-                ))}
+            {narrativeTags.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {narrativeTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
 
-          {film.technique && (
-            <div>
-              <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
-                {film.technique}
-              </span>
-            </div>
-          )}
-        </div>
+            {film.technique && (
+              <div>
+                <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
+                  {film.technique}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {showInteractionControls && (
           <div className="mt-auto flex items-end justify-between gap-6 pt-4">

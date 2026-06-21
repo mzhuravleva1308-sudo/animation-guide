@@ -61,6 +61,8 @@ const FILM_SELECT_FIELDS = [
   "weirdness",
   "kid_safety",
   "why_i_might_like_it",
+  "what_it_is",
+  "the_mood",
   "personal_note",
   "status",
   "cold_start_score",

@@ -27,6 +27,8 @@ export type Film = {
     weirdness?: number | null;
     kid_safety?: string | null;
     why_i_might_like_it?: string | null;
+    what_it_is?: string | null;
+    the_mood?: string | null;
     personal_note?: string | null;
     status?: string | null;
     rating?: number | null;

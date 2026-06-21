@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS public.films (
   weirdness integer,
   kid_safety text,
   why_i_might_like_it text,
+  what_it_is text,
+  the_mood text,
   personal_note text,
   status text,
   cold_start_score numeric,

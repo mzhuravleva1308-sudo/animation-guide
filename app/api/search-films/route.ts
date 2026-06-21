@@ -21,6 +21,8 @@ const SEARCH_FILM_SELECT_FIELDS = [
   "trailer_url",
   "availability",
   "synopsis",
+  "what_it_is",
+  "the_mood",
   "technique",
   "moods",
   "aesthetic_tags",

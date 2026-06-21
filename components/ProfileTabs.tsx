@@ -350,7 +350,7 @@ export default function ProfileTabs({
         </section>
       )}
 
-      {activeTab === "all" && tasteCores.length > 0 && (
+      {showDebugScores && activeTab === "all" && tasteCores.length > 0 && (
         <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-4">
           <p className="mb-4 text-sm font-medium text-gray-700">
             Taste cores detected from your ratings

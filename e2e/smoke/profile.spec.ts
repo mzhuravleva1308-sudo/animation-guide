@@ -87,7 +87,9 @@ test.describe("Profile page", () => {
 
       await expect(filmList(page)).toBeVisible();
       await expectTabHasFilms(page);
-      await expect(filmCards(page).first().getByText("My rating:")).toBeVisible();
+      await expect(
+        filmCards(page).first().getByRole("button", { name: "Rate 1 out of 10" })
+      ).toBeVisible();
 
       await openProfileTab(page, "Saved");
       await expectTabIsEmpty(page);
@@ -106,7 +108,9 @@ test.describe("Profile page", () => {
       await openProfileTab(page, "All films");
 
       const card = firstUnratedFilmCard(page);
-      await expect(card.getByText("My rating: not rated yet")).toBeVisible();
+      await expect(
+        card.getByRole("button", { name: "Rate 8 out of 10" })
+      ).toBeVisible();
       const filmTitle = await card
         .getByRole("heading", { level: 2 })
         .innerText();

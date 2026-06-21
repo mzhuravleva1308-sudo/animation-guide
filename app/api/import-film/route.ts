@@ -57,6 +57,8 @@ The JSON must match this shape:
   "weirdness": number | null,
   "kid_safety": "unknown" | "yes" | "maybe" | "no",
   "why_i_might_like_it": string | null,
+  "what_it_is": string | null,
+  "the_mood": string | null,
   "personal_note": string | null,
   "status": "want_to_watch"
 }
@@ -67,6 +69,7 @@ Rules:
 - Mood/theme/taste fields may be inferred from the synopsis, but keep them modest.
 - emotional_intensity and weirdness are integers from 1 to 5.
 - why_i_might_like_it should be one short taste-based note, not a generic synopsis.
+- what_it_is and the_mood may be null on import; leave null unless clearly inferable from the source text.
 - Use English tags.
           `.trim(),
         },
