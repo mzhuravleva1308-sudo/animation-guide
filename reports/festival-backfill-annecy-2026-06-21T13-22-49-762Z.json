@@ -1,0 +1,49 @@
+{
+  "generatedAt": "2026-06-21T13:22:49.764Z",
+  "festivalId": "annecy",
+  "phase": "discovery",
+  "dryRun": false,
+  "discovery": {
+    "phase": "discovery",
+    "processed": 191,
+    "filmsWithClaims": 26,
+    "claimsSaved": 27,
+    "archiveSearchHits": 1,
+    "skippedNoAnnecySignal": 165,
+    "errors": 0,
+    "statusCounts": {
+      "discovered_unverified": 24,
+      "blocked_or_incomplete": 2
+    },
+    "manualReviewFilms": [
+      {
+        "film_id": "666c7357-500a-4fe0-bf0c-045e639429a6",
+        "title": "Sita Sings the Blues",
+        "year": 2008,
+        "reason": "archive_title_search_match"
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 115,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 8,
+      "discovered_unverified": 99,
+      "blocked_or_incomplete": 2,
+      "confirmed": 6
+    },
+    "confirmedViaAnnecyOfficial": 6,
+    "unverifiedOrBlocked": 101,
+    "rejectedNoEvidence": 8,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": [
+      {
+        "film_id": "666c7357-500a-4fe0-bf0c-045e639429a6",
+        "title": "Sita Sings the Blues",
+        "year": 2008,
+        "reason": "archive_title_search_match"
+      }
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-06-21T12:56:32.629Z",
+  "report": {
+    "processed": 25,
+    "found": 0,
+    "skipped": 9,
+    "notFound": 9,
+    "errors": 4,
+    "savedRows": 0,
+    "statusCounts": {
+      "skipped_out_of_scope_festival": 6
+    },
+    "verifiedOfficial": 0,
+    "outOfScopeSkipped": 6,
+    "filmsOnlyOutOfScope": 3
+  },
+  "verificationLog": [],
+  "reviewRows": [],
+  "unverifiedRows": []
+}

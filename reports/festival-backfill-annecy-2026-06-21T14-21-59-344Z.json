@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-06-21T14:21:59.346Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 1,
+    "presenceConfirmed": 1,
+    "notAtFestival": 0,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 0,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [],
+    "verificationLog": [
+      {
+        "film": "Aunt Hilda!",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecy.org/about/archives/2013/programme-2013:pse",
+        "festival_year": 2013,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 99,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 8,
+      "discovered_unverified": 84,
+      "blocked_or_incomplete": 2,
+      "confirmed": 5
+    },
+    "confirmedViaAnnecyOfficial": 5,
+    "unverifiedOrBlocked": 86,
+    "rejectedNoEvidence": 8,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}

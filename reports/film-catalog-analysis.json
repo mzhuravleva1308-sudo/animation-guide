@@ -1,19 +1,19 @@
 {
-  "generatedAt": "2026-06-18T17:08:14.481Z",
+  "generatedAt": "2026-06-21T16:21:08.598Z",
   "overview": {
-    "totalFilms": 191,
-    "withPoster": 190,
+    "totalFilms": 190,
+    "withPoster": 189,
     "withoutPoster": 1,
-    "withDuration": 191,
+    "withDuration": 190,
     "withoutDuration": 0,
-    "withTechnique": 191,
+    "withTechnique": 190,
     "withoutTechnique": 0,
     "withFestival": 11,
-    "withoutFestival": 180,
+    "withoutFestival": 179,
     "averageMoodsPerFilm": 6.43,
     "averageAestheticTagsPerFilm": 6.03,
     "averageNarrativeTagsPerFilm": 6.52,
-    "from2020Onward": 44
+    "from2020Onward": 43
   },
   "metadataHealth": {
     "missingPoster": [
@@ -1091,13 +1091,6 @@
         "original_title": "風の谷のナウシカ",
         "year": 1984,
         "director": "Hayao Miyazaki"
-      },
-      {
-        "id": "e4d096d0-6fca-469c-9b0b-1571c0084b30",
-        "title": "A Greyhound of a Girl",
-        "original_title": "A Greyhound of a Girl",
-        "year": 2023,
-        "director": "Enzo d'Alò"
       },
       {
         "id": "e7186f16-b274-4493-b6fa-10692b890f8d",
@@ -2581,14 +2574,6 @@
         "totalTags": 19
       },
       {
-        "id": "e4d096d0-6fca-469c-9b0b-1571c0084b30",
-        "title": "A Greyhound of a Girl",
-        "original_title": "A Greyhound of a Girl",
-        "year": 2023,
-        "director": "Enzo d'Alò",
-        "totalTags": 19
-      },
-      {
         "id": "e7186f16-b274-4493-b6fa-10692b890f8d",
         "title": "Dilili in Paris",
         "original_title": "Dilili à Paris",
@@ -2828,17 +2813,17 @@
       "Japan": 52,
       "United States": 38,
       "Belgium": 26,
-      "Luxembourg": 17,
-      "Germany": 15,
-      "United Kingdom": 15,
+      "Luxembourg": 16,
+      "Germany": 14,
+      "United Kingdom": 14,
       "Canada": 12,
       "Spain": 10,
-      "Ireland": 7,
       "Switzerland": 7,
       "Czech Republic": 6,
       "Hungary": 6,
-      "Italy": 6,
-      "Latvia": 5,
+      "Ireland": 6,
+      "Italy": 5,
+      "Latvia": 4,
       "Netherlands": 4,
       "Australia": 3,
       "China": 3,
@@ -2855,7 +2840,6 @@
       "Chile": 1,
       "Colombia": 1,
       "Ecuador": 1,
-      "Estonia": 1,
       "Hong Kong": 1,
       "India": 1,
       "Indonesia": 1,
@@ -2885,15 +2869,15 @@
       },
       {
         "label": "Luxembourg",
-        "count": 17
+        "count": 16
       },
       {
         "label": "Germany",
-        "count": 15
+        "count": 14
       },
       {
         "label": "United Kingdom",
-        "count": 15
+        "count": 14
       },
       {
         "label": "Canada",
@@ -2904,7 +2888,7 @@
         "count": 10
       },
       {
-        "label": "Ireland",
+        "label": "Switzerland",
         "count": 7
       }
     ],
@@ -2954,10 +2938,6 @@
         "count": 1
       },
       {
-        "label": "Estonia",
-        "count": 1
-      },
-      {
         "label": "Hong Kong",
         "count": 1
       },
@@ -2994,12 +2974,12 @@
         "count": 1
       }
     ],
-    "uniqueValues": 41,
-    "totalFilms": 191
+    "uniqueValues": 40,
+    "totalFilms": 190
   },
   "curationRegionCoverage": {
     "counts": {
-      "Western Europe (France, Germany, Spain, Italy, Belgium, …)": 64,
+      "Western Europe (France, Germany, Spain, Italy, Belgium, …)": 63,
       "Japan": 49,
       "Anglophone North Atlantic (United States, Canada, Australia, …)": 42,
       "Central & Eastern Europe (Czech Republic, Poland, Romania, …)": 15,
@@ -3011,7 +2991,7 @@
     "top": [
       {
         "label": "Western Europe (France, Germany, Spain, Italy, Belgium, …)",
-        "count": 64
+        "count": 63
       },
       {
         "label": "Japan",
@@ -3044,12 +3024,12 @@
     ],
     "lowCoverage": [],
     "uniqueValues": 8,
-    "totalFilms": 191
+    "totalFilms": 190
   },
   "decadeCoverage": {
     "counts": {
       "2010s": 83,
-      "2020s": 44,
+      "2020s": 43,
       "2000s": 31,
       "1980s": 15,
       "1990s": 13,
@@ -3063,7 +3043,7 @@
       },
       {
         "label": "2020s",
-        "count": 44
+        "count": 43
       },
       {
         "label": "2000s",
@@ -3093,7 +3073,7 @@
       }
     ],
     "uniqueValues": 7,
-    "totalFilms": 191,
+    "totalFilms": 190,
     "oldestFilms": [
       {
         "id": "21bd519c-2fc1-4b41-9d47-c4e43750f950",
@@ -3168,11 +3148,11 @@
         "director": "Gints Zilbalodis"
       }
     ],
-    "from2020Onward": 44
+    "from2020Onward": 43
   },
   "techniqueCoverage": {
     "counts": {
-      "2d animation": 37,
+      "2d animation": 36,
       "anime": 34,
       "2d": 14,
       "hand-drawn animation": 14,
@@ -3273,7 +3253,7 @@
     "top": [
       {
         "label": "2d animation",
-        "count": 37
+        "count": 36
       },
       {
         "label": "anime",
@@ -3643,13 +3623,13 @@
       }
     ],
     "uniqueValues": 97,
-    "totalFilms": 191
+    "totalFilms": 190
   },
   "festivalCoverage": {
     "available": true,
     "field": "festival",
     "withFestival": 11,
-    "withoutFestival": 180,
+    "withoutFestival": 179,
     "animationFestivalFilms": 2,
     "generalFestivalFilms": 9,
     "otherFestivalFilms": 0,
@@ -3679,31 +3659,31 @@
     ],
     "lowCoverage": [],
     "uniqueValues": 4,
-    "totalFilms": 191
+    "totalFilms": 190
   },
   "sourceCoverage": {
     "available": true,
     "field": "source_url",
     "withSource": 0,
-    "withoutSource": 191,
+    "withoutSource": 190,
     "counts": {},
     "top": [],
     "lowCoverage": [],
     "uniqueValues": 0,
-    "totalFilms": 191
+    "totalFilms": 190
   },
   "moodCoverage": {
     "counts": {
-      "hopeful": 131,
-      "bittersweet": 109,
-      "intimate": 108,
-      "melancholic": 107,
+      "hopeful": 130,
+      "bittersweet": 108,
+      "intimate": 107,
+      "melancholic": 106,
       "anxious": 85,
-      "tender": 80,
+      "tender": 79,
       "poetic": 78,
-      "dreamy": 76,
+      "dreamy": 75,
       "playful": 59,
-      "gentle": 52,
+      "gentle": 51,
       "bleak": 48,
       "whimsical": 47,
       "unsettling": 40,
@@ -3765,19 +3745,19 @@
     "top": [
       {
         "tag": "hopeful",
-        "count": 131
+        "count": 130
       },
       {
         "tag": "bittersweet",
-        "count": 109
-      },
-      {
-        "tag": "intimate",
         "count": 108
       },
       {
-        "tag": "melancholic",
+        "tag": "intimate",
         "count": 107
+      },
+      {
+        "tag": "melancholic",
+        "count": 106
       },
       {
         "tag": "anxious",
@@ -3785,7 +3765,7 @@
       },
       {
         "tag": "tender",
-        "count": 80
+        "count": 79
       },
       {
         "tag": "poetic",
@@ -3793,7 +3773,7 @@
       },
       {
         "tag": "dreamy",
-        "count": 76
+        "count": 75
       },
       {
         "tag": "playful",
@@ -3801,7 +3781,7 @@
       },
       {
         "tag": "gentle",
-        "count": 52
+        "count": 51
       }
     ],
     "rare": [
@@ -3945,19 +3925,19 @@
     "veryFrequent": [
       {
         "tag": "hopeful",
-        "count": 131
+        "count": 130
       },
       {
         "tag": "bittersweet",
-        "count": 109
-      },
-      {
-        "tag": "intimate",
         "count": 108
       },
       {
-        "tag": "melancholic",
+        "tag": "intimate",
         "count": 107
+      },
+      {
+        "tag": "melancholic",
+        "count": 106
       },
       {
         "tag": "anxious",
@@ -3965,7 +3945,7 @@
       },
       {
         "tag": "tender",
-        "count": 80
+        "count": 79
       },
       {
         "tag": "poetic",
@@ -3973,7 +3953,7 @@
       },
       {
         "tag": "dreamy",
-        "count": 76
+        "count": 75
       },
       {
         "tag": "playful",
@@ -3981,7 +3961,7 @@
       },
       {
         "tag": "gentle",
-        "count": 52
+        "count": 51
       },
       {
         "tag": "bleak",
@@ -3997,8 +3977,8 @@
       }
     ],
     "uniqueTags": 67,
-    "totalTagUses": 1229,
-    "averagePerTag": 18.34
+    "totalTagUses": 1222,
+    "averagePerTag": 18.24
   },
   "aestheticTagCoverage": {
     "counts": {
@@ -4044,7 +4024,6 @@
       "atmospheric depth": 3,
       "cultural tapestry": 3,
       "delicate craftsmanship": 3,
-      "delicate linework": 3,
       "documentary realism": 3,
       "ethereal lightness": 3,
       "ethereal shadows": 3,
@@ -4063,7 +4042,6 @@
       "playful simplicity": 3,
       "puppet-like world": 3,
       "rough edges": 3,
-      "soft watercolor world": 3,
       "surreal collage": 3,
       "surreal landscapes": 3,
       "tactile nature": 3,
@@ -4074,7 +4052,6 @@
       "whimsical charm": 3,
       "whimsical grotesque": 3,
       "whimsical nature": 3,
-      "whimsical nostalgia": 3,
       "artistic collage": 2,
       "bleak landscape": 2,
       "bleak minimalism": 2,
@@ -4082,6 +4059,7 @@
       "dark surrealism": 2,
       "darkly ornate": 2,
       "delicate brushwork": 2,
+      "delicate linework": 2,
       "delicate simplicity": 2,
       "delicate textures": 2,
       "domestic simplicity": 2,
@@ -4127,6 +4105,7 @@
       "soft colors": 2,
       "soft focus": 2,
       "soft naturalism": 2,
+      "soft watercolor world": 2,
       "softly surreal": 2,
       "somber color palette": 2,
       "somber palette": 2,
@@ -4157,6 +4136,7 @@
       "whimsical craftsmanship": 2,
       "whimsical fantasy": 2,
       "whimsical folklore": 2,
+      "whimsical nostalgia": 2,
       "abstract representation": 1,
       "absurd cartoonish world": 1,
       "absurdist collage": 1,
@@ -4284,7 +4264,6 @@
       "ethereal brushstrokes": 1,
       "ethereal color palette": 1,
       "ethereal emptiness": 1,
-      "ethereal ghostly presence": 1,
       "ethereal glow": 1,
       "ethereal light": 1,
       "ethereal light play": 1,
@@ -4334,7 +4313,6 @@
       "gentle decay": 1,
       "gentle earth tones": 1,
       "gentle linework": 1,
-      "gentle pastel palette": 1,
       "gentle satire": 1,
       "gentle whimsy": 1,
       "ghostly silhouettes": 1,
@@ -4643,7 +4621,6 @@
       "tactile details": 1,
       "tactile environments": 1,
       "tactile family memories": 1,
-      "tactile family warmth": 1,
       "tactile fantasy": 1,
       "tactile food world": 1,
       "tactile illustrations": 1,
@@ -5331,10 +5308,6 @@
         "count": 1
       },
       {
-        "tag": "ethereal ghostly presence",
-        "count": 1
-      },
-      {
         "tag": "ethereal glow",
         "count": 1
       },
@@ -5528,10 +5501,6 @@
       },
       {
         "tag": "gentle linework",
-        "count": 1
-      },
-      {
-        "tag": "gentle pastel palette",
         "count": 1
       },
       {
@@ -6767,10 +6736,6 @@
         "count": 1
       },
       {
-        "tag": "tactile family warmth",
-        "count": 1
-      },
-      {
         "tag": "tactile fantasy",
         "count": 1
       },
@@ -7477,10 +7442,6 @@
         "count": 3
       },
       {
-        "tag": "delicate linework",
-        "count": 3
-      },
-      {
         "tag": "documentary realism",
         "count": 3
       },
@@ -7553,10 +7514,6 @@
         "count": 3
       },
       {
-        "tag": "soft watercolor world",
-        "count": 3
-      },
-      {
         "tag": "surreal collage",
         "count": 3
       },
@@ -7595,26 +7552,22 @@
       {
         "tag": "whimsical nature",
         "count": 3
-      },
-      {
-        "tag": "whimsical nostalgia",
-        "count": 3
       }
     ],
-    "uniqueTags": 776,
-    "totalTagUses": 1152,
+    "uniqueTags": 773,
+    "totalTagUses": 1146,
     "averagePerTag": 1.48
   },
   "narrativeTagCoverage": {
     "counts": {
-      "character-driven": 112,
+      "character-driven": 111,
       "transformation arc": 89,
       "psychological portrait": 67,
       "quest-driven": 67,
-      "meditative journey": 56,
-      "relationship-driven": 54,
+      "meditative journey": 55,
+      "relationship-driven": 53,
       "atmospheric drift": 52,
-      "quiet character study": 49,
+      "quiet character study": 48,
       "magical world discovery": 46,
       "strange world discovery": 36,
       "world discovery": 35,
@@ -7629,7 +7582,7 @@
       "mystery-driven": 23,
       "simple story": 22,
       "survival journey": 17,
-      "emotional layering": 15,
+      "emotional layering": 14,
       "existential portrait": 14,
       "fast-paced": 13,
       "ensemble story": 12,
@@ -7712,7 +7665,6 @@
       "memory-driven narrative": 1,
       "morally ambiguous characters": 1,
       "morally ambiguous journey": 1,
-      "multi-generational arc": 1,
       "multi-generational saga": 1,
       "music-driven narrative": 1,
       "musical journey": 1,
@@ -7750,7 +7702,7 @@
     "top": [
       {
         "tag": "character-driven",
-        "count": 112
+        "count": 111
       },
       {
         "tag": "transformation arc",
@@ -7766,11 +7718,11 @@
       },
       {
         "tag": "meditative journey",
-        "count": 56
+        "count": 55
       },
       {
         "tag": "relationship-driven",
-        "count": 54
+        "count": 53
       },
       {
         "tag": "atmospheric drift",
@@ -7778,7 +7730,7 @@
       },
       {
         "tag": "quiet character study",
-        "count": 49
+        "count": 48
       },
       {
         "tag": "magical world discovery",
@@ -7983,10 +7935,6 @@
         "count": 1
       },
       {
-        "tag": "multi-generational arc",
-        "count": 1
-      },
-      {
         "tag": "multi-generational saga",
         "count": 1
       },
@@ -8122,7 +8070,7 @@
     "veryFrequent": [
       {
         "tag": "character-driven",
-        "count": 112
+        "count": 111
       },
       {
         "tag": "transformation arc",
@@ -8138,11 +8086,11 @@
       },
       {
         "tag": "meditative journey",
-        "count": 56
+        "count": 55
       },
       {
         "tag": "relationship-driven",
-        "count": 54
+        "count": 53
       },
       {
         "tag": "atmospheric drift",
@@ -8150,7 +8098,7 @@
       },
       {
         "tag": "quiet character study",
-        "count": 49
+        "count": 48
       },
       {
         "tag": "magical world discovery",
@@ -8205,9 +8153,9 @@
         "count": 22
       }
     ],
-    "uniqueTags": 139,
-    "totalTagUses": 1245,
-    "averagePerTag": 8.96
+    "uniqueTags": 138,
+    "totalTagUses": 1239,
+    "averagePerTag": 8.98
   },
   "potentialDuplicates": {
     "normalizedTitleDuplicates": [
@@ -8377,13 +8325,13 @@
         "priority": "medium",
         "category": "festival metadata",
         "suggestion": "Backfill missing festival data for existing films",
-        "rationale": "180 films have no festival field."
+        "rationale": "179 films have no festival field."
       },
       {
         "priority": "low",
         "category": "source metadata",
         "suggestion": "Backfill missing source_url values where possible",
-        "rationale": "191 films have no source_url."
+        "rationale": "190 films have no source_url."
       }
     ]
   }

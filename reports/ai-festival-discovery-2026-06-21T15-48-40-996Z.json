@@ -1,0 +1,30 @@
+{
+  "generatedAt": "2026-06-21T15:48:40.998Z",
+  "report": {
+    "discoverySource": "ai_discovery_v1",
+    "festivalId": null,
+    "processed": 5,
+    "filmsWithClaims": 2,
+    "claimsSaved": 2,
+    "catalogClaims": 0,
+    "aiClaims": 2,
+    "errors": 0,
+    "statusCounts": {
+      "possibly_at_festival": 2
+    }
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "claimsFromThisRun": 2,
+    "claimsInDbForSource": 250,
+    "byStatus": {
+      "discovered_unverified": 241,
+      "blocked_or_incomplete": 9
+    },
+    "bySourceType": {
+      "ai_inference": 240,
+      "catalog_field": 9,
+      "industry_catalog": 1
+    }
+  }
+}

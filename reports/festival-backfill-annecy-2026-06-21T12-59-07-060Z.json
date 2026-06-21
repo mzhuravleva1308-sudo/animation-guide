@@ -1,0 +1,174 @@
+{
+  "generatedAt": "2026-06-21T13:00:24.386Z",
+  "report": {
+    "processed": 4,
+    "found": 3,
+    "skipped": 0,
+    "skippedNoFestival": 0,
+    "notFound": 1,
+    "errors": 0,
+    "savedRows": 4,
+    "statusCounts": {
+      "candidate_needs_review": 1,
+      "confirmed_official_source": 4,
+      "importable": 4
+    },
+    "verifiedOfficial": 4,
+    "outOfScopeSkipped": 0,
+    "festivalFilterSkipped": 2,
+    "filmsOnlyOutOfScope": 0,
+    "festivalId": "annecy"
+  },
+  "verificationLog": [
+    {
+      "film_title": "Mars Express",
+      "official_url": null,
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": null,
+      "section": null,
+      "recognition_type": "official_selection",
+      "evidence_status": "candidate_needs_review",
+      "imported": false,
+      "acceptance_reason": "No official archive page with sufficient film title, year, and participation confirmation was found."
+    },
+    {
+      "film_title": "No Dogs or Italians Allowed",
+      "official_url": "https://www.annecyfestival.com/about/archives:en/2022:en/award-winners",
+      "festival_name": "Annecy International Animated Film Festival",
+      "festival_year": 2022,
+      "section": null,
+      "recognition_type": "award",
+      "evidence_status": "confirmed_official_source",
+      "imported": true,
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording."
+    },
+    {
+      "film_title": "No Dogs or Italians Allowed",
+      "official_url": "https://www.annecyfestival.com/about/archives:en/2022:en/award-winners",
+      "festival_name": "Annecy International Animated Film Festival",
+      "festival_year": 2022,
+      "section": null,
+      "recognition_type": "award",
+      "evidence_status": "confirmed_official_source",
+      "imported": true,
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording."
+    },
+    {
+      "film_title": "True North",
+      "official_url": "https://www.annecy.org/about/archives/2020/official-selection:lmcc",
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": 2020,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "evidence_status": "confirmed_official_source",
+      "imported": true,
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording."
+    },
+    {
+      "film_title": "Unicorn Wars",
+      "official_url": "https://www.annecy.org/about/archives/2022/official-selection:lm",
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": 2022,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "evidence_status": "confirmed_official_source",
+      "imported": true,
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording."
+    }
+  ],
+  "reviewRows": [
+    {
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": null,
+      "section": null,
+      "recognition_type": "official_selection",
+      "award_name": null,
+      "award_level": null,
+      "source_url": "https://en.wikipedia.org/wiki/Mars_Express_(film)",
+      "source_label": "Wikipedia",
+      "source_type": "wikipedia",
+      "original_text": "It also made it to the competitive slate of the Annecy International Animation Film Festival.",
+      "evidence_status": "candidate_needs_review",
+      "acceptance_reason": "Wikipedia supplied the only located evidence; awaiting official festival archive, film site, distributor page, or press kit.",
+      "importable": false,
+      "film_title": "Mars Express"
+    },
+    {
+      "festival_name": "Annecy International Animated Film Festival",
+      "festival_year": 2022,
+      "section": null,
+      "recognition_type": "award",
+      "award_name": "Jury Prize for feature film",
+      "award_level": "jury_prize",
+      "source_url": "https://www.annecyfestival.com/about/archives:en/2022:en/award-winners",
+      "source_label": "annecyfestival.com",
+      "source_type": "official_archive",
+      "original_text": "Interdit aux chiens et aux Italiens",
+      "evidence_status": "confirmed_official_source",
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording.",
+      "importable": true,
+      "film_title": "No Dogs or Italians Allowed"
+    },
+    {
+      "festival_name": "Annecy International Animated Film Festival",
+      "festival_year": 2022,
+      "section": null,
+      "recognition_type": "award",
+      "award_name": "GAN Foundation Prize",
+      "award_level": "jury_prize",
+      "source_url": "https://www.annecyfestival.com/about/archives:en/2022:en/award-winners",
+      "source_label": "annecyfestival.com",
+      "source_type": "official_archive",
+      "original_text": "Interdit aux chiens et aux Italiens",
+      "evidence_status": "confirmed_official_source",
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording.",
+      "importable": true,
+      "film_title": "No Dogs or Italians Allowed"
+    },
+    {
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": 2020,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "award_name": "feature films contrechamp",
+      "award_level": null,
+      "source_url": "https://www.annecy.org/about/archives/2020/official-selection:lmcc",
+      "source_label": "annecy.org",
+      "source_type": "official_archive",
+      "original_text": "True North",
+      "evidence_status": "confirmed_official_source",
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording.",
+      "importable": true,
+      "film_title": "True North"
+    },
+    {
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": 2022,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "award_name": null,
+      "award_level": null,
+      "source_url": "https://www.annecy.org/about/archives/2022/official-selection:lm",
+      "source_label": "annecy.org",
+      "source_type": "official_archive",
+      "original_text": "Unicorn Wars",
+      "evidence_status": "confirmed_official_source",
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording.",
+      "importable": true,
+      "film_title": "Unicorn Wars"
+    }
+  ],
+  "unverifiedRows": [
+    {
+      "film": "Mars Express",
+      "festival": "Annecy International Animation Film Festival",
+      "year": "",
+      "section": "",
+      "recognition_type": "official_selection",
+      "original_text": "It also made it to the competitive slate of the Annecy International Animation Film Festival.",
+      "source_url": "https://en.wikipedia.org/wiki/Mars_Express_(film)",
+      "status": "candidate_needs_review",
+      "reason": "Wikipedia supplied the only located evidence; awaiting official festival archive, film site, distributor page, or press kit."
+    }
+  ]
+}

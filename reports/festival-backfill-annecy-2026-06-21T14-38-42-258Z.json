@@ -1,0 +1,67 @@
+{
+  "generatedAt": "2026-06-21T14:38:42.260Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 4,
+    "presenceConfirmed": 2,
+    "notAtFestival": 2,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 0,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [],
+    "verificationLog": [
+      {
+        "film": "Birdboy: The Forgotten Children",
+        "at_annecy": "no",
+        "claim_status": "not_at_festival",
+        "official_url": null,
+        "festival_year": null,
+        "reason": "Official Annecy archive check: film not listed for tried festival years."
+      },
+      {
+        "film": "Blind Willow, Sleeping Woman",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2022:en/award-winners",
+        "festival_year": 2022,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      },
+      {
+        "film": "Chicken for Linda!",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2023:en/award-winners",
+        "festival_year": 2023,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      },
+      {
+        "film": "Chico & Rita",
+        "at_annecy": "no",
+        "claim_status": "not_at_festival",
+        "official_url": null,
+        "festival_year": null,
+        "reason": "Official Annecy archive check: film not listed for tried festival years."
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 118,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 10,
+      "discovered_unverified": 98,
+      "blocked_or_incomplete": 2,
+      "confirmed": 8
+    },
+    "confirmedViaAnnecyOfficial": 8,
+    "unverifiedOrBlocked": 100,
+    "rejectedNoEvidence": 10,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}

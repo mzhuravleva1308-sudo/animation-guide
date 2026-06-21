@@ -287,14 +287,23 @@ async function main() {
       }
 
       report.filmsWithClaims += 1;
+      const festivals = [
+        ...new Set(
+          claimRows.map((row) => String(row.canonical_festival_id ?? row.raw_festival_name))
+        ),
+      ].join(", ");
       console.log(
-        `[ai-discovery] ${film.title} (${film.year ?? "?"}): ${claimRows.length} claim(s)`
+        `[ai-discovery] ${film.title} (${film.year ?? "?"}): ${claimRows.length} claim(s) [${festivals}]`
       );
     } catch (error) {
       report.errors += 1;
       console.error(
         `[ai-discovery-error] ${film.title}: ${
-          error instanceof Error ? error.message : String(error)
+          error instanceof Error
+            ? error.message
+            : typeof error === "object" && error !== null && "message" in error
+              ? String(error.message)
+              : String(error)
         }`
       );
     }

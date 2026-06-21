@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-06-21T14:07:19.375Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 1,
+    "presenceConfirmed": 1,
+    "notAtFestival": 0,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 0,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [],
+    "verificationLog": [
+      {
+        "film": "Another Day of Life",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2018:en/2018-programme:pse",
+        "festival_year": 2018,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 93,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 9,
+      "discovered_unverified": 78,
+      "blocked_or_incomplete": 2,
+      "confirmed": 4
+    },
+    "confirmedViaAnnecyOfficial": 4,
+    "unverifiedOrBlocked": 80,
+    "rejectedNoEvidence": 9,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-06-21T13:31:49.862Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 2,
+    "confirmed": 0,
+    "rejected": 2,
+    "blocked": 0,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [
+      {
+        "film_id": "95049904-6855-4eee-92b6-eddae2d31f0a",
+        "title": "Alice",
+        "year": 1988,
+        "reason": "verification_failed_or_archive_gap"
+      },
+      {
+        "film_id": "95049904-6855-4eee-92b6-eddae2d31f0a",
+        "title": "Alice",
+        "year": 1988,
+        "reason": "verification_failed_or_archive_gap"
+      }
+    ],
+    "verificationLog": [
+      {
+        "film": "Alice",
+        "year": 1989,
+        "section": null,
+        "award": null,
+        "source_type": "ai_inference",
+        "claim_status": "rejected_after_verification",
+        "official_url": null,
+        "reason": "No official archive page with sufficient film title, year, and participation confirmation was found.",
+        "imported": false
+      },
+      {
+        "film": "Alice",
+        "year": 1989,
+        "section": null,
+        "award": "best feature-film",
+        "source_type": "wikipedia",
+        "claim_status": "rejected_after_verification",
+        "official_url": null,
+        "reason": "No official archive page with sufficient film title, year, and participation confirmation was found.",
+        "imported": false
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 71,
+    "annecyClaimsByStatus": {
+      "discovered_unverified": 66,
+      "rejected_after_verification": 3,
+      "blocked_or_incomplete": 2
+    },
+    "confirmedViaAnnecyOfficial": 0,
+    "unverifiedOrBlocked": 68,
+    "rejectedNoEvidence": 3,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": [
+      {
+        "film_id": "95049904-6855-4eee-92b6-eddae2d31f0a",
+        "title": "Alice",
+        "year": 1988,
+        "reason": "verification_failed_or_archive_gap"
+      }
+    ]
+  }
+}

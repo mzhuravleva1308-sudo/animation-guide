@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-06-21T13:20:25.540Z",
+  "festivalId": "annecy",
+  "phase": "discovery",
+  "dryRun": false,
+  "discovery": {
+    "phase": "discovery",
+    "processed": 191,
+    "filmsWithClaims": 25,
+    "claimsSaved": 27,
+    "archiveSearchHits": 2,
+    "skippedNoAnnecySignal": 166,
+    "errors": 0,
+    "statusCounts": {
+      "discovered_unverified": 24,
+      "blocked_or_incomplete": 2
+    },
+    "manualReviewFilms": [
+      {
+        "film_id": "e1e116e0-528c-471a-a689-332af260fae5",
+        "title": "Mary and Max",
+        "year": 2009,
+        "reason": "title_matching_or_archive_coverage"
+      },
+      {
+        "film_id": "666c7357-500a-4fe0-bf0c-045e639429a6",
+        "title": "Sita Sings the Blues",
+        "year": 2008,
+        "reason": "archive_title_search_match"
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 113,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 8,
+      "discovered_unverified": 97,
+      "blocked_or_incomplete": 2,
+      "confirmed": 6
+    },
+    "confirmedViaAnnecyOfficial": 6,
+    "unverifiedOrBlocked": 99,
+    "rejectedNoEvidence": 8,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": [
+      {
+        "film_id": "e1e116e0-528c-471a-a689-332af260fae5",
+        "title": "Mary and Max",
+        "year": 2009,
+        "reason": "title_matching_or_archive_coverage"
+      },
+      {
+        "film_id": "666c7357-500a-4fe0-bf0c-045e639429a6",
+        "title": "Sita Sings the Blues",
+        "year": 2008,
+        "reason": "archive_title_search_match"
+      }
+    ]
+  }
+}

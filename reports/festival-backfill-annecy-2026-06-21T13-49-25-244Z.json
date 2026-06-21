@@ -1,0 +1,33 @@
+{
+  "generatedAt": "2026-06-21T13:49:25.245Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 5,
+    "presenceConfirmed": 3,
+    "notAtFestival": 0,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 2,
+    "savedRecognitions": 0,
+    "errors": 5,
+    "manualReviewFilms": [],
+    "verificationLog": []
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 82,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 8,
+      "discovered_unverified": 72,
+      "blocked_or_incomplete": 2
+    },
+    "confirmedViaAnnecyOfficial": 0,
+    "unverifiedOrBlocked": 74,
+    "rejectedNoEvidence": 8,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}

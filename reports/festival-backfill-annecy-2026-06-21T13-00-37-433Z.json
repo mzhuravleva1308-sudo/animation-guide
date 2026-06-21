@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-06-21T13:00:59.016Z",
+  "report": {
+    "processed": 1,
+    "found": 1,
+    "skipped": 0,
+    "skippedNoFestival": 0,
+    "notFound": 0,
+    "errors": 0,
+    "savedRows": 1,
+    "statusCounts": {
+      "confirmed_official_source": 1,
+      "importable": 1
+    },
+    "verifiedOfficial": 1,
+    "outOfScopeSkipped": 0,
+    "festivalFilterSkipped": 2,
+    "filmsOnlyOutOfScope": 0,
+    "festivalId": "annecy"
+  },
+  "verificationLog": [
+    {
+      "film_title": "Mars Express",
+      "official_url": "https://www.annecy.org/about/archives/2023/official-selection:lm",
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": null,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "evidence_status": "confirmed_official_source",
+      "imported": true,
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording."
+    }
+  ],
+  "reviewRows": [
+    {
+      "festival_name": "Annecy International Animation Film Festival",
+      "festival_year": null,
+      "section": "Competition",
+      "recognition_type": "official_selection",
+      "award_name": null,
+      "award_level": null,
+      "source_url": "https://www.annecy.org/about/archives/2023/official-selection:lm",
+      "source_label": "annecy.org",
+      "source_type": "official_archive",
+      "original_text": "Mars Express",
+      "evidence_status": "confirmed_official_source",
+      "acceptance_reason": "Confirmed on an official festival archive or programme page with matching film title, year, and participation wording.",
+      "importable": true,
+      "film_title": "Mars Express"
+    }
+  ],
+  "unverifiedRows": []
+}

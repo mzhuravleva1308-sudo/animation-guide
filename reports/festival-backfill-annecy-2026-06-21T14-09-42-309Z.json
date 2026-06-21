@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-06-21T14:09:42.310Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 1,
+    "presenceConfirmed": 0,
+    "notAtFestival": 0,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 1,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [],
+    "verificationLog": [
+      {
+        "film": "Aunt Hilda!",
+        "tier": "rate_limited",
+        "claim_status": "discovered_unverified",
+        "official_url": null,
+        "reason": "Annecy rate limit (429). Presence check paused; retry verification later.",
+        "recognitions_saved": 0
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 97,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 8,
+      "discovered_unverified": 83,
+      "blocked_or_incomplete": 2,
+      "confirmed": 4
+    },
+    "confirmedViaAnnecyOfficial": 4,
+    "unverifiedOrBlocked": 85,
+    "rejectedNoEvidence": 8,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}

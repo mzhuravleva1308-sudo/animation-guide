@@ -1,0 +1,75 @@
+{
+  "generatedAt": "2026-06-21T13:53:31.157Z",
+  "festivalId": "annecy",
+  "phase": "verification",
+  "dryRun": false,
+  "verification": {
+    "phase": "verification",
+    "processed": 5,
+    "presenceConfirmed": 3,
+    "notAtFestival": 2,
+    "enriched": 0,
+    "stillPossible": 0,
+    "blocked": 0,
+    "savedRecognitions": 0,
+    "errors": 0,
+    "manualReviewFilms": [],
+    "verificationLog": [
+      {
+        "film": "Approved for Adoption",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2012:en/award-winners",
+        "festival_year": 2012,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      },
+      {
+        "film": "April and the Extraordinary World",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2015:en/award-winners",
+        "festival_year": 2015,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      },
+      {
+        "film": "Another Day of Life",
+        "at_annecy": "no",
+        "claim_status": "not_at_festival",
+        "official_url": null,
+        "festival_year": null,
+        "reason": "Official Annecy archive check: film not listed for tried festival years."
+      },
+      {
+        "film": "Away",
+        "at_annecy": "yes",
+        "claim_status": "confirmed_presence",
+        "official_url": "https://www.annecyfestival.com/about/archives:en/2019:en/award-winners",
+        "festival_year": 2019,
+        "reason": "Official Annecy presence confirmed on festival archive."
+      },
+      {
+        "film": "Aunt Hilda!",
+        "at_annecy": "no",
+        "claim_status": "not_at_festival",
+        "official_url": null,
+        "festival_year": null,
+        "reason": "Official Annecy archive check: film not listed for tried festival years."
+      }
+    ]
+  },
+  "summary": {
+    "totalCatalogFilms": 191,
+    "annecyClaimsDiscovered": 91,
+    "annecyClaimsByStatus": {
+      "rejected_after_verification": 10,
+      "discovered_unverified": 76,
+      "blocked_or_incomplete": 2,
+      "confirmed": 3
+    },
+    "confirmedViaAnnecyOfficial": 3,
+    "unverifiedOrBlocked": 78,
+    "rejectedNoEvidence": 10,
+    "uniqueConfirmedRecognitionRows": 0,
+    "manualReviewFilms": []
+  }
+}
