@@ -84,25 +84,34 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="grid gap-4 rounded-2xl border p-5 md:grid-cols-[160px_1fr] md:items-stretch"
+      className="grid grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-2xl border sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
     >
       <div
         data-testid="film-poster"
-        className="relative h-56 w-full overflow-hidden rounded-xl bg-gray-100 md:h-60"
+        className="relative h-full min-h-full w-full bg-gray-100"
       >
         {posterUrl ? (
-          <img
-            src={posterUrl}
-            alt={film.title}
-            loading={lazyLoadPoster ? "lazy" : "eager"}
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-400">
-            No image
-          </div>
-        )}
+  <>
+    <img
+      src={posterUrl}
+      alt={film.title}
+      loading={lazyLoadPoster ? "lazy" : "eager"}
+      decoding="async"
+      className="relative z-10 h-full w-full object-cover"
+    />
+
+<img
+  src={posterUrl}
+  alt=""
+  aria-hidden="true"
+  className="pointer-events-none absolute inset-y-0 left-full z-0 h-full w-6 -translate-x-5 scale-110 object-cover blur-lg opacity-20 brightness-75 sm:w-7 md:w-8"
+/>
+  </>
+) : (
+  <div className="flex h-full items-center justify-center text-sm text-gray-400">
+    No image
+  </div>
+)}
 
         {film.trailer_url && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
@@ -126,7 +135,7 @@ export default function FilmCard(props: FilmCardProps) {
         )}
       </div>
 
-      <div className="flex h-full min-h-0 flex-col">
+      <div className="flex min-h-0 flex-col p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
           <CopyableFilmTitle title={film.title} />
