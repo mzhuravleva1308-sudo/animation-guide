@@ -7,6 +7,7 @@ import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
+import CopyableFilmTitle from "@/components/CopyableFilmTitle";
 
 type FilmCardBaseProps = {
   film: Film;
@@ -128,7 +129,7 @@ export default function FilmCard(props: FilmCardProps) {
       <div className="flex h-full min-h-0 flex-col">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-medium">{film.title}</h2>
+          <CopyableFilmTitle title={film.title} />
             {(metadataLine || techniquePills.length > 0) && (
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1.5">
                 {metadataLine ? (
