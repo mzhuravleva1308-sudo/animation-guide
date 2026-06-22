@@ -31,7 +31,7 @@ type ProfileTasteCore = {
   aesthetic_profile_tags?: string[] | null;
 };
 
-const ALL_FILMS_PAGE_SIZE = 50;
+const ALL_FILMS_PAGE_SIZE = 100;
 const SHOW_DEBUG_SCORES = process.env.NEXT_PUBLIC_SHOW_DEBUG_SCORES === "true";
 
 const FILM_SELECT_FIELDS = [
