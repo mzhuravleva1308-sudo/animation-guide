@@ -9,7 +9,7 @@ import { Film } from "@/types/film";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const CATALOG_PAGE_SIZE = 50;
+const CATALOG_PAGE_SIZE = 100;
 
 const PUBLIC_CATALOG_FILM_FIELDS = [
   "id",
