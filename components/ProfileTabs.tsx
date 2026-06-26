@@ -8,6 +8,7 @@ import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
+import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -98,6 +99,7 @@ export default function ProfileTabs({
   loadError,
 }: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>("all");
+  const [activeQuickFilter, setActiveQuickFilter] =useState<QuickFilter>(null);
   const [allFilmsPage, setAllFilmsPage] = useState(1);
   const [localSavedFilms, setLocalSavedFilms] = useState(savedFilms);
   const [localFilmRatings, setLocalFilmRatings] = useState(filmRatings);
@@ -219,6 +221,23 @@ export default function ProfileTabs({
     return [...unratedFromServerList, ...returnedToQueue];
   }, [allFilmsSorted, watchedFilms, ratedFilmIds]);
 
+  const quickFilteredAllFilms = useMemo(() => {
+    if (activeQuickFilter !== "recent") {
+      return localAllFilmsSorted;
+    }
+  
+    const currentYear = new Date().getFullYear();
+    const recentYearFrom = currentYear - 2;
+  
+    return localAllFilmsSorted.filter(
+      (film) =>
+        typeof film.year === "number" &&
+        film.year >= recentYearFrom &&
+        film.year <= currentYear
+    );
+  }, [activeQuickFilter, localAllFilmsSorted]);
+
+
   const localWatchedFilms = useMemo(() => {
     const watchedById = new Map(watchedFilms.map((film) => [film.id, film]));
 
@@ -240,7 +259,8 @@ export default function ProfileTabs({
     );
   }, [allFilmsSorted, watchedFilms, ratedFilmIds, localRatingOrder]);
 
-  const totalAllFilmsCount = localAllFilmsSorted.length;
+  const totalAllFilmsCount = quickFilteredAllFilms.length;
+
   const allFilmsTotalPages = Math.max(
     1,
     Math.ceil(totalAllFilmsCount / allFilmsPageSize)
@@ -273,7 +293,7 @@ export default function ProfileTabs({
     const end = start + allFilmsPageSize;
 
     return {
-      films: localAllFilmsSorted.slice(start, end),
+      films: quickFilteredAllFilms.slice(start, end),
       scores: allFilmsScores,
     };
   }, [
@@ -281,13 +301,18 @@ export default function ProfileTabs({
     allFilmsCurrentPage,
     allFilmsPageSize,
     isAllFilmsSearchActive,
-    localAllFilmsSorted,
+    quickFilteredAllFilms,
     allFilmsScores,
     localSavedFilms,
     localWatchedFilms,
     searchState.films,
   ]);
 
+  function handleQuickFilterChange(filter: QuickFilter) {
+    setActiveQuickFilter(filter);
+    setAllFilmsPage(1);
+  }
+  
   function handleTabChange(tab: ProfileTab) {
     setActiveTab(tab);
   }
@@ -400,7 +425,10 @@ export default function ProfileTabs({
             onResultsChange={handleSearchResultsChange}
             isLoading={searchState.isLoading}
           />
-
+          <QuickFilters
+            activeFilter={activeQuickFilter}
+            onFilterChange={handleQuickFilterChange}
+          />
           <div className="mb-6 min-h-5" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (
               <p className="text-sm text-red-600" data-testid="film-search-error">
