@@ -80,6 +80,23 @@ function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
   return order;
 }
 
+function isStopMotionTechnique(technique: string | null | undefined) {
+  const value = (technique ?? "").toLowerCase();
+
+  return [
+    "stop motion",
+    "stop-motion",
+    "stopmotion",
+    "clay",
+    "claymation",
+    "plasticine",
+    "puppet",
+    "puppetry",
+    "object animation",
+    "object-animation",
+  ].some((term) => value.includes(term));
+}
+
 export default function ProfileTabs({
   profileSlug,
   profileId,
@@ -222,19 +239,25 @@ export default function ProfileTabs({
   }, [allFilmsSorted, watchedFilms, ratedFilmIds]);
 
   const quickFilteredAllFilms = useMemo(() => {
-    if (activeQuickFilter !== "recent") {
-      return localAllFilmsSorted;
+    if (activeQuickFilter === "recent") {
+      const currentYear = new Date().getFullYear();
+      const recentYearFrom = currentYear - 2;
+  
+      return localAllFilmsSorted.filter(
+        (film) =>
+          typeof film.year === "number" &&
+          film.year >= recentYearFrom &&
+          film.year <= currentYear
+      );
     }
   
-    const currentYear = new Date().getFullYear();
-    const recentYearFrom = currentYear - 2;
+    if (activeQuickFilter === "stop-motion") {
+      return localAllFilmsSorted.filter((film) =>
+        isStopMotionTechnique(film.technique)
+      );
+    }
   
-    return localAllFilmsSorted.filter(
-      (film) =>
-        typeof film.year === "number" &&
-        film.year >= recentYearFrom &&
-        film.year <= currentYear
-    );
+    return localAllFilmsSorted;
   }, [activeQuickFilter, localAllFilmsSorted]);
 
 
