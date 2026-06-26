@@ -8,19 +8,13 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
   return (
     <span className="group/badge relative inline-flex">
       <span
-        data-testid={`festival-badge-${badge.id}`}
-        tabIndex={0}
-        aria-describedby={tooltipId}
-        className="inline-flex cursor-help items-center rounded-full border border-l-[3px] bg-white px-2.5 py-1 text-[11px] font-semibold leading-none text-gray-900 shadow-sm outline-none ring-offset-2 transition-shadow focus-visible:ring-2 focus-visible:ring-gray-400"
-        style={{
-          borderTopColor: `${badge.color}29`,
-          borderRightColor: `${badge.color}29`,
-          borderBottomColor: `${badge.color}29`,
-          borderLeftColor: badge.color,
-        }}
-      >
-        {badge.label}
-      </span>
+  data-testid={`festival-badge-${badge.id}`}
+  tabIndex={0}
+  aria-describedby={tooltipId}
+  className="inline-flex cursor-help items-center rounded-md border border-[#ead8c7] bg-[#fffaf6] px-2.5 py-1 text-[11px] font-medium leading-none text-[#8a5b2d] shadow-sm outline-none ring-offset-2 transition-shadow focus-visible:ring-2 focus-visible:ring-[#8a5b2d]/40"
+>
+  {badge.label}
+</span>
 
       <span
         id={tooltipId}
@@ -45,7 +39,7 @@ export function FestivalBadgeList({ badges }: { badges: FestivalBadgeType[] }) {
 
   return (
     <ul
-      className="flex max-w-full flex-wrap items-center justify-end gap-1.5"
+      className="flex max-w-full flex-wrap items-center gap-1.5"
       data-testid="film-festival-badges"
       aria-label="Festival recognitions"
     >
