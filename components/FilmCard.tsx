@@ -197,7 +197,7 @@ export default function FilmCard(props: FilmCardProps) {
 
       {film.the_mood && (
         <div className="border-l-2 border-[#ead8c7] pl-4">
-          <p className="text-sm italic leading-6 text-[#8a5b2d]">
+          <p className="text-sm italic leading-6 text-[#8a5b2d] [font-style:oblique_7deg]">
             {film.the_mood}
           </p>
         </div>
