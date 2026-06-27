@@ -1,8 +1,15 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
+
+const scope = parseFilmScopeArgs(process.argv.slice(2));
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -37,15 +44,10 @@ function buildMoodText(film) {
 }
 
 async function getFilms() {
-  const { data, error } = await supabase
-    .from("films")
-    .select("id, title, moods)
-    .not("moods", "is", null)
-    .order("title");
-
-  if (error) throw error;
-
-  return (data ?? []).filter((film) => film.moods?.length);
+  return loadScopedFilms(supabase, scope, {
+    select: "id, title, moods",
+    applyFilters: (query) => query.not("moods", "is", null).order("title"),
+  });
 }
 
 async function getExistingFilmEmbeddings() {
@@ -74,9 +76,10 @@ async function createEmbedding(input) {
 }
 
 async function main() {
-  const films = await getFilms();
+  const films = (await getFilms()).filter((film) => film.moods?.length);
   const existing = await getExistingFilmEmbeddings();
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with moods: ${films.length}`);
 
   for (const film of films) {

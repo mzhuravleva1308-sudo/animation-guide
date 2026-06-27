@@ -1,7 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
 import { applyAppEnv } from "./load-app-env.mjs";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
+
+const scope = parseFilmScopeArgs(process.argv.slice(2));
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -181,13 +188,12 @@ async function getTrailerUrl(tmdbMovieId) {
 }
 
 async function main() {
-  const { data: films, error } = await supabase
-    .from("films")
-    .select("id,title,original_title,year,trailer_url")
-    .is("trailer_url", null);
+  const films = await loadScopedFilms(supabase, scope, {
+    select: "id,title,original_title,year,trailer_url",
+    applyFilters: (query) => query.is("trailer_url", null),
+  });
 
-  if (error) throw error;
-
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films without trailer: ${films.length}`);
 
   for (const film of films) {

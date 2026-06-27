@@ -14,6 +14,21 @@ New films must go through the **controlled import pipeline** so each record gets
 - Poster fetching/caching (`scripts/cache-posters.mjs`)
 - Post-import enrichment (`npm run after-films`)
 
+For a **single new film**, run scoped enrichment so only that row is processed:
+
+```bash
+node scripts/import-<film>.mjs
+# or, after insert:
+node scripts/after-films.mjs --film-id <uuid>
+node scripts/after-films.mjs --title "Film Title"
+```
+
+Full-catalog enrichment remains the default when no scope flags are passed:
+
+```bash
+npm run after-films
+```
+
 Use Cursor-assisted import flows or scripts that call `insertFilmWithDuplicateCheck` rather than raw `INSERT` statements.
 
 ## Correcting existing films

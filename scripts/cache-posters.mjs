@@ -8,12 +8,19 @@ import {
   getExternalImageSource,
   isCachedPosterUrl,
 } from "../lib/film-poster.mjs";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
 
+const scope = parseFilmScopeArgs(process.argv.slice(2));
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const force = process.argv.includes("--force");
+const force =
+  scope.passthrough.includes("--force") || process.argv.includes("--force");
 
 if (!supabaseUrl) {
   throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL");
@@ -61,16 +68,13 @@ function shouldCacheFilm(film) {
 }
 
 async function main() {
-  const { data: films, error } = await supabase
-    .from("films")
-    .select("id, title, image_url, external_image_url, poster_url");
-
-  if (error) {
-    throw error;
-  }
+  const films = await loadScopedFilms(supabase, scope, {
+    select: "id, title, image_url, external_image_url, poster_url",
+  });
 
   const toCache = films.filter(shouldCacheFilm);
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(
     `Films to cache: ${toCache.length} (${films.length} total, force=${force})`
   );

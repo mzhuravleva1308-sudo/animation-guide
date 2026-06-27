@@ -1,7 +1,14 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
+
+const scope = parseFilmScopeArgs(process.argv.slice(2));
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -203,15 +210,12 @@ async function findBestTmdbMatch(film) {
 }
 
 async function main() {
-  const { data: films, error } = await supabase
-    .from("films")
-    .select("id, title, original_title, director, year, image_url")
-    .is("image_url", null);
+  const films = await loadScopedFilms(supabase, scope, {
+    select: "id, title, original_title, director, year, image_url",
+    applyFilters: (query) => query.is("image_url", null),
+  });
 
-  if (error) {
-    throw error;
-  }
-
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films without image: ${films.length}`);
 
   for (const film of films) {

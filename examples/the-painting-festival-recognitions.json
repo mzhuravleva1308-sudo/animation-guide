@@ -1,0 +1,90 @@
+[
+  {
+    "film_match": {
+      "title": "The Painting",
+      "year": 2011,
+      "original_title": "Le Tableau"
+    },
+    "import_source": "manual_backfill",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animated Film Festival",
+        "festival_year": 2012,
+        "section": "Feature Films",
+        "recognition_type": "nomination",
+        "award_name": "Cristal for Best Feature Film",
+        "award_result": "nominee",
+        "source_url": "https://www.imdb.com/title/tt1891769/awards/",
+        "import_key": "annecy-2012-cristal-nomination"
+      },
+      {
+        "festival_name": "Annecy International Animated Film Festival",
+        "festival_year": 2012,
+        "section": "Feature Films",
+        "recognition_type": "official_selection",
+        "source_url": "https://www.zippyframes.com/festivals/zarafa-le-tableau-wrinkles-at-the-annecy-2012-feature-selection",
+        "import_key": "annecy-2012-official-selection"
+      },
+      {
+        "festival_name": "César Awards",
+        "festival_year": 2012,
+        "section": "Best Animated Film",
+        "recognition_type": "nomination",
+        "award_name": "César Award for Best Animated Film",
+        "award_result": "nominee",
+        "source_url": "https://www.imdb.com/title/tt1891769/awards/",
+        "import_key": "cesar-2012-best-animated-film-nomination"
+      },
+      {
+        "festival_name": "Festival of European Animated Feature Films and TV Specials",
+        "festival_year": 2013,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Best Feature Film",
+        "award_result": "winner",
+        "source_url": "https://en.wikipedia.org/wiki/Le_Tableau",
+        "import_key": "european-animated-festival-2013-best-feature"
+      },
+      {
+        "festival_name": "Tübingen Stuttgart International French-language Film Festival",
+        "festival_year": 2012,
+        "section": "SACEM Prize",
+        "recognition_type": "award",
+        "award_name": "SACEM Prize for Best Original Music",
+        "award_result": "winner",
+        "source_url": "https://en.unifrance.org/movie/32398/the-painting",
+        "import_key": "tubingen-2012-sacem-music"
+      },
+      {
+        "festival_name": "Chicago International Children's Film Festival",
+        "festival_year": 2012,
+        "section": "Adult's Jury Award",
+        "recognition_type": "award",
+        "award_name": "Best Original Music",
+        "award_result": "winner",
+        "source_url": "https://www.imdb.com/title/tt1891769/awards/",
+        "import_key": "chicago-2012-adult-jury-music"
+      },
+      {
+        "festival_name": "Monterrey International Film Festival",
+        "festival_year": 2012,
+        "section": "International Feature Film Animation",
+        "recognition_type": "award",
+        "award_name": "Jury Mention",
+        "award_result": "mention",
+        "source_url": "https://www.imdb.com/title/tt1891769/awards/",
+        "import_key": "monterrey-2012-jury-mention"
+      },
+      {
+        "festival_name": "Gijón International Film Festival",
+        "festival_year": 2012,
+        "section": "Best Animated Film",
+        "recognition_type": "nomination",
+        "award_name": "Best Animated Film",
+        "award_result": "nominee",
+        "source_url": "https://www.filmaffinity.com/en/film562278.html",
+        "import_key": "gijon-2012-best-animated-film-nomination"
+      }
+    ]
+  }
+]

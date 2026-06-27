@@ -1,8 +1,15 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  parseFilmScopeArgs,
+  resolveScopedFilmIds,
+} from "./film-scope.mjs";
 
 applyAppEnv();
+
+const scope = parseFilmScopeArgs(process.argv.slice(2));
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -45,11 +52,17 @@ function normalizeMood(mood) {
   return mood.trim().toLowerCase();
 }
 
-async function getUniqueMoods() {
-  const { data, error } = await supabase
-    .from("films")
-    .select("moods")
-    .not("moods", "is", null);
+/**
+ * @param {string[] | null} filmIds
+ */
+async function getUniqueMoods(filmIds = null) {
+  let query = supabase.from("films").select("moods").not("moods", "is", null);
+
+  if (filmIds) {
+    query = query.in("id", filmIds);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw error;
@@ -128,11 +141,22 @@ async function fillEmbeddings(moods, existingEmbeddings) {
   return embeddings;
 }
 
-async function fillDistances(moods, embeddings) {
+/**
+ * @param {string[]} targetMoods moods introduced by the scoped film(s)
+ * @param {string[]} allMoods every mood with an embedding
+ * @param {Map<string, number[]>} embeddings
+ * @param {boolean} scoped
+ */
+async function fillDistances(targetMoods, allMoods, embeddings, scoped) {
+  const targetSet = new Set(targetMoods);
   const rows = [];
 
-  for (const moodA of moods) {
-    for (const moodB of moods) {
+  for (const moodA of allMoods) {
+    for (const moodB of allMoods) {
+      if (scoped && !targetSet.has(moodA) && !targetSet.has(moodB)) {
+        continue;
+      }
+
       const embeddingA = embeddings.get(moodA);
       const embeddingB = embeddings.get(moodB);
 
@@ -160,11 +184,9 @@ async function fillDistances(moods, embeddings) {
   for (let i = 0; i < rows.length; i += batchSize) {
     const batch = rows.slice(i, i + batchSize);
 
-    const { error } = await supabase
-      .from("mood_distances")
-      .upsert(batch, {
-        onConflict: "mood_a,mood_b",
-      });
+    const { error } = await supabase.from("mood_distances").upsert(batch, {
+      onConflict: "mood_a,mood_b",
+    });
 
     if (error) {
       throw error;
@@ -175,14 +197,23 @@ async function fillDistances(moods, embeddings) {
 }
 
 async function main() {
-  const moods = await getUniqueMoods();
+  const scopedFilmIds = await resolveScopedFilmIds(supabase, scope);
+  const targetMoods = await getUniqueMoods(scopedFilmIds);
+  const allMoods = scopedFilmIds ? await getUniqueMoods(null) : targetMoods;
 
-  console.log(`Found ${moods.length} unique moods`);
+  console.log(`Scope: ${describeFilmScope(scope)}`);
+  console.log(`Target moods: ${targetMoods.length}`);
+  console.log(`Catalog moods: ${allMoods.length}`);
+
+  if (targetMoods.length === 0) {
+    console.log("No moods to process.");
+    return;
+  }
 
   const existingEmbeddings = await getExistingEmbeddings();
-  const embeddings = await fillEmbeddings(moods, existingEmbeddings);
+  const embeddings = await fillEmbeddings(targetMoods, existingEmbeddings);
 
-  await fillDistances(moods, embeddings);
+  await fillDistances(targetMoods, allMoods, embeddings, Boolean(scopedFilmIds));
 
   console.log("Done");
 }

@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-06-26T22:14:58.328Z",
+  "report": {
+    "source": "ai_festival_winners_v1",
+    "processed": 191,
+    "filmsWithAwards": 85,
+    "awardsFound": 151,
+    "awardsSaved": 151,
+    "errors": 0
+  }
+}

@@ -35,6 +35,7 @@ type ProfileTabsProps = {
   tasteCores: ProfileTasteCore[];
   allFilmsSorted: Film[];
   allFilmsScores: Record<string, FilmScore>;
+  awardWinningFilmIds: string[];
   isColdStartMode: boolean;
   savedFilms: Film[];
   watchedFilms: Film[];
@@ -107,6 +108,7 @@ export default function ProfileTabs({
   tasteCores,
   allFilmsSorted,
   allFilmsScores,
+  awardWinningFilmIds,
   isColdStartMode,
   savedFilms,
   watchedFilms,
@@ -226,6 +228,11 @@ export default function ProfileTabs({
     [localFilmRatings]
   );
 
+  const awardWinningFilmIdSet = useMemo(
+    () => new Set(awardWinningFilmIds),
+    [awardWinningFilmIds]
+  );
+
   const localAllFilmsSorted = useMemo(() => {
     const unratedFromServerList = allFilmsSorted.filter(
       (film) => !ratedFilmIds.has(film.id)
@@ -257,8 +264,18 @@ export default function ProfileTabs({
       );
     }
   
+    if (activeQuickFilter === "award-winners") {
+      return localAllFilmsSorted.filter((film) =>
+        awardWinningFilmIdSet.has(film.id)
+      );
+    }
+    
     return localAllFilmsSorted;
-  }, [activeQuickFilter, localAllFilmsSorted]);
+  }, [
+    activeQuickFilter,
+    localAllFilmsSorted,
+    awardWinningFilmIdSet,
+  ]);
 
 
   const localWatchedFilms = useMemo(() => {

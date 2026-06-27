@@ -117,6 +117,7 @@ export default async function ProfilePage({
     { data: ratings, error: ratingsError },
     { data: watchlistItems },
     { data: scoreRows },
+    { data: awardRecognitionRows },
   ] = await Promise.all([
     supabase
       .from("profile_taste_cores")
@@ -142,6 +143,12 @@ export default async function ProfilePage({
       .select("film_id, emotional_score, material_score")
       .eq("profile_id", profile.id)
       .order("film_id"),
+    supabase
+      .from("film_festival_recognitions")
+      .select("film_id")
+      .eq("import_source", "manual_verified_major_awards_v1")
+      .eq("recognition_type", "award")
+      .eq("award_result", "grand_prize"),  
   ]);
 
   const tasteCores = (tasteCoresData as ProfileTasteCore[] | null) ?? [];
@@ -154,6 +161,14 @@ export default async function ProfilePage({
   const filmRatings = buildFilmRatings(safeRatings);
   const savedFilmIds = new Set(
     watchlistItems?.map((item) => item.film_id) ?? []
+  );
+
+  const awardWinningFilmIds = Array.from(
+    new Set(
+      (awardRecognitionRows ?? [])
+        .map((row) => row.film_id)
+        .filter((filmId): filmId is string => Boolean(filmId))
+    )
   );
 
   const savedFilms = allFilms.filter((film) => savedFilmIds.has(film.id));
@@ -242,6 +257,7 @@ export default async function ProfilePage({
         tasteCores={tasteCores}
         allFilmsSorted={allFilmsSorted}
         allFilmsScores={allFilmsScores}
+        awardWinningFilmIds={awardWinningFilmIds}
         isColdStartMode={isColdStartMode}
         savedFilms={savedFilms}
         watchedFilms={watchedFilms}

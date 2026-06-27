@@ -1,0 +1,40 @@
+[
+    {
+      "film_id": "0ae7abb9-72b5-49a9-9693-0fb351094c3f",
+      "import_source": "manual_verified_major_awards_v1",
+      "recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2021,
+          "section": "Feature Films",
+          "recognition_type": "award",
+          "award_name": "Cristal for a Feature Film",
+          "award_result": "grand_prize",
+          "source_url": "https://www.annecyfestival.com/about/archives/en/2021/award-winners/film-index:film-20211791",
+          "source_label": "Annecy 2021 Award Winners — official archive",
+          "source_type": "official_source",
+          "original_text": "Cristal for a Feature Film — Flee",
+          "import_key": "official-annecy-2021-flee-cristal-feature"
+        }
+      ]
+    },
+    {
+      "film_id": "612b5f04-5f47-4668-b9a7-c3b51947e817",
+      "import_source": "manual_verified_major_awards_v1",
+      "recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2023,
+          "section": "Feature Films",
+          "recognition_type": "award",
+          "award_name": "Cristal for a Feature Film",
+          "award_result": "grand_prize",
+          "source_url": "https://www.annecyfestival.com/about/archives/2023/award-winners/film-index:film-20233104",
+          "source_label": "Annecy 2023 Award Winners — official archive",
+          "source_type": "official_source",
+          "original_text": "Cristal for a Feature Film — Chicken for Linda!",
+          "import_key": "official-annecy-2023-chicken-for-linda-cristal-feature"
+        }
+      ]
+    }
+  ]

@@ -1,0 +1,98 @@
+[
+  {
+    "film_match": {
+      "title": "Even Mice Belong in Heaven",
+      "year": 2021,
+      "original_title": "Myši patří do nebe"
+    },
+    "import_source": "manual_backfill",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animated Film Festival",
+        "festival_year": 2021,
+        "section": "Screening Event",
+        "recognition_type": "screening",
+        "source_url": "https://cineuropa.org/en/newsdetail/405009/",
+        "import_key": "annecy-2021-screening-event"
+      },
+      {
+        "festival_name": "Karlovy Vary International Film Festival",
+        "festival_year": 2021,
+        "section": "Horizons",
+        "recognition_type": "official_selection",
+        "source_url": "https://www.kviff.com/en/programme/film/57/33790-even-mice-belong-in-heaven",
+        "import_key": "kviff-2021-horizons"
+      },
+      {
+        "festival_name": "Anifilm International Festival of Animated Films",
+        "festival_year": 2021,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Audience Award",
+        "award_result": "winner",
+        "source_url": "https://www.swanfrance.com/lesfilmsducygne/en/projet/103/even-mice-belong-in-heaven-by-jan-bubeniek-et-denisa-grimmova",
+        "import_key": "anifilm-2021-audience-award"
+      },
+      {
+        "festival_name": "Anifilm International Festival of Animated Films",
+        "festival_year": 2021,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Jury Special Mention",
+        "award_result": "mention",
+        "source_url": "https://www.swanfrance.com/lesfilmsducygne/en/projet/103/even-mice-belong-in-heaven-by-jan-bubeniek-et-denisa-grimmova",
+        "import_key": "anifilm-2021-jury-special-mention"
+      },
+      {
+        "festival_name": "Czech Lion Awards",
+        "festival_year": 2022,
+        "section": "Best Animated Film",
+        "recognition_type": "award",
+        "award_name": "Czech Lion for Best Animated Film",
+        "award_result": "winner",
+        "source_url": "https://www.filmovyprehled.cz/en/film/402168/even-mice-belong-in-heaven",
+        "import_key": "czech-lion-2022-best-animated-film"
+      },
+      {
+        "festival_name": "Czech Lion Awards",
+        "festival_year": 2022,
+        "section": "Best Music",
+        "recognition_type": "nomination",
+        "award_name": "Czech Lion for Best Music",
+        "award_result": "nominee",
+        "source_url": "https://www.filmovyprehled.cz/en/film/402168/even-mice-belong-in-heaven",
+        "import_key": "czech-lion-2022-best-music-nomination"
+      },
+      {
+        "festival_name": "European Film Awards",
+        "festival_year": 2021,
+        "section": "Best European Animated Feature Film",
+        "recognition_type": "nomination",
+        "award_name": "European Film Award for Best European Animated Feature Film",
+        "award_result": "nominee",
+        "source_url": "https://hausboot.cz/portfolio/even-mice-belong-in-heaven-2/",
+        "import_key": "efa-2021-animated-feature-nomination"
+      },
+      {
+        "festival_name": "César Awards",
+        "festival_year": 2022,
+        "section": "Best Animated Film",
+        "recognition_type": "nomination",
+        "award_name": "César Award for Best Animated Film",
+        "award_result": "nominee",
+        "source_url": "https://hausboot.cz/portfolio/even-mice-belong-in-heaven-2/",
+        "import_key": "cesar-2022-best-animated-film-nomination"
+      },
+      {
+        "festival_name": "Zlín Film Festival",
+        "festival_year": 2021,
+        "section": "International Competition",
+        "recognition_type": "award",
+        "award_name": "Special Mention",
+        "award_result": "mention",
+        "source_url": "https://www.swanfrance.com/lesfilmsducygne/en/projet/103/even-mice-belong-in-heaven-by-jan-bubeniek-et-denisa-grimmova",
+        "import_key": "zlin-2021-special-mention"
+      }
+    ]
+  }
+]
