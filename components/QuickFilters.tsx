@@ -18,10 +18,23 @@ export default function QuickFilters({
   const isRecentActive = activeFilter === "recent";
   const isStopMotionActive = activeFilter === "stop-motion";
   const isAwardWinnersActive = activeFilter === "award-winners";
+  const isAllActive = activeFilter === null;
 
   return (
     <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
       <button
+        type="button"
+        onClick={() => onFilterChange(null)}
+        aria-pressed={isAllActive}
+        className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+          isAllActive
+            ? "border-stone-800 bg-stone-800 text-white"
+            : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
+        }`}
+      >
+        All
+      </button>
+<button
         type="button"
         onClick={() => onFilterChange(isRecentActive ? null : "recent")}
         aria-pressed={isRecentActive}
