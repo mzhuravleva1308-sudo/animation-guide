@@ -22,6 +22,7 @@ import { Film } from "@/types/film";
 type FilmsPageClientProps = {
   auth: AuthUserSummary | null;
   films: Film[];
+  awardWinningFilmIds: string[];
   pageSize: number;
   loadError: string | null;
 };
@@ -44,6 +45,7 @@ function cloneInteractionSnapshot(
 export default function FilmsPageClient({
   auth: initialAuth,
   films,
+  awardWinningFilmIds,
   pageSize,
   loadError,
 }: FilmsPageClientProps) {
@@ -317,6 +319,7 @@ export default function FilmsPageClient({
 
       <FilmCatalog
         films={films}
+        awardWinningFilmIds={awardWinningFilmIds}
         pageSize={pageSize}
         loadError={loadError}
         interaction={{

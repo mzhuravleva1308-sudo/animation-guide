@@ -468,6 +468,7 @@ export default function ProfileTabs({
           <QuickFilters
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
+            availableFilters={["all", "recent", "award-winners", "stop-motion"]}
           />
           <div className="mb-6 min-h-5" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (

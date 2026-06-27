@@ -5,6 +5,7 @@ import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
+import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 
 type FilmCatalogInteractionProps = {
@@ -23,18 +24,38 @@ type FilmCatalogInteractionProps = {
 
 type FilmCatalogProps = {
   films: Film[];
+  awardWinningFilmIds: string[];
   pageSize: number;
   loadError?: string | null;
   interaction?: FilmCatalogInteractionProps;
 };
 
+function isStopMotionTechnique(technique: string | null | undefined) {
+  const value = (technique ?? "").toLowerCase();
+
+  return [
+    "stop motion",
+    "stop-motion",
+    "stopmotion",
+    "clay",
+    "claymation",
+    "plasticine",
+    "puppet",
+    "puppetry",
+    "object animation",
+    "object-animation",
+  ].some((term) => value.includes(term));
+}
+
 export default function FilmCatalog({
   films,
+  awardWinningFilmIds,
   pageSize,
   loadError,
   interaction,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
+  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>(null);
   const [searchState, setSearchState] = useState({
     query: "",
     films: [] as Film[],
@@ -42,6 +63,40 @@ export default function FilmCatalog({
     isActive: false,
     error: null as string | null,
   });
+
+  const awardWinningFilmIdSet = useMemo(
+    () => new Set(awardWinningFilmIds),
+    [awardWinningFilmIds]
+  );
+  
+  const quickFilteredFilms = useMemo(() => {
+    if (activeQuickFilter === "recent") {
+      const currentYear = new Date().getFullYear();
+      const recentYearFrom = currentYear - 2;
+  
+      return films.filter(
+        (film) =>
+          typeof film.year === "number" &&
+          film.year >= recentYearFrom &&
+          film.year <= currentYear
+      );
+    }
+  
+    if (activeQuickFilter === "award-winners") {
+      return films.filter((film) => awardWinningFilmIdSet.has(film.id));
+    }
+  
+    if (activeQuickFilter === "stop-motion") {
+      return films.filter((film) => isStopMotionTechnique(film.technique));
+    }
+  
+    return films;
+  }, [activeQuickFilter, awardWinningFilmIdSet, films]);
+  
+  function handleQuickFilterChange(filter: QuickFilter) {
+    setActiveQuickFilter(filter);
+    setPage(1);
+  }
 
   const handleSearchResultsChange = useCallback(
     (nextState: {
@@ -60,7 +115,7 @@ export default function FilmCatalog({
   const isSearchReady =
     searchState.query.length >= filmSearchConstants.MIN_QUERY_LENGTH;
 
-  const totalCount = films.length;
+  const totalCount = quickFilteredFilms.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.min(page, totalPages);
 
@@ -70,9 +125,9 @@ export default function FilmCatalog({
     }
 
     const start = (currentPage - 1) * pageSize;
-    return films.slice(start, start + pageSize);
+    return quickFilteredFilms.slice(start, start + pageSize);
   }, [
-    films,
+    quickFilteredFilms,
     currentPage,
     pageSize,
     isSearchActive,
@@ -95,6 +150,11 @@ export default function FilmCatalog({
       <FilmSearch
         onResultsChange={handleSearchResultsChange}
         isLoading={searchState.isLoading}
+      />
+      <QuickFilters
+        activeFilter={activeQuickFilter}
+        onFilterChange={handleQuickFilterChange}
+        availableFilters={["all", "recent", "award-winners"]}
       />
 
       <div className="mb-6 min-h-5" aria-live="polite">

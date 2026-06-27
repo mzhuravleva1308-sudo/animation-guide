@@ -36,9 +36,19 @@ const PUBLIC_CATALOG_FILM_FIELDS = [
 ].join(", ");
 
 export default async function FilmsPage() {
-  const [auth, { data: filmsData, error }] = await Promise.all([
+  const [
+    auth,
+    { data: filmsData, error },
+    { data: awardRecognitionRows },
+  ] = await Promise.all([
     getAuthUserSummary(),
     supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS),
+    supabase
+      .from("film_festival_recognitions")
+      .select("film_id")
+      .eq("import_source", "manual_verified_major_awards_v1")
+      .eq("recognition_type", "award")
+      .eq("award_result", "grand_prize"),
   ]);
 
   const films = sortFilmsByColdStart(
@@ -49,10 +59,19 @@ export default async function FilmsPage() {
   );
   const loadError = error?.message ?? null;
 
+  const awardWinningFilmIds = Array.from(
+    new Set(
+      (awardRecognitionRows ?? [])
+        .map((row) => row.film_id)
+        .filter((filmId): filmId is string => Boolean(filmId))
+    )
+  );
+  
   return (
     <FilmsPageClient
       auth={auth}
       films={films}
+      awardWinningFilmIds={awardWinningFilmIds}
       pageSize={CATALOG_PAGE_SIZE}
       loadError={loadError}
     />
