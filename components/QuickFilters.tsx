@@ -4,13 +4,15 @@ export type QuickFilter =
   | "recent"
   | "stop-motion"
   | "award-winners"
+  | "sci-fi"
   | null;
 
 export type QuickFilterOption =
   | "all"
   | "recent"
   | "award-winners"
-  | "stop-motion";
+  | "stop-motion"
+  | "sci-fi";
 
 type QuickFiltersProps = {
   activeFilter: QuickFilter;
@@ -23,6 +25,7 @@ const FILTER_LABELS: Record<QuickFilterOption, string> = {
   recent: "Recent",
   "award-winners": "Award winners",
   "stop-motion": "Stop motion",
+  "sci-fi": "Sci-Fi",
 };
 
 function optionToFilter(option: QuickFilterOption): QuickFilter {
@@ -32,7 +35,7 @@ function optionToFilter(option: QuickFilterOption): QuickFilter {
 export default function QuickFilters({
   activeFilter,
   onFilterChange,
-  availableFilters = ["all", "recent", "award-winners", "stop-motion"],
+  availableFilters = ["all", "recent", "award-winners", "stop-motion", "sci-fi"],
 }: QuickFiltersProps) {
   return (
     <div className="mt-3 flex gap-2 overflow-x-auto pb-1">

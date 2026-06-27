@@ -56,6 +56,7 @@ const FILM_SELECT_FIELDS = [
   "aesthetic_tags",
   "narrative_tags",
   "themes",
+  "quick_filters",
   "dialogue",
   "emotional_intensity",
   "weirdness",

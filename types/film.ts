@@ -41,4 +41,5 @@ export type Film = {
     festival_recognitions?: import("@/types/film-festival-recognition").FilmFestivalRecognition[] | null;
     festival_badges?: import("@/types/festival-badge").FestivalBadge[] | null;
     created_at?: string;
+    quick_filters?: string[] | null;
   };

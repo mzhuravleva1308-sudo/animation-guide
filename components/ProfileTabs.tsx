@@ -270,6 +270,12 @@ export default function ProfileTabs({
       );
     }
     
+    if (activeQuickFilter === "sci-fi") {
+      return localAllFilmsSorted.filter((film) =>
+        film.quick_filters?.includes("sci-fi")
+      );
+    }
+
     return localAllFilmsSorted;
   }, [
     activeQuickFilter,
@@ -468,7 +474,7 @@ export default function ProfileTabs({
           <QuickFilters
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
-            availableFilters={["all", "recent", "award-winners", "stop-motion"]}
+            availableFilters={["all", "recent", "award-winners", "stop-motion", "sci-fi"]}
           />
           <div className="mb-6 min-h-5" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (
