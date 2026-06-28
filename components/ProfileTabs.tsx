@@ -244,7 +244,7 @@ export default function ProfileTabs({
 
     return [...unratedFromServerList, ...returnedToQueue];
   }, [allFilmsSorted, watchedFilms, ratedFilmIds]);
-
+  
   const quickFilteredAllFilms = useMemo(() => {
     if (activeQuickFilter === "recent") {
       const currentYear = new Date().getFullYear();
@@ -273,6 +273,17 @@ export default function ProfileTabs({
     if (activeQuickFilter === "sci-fi") {
       return localAllFilmsSorted.filter((film) =>
         film.quick_filters?.includes("sci-fi")
+      );
+    }
+    if (activeQuickFilter === "connection") {
+      return localAllFilmsSorted.filter((film) =>
+        film.quick_filters?.includes("connection")
+      );
+    }
+    
+    if (activeQuickFilter === "distance") {
+      return localAllFilmsSorted.filter((film) =>
+        film.quick_filters?.includes("distance")
       );
     }
 
@@ -474,7 +485,7 @@ export default function ProfileTabs({
           <QuickFilters
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
-            availableFilters={["all", "recent", "award-winners", "stop-motion", "sci-fi"]}
+            availableFilters={["all", "recent", "award-winners", "stop-motion", "sci-fi", "connection", "distance"]}
           />
           <div className="mb-6 min-h-5" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (

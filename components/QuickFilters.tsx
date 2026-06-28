@@ -5,6 +5,8 @@ export type QuickFilter =
   | "stop-motion"
   | "award-winners"
   | "sci-fi"
+  | "connection"
+  | "distance"
   | null;
 
 export type QuickFilterOption =
@@ -12,7 +14,9 @@ export type QuickFilterOption =
   | "recent"
   | "award-winners"
   | "stop-motion"
-  | "sci-fi";
+  | "sci-fi"
+  | "connection"
+  | "distance";
 
 type QuickFiltersProps = {
   activeFilter: QuickFilter;
@@ -26,6 +30,8 @@ const FILTER_LABELS: Record<QuickFilterOption, string> = {
   "award-winners": "Award winners",
   "stop-motion": "Stop motion",
   "sci-fi": "Sci-Fi",
+  connection: "Light",
+  distance: "Shadow",
 };
 
 function optionToFilter(option: QuickFilterOption): QuickFilter {
@@ -35,7 +41,15 @@ function optionToFilter(option: QuickFilterOption): QuickFilter {
 export default function QuickFilters({
   activeFilter,
   onFilterChange,
-  availableFilters = ["all", "recent", "award-winners", "stop-motion", "sci-fi"],
+  availableFilters = [
+    "all",
+    "recent",
+    "award-winners",
+    "stop-motion",
+    "sci-fi",
+    "connection",
+    "distance",
+  ],
 }: QuickFiltersProps) {
   return (
     <div className="mt-3 flex gap-2 overflow-x-auto pb-1">

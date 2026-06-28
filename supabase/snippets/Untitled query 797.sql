@@ -1,4 +1,5 @@
-select title, year, quick_filters
-from public.films
-where 'sci-fi' = any(quick_filters)
-order by year desc nulls last, title;
+select f.title, f.quick_filters, r.rating
+from public.films f
+left join public.film_ratings r on r.film_id = f.id
+where 'connection' = any(f.quick_filters)
+order by r.rating nulls first, f.title;
