@@ -52,7 +52,7 @@ export default function QuickFilters({
   ],
 }: QuickFiltersProps) {
   return (
-    <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+    <div className="mt-3 flex flex-wrap gap-2 pb-1">
       {availableFilters.map((option) => {
         const filter = optionToFilter(option);
         const isActive = activeFilter === filter;
@@ -63,13 +63,20 @@ export default function QuickFilters({
             type="button"
             onClick={() => onFilterChange(isActive ? null : filter)}
             aria-pressed={isActive}
-            className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition ${
+            className={`rounded-full border px-3 py-1.5 text-sm font-medium transition ${
               isActive
                 ? "border-stone-800 bg-stone-800 text-white"
                 : "border-stone-200 bg-white text-stone-700 hover:bg-stone-50"
             }`}
           >
-            {FILTER_LABELS[option]}
+            {option === "award-winners" ? (
+              <>
+                <span className="sm:hidden">Winners</span>
+                <span className="hidden sm:inline">Award winners</span>
+              </>
+            ) : (
+              FILTER_LABELS[option]
+            )}
           </button>
         );
       })}
