@@ -120,12 +120,12 @@ export default function FilmCard(props: FilmCardProps) {
               target="_blank"
               rel="noreferrer"
               data-testid="film-trailer-link"
-              className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-1 text-xs font-medium leading-none text-black shadow-sm backdrop-blur hover:bg-white"
+              className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-medium leading-none text-black shadow-sm backdrop-blur transition hover:bg-white"
             >
               <svg
                 aria-hidden="true"
                 viewBox="0 0 24 24"
-                className="h-3 w-3 shrink-0 fill-current"
+                className="h-4 w-4 shrink-0 fill-current"
               >
                 <path d="M8 5v14l11-7z" />
               </svg>
