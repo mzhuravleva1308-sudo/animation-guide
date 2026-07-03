@@ -84,11 +84,11 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="grid grid-cols-[112px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-stone-300 sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
+      className="overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
     >
       <div
         data-testid="film-poster"
-        className="relative h-full min-h-full w-full bg-gray-100"
+        className="relative h-72 w-full overflow-hidden bg-gray-100 sm:h-full sm:min-h-full sm:overflow-visible"
       >
         {posterUrl ? (
   <>
@@ -136,8 +136,8 @@ export default function FilmCard(props: FilmCardProps) {
       </div>
 
       <div className="flex min-h-0 flex-col p-4 sm:p-5">
-  <div className="flex items-start justify-between gap-3">
-    <div className="min-w-0 flex-1">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+      <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
       {techniquePills.length > 0 ? (
         <div
           className="mb-1 flex flex-wrap items-center gap-2"
@@ -171,7 +171,7 @@ export default function FilmCard(props: FilmCardProps) {
     </div>
 
     {film.festival_badges?.length ? (
-      <div className="shrink-0 -mt-1.5">
+      <div className="order-1 w-full sm:order-2 sm:-mt-1.5 sm:w-auto sm:shrink-0">
         <FestivalBadgeList badges={film.festival_badges} />
       </div>
     ) : null}

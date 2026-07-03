@@ -48,7 +48,7 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
         data-testid={`festival-badge-${badge.id}`}
         tabIndex={0}
         aria-describedby={tooltipId}
-        className="inline-flex cursor-help items-center gap-1.5 text-[11px] font-semibold leading-none text-[#9a6a3a] outline-none ring-offset-2 transition-colors hover:text-[#7b4f27] focus-visible:ring-2 focus-visible:ring-[#8a5b2d]/30"
+        className="inline-flex cursor-help items-center text-sm font-medium text-[#8a5b2d] outline-none sm:rounded-md sm:border sm:border-[#ead8c7] sm:bg-[#fffaf6] sm:px-2.5 sm:py-1 sm:text-[11px] sm:leading-none sm:shadow-sm sm:ring-offset-2 sm:transition-shadow sm:focus-visible:ring-2 sm:focus-visible:ring-[#8a5b2d]/40"
       >
         <LaurelLeft />
         <span className="whitespace-nowrap tracking-[0.02em]">
