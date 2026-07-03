@@ -33,6 +33,7 @@ const PUBLIC_CATALOG_FILM_FIELDS = [
   "aesthetic_tags",
   "narrative_tags",
   "cold_start_score",
+  "quick_filters",
 ].join(", ");
 
 export default async function FilmsPage() {

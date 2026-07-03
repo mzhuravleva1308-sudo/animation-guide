@@ -9,6 +9,10 @@ import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
+import {
+  filterFilmsByQuickFilter,
+  QUICK_FILTERS,
+} from "@/lib/quick-film-filters";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -79,23 +83,6 @@ function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
   });
 
   return order;
-}
-
-function isStopMotionTechnique(technique: string | null | undefined) {
-  const value = (technique ?? "").toLowerCase();
-
-  return [
-    "stop motion",
-    "stop-motion",
-    "stopmotion",
-    "clay",
-    "claymation",
-    "plasticine",
-    "puppet",
-    "puppetry",
-    "object animation",
-    "object-animation",
-  ].some((term) => value.includes(term));
 }
 
 export default function ProfileTabs({
@@ -245,54 +232,19 @@ export default function ProfileTabs({
     return [...unratedFromServerList, ...returnedToQueue];
   }, [allFilmsSorted, watchedFilms, ratedFilmIds]);
   
-  const quickFilteredAllFilms = useMemo(() => {
-    if (activeQuickFilter === "recent") {
-      const currentYear = new Date().getFullYear();
-      const recentYearFrom = currentYear - 2;
-  
-      return localAllFilmsSorted.filter(
-        (film) =>
-          typeof film.year === "number" &&
-          film.year >= recentYearFrom &&
-          film.year <= currentYear
-      );
-    }
-  
-    if (activeQuickFilter === "stop-motion") {
-      return localAllFilmsSorted.filter((film) =>
-        isStopMotionTechnique(film.technique)
-      );
-    }
-  
-    if (activeQuickFilter === "award-winners") {
-      return localAllFilmsSorted.filter((film) =>
-        awardWinningFilmIdSet.has(film.id)
-      );
-    }
-    
-    if (activeQuickFilter === "sci-fi") {
-      return localAllFilmsSorted.filter((film) =>
-        film.quick_filters?.includes("sci-fi")
-      );
-    }
-    if (activeQuickFilter === "connection") {
-      return localAllFilmsSorted.filter((film) =>
-        film.quick_filters?.includes("connection")
-      );
-    }
-    
-    if (activeQuickFilter === "distance") {
-      return localAllFilmsSorted.filter((film) =>
-        film.quick_filters?.includes("distance")
-      );
-    }
-
-    return localAllFilmsSorted;
-  }, [
-    activeQuickFilter,
-    localAllFilmsSorted,
-    awardWinningFilmIdSet,
-  ]);
+  const quickFilteredAllFilms = useMemo(
+    () =>
+      filterFilmsByQuickFilter(
+        localAllFilmsSorted,
+        activeQuickFilter,
+        awardWinningFilmIdSet
+      ),
+    [
+      localAllFilmsSorted,
+      activeQuickFilter,
+      awardWinningFilmIdSet,
+    ]
+  );
 
 
   const localWatchedFilms = useMemo(() => {
@@ -485,7 +437,7 @@ export default function ProfileTabs({
           <QuickFilters
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
-            availableFilters={["all", "recent", "award-winners", "stop-motion", "sci-fi", "connection", "distance"]}
+            availableFilters={QUICK_FILTERS}
           />
           <div className="mb-6 min-h-5" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (

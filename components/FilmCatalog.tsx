@@ -6,6 +6,10 @@ import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
+import {
+  filterFilmsByQuickFilter,
+  QUICK_FILTERS,
+} from "@/lib/quick-film-filters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 
 type FilmCatalogInteractionProps = {
@@ -30,23 +34,6 @@ type FilmCatalogProps = {
   interaction?: FilmCatalogInteractionProps;
 };
 
-function isStopMotionTechnique(technique: string | null | undefined) {
-  const value = (technique ?? "").toLowerCase();
-
-  return [
-    "stop motion",
-    "stop-motion",
-    "stopmotion",
-    "clay",
-    "claymation",
-    "plasticine",
-    "puppet",
-    "puppetry",
-    "object animation",
-    "object-animation",
-  ].some((term) => value.includes(term));
-}
-
 export default function FilmCatalog({
   films,
   awardWinningFilmIds,
@@ -69,29 +56,15 @@ export default function FilmCatalog({
     [awardWinningFilmIds]
   );
   
-  const quickFilteredFilms = useMemo(() => {
-    if (activeQuickFilter === "recent") {
-      const currentYear = new Date().getFullYear();
-      const recentYearFrom = currentYear - 2;
-  
-      return films.filter(
-        (film) =>
-          typeof film.year === "number" &&
-          film.year >= recentYearFrom &&
-          film.year <= currentYear
-      );
-    }
-  
-    if (activeQuickFilter === "award-winners") {
-      return films.filter((film) => awardWinningFilmIdSet.has(film.id));
-    }
-  
-    if (activeQuickFilter === "stop-motion") {
-      return films.filter((film) => isStopMotionTechnique(film.technique));
-    }
-  
-    return films;
-  }, [activeQuickFilter, awardWinningFilmIdSet, films]);
+  const quickFilteredFilms = useMemo(
+    () =>
+      filterFilmsByQuickFilter(
+        films,
+        activeQuickFilter,
+        awardWinningFilmIdSet
+      ),
+    [films, activeQuickFilter, awardWinningFilmIdSet]
+  );
   
   function handleQuickFilterChange(filter: QuickFilter) {
     setActiveQuickFilter(filter);
@@ -154,7 +127,7 @@ export default function FilmCatalog({
       <QuickFilters
         activeFilter={activeQuickFilter}
         onFilterChange={handleQuickFilterChange}
-        availableFilters={["all", "recent", "award-winners"]}
+        availableFilters={QUICK_FILTERS}
       />
 
       <div className="mb-6 min-h-5" aria-live="polite">
