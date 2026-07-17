@@ -1,0 +1,27 @@
+[
+  {
+    "film_match": {
+      "title": "Decorado",
+      "year": 2026,
+      "original_title": "Decorado"
+    },
+    "import_source": "manual_backfill",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2026,
+        "section": "Feature Films Official Competition",
+        "recognition_type": "official_selection",
+        "import_key": "annecy-2026-feature-films-official-competition-selection"
+      },
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2026,
+        "section": "Feature Films Official Competition",
+        "recognition_type": "award",
+        "award_name": "Paul Grimault Award",
+        "import_key": "annecy-2026-paul-grimault-award"
+      }
+    ]
+  }
+]

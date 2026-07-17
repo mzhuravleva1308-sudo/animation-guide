@@ -5,6 +5,10 @@ import { getFilmTechniquePills } from "@/lib/film-technique";
 import RatingButtons from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
+import {
+  getFilmCardMood,
+  getFilmCardSynopsis,
+} from "@/lib/film-card-copy.mjs";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
@@ -69,6 +73,8 @@ export default function FilmCard(props: FilmCardProps) {
   const aestheticTags = normalizeFilmTagList(film.aesthetic_tags);
   const narrativeTags = normalizeFilmTagList(film.narrative_tags);
   const posterUrl = getFilmPosterUrl(film);
+  const synopsis = getFilmCardSynopsis(film);
+  const mood = getFilmCardMood(film);
   const techniquePills = getFilmTechniquePills(film.technique);
   const metadataLine = [
     film.director,
@@ -190,16 +196,16 @@ export default function FilmCard(props: FilmCardProps) {
     </p>
   )}
 
-  {!reason && (film.what_it_is || film.the_mood) && (
+  {(synopsis || mood) && (
     <div className="mt-3 space-y-2.5">
-      {film.what_it_is && (
-        <p className="text-sm leading-6 text-gray-900">{film.what_it_is}</p>
+      {synopsis && (
+        <p className="text-sm leading-6 text-gray-900">{synopsis}</p>
       )}
 
-      {film.the_mood && (
+      {mood && (
         <div className="border-l-2 border-[#ead8c7] pl-4">
           <p className="text-sm italic leading-6 text-[#8a5b2d] [font-style:oblique_7deg]">
-            {film.the_mood}
+            {mood}
           </p>
         </div>
       )}

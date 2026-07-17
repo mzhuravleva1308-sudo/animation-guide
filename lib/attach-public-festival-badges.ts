@@ -1,5 +1,6 @@
 import { enrichFilmsWithFestivalBadges } from "@/lib/enrich-films-with-festival-badges";
 import { loadPublicFestivalClaimsByFilmIds } from "@/lib/load-film-festival-claims-public.mjs";
+import { loadFilmFestivalRecognitionsByFilmIds } from "@/lib/load-film-festival-recognitions.mjs";
 import type { Film } from "@/types/film";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -13,11 +14,15 @@ export async function attachPublicFestivalBadges(
 
   try {
     const filmIds = films.map((film) => film.id);
-    const claimsByFilmId = await loadPublicFestivalClaimsByFilmIds(
-      supabase,
-      filmIds
+    const [claimsByFilmId, recognitionsByFilmId] = await Promise.all([
+      loadPublicFestivalClaimsByFilmIds(supabase, filmIds),
+      loadFilmFestivalRecognitionsByFilmIds(supabase, filmIds),
+    ]);
+    return enrichFilmsWithFestivalBadges(
+      films,
+      claimsByFilmId,
+      recognitionsByFilmId
     );
-    return enrichFilmsWithFestivalBadges(films, claimsByFilmId);
   } catch {
     return enrichFilmsWithFestivalBadges(films, new Map());
   }
