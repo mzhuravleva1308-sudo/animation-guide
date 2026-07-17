@@ -139,6 +139,7 @@ export async function unsaveAllVisibleFilms(page: Page) {
     );
 
     await removeButton.click();
+    await expect(page.getByTestId("toast")).toContainText("Removed from Saved.");
     await expect(filmCards(page)).toHaveCount(0, { timeout: 10_000 });
   }
 

@@ -21,6 +21,7 @@ type FilmCardProfileProps = FilmCardBaseProps & {
   mode?: "profile";
   profileId: string;
   profileSlug: string;
+  profileToken: string;
   initialRating: number | null;
   savedFilmIds: Set<string>;
   onSavedChange: (film: Film, saved: boolean) => void;
@@ -267,6 +268,9 @@ export default function FilmCard(props: FilmCardProps) {
       <RatingButtons
         filmId={film.id}
         profileId={props.profileId}
+        profileToken={
+          props.mode === "profile" ? props.profileToken : undefined
+        }
         initialRating={props.initialRating}
         onRatingChange={props.onRatingChange}
         onAuthRequired={
@@ -277,6 +281,9 @@ export default function FilmCard(props: FilmCardProps) {
         filmId={film.id}
         profileSlug={props.profileSlug}
         profileId={props.profileId}
+        profileToken={
+          props.mode === "profile" ? props.profileToken : undefined
+        }
         isSaved={props.savedFilmIds.has(film.id)}
         onSavedChange={(saved) => props.onSavedChange(film, saved)}
         onAuthRequired={

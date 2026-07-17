@@ -13,11 +13,41 @@ export async function persistFilmRating({
   profileId,
   filmId,
   rating,
+  profileToken,
 }: {
   profileId: string;
   filmId: string;
   rating: number | null;
+  profileToken?: string;
 }): Promise<MutationResult> {
+  if (profileToken) {
+    const response = await fetch("/api/profile-rating", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        profileId,
+        filmId,
+        rating,
+        token: profileToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      return {
+        error: {
+          message: body?.error ?? "Could not save film rating",
+        },
+      };
+    }
+
+    return { error: null };
+  }
+
   const supabase = createClient();
 
   if (rating === null) {
@@ -81,11 +111,41 @@ export async function persistFilmSave({
   profileId,
   filmId,
   saved,
+  profileToken,
 }: {
   profileId: string;
   filmId: string;
   saved: boolean;
+  profileToken?: string;
 }): Promise<MutationResult> {
+  if (profileToken) {
+    const response = await fetch("/api/profile-save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        profileId,
+        filmId,
+        saved,
+        token: profileToken,
+      }),
+    });
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as
+        | { error?: string }
+        | null;
+      return {
+        error: {
+          message: body?.error ?? "Could not save film",
+        },
+      };
+    }
+
+    return { error: null };
+  }
+
   const supabase = createClient();
 
   if (saved) {

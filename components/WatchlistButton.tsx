@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { persistFilmSave } from "@/lib/film-profile-mutations";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import { useToast } from "@/components/ToastProvider";
 
 type WatchlistButtonProps = {
   filmId: string;
   profileSlug?: string;
   profileId?: string;
+  profileToken?: string;
   isSaved?: boolean;
   onSavedChange?: (saved: boolean) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
@@ -18,6 +20,7 @@ export default function WatchlistButton({
   filmId,
   profileSlug = "maria",
   profileId: profileIdFromProps,
+  profileToken,
   isSaved,
   onSavedChange,
   onAuthRequired,
@@ -26,6 +29,7 @@ export default function WatchlistButton({
   const [isInWatchlist, setIsInWatchlist] = useState(isSaved ?? false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (isSaved !== undefined) {
@@ -115,6 +119,7 @@ export default function WatchlistButton({
       profileId,
       filmId,
       saved: nextSaved,
+      profileToken,
     });
 
     if (error) {
@@ -125,6 +130,11 @@ export default function WatchlistButton({
     }
 
     onSavedChange?.(nextSaved);
+    if (nextSaved) {
+      showToast("Saved for later.", "You can find it in Saved.");
+    } else {
+      showToast("Removed from Saved.", "");
+    }
     setIsSaving(false);
   }
 

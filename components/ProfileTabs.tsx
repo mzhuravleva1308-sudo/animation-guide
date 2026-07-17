@@ -514,6 +514,7 @@ export default function ProfileTabs({
               film={film}
               profileId={profileId}
               profileSlug={profileSlug}
+              profileToken={token}
               initialRating={getFilmRating(localFilmRatings, film.id)}
               savedFilmIds={savedFilmIds}
               onSavedChange={handleSavedChange}

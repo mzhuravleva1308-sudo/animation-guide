@@ -133,6 +133,9 @@ test.describe("Profile page", () => {
       ).toBeVisible();
 
       await rateFilmOnCard(card, rating);
+      await expect(page.getByTestId("toast")).toContainText(
+        "Saved to Watched and added to your taste profile."
+      );
 
       await expect(
         filmList(page).locator(
@@ -162,10 +165,38 @@ test.describe("Profile page", () => {
       ).toHaveAttribute("aria-pressed", "true");
 
       await rateFilmOnCard(reloadedWatchedCard, rating);
+      await expect(page.getByTestId("toast")).toContainText(
+        "Rating removed and no longer affects your taste profile."
+      );
       await expect(reloadedWatchedCard).not.toBeVisible();
       await expect
         .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
         .toBe(0);
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+    });
+
+    test("share-token profile can save a rating without login", async ({
+      page,
+    }, testInfo) => {
+      const rating = 6;
+      const smokeRatingFilm = await getSmokeRatingFilmForProject(
+        testInfo.project.name
+      );
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+
+      const card = await findFilmCardInAllFilmsList(page, smokeRatingFilm.id);
+      await rateFilmOnCard(card, rating);
+
+      await expect(page.getByTestId("toast")).toContainText(
+        "Saved to Watched and added to your taste profile."
+      );
+      await expect
+        .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
+        .toBe(1);
+
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
     });
 
@@ -191,8 +222,7 @@ test.describe("Profile page", () => {
       await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
     });
 
-    test("save to Saved tab and unsave round trip", async ({ page }, testInfo) => {
-      await signInProjectRatingUser(page, testInfo.project.name);
+    test("save to Saved tab and unsave round trip", async ({ page }) => {
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
@@ -204,6 +234,9 @@ test.describe("Profile page", () => {
       await expect(
         card.getByRole("button", { name: "Remove from watchlist" })
       ).toBeVisible();
+      await expect(page.getByTestId("toast")).toContainText(
+        "Saved for later. You can find it in Saved."
+      );
 
       await openProfileTab(page, "Saved");
       await expectTabHasFilms(page, 1);

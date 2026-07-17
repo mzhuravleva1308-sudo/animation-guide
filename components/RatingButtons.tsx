@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { persistFilmRating } from "@/lib/film-profile-mutations";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import { useToast } from "@/components/ToastProvider";
 
 type RatingChangeOptions = {
   skipOrderUpdate?: boolean;
@@ -11,6 +12,7 @@ type RatingChangeOptions = {
 type RatingButtonsProps = {
   filmId: string;
   profileId?: string;
+  profileToken?: string;
   initialRating?: number | null;
   onRatingChange?: (
     filmId: string,
@@ -31,6 +33,7 @@ function normalizeRating(value: number | null | undefined): number | null {
 export default function RatingButtons({
   filmId,
   profileId,
+  profileToken,
   initialRating = null,
   onRatingChange,
   onAuthRequired,
@@ -39,6 +42,7 @@ export default function RatingButtons({
   const [rating, setRating] = useState<number | null>(normalizedInitialRating);
   const ratingRef = useRef<number | null>(normalizedInitialRating);
   const saveRequestIdRef = useRef(0);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const nextRating = normalizeRating(initialRating);
@@ -81,6 +85,7 @@ export default function RatingButtons({
       profileId,
       filmId,
       rating: nextRating,
+      profileToken,
     });
 
     if (requestId !== saveRequestIdRef.current) {
@@ -92,6 +97,19 @@ export default function RatingButtons({
       setRating(previousRating);
       ratingRef.current = previousRating;
       onRatingChange?.(filmId, previousRating, { skipOrderUpdate: true });
+      return;
+    }
+
+    if (nextRating === null) {
+      showToast(
+        "Rating removed",
+        "and no longer affects your taste profile."
+      );
+    } else {
+      showToast(
+        "Saved to Watched",
+        "and added to your taste profile."
+      );
     }
   }
 

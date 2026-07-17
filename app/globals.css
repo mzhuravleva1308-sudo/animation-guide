@@ -32,3 +32,65 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
+
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.toast-enter {
+  animation: toast-enter 200ms ease-out both;
+}
+
+.toast-exit {
+  animation: toast-exit 170ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-enter {
+    animation: toast-opacity-in 100ms ease-out both;
+  }
+
+  .toast-exit {
+    animation: toast-opacity-out 100ms ease-out both;
+  }
+}
+
+@keyframes toast-opacity-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-opacity-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

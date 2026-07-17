@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { supabase } from "@/lib/supabase";
 import { Film } from "@/types/film";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     );
   }
 
+  const supabase = getAdminSupabase();
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id, name, slug")
