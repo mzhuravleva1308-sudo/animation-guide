@@ -14,6 +14,7 @@ import { buildFilmRatings } from "@/lib/film-ratings";
 import { normalizeFilms } from "@/lib/normalize-film";
 import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges";
 import { createProfilePageLoadTimer } from "@/lib/profile-page-load-log";
+import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -111,6 +112,7 @@ export default async function ProfilePage({
   }
 
   const logProfilePageLoad = createProfilePageLoadTimer();
+  const adminSupabase = getAdminSupabase();
 
   const [
     { data: tasteCoresData },
@@ -139,7 +141,7 @@ export default async function ProfilePage({
       .eq("profile_id", profile.id)
       .eq("list_type", "to_watch")
       .order("film_id"),
-    supabase
+    adminSupabase
       .from("profile_film_scores")
       .select("film_id, emotional_score, material_score")
       .eq("profile_id", profile.id)
