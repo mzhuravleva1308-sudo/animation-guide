@@ -42,6 +42,7 @@ export default function RatingButtons({
   const [rating, setRating] = useState<number | null>(normalizedInitialRating);
   const ratingRef = useRef<number | null>(normalizedInitialRating);
   const saveRequestIdRef = useRef(0);
+  const [isSaving, setIsSaving] = useState(false);
   const { showToast } = useToast();
 
   useEffect(() => {
@@ -77,28 +78,10 @@ export default function RatingButtons({
 
     const requestId = ++saveRequestIdRef.current;
 
+    setIsSaving(true);
     setRating(nextRating);
     ratingRef.current = nextRating;
     onRatingChange?.(filmId, nextRating);
-
-    const { error } = await persistFilmRating({
-      profileId,
-      filmId,
-      rating: nextRating,
-      profileToken,
-    });
-
-    if (requestId !== saveRequestIdRef.current) {
-      return;
-    }
-
-    if (error) {
-      console.error("Rating save error", error);
-      setRating(previousRating);
-      ratingRef.current = previousRating;
-      onRatingChange?.(filmId, previousRating, { skipOrderUpdate: true });
-      return;
-    }
 
     if (nextRating === null) {
       showToast(
@@ -111,6 +94,41 @@ export default function RatingButtons({
         "and added to your taste profile."
       );
     }
+
+    let error: { message: string } | null = null;
+
+    try {
+      ({ error } = await persistFilmRating({
+        profileId,
+        filmId,
+        rating: nextRating,
+        profileToken,
+      }));
+    } catch (cause) {
+      error = {
+        message: cause instanceof Error ? cause.message : "Network error",
+      };
+    }
+
+    if (requestId !== saveRequestIdRef.current) {
+      return;
+    }
+
+    if (error) {
+      console.error("Rating save error", error);
+      setRating(previousRating);
+      ratingRef.current = previousRating;
+      onRatingChange?.(filmId, previousRating, { skipOrderUpdate: true });
+      setIsSaving(false);
+      showToast(
+        "Couldn’t save your changes.",
+        "Please try again.",
+        "error"
+      );
+      return;
+    }
+
+    setIsSaving(false);
   }
 
   return (
@@ -130,6 +148,7 @@ export default function RatingButtons({
             type="button"
             aria-label={`Rate ${value} out of 10`}
             aria-pressed={rating === value}
+            disabled={isSaving}
             onClick={() => saveRating(value)}
             className={`inline-flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
               rating === value

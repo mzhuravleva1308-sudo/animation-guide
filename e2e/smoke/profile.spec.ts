@@ -183,6 +183,14 @@ test.describe("Profile page", () => {
         testInfo.project.name
       );
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+      let releaseRequest!: () => void;
+      const requestReleased = new Promise<void>((resolve) => {
+        releaseRequest = resolve;
+      });
+      await page.route("**/api/profile-rating", async (route) => {
+        await requestReleased;
+        await route.continue();
+      });
 
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
@@ -193,11 +201,44 @@ test.describe("Profile page", () => {
       await expect(page.getByTestId("toast")).toContainText(
         "Saved to Watched and added to your taste profile."
       );
+      releaseRequest();
       await expect
         .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
         .toBe(1);
 
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+    });
+
+    test("rating failure rolls back the optimistic UI", async ({
+      page,
+    }, testInfo) => {
+      const smokeRatingFilm = await getSmokeRatingFilmForProject(
+        testInfo.project.name
+      );
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+      await page.route("**/api/profile-rating", async (route) => {
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "save failed" }),
+        });
+      });
+
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+      const card = await findFilmCardInAllFilmsList(page, smokeRatingFilm.id);
+      await rateFilmOnCard(card, 6);
+
+      await expect(page.getByTestId("toast")).toContainText(
+        "Couldn’t save your changes. Please try again."
+      );
+      const restoredCard = await findFilmCardInAllFilmsList(
+        page,
+        smokeRatingFilm.id
+      );
+      await expect(
+        restoredCard.getByRole("button", { name: "Rate 6 out of 10" })
+      ).toHaveAttribute("aria-pressed", "false");
     });
 
     test('rated film leaves the "All films" queue', async ({ page }, testInfo) => {
@@ -223,6 +264,15 @@ test.describe("Profile page", () => {
     });
 
     test("save to Saved tab and unsave round trip", async ({ page }) => {
+      let releaseRequest!: () => void;
+      const requestReleased = new Promise<void>((resolve) => {
+        releaseRequest = resolve;
+      });
+      await page.route("**/api/profile-save", async (route) => {
+        await requestReleased;
+        await route.continue();
+      });
+
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
@@ -237,12 +287,36 @@ test.describe("Profile page", () => {
       await expect(page.getByTestId("toast")).toContainText(
         "Saved for later. You can find it in Saved."
       );
+      releaseRequest();
 
       await openProfileTab(page, "Saved");
       await expectTabHasFilms(page, 1);
       await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
 
       await unsaveAllVisibleFilms(page);
+    });
+
+    test("Saved failure rolls back the optimistic UI", async ({ page }) => {
+      await page.route("**/api/profile-save", async (route) => {
+        await route.fulfill({
+          status: 500,
+          contentType: "application/json",
+          body: JSON.stringify({ error: "save failed" }),
+        });
+      });
+
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+      const card = firstFilmCard(page);
+      const saveButton = await waitForWatchlistButton(card, "Add to watchlist");
+      await saveButton.click();
+
+      await expect(page.getByTestId("toast")).toContainText(
+        "Couldn’t save your changes. Please try again."
+      );
+      await expect(
+        card.getByRole("button", { name: "Add to watchlist" })
+      ).toBeVisible();
     });
 
     test("empty Saved tab shows correct empty state", async ({ page }) => {

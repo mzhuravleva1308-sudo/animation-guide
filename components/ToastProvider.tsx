@@ -13,10 +13,15 @@ type ToastMessage = {
   id: number;
   title: string;
   text: string;
+  variant: "success" | "error";
 };
 
 type ToastContextValue = {
-  showToast: (title: string, text: string) => void;
+  showToast: (
+    title: string,
+    text: string,
+    variant?: ToastMessage["variant"]
+  ) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -25,14 +30,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isExiting, setIsExiting] = useState(false);
 
-  const showToast = useCallback((title: string, text: string) => {
-    setIsExiting(false);
-    setToast((current) => ({
-      id: (current?.id ?? 0) + 1,
-      title,
-      text,
-    }));
-  }, []);
+  const showToast = useCallback(
+    (
+      title: string,
+      text: string,
+      variant: ToastMessage["variant"] = "success"
+    ) => {
+      setIsExiting(false);
+      setToast((current) => ({
+        id: (current?.id ?? 0) + 1,
+        title,
+        text,
+        variant,
+      }));
+    },
+    []
+  );
 
   useEffect(() => {
     if (!toast) {
@@ -78,10 +91,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             <span
               aria-hidden="true"
-              className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700"
+              className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                toast.variant === "error"
+                  ? "bg-red-100 text-red-700"
+                  : "bg-emerald-100 text-emerald-700"
+              }`}
             >
               <svg viewBox="0 0 16 16" className="h-3 w-3 fill-none stroke-current stroke-2">
-                <path d="m3.25 8.25 3 3 6.5-6.5" strokeLinecap="round" strokeLinejoin="round" />
+                {toast.variant === "error" ? (
+                  <path
+                    d="m4.5 4.5 7 7m0-7-7 7"
+                    strokeLinecap="round"
+                  />
+                ) : (
+                  <path
+                    d="m3.25 8.25 3 3 6.5-6.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
               </svg>
             </span>
             <p className="min-w-0 text-[13px] font-normal leading-5 text-stone-700 max-[639px]:line-clamp-2 sm:whitespace-nowrap">

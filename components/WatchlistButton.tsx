@@ -115,26 +115,40 @@ export default function WatchlistButton({
     setIsSaving(true);
     setIsInWatchlist(nextSaved);
 
-    const { error } = await persistFilmSave({
-      profileId,
-      filmId,
-      saved: nextSaved,
-      profileToken,
-    });
-
-    if (error) {
-      console.error(nextSaved ? "Watchlist add error" : "Watchlist remove error", error);
-      setIsInWatchlist(previousSaved);
-      setIsSaving(false);
-      return;
-    }
-
-    onSavedChange?.(nextSaved);
     if (nextSaved) {
       showToast("Saved for later.", "You can find it in Saved.");
     } else {
       showToast("Removed from Saved.", "");
     }
+
+    let error: { message: string } | null = null;
+
+    try {
+      ({ error } = await persistFilmSave({
+        profileId,
+        filmId,
+        saved: nextSaved,
+        profileToken,
+      }));
+    } catch (cause) {
+      error = {
+        message: cause instanceof Error ? cause.message : "Network error",
+      };
+    }
+
+    if (error) {
+      console.error(nextSaved ? "Watchlist add error" : "Watchlist remove error", error);
+      setIsInWatchlist(previousSaved);
+      setIsSaving(false);
+      showToast(
+        "Couldn’t save your changes.",
+        "Please try again.",
+        "error"
+      );
+      return;
+    }
+
+    onSavedChange?.(nextSaved);
     setIsSaving(false);
   }
 
