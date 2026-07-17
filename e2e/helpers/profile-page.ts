@@ -47,8 +47,45 @@ export function firstUnratedFilmCard(page: Page) {
 
 export function filmCardByTitle(page: Page, filmTitle: string) {
   return filmCards(page).filter({
-    has: page.getByRole("heading", { level: 2, name: filmTitle }),
+    has: page.getByRole("button", { name: `Copy ${filmTitle}` }),
   });
+}
+
+export async function filmTitleFromCard(
+  card: ReturnType<typeof firstFilmCard>
+): Promise<string> {
+  const copyButton = card.getByRole("button", { name: /^Copy / });
+  const ariaLabel = await copyButton.getAttribute("aria-label");
+  return ariaLabel?.replace(/^Copy /, "") ?? "";
+}
+
+export function filmCardByFilmId(page: Page, filmId: string) {
+  return page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`);
+}
+
+export async function findFilmCardInAllFilmsList(page: Page, filmId: string) {
+  const cardInList = () =>
+    filmList(page).locator(
+      `[data-testid="film-card"][data-film-id="${filmId}"]`
+    );
+
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const card = cardInList();
+    if ((await card.count()) > 0) {
+      await card.scrollIntoViewIfNeeded();
+      return card;
+    }
+
+    const nextButton = page.getByRole("button", { name: "Next", exact: true });
+    if ((await nextButton.count()) === 0) {
+      break;
+    }
+
+    await nextButton.click();
+    await expect(filmList(page)).toBeVisible();
+  }
+
+  throw new Error(`Film ${filmId} not found in All films list`);
 }
 
 export async function expectTabIsEmpty(page: Page) {
@@ -75,6 +112,7 @@ export async function rateFilmOnCard(
   });
 
   await button.scrollIntoViewIfNeeded();
+  await expect(button).toBeEnabled();
   await button.click();
 }
 

@@ -67,8 +67,14 @@ async function finalizeAuthenticatedCallback(
   try {
     ({ profile } = await ensureAuthProfileForUser(supabase, user));
   } catch (error) {
+    const errorCode =
+      error && typeof error === "object" && "code" in error
+        ? String(error.code)
+        : "profile_provision_failed";
+
     console.error("[auth/callback] failed to ensure auth profile", {
       userId: user.id,
+      errorCode,
       message: error instanceof Error ? error.message : "unknown error",
     });
 

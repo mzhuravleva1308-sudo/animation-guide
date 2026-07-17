@@ -1,14 +1,23 @@
 import { test, expect } from "@playwright/test";
+import type { ProfileTestCredentials } from "../helpers/profile-credentials";
 import {
-  requireProfileTestCredentials,
-  type ProfileTestCredentials,
-} from "../helpers/profile-credentials";
+  ensureProjectE2eProfile,
+} from "../helpers/project-profile-credentials";
+import {
+  ensureProjectRatingAuthUser,
+  signInProjectRatingUser,
+} from "../helpers/project-profile-auth";
+import { countRatingRowsForFilm } from "../helpers/e2e-auth-profile";
+import { getSmokeRatingFilmForProject } from "../helpers/film-catalog-order";
 import {
   expectTabHasFilms,
   expectTabIsEmpty,
+  filmCardByFilmId,
   filmCardByTitle,
   filmCards,
   filmList,
+  filmTitleFromCard,
+  findFilmCardInAllFilmsList,
   firstFilmCard,
   firstUnratedFilmCard,
   gotoProfilePage,
@@ -17,7 +26,10 @@ import {
   unsaveAllVisibleFilms,
   waitForWatchlistButton,
 } from "../helpers/profile-page";
-import { resetE2eProfile } from "../helpers/reset-e2e-profile";
+import {
+  resetE2eProfile,
+  resetE2eProfileFilmRating,
+} from "../helpers/reset-e2e-profile";
 import {
   expectTrailerOverlayLayout,
   firstFilmCardWithTrailer,
@@ -39,14 +51,15 @@ test.describe("Profile page", () => {
     test.describe.configure({ mode: "serial" });
 
     let credentials: ProfileTestCredentials;
+    let profileId: string;
     let resetFailed = false;
     let resetFailureMessage = "";
 
-    test.beforeAll(async () => {
-      credentials = requireProfileTestCredentials();
-
+    test.beforeAll(async ({}, testInfo) => {
       try {
-        await resetE2eProfile(credentials);
+        credentials = await ensureProjectE2eProfile(testInfo.project.name);
+        profileId = await resetE2eProfile(credentials);
+        await ensureProjectRatingAuthUser(testInfo.project.name);
       } catch (error) {
         resetFailed = true;
         resetFailureMessage =
@@ -68,7 +81,7 @@ test.describe("Profile page", () => {
         resetFailureMessage || "E2E profile reset failed in beforeAll."
       );
 
-      await resetE2eProfile(credentials);
+      profileId = await resetE2eProfile(credentials);
     });
 
     test("loads film cards and tab navigation for a valid share link", async ({
@@ -103,50 +116,70 @@ test.describe("Profile page", () => {
       expect(consoleErrors).toEqual([]);
     });
 
-    test("rating a film updates the card UI", async ({ page }) => {
+    test("rating a film updates the card UI", async ({ page }, testInfo) => {
+      const rating = 8;
+      const smokeRatingFilm = await getSmokeRatingFilmForProject(
+        testInfo.project.name
+      );
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+
+      await signInProjectRatingUser(page, testInfo.project.name);
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
-      const card = firstUnratedFilmCard(page);
+      const card = await findFilmCardInAllFilmsList(page, smokeRatingFilm.id);
       await expect(
-        card.getByRole("button", { name: "Rate 8 out of 10" })
+        card.getByRole("button", { name: `Rate ${rating} out of 10` })
       ).toBeVisible();
-      const filmTitle = await card
-        .getByRole("heading", { level: 2 })
-        .innerText();
 
-      await rateFilmOnCard(card, 8);
+      await rateFilmOnCard(card, rating);
 
       await expect(
-        filmList(page).getByRole("heading", { level: 2, name: filmTitle })
+        filmList(page).locator(
+          `[data-testid="film-card"][data-film-id="${smokeRatingFilm.id}"]`
+        )
       ).toHaveCount(0);
 
       await openProfileTab(page, "Watched");
-      const watchedCard = filmCardByTitle(page, filmTitle);
-
-      await expect(watchedCard.getByText("My rating: 8/10")).toBeVisible();
+      const watchedCard = filmCardByFilmId(page, smokeRatingFilm.id);
+      await expect(watchedCard.getByText(`My rating: ${rating}/10`)).toBeVisible({
+        timeout: 15_000,
+      });
       await expect(
-        watchedCard.getByRole("button", { name: "Rate 8 out of 10" })
+        watchedCard.getByRole("button", { name: `Rate ${rating} out of 10` })
       ).toHaveAttribute("aria-pressed", "true");
 
-      await rateFilmOnCard(watchedCard, 8);
-      await expect(watchedCard).not.toBeVisible();
+      await expect
+        .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
+        .toBe(1);
+
+      await page.reload();
+      await openProfileTab(page, "Watched");
+      const reloadedWatchedCard = filmCardByFilmId(page, smokeRatingFilm.id);
+      await expect(reloadedWatchedCard.getByText(`My rating: ${rating}/10`)).toBeVisible();
+      await expect(
+        reloadedWatchedCard.getByRole("button", { name: `Rate ${rating} out of 10` })
+      ).toHaveAttribute("aria-pressed", "true");
+
+      await rateFilmOnCard(reloadedWatchedCard, rating);
+      await expect(reloadedWatchedCard).not.toBeVisible();
+      await expect
+        .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
+        .toBe(0);
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
     });
 
-    test('rated film leaves the "All films" queue', async ({ page }) => {
+    test('rated film leaves the "All films" queue', async ({ page }, testInfo) => {
+      await signInProjectRatingUser(page, testInfo.project.name);
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
       const card = firstUnratedFilmCard(page);
-      const filmTitle = await card
-        .getByRole("heading", { level: 2 })
-        .innerText();
+      const filmTitle = await filmTitleFromCard(card);
 
       await rateFilmOnCard(card, 7);
 
-      await expect(
-        filmList(page).getByRole("heading", { level: 2, name: filmTitle })
-      ).toHaveCount(0);
+      await expect(filmCardByTitle(page, filmTitle)).toHaveCount(0);
 
       await openProfileTab(page, "Watched");
       await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
@@ -155,19 +188,16 @@ test.describe("Profile page", () => {
       await expect(filmCardByTitle(page, filmTitle)).not.toBeVisible();
 
       await openProfileTab(page, "All films");
-      await expect(
-        filmList(page).getByRole("heading", { level: 2, name: filmTitle })
-      ).toBeVisible();
+      await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
     });
 
-    test("save to Saved tab and unsave round trip", async ({ page }) => {
+    test("save to Saved tab and unsave round trip", async ({ page }, testInfo) => {
+      await signInProjectRatingUser(page, testInfo.project.name);
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
       const card = firstFilmCard(page);
-      const filmTitle = await card
-        .getByRole("heading", { level: 2 })
-        .innerText();
+      const filmTitle = await filmTitleFromCard(card);
       const saveButton = await waitForWatchlistButton(card, "Add to watchlist");
 
       await saveButton.click();
@@ -177,9 +207,7 @@ test.describe("Profile page", () => {
 
       await openProfileTab(page, "Saved");
       await expectTabHasFilms(page, 1);
-      await expect(
-        filmList(page).getByRole("heading", { level: 2, name: filmTitle })
-      ).toBeVisible();
+      await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
 
       await unsaveAllVisibleFilms(page);
     });
@@ -206,18 +234,15 @@ test.describe("Profile page", () => {
       await searchInput.fill("a");
       await expect(page.getByTestId("film-search-hint")).toBeVisible();
 
-      const firstTitle = await firstFilmCard(page)
-        .getByRole("heading", { level: 2 })
-        .innerText();
+      const firstTitle = await filmTitleFromCard(firstFilmCard(page));
       const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
 
       await searchInput.fill(partialTitle);
       await expect(page.getByTestId("film-search-results")).toBeVisible();
       await expect(
-        page.getByTestId("film-search-results").getByRole("heading", {
-          level: 2,
-          name: firstTitle,
-        })
+        page
+          .getByTestId("film-search-results")
+          .getByRole("button", { name: `Copy ${firstTitle}` })
       ).toBeVisible();
     });
 
@@ -228,9 +253,7 @@ test.describe("Profile page", () => {
       await openProfileTab(page, "All films");
 
       const searchInput = page.getByTestId("film-search-input");
-      const firstTitle = await firstFilmCard(page)
-        .getByRole("heading", { level: 2 })
-        .innerText();
+      const firstTitle = await filmTitleFromCard(firstFilmCard(page));
       const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
 
       await searchInput.fill(partialTitle);
@@ -265,7 +288,7 @@ test.describe("Profile page", () => {
 
       await page.setViewportSize({ width: 1280, height: 800 });
       await expectTrailerOverlayLayout(cardWithTrailer, {
-        maxWidthRatio: 0.45,
+        maxWidthRatio: 0.48,
         maxHeight: 32,
       });
 

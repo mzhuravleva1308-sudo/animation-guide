@@ -72,6 +72,41 @@ export async function findAuthUserIdByEmail(email: string): Promise<string | nul
   return user?.id ?? null;
 }
 
+export async function createPasswordUserWithoutProfileForTests(
+  email: string,
+  password: string
+): Promise<string> {
+  await deleteAuthUserByEmail(email);
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  if (error || !data.user) {
+    throw new Error(
+      `Failed to create password auth user for ${email}: ${
+        error?.message ?? "unknown error"
+      }`
+    );
+  }
+
+  const { error: profileError } = await supabase
+    .from("profiles")
+    .delete()
+    .eq("user_id", data.user.id);
+
+  if (profileError) {
+    throw new Error(
+      `Failed to clear profile for ${email}: ${profileError.message}`
+    );
+  }
+
+  return data.user.id;
+}
+
 export async function findProfileByUserId(userId: string) {
   const supabase = createServiceRoleClient();
 

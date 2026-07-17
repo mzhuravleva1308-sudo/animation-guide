@@ -3,6 +3,7 @@ import {
   assertFilmSavedInProfile,
   countProfilesForUserId,
   countSavedListRowsForFilm,
+  createPasswordUserWithoutProfileForTests,
   deleteAuthUserByEmailForTests,
   findAuthUserIdByEmail,
   findProfileByUserId,
@@ -12,6 +13,7 @@ import {
   completeFilmsMagicLinkSignIn,
   getMagicLinkFlowSkipReason,
   profileGuideUrlPattern,
+  requestFilmsMagicLink,
 } from "../helpers/magic-link-auth";
 import {
   firstFilmCard,
@@ -123,5 +125,25 @@ test.describe("Films auth profile provisioning with Mailpit", () => {
     );
     await expect(page).toHaveURL(/\/login\?/);
     expect(await countProfilesForUserId(userId!)).toBe(1);
+  });
+
+  test("provisions a profile for an existing auth user through callback", async ({
+    page,
+  }) => {
+    const email = uniquePersonalGuideTestEmail("existing-auth-user");
+    const userId = await createPasswordUserWithoutProfileForTests(
+      email,
+      "local-test-password"
+    );
+
+    try {
+      const sentAfter = await requestFilmsMagicLink(page, email);
+      await completeFilmsMagicLinkSignIn(page, email, sentAfter);
+
+      await expect.poll(async () => countProfilesForUserId(userId)).toBe(1);
+      expect((await findProfileByUserId(userId))?.user_id).toBe(userId);
+    } finally {
+      await deleteAuthUserByEmailForTests(email);
+    }
   });
 });

@@ -71,3 +71,41 @@ INSERT INTO public.profiles (
   'local-e2e-test-token'
 )
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO public.profiles (
+  id,
+  name,
+  slug,
+  share_token
+) VALUES
+  (
+    '22222222-2222-4222-8222-222222222202',
+    'E2E Test Profile (chromium)',
+    'e2e-test-chromium',
+    'local-e2e-chromium-token'
+  ),
+  (
+    '22222222-2222-4222-8222-222222222203',
+    'E2E Test Profile (firefox)',
+    'e2e-test-firefox',
+    'local-e2e-firefox-token'
+  ),
+  (
+    '22222222-2222-4222-8222-222222222204',
+    'E2E Test Profile (webkit)',
+    'e2e-test-webkit',
+    'local-e2e-webkit-token'
+  ),
+  (
+    '22222222-2222-4222-8222-222222222205',
+    'E2E Test Profile (mobile-chrome)',
+    'e2e-test-mobile-chrome',
+    'local-e2e-mobile-chrome-token'
+  ),
+  (
+    '22222222-2222-4222-8222-222222222206',
+    'E2E Test Profile (mobile-safari)',
+    'e2e-test-mobile-safari',
+    'local-e2e-mobile-safari-token'
+  )
+ON CONFLICT (id) DO NOTHING;

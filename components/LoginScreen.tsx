@@ -5,6 +5,7 @@ import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/auth/callback-url";
 import { resolveAuthOrigin } from "@/lib/auth/callback-origin";
+import { provisionAuthProfile } from "@/lib/auth/provision-auth-profile-client";
 import {
   getOAuthSignInLabel,
   type OAuthProvider,
@@ -56,6 +57,27 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
     return getAuthCallbackUrl(authOrigin);
   }
 
+  async function finishBrowserAuth() {
+    try {
+      const result = await provisionAuthProfile();
+
+      if (!result.ok) {
+        setMessage(`${result.message} (${result.auth_error})`);
+        setLoading(null);
+        return false;
+      }
+
+      window.location.assign(POST_AUTH_PATH);
+      return true;
+    } catch {
+      setMessage(
+        "We signed you in, but couldn't set up your personal guide. (profile_provision_failed)"
+      );
+      setLoading(null);
+      return false;
+    }
+  }
+
   async function handlePasswordSignIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -79,7 +101,7 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
       return;
     }
 
-    window.location.assign(POST_AUTH_PATH);
+    await finishBrowserAuth();
   }
 
   async function handlePasswordSignUp() {
@@ -112,7 +134,7 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
     }
 
     if (data.session) {
-      window.location.assign(POST_AUTH_PATH);
+      await finishBrowserAuth();
       return;
     }
 

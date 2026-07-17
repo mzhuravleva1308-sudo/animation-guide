@@ -9,7 +9,23 @@ function requireEnv(name: string): string {
   return value;
 }
 
-export async function getFirstFilmTitleByIdOrder(): Promise<string> {
+export type CatalogFilmRef = {
+  id: string;
+  title: string;
+};
+
+const SMOKE_RATING_FILM_OFFSET_BY_PROJECT: Record<string, number> = {
+  chromium: 0,
+  firefox: 1,
+  webkit: 2,
+  "mobile-chrome": 3,
+  "mobile-safari": 4,
+};
+
+export async function getSmokeRatingFilmForProject(
+  projectName: string
+): Promise<CatalogFilmRef> {
+  const offset = SMOKE_RATING_FILM_OFFSET_BY_PROJECT[projectName] ?? 0;
   const supabase = createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
     requireEnv("SUPABASE_SERVICE_ROLE_KEY")
@@ -17,16 +33,21 @@ export async function getFirstFilmTitleByIdOrder(): Promise<string> {
 
   const { data, error } = await supabase
     .from("films")
-    .select("title")
+    .select("id, title")
     .order("id")
-    .limit(1)
+    .range(offset, offset)
     .single();
 
-  if (error || !data?.title) {
+  if (error || !data?.id || !data.title) {
     throw new Error(
-      `Failed to load lowest-id film: ${error?.message ?? "no title"}`
+      `Failed to load smoke rating film for ${projectName}: ${error?.message ?? "missing film"}`
     );
   }
 
-  return data.title;
+  return { id: data.id, title: data.title };
+}
+
+export async function getFirstFilmTitleByIdOrder(): Promise<string> {
+  const film = await getSmokeRatingFilmForProject("chromium");
+  return film.title;
 }

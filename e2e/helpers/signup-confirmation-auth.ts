@@ -43,7 +43,9 @@ export async function completeSignupConfirmation(
   const confirmationUrl = await waitForMailpitAuthLink({ email, sentAfter });
 
   await page.goto(confirmationUrl);
-  await page.waitForURL(/\/my-profile(?:\/|$|\?)/, { timeout: 20_000 });
+  await page.waitForURL(/\/my-profile(?:\/|$|\?)|\/p\/[^/?#]+/, {
+    timeout: 20_000,
+  });
 
   return confirmationUrl;
 }
