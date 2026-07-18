@@ -6,6 +6,7 @@ import {
   parseFilmScopeArgs,
 } from "./film-scope.mjs";
 import {
+  buildVideoLanguageList,
   evaluateTmdbMatch,
   fetchTmdbMovieDetails,
 } from "../lib/tmdb-film-matching.mjs";
@@ -63,7 +64,7 @@ async function searchTmdbMovie(film) {
     const details = await fetchTmdbMovieDetails(
       tmdbApiKey,
       result.id,
-      "credits,videos"
+      "credits"
     );
     evaluatedResults.push({
       result: { ...result, ...details },
@@ -111,6 +112,21 @@ async function searchTmdbMovie(film) {
     return null;
   }
 
+  const videoLanguages = buildVideoLanguageList(
+    bestMatch.result.original_language
+  );
+  console.log(
+    `  Video languages for ${film.title}: ${videoLanguages.join(",")}`
+  );
+
+  const videoDetails = await fetchTmdbMovieDetails(
+    tmdbApiKey,
+    bestMatch.result.id,
+    "videos",
+    { includeVideoLanguage: videoLanguages.join(",") }
+  );
+  const matchedMovie = { ...bestMatch.result, ...videoDetails };
+
   console.log(
     `  Match ${bestMatch.result.title} (${bestMatch.result.release_date?.slice(
       0,
@@ -118,7 +134,7 @@ async function searchTmdbMovie(film) {
     ) ?? "unknown"}): ${bestMatch.evaluation.reason}`
   );
 
-  return bestMatch.result;
+  return matchedMovie;
 }
 
 async function resolveYoutubeChannel(video) {
