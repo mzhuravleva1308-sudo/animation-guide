@@ -1,0 +1,36 @@
+-- Run manually in the Supabase SQL Editor after applying:
+-- 20260718_enable_profile_score_supabase_cron.sql
+--
+-- Replace both placeholders before running. Do not commit a filled-in copy.
+
+SELECT vault.create_secret(
+  'https://YOUR_PRODUCTION_HOST.example.com/api/internal/process-profile-score-jobs',
+  'animationpre_profile_score_worker_url',
+  'Production URL for the profile score worker'
+);
+
+SELECT vault.create_secret(
+  'REPLACE_WITH_THE_SAME_CRON_SECRET_AS_VERCEL',
+  'animationpre_profile_score_worker_secret',
+  'Bearer secret for the profile score worker'
+);
+
+DO $cron$
+DECLARE
+  existing_job record;
+BEGIN
+  FOR existing_job IN
+    SELECT jobid
+    FROM cron.job
+    WHERE jobname = 'animationpre-profile-score-worker'
+  LOOP
+    PERFORM cron.unschedule(existing_job.jobid);
+  END LOOP;
+
+  PERFORM cron.schedule(
+    'animationpre-profile-score-worker',
+    '* * * * *',
+    $$SELECT public.invoke_profile_score_worker();$$
+  );
+END;
+$cron$;

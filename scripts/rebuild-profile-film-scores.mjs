@@ -420,7 +420,7 @@ function getGatedDimensionScores(
   };
 }
 
-async function getProfiles(profileSlug) {
+export async function getProfiles(profileSlug) {
   let query = supabase.from("profiles").select("id, slug, name").order("slug");
 
   if (profileSlug) {
@@ -455,7 +455,7 @@ async function getTasteCores(profileId) {
     .filter((core) => core.centerEmbedding);
 }
 
-async function getAllFilms() {
+export async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
     .select("id, title, moods, aesthetic_tags, technique, year")
@@ -525,7 +525,7 @@ async function upsertScores(profileId, scoreRows) {
   }
 }
 
-async function rebuildProfileScores(profile, allFilms) {
+export async function calculateProfileScores(profile, allFilms) {
   console.log(`\nRebuilding scores for ${profile.slug} (${profile.name})`);
 
   const tasteCores = await getTasteCores(profile.id);
@@ -583,9 +583,8 @@ async function rebuildProfileScores(profile, allFilms) {
     .sort(compareFilmsById);
 
   if (!candidateFilms.length) {
-    await upsertScores(profile.id, []);
     console.log("  No unrated films to score.");
-    return;
+    return [];
   }
 
   const filmIds = allFilms.map((film) => film.id);
@@ -622,10 +621,6 @@ async function rebuildProfileScores(profile, allFilms) {
       computed_at: computedAt,
     };
   });
-
-  await upsertScores(profile.id, scoreRows);
-
-  console.log(`  Stored ${scoreRows.length} film scores.`);
 
   const rawScoresByFilmId = new Map(
     scoreRows.map((row) => [
@@ -723,6 +718,14 @@ async function rebuildProfileScores(profile, allFilms) {
         `oldBlended=${oldBlendedScore.toFixed(4)}`
     );
   });
+
+  return scoreRows;
+}
+
+export async function rebuildProfileScores(profile, allFilms) {
+  const scoreRows = await calculateProfileScores(profile, allFilms);
+  await upsertScores(profile.id, scoreRows);
+  console.log(`  Stored ${scoreRows.length} film scores.`);
 }
 
 async function main() {
@@ -754,7 +757,9 @@ async function main() {
   console.log("\nDone: profile film scores rebuilt.\n");
 }
 
-main().catch((error) => {
-  console.error("\nRebuild profile film scores failed.\n", error);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((error) => {
+    console.error("\nRebuild profile film scores failed.\n", error);
+    process.exit(1);
+  });
+}
