@@ -1,0 +1,43 @@
+{
+  "batch_name": "annecy-2026-july",
+  "films": [
+    {
+      "title": "Film title",
+      "original_title": "Original title",
+      "year": 2026,
+      "runtime_minutes": 85,
+      "countries": ["France", "Belgium"],
+      "directors": ["Director Name"],
+
+      "synopsis": "Neutral plot description without spoilers or evaluative language.",
+
+      "the_mood": "A short editorial sentence describing the felt experience of the film.",
+
+      "technique": [
+        "2D animation"
+      ],
+
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://example.com/festival-source"
+        }
+      ],
+
+      "source_urls": {
+        "official": "https://example.com/official-film-page",
+        "festival": "https://example.com/festival-film-page",
+        "tmdb": "https://www.themoviedb.org/movie/123456-example",
+        "imdb": null
+      },
+
+      "notes": "Editorial notes only. This field is not imported into films."
+    }
+  ]
+}
