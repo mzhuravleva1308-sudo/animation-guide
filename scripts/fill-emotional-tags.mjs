@@ -130,6 +130,11 @@ async function main() {
   console.log(`Found ${films.length} films`);
 
   for (const film of films) {
+    if (film.moods?.length) {
+      console.log(`Exists: ${film.title}`);
+      continue;
+    }
+
     try {
       const moods = await generateEmotionalTags(film);
 
