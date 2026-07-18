@@ -9,6 +9,7 @@ import {
   evaluateTmdbMatch,
   fetchTmdbMovieDetails,
 } from "../lib/tmdb-film-matching.mjs";
+import { selectBestTrailerVideo } from "../lib/tmdb-trailer-selection.mjs";
 
 applyAppEnv();
 
@@ -120,28 +121,37 @@ async function searchTmdbMovie(film) {
   return bestMatch.result;
 }
 
-function getTrailerUrl(movie) {
-  const videos = movie.videos?.results ?? [];
+async function resolveYoutubeChannel(video) {
+  const response = await fetch(
+    `https://www.youtube.com/oembed?url=${encodeURIComponent(
+      `https://www.youtube.com/watch?v=${video.key}`
+    )}&format=json`
+  );
 
-  const trailer =
-    videos.find(
-      (video) =>
-        video.site === "YouTube" &&
-        video.type === "Trailer" &&
-        video.official === true
-    ) ??
-    videos.find(
-      (video) =>
-        video.site === "YouTube" &&
-        video.type === "Teaser" &&
-        video.official === true
-    );
-
-  if (!trailer?.key) {
+  if (!response.ok) {
     return null;
   }
 
-  return `https://www.youtube.com/watch?v=${trailer.key}`;
+  const data = await response.json();
+  return data.author_name ?? null;
+}
+
+async function getTrailerUrl(movie) {
+  const selected = await selectBestTrailerVideo(movie, {
+    resolveChannel: resolveYoutubeChannel,
+  });
+
+  if (!selected?.video?.key) {
+    return null;
+  }
+
+  console.log(
+    `  Video ${selected.video.key}: ${selected.kind}; ${selected.sourceReason}${
+      selected.video.channel_name ? `; channel: ${selected.video.channel_name}` : ""
+    }`
+  );
+
+  return `https://www.youtube.com/watch?v=${selected.video.key}`;
 }
 
 async function main() {
@@ -163,7 +173,7 @@ async function main() {
         continue;
       }
 
-      const trailerUrl = getTrailerUrl(movie);
+      const trailerUrl = await getTrailerUrl(movie);
 
       if (!trailerUrl) {
         console.log(`No trailer found: ${film.title}`);
