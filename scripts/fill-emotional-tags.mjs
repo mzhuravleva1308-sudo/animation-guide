@@ -1,6 +1,11 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
 
@@ -14,6 +19,8 @@ if (!supabaseUrl || !serviceRoleKey || !openaiApiKey) {
 
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
+const scope = parseFilmScopeArgs(process.argv.slice(2));
+const dryRun = scope.passthrough.includes("--dry-run");
 
 const BATCH_LIMIT = 500;
 
@@ -25,17 +32,11 @@ function normalizeTag(tag) {
 }
 
 async function getFilms() {
-  const { data, error } = await supabase
-    .from("films")
-    .select(
-      "id, title, original_title, director, year, country, synopsis, technique, moods, themes, aesthetic_tags"
-    )
-    .order("title")
-    .limit(BATCH_LIMIT);
-
-  if (error) throw error;
-
-  return data ?? [];
+  return loadScopedFilms(supabase, scope, {
+    select:
+      "id, title, original_title, director, year, country, synopsis, technique, moods, themes, aesthetic_tags",
+    applyFilters: (query) => query.order("title").limit(BATCH_LIMIT),
+  });
 }
 
 async function generateEmotionalTags(film) {
@@ -125,6 +126,7 @@ async function updateFilm(film, moods) {
 async function main() {
   const films = await getFilms();
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Found ${films.length} films`);
 
   for (const film of films) {
@@ -133,7 +135,11 @@ async function main() {
 
       console.log(`${film.title}: ${moods.join(", ")}`);
 
-      await updateFilm(film, moods);
+      if (dryRun) {
+        console.log(`  [dry-run] would update ${film.id}`);
+      } else {
+        await updateFilm(film, moods);
+      }
     } catch (error) {
       console.error(`Failed: ${film.title}`);
       console.error(error);

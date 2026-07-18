@@ -1,6 +1,11 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
 
@@ -22,6 +27,8 @@ if (!openaiApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
+const scope = parseFilmScopeArgs(process.argv.slice(2));
+const dryRun = scope.passthrough.includes("--dry-run");
 
 const MAX_TAGS = 7;
 
@@ -44,16 +51,12 @@ function parseJson(text) {
 }
 
 async function getFilms() {
-  const { data, error } = await supabase
-    .from("films")
-    .select(
+  return loadScopedFilms(supabase, scope, {
+    select:
       "id, title, original_title, director, year, country, synopsis, moods, themes, technique, aesthetic_tags"
-    )
-    .order("title");
-
-  if (error) throw error;
-
-  return data ?? [];
+    ,
+    applyFilters: (query) => query.order("title"),
+  });
 }
 
 async function generateAestheticTags(film) {
@@ -142,6 +145,7 @@ Format:
 async function main() {
   const films = await getFilms();
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films found: ${films.length}`);
 
   for (const film of films) {
@@ -155,6 +159,11 @@ async function main() {
     const aestheticTags = await generateAestheticTags(film);
 
     console.log(`  ${aestheticTags.join(", ")}`);
+
+    if (dryRun) {
+      console.log(`  [dry-run] would update ${film.id}`);
+      continue;
+    }
 
     const { error } = await supabase
       .from("films")

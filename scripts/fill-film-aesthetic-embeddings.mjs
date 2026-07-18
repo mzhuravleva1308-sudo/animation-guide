@@ -1,6 +1,11 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
 
@@ -22,6 +27,8 @@ if (!openaiApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
+const scope = parseFilmScopeArgs(process.argv.slice(2));
+const dryRun = scope.passthrough.includes("--dry-run");
 
 function normalizeTag(tag) {
   return tag.trim().toLowerCase();
@@ -39,15 +46,11 @@ function buildAestheticText(film) {
 }
 
 async function getFilms() {
-  const { data, error } = await supabase
-    .from("films")
-    .select("id, title, aesthetic_tags")
-    .not("aesthetic_tags", "is", null)
-    .order("title");
-
-  if (error) throw error;
-
-  return (data ?? []).filter((film) => film.aesthetic_tags?.length);
+  return loadScopedFilms(supabase, scope, {
+    select: "id, title, aesthetic_tags",
+    applyFilters: (query) =>
+      query.not("aesthetic_tags", "is", null).order("title"),
+  }).then((films) => films.filter((film) => film.aesthetic_tags?.length));
 }
 
 async function getExistingEmbeddings() {
@@ -79,6 +82,7 @@ async function main() {
   const films = await getFilms();
   const existing = await getExistingEmbeddings();
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with aesthetic tags: ${films.length}`);
 
   for (const film of films) {
@@ -87,6 +91,13 @@ async function main() {
 
     if (existingText === aestheticText) {
       console.log(`Embedding exists: ${film.title}`);
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`[dry-run] would create aesthetic embedding: ${film.title}`);
+      console.log(`  film_id: ${film.id}`);
+      console.log(`  ${aestheticText}`);
       continue;
     }
 
