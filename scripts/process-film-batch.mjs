@@ -5,6 +5,9 @@ import path from "node:path";
 import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { buildVideoLanguageList } from "../lib/tmdb-film-matching.mjs";
+import { checkFilmDuplicates } from "../lib/insert-film.mjs";
+import { normalizeRecognitionRow } from "../lib/festival-recognition-normalization.mjs";
+import { validateFile } from "./validate-film-import-batch.mjs";
 
 applyAppEnv();
 
@@ -37,6 +40,7 @@ const IMMUTABLE_FIELDS = [
 function parseArgs(argv) {
   const options = {
     filmIds: [],
+    file: null,
     dryRun: false,
     execute: false,
     skipMedia: false,
@@ -56,6 +60,12 @@ function parseArgs(argv) {
       options.filmIds.push(
         ...arg.slice("--film-ids=".length).split(",").map((id) => id.trim()).filter(Boolean)
       );
+    } else if (arg === "--file") {
+      options.file = argv[++index];
+      if (!options.file) throw new Error("Missing value for --file");
+    } else if (arg.startsWith("--file=")) {
+      options.file = arg.slice("--file=".length);
+      if (!options.file) throw new Error("Missing value for --file");
     } else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--execute") options.execute = true;
     else if (arg === "--skip-media") options.skipMedia = true;
@@ -69,7 +79,13 @@ function parseArgs(argv) {
   if (options.dryRun === options.execute) {
     throw new Error("Pass exactly one of --dry-run or --execute");
   }
-  if (!options.filmIds.length) throw new Error("Pass --film-ids <uuid,...>");
+  if (options.file && options.filmIds.length) {
+    throw new Error("Use either --file or --film-ids, not both");
+  }
+  if (!options.file && !options.filmIds.length) {
+    throw new Error("Pass --file <path> or --film-ids <uuid,...>");
+  }
+  if (options.file) return options;
   if (new Set(options.filmIds).size !== options.filmIds.length) {
     throw new Error("Duplicate film UUIDs are not allowed");
   }
@@ -122,6 +138,16 @@ function snapshotFilm(film) {
       .filter((field) => nonEmpty(film[field]))
       .map((field) => [field, stableValue(film[field])])
   );
+}
+
+/** Only previously non-empty immutable fields must stay unchanged. */
+function immutableFieldsChanged(before, after) {
+  for (const [field, value] of Object.entries(before)) {
+    if (value !== stableValue(after[field])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function readiness(film, moodEmbedding, aestheticEmbedding) {
@@ -327,14 +353,419 @@ function printTable(films, states) {
   }
 }
 
+function parseTmdbId(value) {
+  if (typeof value !== "string") return null;
+  const match = value.match(/\/movie\/(\d+)(?:[-/?#]|$)/i);
+  return match ? Number(match[1]) : null;
+}
+
+function buildFilmIdentity(film) {
+  return {
+    title: film.title,
+    original_title: film.original_title ?? null,
+    director: film.directors.join(", "),
+    year: film.year,
+    country: film.countries.join(", "),
+    duration_minutes: film.runtime_minutes ?? null,
+    source_url: film.source_urls.official ?? film.source_urls.festival ?? null,
+    watch_url: null,
+    trailer_url: null,
+    tmdb_id: parseTmdbId(film.source_urls.tmdb),
+    imdb_id: null,
+  };
+}
+
+function buildFilmInsertPayload(film) {
+  const identity = buildFilmIdentity(film);
+  return {
+    title: identity.title,
+    original_title: identity.original_title,
+    director: identity.director,
+    year: identity.year,
+    country: identity.country,
+    duration_minutes: identity.duration_minutes,
+    source_url: identity.source_url,
+    synopsis: film.synopsis,
+    technique: film.technique.join(", "),
+    the_mood: film.the_mood,
+    tmdb_id: identity.tmdb_id,
+  };
+}
+
+const RECOGNITION_INSERT_FIELDS = [
+  "film_id",
+  "festival_name",
+  "normalized_festival_name",
+  "canonical_festival_id",
+  "canonical_festival_name",
+  "festival_year",
+  "section",
+  "recognition_type",
+  "award_name",
+  "normalized_award_name",
+  "award_result",
+  "award_level",
+  "source_url",
+  "source_label",
+  "source_type",
+  "original_text",
+  "import_source",
+  "import_key",
+  "dedupe_key",
+  "confidence_status",
+];
+
+function buildRecognitionInsertPayload(filmId, recognition) {
+  const normalized = normalizeRecognitionRow({
+    ...recognition,
+    film_id: filmId,
+    recognition_type:
+      recognition.recognition_type === "selection"
+        ? "official_selection"
+        : recognition.recognition_type,
+    import_source: "film-import-batch",
+  });
+
+  return Object.fromEntries(
+    RECOGNITION_INSERT_FIELDS.map((field) => [field, normalized[field] ?? null])
+  );
+}
+
+function buildImportPlan(batch, plannedFilmId = "<planned-film-uuid>") {
+  return batch.films.map((film) => ({
+    input: film,
+    identity: buildFilmIdentity(film),
+    filmPayload: buildFilmInsertPayload(film),
+    recognitionPayloads: film.festival_recognitions.map((recognition) =>
+      buildRecognitionInsertPayload(plannedFilmId, recognition)
+    ),
+  }));
+}
+
+export const FILM_STATUS = {
+  RANKING_READY: "ranking_ready",
+  CATALOG_READY: "catalog_ready",
+  DUPLICATE_SKIPPED: "duplicate_skipped",
+  FAILED_ROLLED_BACK: "failed_rolled_back",
+};
+
+export const EXIT = {
+  SUCCESS: 0,
+  FATAL: 1,
+  PARTIAL: 2,
+};
+
+export function resolveBatchExitCode(results) {
+  const failed = results.filter(
+    (row) => row.status === FILM_STATUS.FAILED_ROLLED_BACK
+  );
+  const successful = results.filter(
+    (row) =>
+      row.status === FILM_STATUS.RANKING_READY ||
+      row.status === FILM_STATUS.CATALOG_READY
+  );
+  if (failed.length === 0) return EXIT.SUCCESS;
+  if (successful.length === 0) return EXIT.FATAL;
+  return EXIT.PARTIAL;
+}
+
+async function classifyImportPlan(supabase, batch) {
+  const plan = buildImportPlan(batch);
+  /** @type {{ item: ReturnType<typeof buildImportPlan>[number], duplicate: null | { existingFilmId: string, reason: string } }[]} */
+  const classified = [];
+
+  for (const item of plan) {
+    const duplicateReport = await checkFilmDuplicates(supabase, item.identity);
+    if (duplicateReport.matches.length) {
+      const match =
+        duplicateReport.matches.find((entry) => entry.isHardDuplicate) ??
+        duplicateReport.matches[0];
+      classified.push({
+        item,
+        duplicate: {
+          existingFilmId: match.existingFilm.id,
+          reason: match.reasons.join("; "),
+        },
+      });
+    } else {
+      classified.push({ item, duplicate: null });
+    }
+  }
+
+  return classified;
+}
+
+function printImportPlan(classified, profiles) {
+  console.log("\nImport plan (no writes):");
+  for (const entry of classified) {
+    const title = entry.item.input.title;
+    if (entry.duplicate) {
+      console.log(
+        `[duplicate_skipped] ${title} — existing UUID ${entry.duplicate.existingFilmId} (${entry.duplicate.reason})`
+      );
+      continue;
+    }
+    console.log(`Film row: ${JSON.stringify(entry.item.filmPayload, null, 2)}`);
+    for (const recognition of entry.item.recognitionPayloads) {
+      console.log(
+        `Festival recognition row: ${JSON.stringify(recognition, null, 2)}`
+      );
+    }
+    console.log(`[planned] ${title} — import → enrich → embed → media → readiness`);
+  }
+  const wouldImport = classified.filter((entry) => !entry.duplicate).length;
+  console.log(
+    `\nEnqueue after successful films: ${
+      wouldImport > 0 ? "planned once" : "skipped (no importable films)"
+    } (${profiles.map((profile) => profile.slug ?? profile.id).join(", ")})`
+  );
+}
+
+function printBatchReport(results) {
+  console.log("\nBatch film statuses:");
+  for (const row of results) {
+    const uuid = row.filmId ?? row.existingFilmId ?? "—";
+    const error = row.error ? ` — ${row.error}` : "";
+    console.log(`- ${row.title}: ${row.status} (${uuid})${error}`);
+  }
+  const successful = results.filter(
+    (row) =>
+      row.status === FILM_STATUS.RANKING_READY ||
+      row.status === FILM_STATUS.CATALOG_READY
+  );
+  const duplicates = results.filter(
+    (row) => row.status === FILM_STATUS.DUPLICATE_SKIPPED
+  );
+  const failed = results.filter(
+    (row) => row.status === FILM_STATUS.FAILED_ROLLED_BACK
+  );
+  console.log(
+    `Summary: successful=${successful.length}, duplicate_skipped=${duplicates.length}, failed_rolled_back=${failed.length}`
+  );
+}
+
+/** Rollback only rows created for this attempt's film UUID. */
+async function rollbackCreatedFilm(supabase, filmId) {
+  if (!filmId) return;
+  const rollbackErrors = [];
+  for (const table of [
+    "film_festival_recognitions",
+    "film_mood_embeddings",
+    "film_aesthetic_embeddings",
+  ]) {
+    const { error } = await supabase.from(table).delete().eq("film_id", filmId);
+    if (error) rollbackErrors.push(`${table}: ${error.message}`);
+  }
+  const { error: filmError } = await supabase
+    .from("films")
+    .delete()
+    .eq("id", filmId);
+  if (filmError) rollbackErrors.push(`films: ${filmError.message}`);
+  if (rollbackErrors.length) {
+    throw new Error(`Import rollback failed for ${filmId}: ${rollbackErrors.join("; ")}`);
+  }
+}
+
+async function importOneFilm(supabase, item) {
+  const { data: film, error: filmError } = await supabase
+    .from("films")
+    .insert(item.filmPayload)
+    .select("id")
+    .single();
+  if (filmError) throw filmError;
+  if (!film?.id) {
+    throw new Error(`Film insert returned no UUID for ${item.input.title}`);
+  }
+
+  try {
+    for (const recognition of item.recognitionPayloads) {
+      const { error: recognitionError } = await supabase
+        .from("film_festival_recognitions")
+        .insert({ ...recognition, film_id: film.id });
+      if (recognitionError) throw recognitionError;
+    }
+  } catch (error) {
+    await rollbackCreatedFilm(supabase, film.id);
+    throw error;
+  }
+
+  return film.id;
+}
+
+/** @deprecated kept for tests that import a whole plan atomically */
+async function executeImportPlan(supabase, plan) {
+  const imported = [];
+  try {
+    for (const item of plan) {
+      const filmId = await importOneFilm(supabase, item);
+      imported.push({ filmId, title: item.input.title });
+    }
+    return imported;
+  } catch (error) {
+    for (const item of [...imported].reverse()) {
+      await rollbackCreatedFilm(supabase, item.filmId);
+    }
+    throw new Error(
+      `${error instanceof Error ? error.message : String(error)}; imported rows rolled back`
+    );
+  }
+}
+
+async function rollbackImportedRows(supabase, imported) {
+  for (const item of [...imported].reverse()) {
+    await rollbackCreatedFilm(supabase, item.filmId);
+  }
+}
+
+export async function processFilmImportBatch({
+  supabase,
+  batch,
+  options,
+  pipeline = processFilmBatch,
+  enqueue = enqueueProfiles,
+} = {}) {
+  const profiles = await readProfiles(supabase);
+  const classified = await classifyImportPlan(supabase, batch);
+
+  if (options.dryRun) {
+    printImportPlan(classified, profiles);
+    const results = classified.map((entry) =>
+      entry.duplicate
+        ? {
+            title: entry.item.input.title,
+            status: FILM_STATUS.DUPLICATE_SKIPPED,
+            existingFilmId: entry.duplicate.existingFilmId,
+            error: null,
+          }
+        : {
+            title: entry.item.input.title,
+            status: "planned_import",
+            filmId: null,
+            error: null,
+          }
+    );
+    return {
+      dryRun: true,
+      results,
+      profiles,
+      exitCode: EXIT.SUCCESS,
+      enqueueCalled: false,
+    };
+  }
+
+  /** @type {Array<{ title: string, status: string, filmId?: string | null, existingFilmId?: string | null, error?: string | null, catalogReady?: boolean, rankingReady?: boolean }>} */
+  const results = [];
+  /** @type {string[]} */
+  const successfulFilmIds = [];
+  let enqueueCallCount = 0;
+
+  for (const entry of classified) {
+    const title = entry.item.input.title;
+    if (entry.duplicate) {
+      results.push({
+        title,
+        status: FILM_STATUS.DUPLICATE_SKIPPED,
+        existingFilmId: entry.duplicate.existingFilmId,
+        filmId: null,
+        error: null,
+      });
+      console.log(
+        `[duplicate_skipped] ${title} — existing UUID ${entry.duplicate.existingFilmId}`
+      );
+      continue;
+    }
+
+    let createdFilmId = null;
+    try {
+      createdFilmId = await importOneFilm(supabase, entry.item);
+      console.log(`[imported] ${title} — ${createdFilmId}`);
+
+      const pipelineResult = await pipeline({
+        supabase,
+        options: {
+          ...options,
+          file: null,
+          filmIds: [createdFilmId],
+          deferEnqueue: true,
+        },
+      });
+
+      const state = pipelineResult?.states?.get(createdFilmId);
+      if (!state?.rankingReady) {
+        throw new Error("Film did not become ranking-ready");
+      }
+
+      const status = state.catalogReady
+        ? FILM_STATUS.CATALOG_READY
+        : FILM_STATUS.RANKING_READY;
+      results.push({
+        title,
+        status,
+        filmId: createdFilmId,
+        rankingReady: true,
+        catalogReady: Boolean(state.catalogReady),
+        error: null,
+      });
+      successfulFilmIds.push(createdFilmId);
+      console.log(`[${status}] ${title} — ${createdFilmId}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (createdFilmId) {
+        await rollbackCreatedFilm(supabase, createdFilmId);
+      }
+      results.push({
+        title,
+        status: FILM_STATUS.FAILED_ROLLED_BACK,
+        filmId: createdFilmId,
+        error: message,
+      });
+      console.error(`[failed_rolled_back] ${title} — ${message}`);
+    }
+  }
+
+  /** @type {unknown[]} */
+  let jobs = [];
+  if (successfulFilmIds.length > 0) {
+    enqueueCallCount += 1;
+    jobs = await enqueue(supabase, profiles);
+    console.log(`Enqueued profiles: ${jobs.length} (once for ${successfulFilmIds.length} successful film(s))`);
+    if (options.waitForJobs) {
+      await waitForJobs(supabase, jobs, {
+        ...options,
+        sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      });
+      await verifyCoverage(supabase, profiles, successfulFilmIds);
+      console.log("Worker completion and successful-film coverage verified.");
+    } else {
+      console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
+    }
+  } else {
+    console.log("No ranking-ready films — enqueue skipped.");
+  }
+
+  printBatchReport(results);
+  const exitCode = resolveBatchExitCode(results);
+  return {
+    results,
+    successfulFilmIds,
+    jobs,
+    profiles,
+    exitCode,
+    enqueueCalled: enqueueCallCount > 0,
+    enqueueCallCount,
+  };
+}
+
 export async function processFilmBatch({
   supabase,
   options,
   runScript = runScopedScript,
   sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  onEnqueue = () => {},
 } = {}) {
   if (!supabase) throw new Error("supabase client is required");
   const { filmIds } = options;
+  const deferEnqueue = Boolean(options.deferEnqueue);
   const initial = await loadState(supabase, filmIds);
   const snapshots = new Map(initial.films.map((film) => [film.id, snapshotFilm(film)]));
   const profiles = await readProfiles(supabase);
@@ -369,7 +800,7 @@ export async function processFilmBatch({
   if (allInitiallyReady && !options.rebuildAllProfiles) {
     console.log("Fully ranking-ready batch: no-op (use --rebuild-all-profiles to enqueue).");
     printTable(initial.films, initialStates);
-    return { noOp: true, profiles };
+    return { noOp: true, profiles, states: initialStates, films: initial.films };
   }
 
   const missingMoodTags = initial.films.filter((film) => !hasTags(film.moods));
@@ -390,7 +821,7 @@ export async function processFilmBatch({
     }
     console.log(`Profiles that would be enqueued: ${profiles.map((profile) => profile.slug ?? profile.id).join(", ")}`);
     printTable(initial.films, initialStates);
-    return { dryRun: true, profiles };
+    return { dryRun: true, profiles, states: initialStates, films: initial.films };
   }
 
   try {
@@ -488,13 +919,24 @@ export async function processFilmBatch({
     if (notReady.length) throw new Error(`Ranking readiness failed: ${notReady.map((film) => film.title).join(", ")}`);
     const immutableAfter = await loadState(supabase, filmIds);
     for (const film of immutableAfter.films) {
-      if (stableValue(snapshots.get(film.id)) !== stableValue(snapshotFilm(film))) {
+      if (immutableFieldsChanged(snapshots.get(film.id), film)) {
         throw new Error(`Immutable film fields changed: ${film.title}`);
       }
     }
     if (stableValue(initial.recognitions) !== stableValue(immutableAfter.recognitions)) {
       throw new Error("Festival recognitions changed unexpectedly");
     }
+
+    for (const film of current.films) {
+      logFilm("ranking-ready", film, "yes");
+      logFilm("catalog-ready", film, finalStates.get(film.id).catalogReady ? "yes" : "no");
+    }
+
+    if (deferEnqueue) {
+      return { deferredEnqueue: true, states: finalStates, films: current.films, profiles };
+    }
+
+    onEnqueue();
     const jobs = await enqueueProfiles(supabase, profiles);
     console.log(`Enqueued profiles: ${jobs.length}`);
     if (options.waitForJobs) {
@@ -504,11 +946,7 @@ export async function processFilmBatch({
     } else {
       console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
     }
-    for (const film of current.films) {
-      logFilm("ranking-ready", film, "yes");
-      logFilm("catalog-ready", film, finalStates.get(film.id).catalogReady ? "yes" : "no");
-    }
-    return { jobs, states: finalStates, profiles };
+    return { jobs, states: finalStates, profiles, films: current.films };
   } catch (error) {
     console.error("Batch stopped before enqueue:", error.message);
     throw error;
@@ -521,16 +959,37 @@ async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+  const supabase = createClient(url, key);
+
+  if (options.file) {
+    const validation = await validateFile(options.file);
+    if (validation.errors.length) {
+      throw new Error(
+        `Invalid film import batch:\n${validation.messages
+          .map((message) => `- ${message}`)
+          .join("\n")}`
+      );
+    }
+
+    const result = await processFilmImportBatch({
+      supabase,
+      batch: validation.data,
+      options,
+    });
+    process.exitCode = result.exitCode ?? EXIT.SUCCESS;
+    return;
+  }
+
   if (options.dryRun) {
     console.log(`Dry-run embedding config: model=${EMBEDDING_MODEL}, dimensions=${EMBEDDING_DIMENSIONS ?? "provider response"}`);
   }
-  await processFilmBatch({ supabase: createClient(url, key), options });
+  await processFilmBatch({ supabase, options });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
     console.error(`process-film-batch failed: ${error.message}`);
-    process.exitCode = 1;
+    process.exitCode = EXIT.FATAL;
   });
 }
 
@@ -538,6 +997,15 @@ export {
   EMBEDDING_MODEL,
   EMBEDDING_DIMENSIONS,
   parseArgs,
+  buildFilmIdentity,
+  buildFilmInsertPayload,
+  buildRecognitionInsertPayload,
+  buildImportPlan,
+  parseTmdbId,
+  executeImportPlan,
+  rollbackImportedRows,
+  rollbackCreatedFilm,
+  classifyImportPlan,
   readiness,
   validEmbedding,
   buildVideoLanguageList,

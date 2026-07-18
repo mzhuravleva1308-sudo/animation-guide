@@ -1,0 +1,62 @@
+{
+  "batch_name": "recent-animation-2026-a-new-dawn",
+  "films": [
+    {
+      "title": "A New Dawn",
+      "original_title": "花緑青が明ける日に",
+      "year": 2026,
+      "runtime_minutes": 75,
+      "countries": [
+        "Japan",
+        "France"
+      ],
+      "directors": [
+        "Yoshitoshi Shinomiya"
+      ],
+      "synopsis": "Young Keitaro lives in an abandoned fireworks factory that is about to be demolished. Before it disappears, he sets out with his brother and a childhood friend to launch the final firework left behind by his late father.",
+      "the_mood": "A luminous and wistful farewell to a disappearing place, where grief, memory and renewal glow against a changing landscape.",
+      "technique": [
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-contrechamp/new-dawn"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "award",
+          "award_name": "Contrechamp Jury Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/2026-awards"
+        },
+        {
+          "festival_name": "Berlin International Film Festival",
+          "festival_year": 2026,
+          "section": "Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.berlinale.de/en/2026/programme/202602554.html"
+        }
+      ],
+      "source_urls": {
+        "official": "https://charades.eu/movies/a-new-dawn",
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-contrechamp/new-dawn",
+        "tmdb": "https://www.themoviedb.org/movie/1279865",
+        "imdb": null
+      },
+      "notes": "First end-to-end test of the validated batch import pipeline. Verify the preferred romanization of the original title and obtain a reliable TMDB match before executing writes."
+    }
+  ]
+}
