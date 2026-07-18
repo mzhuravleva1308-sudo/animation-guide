@@ -5,6 +5,10 @@ import {
   loadScopedFilms,
   parseFilmScopeArgs,
 } from "./film-scope.mjs";
+import {
+  evaluateTmdbMatch,
+  fetchTmdbMovieDetails,
+} from "../lib/tmdb-film-matching.mjs";
 
 applyAppEnv();
 
@@ -21,70 +25,6 @@ if (!supabaseUrl || !supabaseKey || !tmdbApiKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
-const TMDB_ANIMATION_GENRE_ID = 16;
-
-function normalizeTitle(value) {
-  return (value ?? "")
-    .toLowerCase()
-    .replace(/^the\s+/, "")
-    .replace(/^a\s+/, "")
-    .replace(/^an\s+/, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function getYearFromDate(date) {
-  if (!date) return null;
-  return Number(String(date).slice(0, 4));
-}
-
-function isAnimationResult(result) {
-  return result.genre_ids?.includes(TMDB_ANIMATION_GENRE_ID);
-}
-
-function getTitleSimilarity(a, b) {
-  const normalizedA = normalizeTitle(a);
-  const normalizedB = normalizeTitle(b);
-
-  if (!normalizedA || !normalizedB) return 0;
-  if (normalizedA === normalizedB) return 100;
-
-  if (normalizedA.includes(normalizedB) || normalizedB.includes(normalizedA)) {
-    return 70;
-  }
-
-  const wordsA = new Set(normalizedA.split(" "));
-  const wordsB = new Set(normalizedB.split(" "));
-  const sharedWords = [...wordsA].filter((word) => wordsB.has(word));
-
-  return (sharedWords.length / Math.max(wordsA.size, wordsB.size)) * 60;
-}
-
-function scoreTmdbResult(film, result) {
-  const filmYear = Number(film.year);
-  const resultYear = getYearFromDate(result.release_date);
-
-  const titleScore = Math.max(
-    getTitleSimilarity(film.title, result.title),
-    getTitleSimilarity(film.title, result.original_title),
-    getTitleSimilarity(film.original_title, result.title),
-    getTitleSimilarity(film.original_title, result.original_title)
-  );
-
-  const yearScore =
-    filmYear && resultYear
-      ? filmYear === resultYear
-        ? 35
-        : Math.abs(filmYear - resultYear) === 1
-          ? 10
-          : -80
-      : 0;
-
-  const animationScore = isAnimationResult(result) ? 40 : -100;
-
-  return titleScore + yearScore + animationScore;
-}
 
 async function searchTmdbMovie(film) {
   const queries = [film.title, film.original_title].filter(Boolean);
@@ -117,53 +57,71 @@ async function searchTmdbMovie(film) {
     new Map(allResults.map((result) => [result.id, result])).values()
   );
 
-  const scoredResults = uniqueResults
-    .map((result) => ({
-      result,
-      score: scoreTmdbResult(film, result),
-    }))
-    .filter((item) => isAnimationResult(item.result))
-    .sort((a, b) => b.score - a.score);
+  const evaluatedResults = [];
+  for (const result of uniqueResults.slice(0, 10)) {
+    const details = await fetchTmdbMovieDetails(
+      tmdbApiKey,
+      result.id,
+      "credits,videos"
+    );
+    evaluatedResults.push({
+      result: { ...result, ...details },
+      evaluation: evaluateTmdbMatch(film, { ...result, ...details }),
+    });
+  }
 
-  const bestMatch = scoredResults[0];
+  evaluatedResults.sort((a, b) => {
+    const titleDifference =
+      b.evaluation.evidence.titleSimilarity -
+      a.evaluation.evidence.titleSimilarity;
+    if (titleDifference !== 0) {
+      return titleDifference;
+    }
 
-  if (!bestMatch || bestMatch.score < 100) {
+    const signalDifference =
+      b.evaluation.evidence.signalCount -
+      a.evaluation.evidence.signalCount;
+    if (signalDifference !== 0) {
+      return signalDifference;
+    }
+
+    return (
+      (a.evaluation.evidence.yearDifference ?? Number.POSITIVE_INFINITY) -
+      (b.evaluation.evidence.yearDifference ?? Number.POSITIVE_INFINITY)
+    );
+  });
+
+  const bestMatch = evaluatedResults.find((item) => item.evaluation.accepted);
+
+  if (!bestMatch) {
     console.log(
       `Skipped TMDB movie: ${film.title} (${film.year}) — no confident animation match`
     );
 
-    console.log(
-      scoredResults.slice(0, 5).map((item) => ({
-        title: item.result.title,
-        original_title: item.result.original_title,
-        year: getYearFromDate(item.result.release_date),
-        score: item.score,
-        genre_ids: item.result.genre_ids,
-      }))
-    );
+    for (const item of evaluatedResults.slice(0, 5)) {
+      console.log(
+        `  Candidate ${item.result.title} (${item.result.release_date?.slice(
+          0,
+          4
+        ) ?? "unknown"}): ${item.evaluation.reason}`
+      );
+    }
 
     return null;
   }
 
+  console.log(
+    `  Match ${bestMatch.result.title} (${bestMatch.result.release_date?.slice(
+      0,
+      4
+    ) ?? "unknown"}): ${bestMatch.evaluation.reason}`
+  );
+
   return bestMatch.result;
 }
 
-async function getTrailerUrl(tmdbMovieId) {
-  const params = new URLSearchParams({
-    api_key: tmdbApiKey,
-  });
-
-  const response = await fetch(
-    `https://api.themoviedb.org/3/movie/${tmdbMovieId}/videos?${params.toString()}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`TMDB videos error for movie ${tmdbMovieId}: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  const videos = data.results ?? [];
+function getTrailerUrl(movie) {
+  const videos = movie.videos?.results ?? [];
 
   const trailer =
     videos.find(
@@ -173,12 +131,11 @@ async function getTrailerUrl(tmdbMovieId) {
         video.official === true
     ) ??
     videos.find(
-      (video) => video.site === "YouTube" && video.type === "Trailer"
-    ) ??
-    videos.find(
-      (video) => video.site === "YouTube" && video.type === "Teaser"
-    ) ??
-    videos.find((video) => video.site === "YouTube");
+      (video) =>
+        video.site === "YouTube" &&
+        video.type === "Teaser" &&
+        video.official === true
+    );
 
   if (!trailer?.key) {
     return null;
@@ -189,7 +146,8 @@ async function getTrailerUrl(tmdbMovieId) {
 
 async function main() {
   const films = await loadScopedFilms(supabase, scope, {
-    select: "id,title,original_title,year,trailer_url",
+    select:
+      "id,title,original_title,director,country,synopsis,year,trailer_url",
     applyFilters: (query) => query.is("trailer_url", null),
   });
 
@@ -205,7 +163,7 @@ async function main() {
         continue;
       }
 
-      const trailerUrl = await getTrailerUrl(movie.id);
+      const trailerUrl = getTrailerUrl(movie);
 
       if (!trailerUrl) {
         console.log(`No trailer found: ${film.title}`);
