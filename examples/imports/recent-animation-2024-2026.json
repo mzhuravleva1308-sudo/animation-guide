@@ -1,0 +1,885 @@
+{
+  "batch_name": "recent-animation-2024-2026",
+  "films": [
+    {
+      "title": "Rock Bottom",
+      "original_title": "Rock Bottom",
+      "year": 2024,
+      "runtime_minutes": 86,
+      "countries": [
+        "Spain",
+        "Poland"
+      ],
+      "directors": [
+        "María Trénor"
+      ],
+      "synopsis": "In the early 1970s, two young artists fall into an intense relationship shaped by music, creative ambition and drug use.",
+      "the_mood": "Dreamlike and bruised, drifting between artistic exhilaration, hazy intimacy and the slow collapse of an idealised summer.",
+      "technique": [
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official"
+        }
+      ],
+      "source_urls": {
+        "official": "https://www.albasotorra.com/film/rock-bottom/",
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Based on the music and life of Robert Wyatt."
+    },
+    {
+      "title": "Savages",
+      "original_title": "Sauvages",
+      "year": 2024,
+      "runtime_minutes": 86,
+      "countries": [
+        "Switzerland",
+        "France",
+        "Belgium"
+      ],
+      "directors": [
+        "Claude Barras"
+      ],
+      "synopsis": "In Borneo, a girl, her Indigenous cousin and a rescued orangutan confront the destruction of the rainforest around their home.",
+      "the_mood": "Tactile and spirited, balancing playful animal energy with humid forest beauty and an increasingly urgent sense of ecological loss.",
+      "technique": [
+        "Stop-motion animation",
+        "Puppet animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official"
+        }
+      ],
+      "source_urls": {
+        "official": "https://www.hautetcourt.com/animation/sauvages/",
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "The Glassworker",
+      "original_title": "شیشہ گر",
+      "year": 2024,
+      "runtime_minutes": 99,
+      "countries": [
+        "Pakistan"
+      ],
+      "directors": [
+        "Usman Riaz"
+      ],
+      "synopsis": "A young glassworker and a violinist grow close as war and the expectations of their families begin to reshape their seaside town.",
+      "the_mood": "Luminous and fragile, with the warmth of glass and music set against gathering military tension and the ache of first love.",
+      "technique": [
+        "Hand-drawn animation",
+        "2D animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-contrechamp"
+        }
+      ],
+      "source_urls": {
+        "official": "https://manoanimationstudios.com/the-glassworker/",
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-contrechamp",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Pakistan's first hand-drawn animated feature."
+    },
+    {
+      "title": "Living Large",
+      "original_title": "Život k sežrání",
+      "year": 2024,
+      "runtime_minutes": 79,
+      "countries": [
+        "Czech Republic",
+        "Slovakia",
+        "France"
+      ],
+      "directors": [
+        "Kristina Dufková"
+      ],
+      "synopsis": "A twelve-year-old boy facing bullying about his weight tries to change himself while navigating family, friendship, food and first love.",
+      "the_mood": "Warm, funny and gently awkward, mixing tactile puppet textures with adolescent embarrassment and a generous movement toward self-acceptance.",
+      "technique": [
+        "Puppet animation",
+        "2D animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-contrechamp"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "award",
+          "award_name": "Contrechamp Jury Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-contrechamp",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "Angelo in the Mysterious Forest",
+      "original_title": "Angelo dans la forêt mystérieuse",
+      "year": 2024,
+      "runtime_minutes": 81,
+      "countries": [
+        "France",
+        "Luxembourg"
+      ],
+      "directors": [
+        "Vincent Paronnaud",
+        "Alexis Ducord"
+      ],
+      "synopsis": "After being left behind during a family journey, a boy crosses a mysterious forest filled with strange creatures to find his way back.",
+      "the_mood": "Wild, shadowy and mischievous, moving through fairy-tale danger with restless humour, visual abundance and flashes of childlike wonder.",
+      "technique": [
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "A Boat in the Garden",
+      "original_title": "Slocum et moi",
+      "year": 2024,
+      "runtime_minutes": 75,
+      "countries": [
+        "France",
+        "Luxembourg"
+      ],
+      "directors": [
+        "Jean-François Laguionie"
+      ],
+      "synopsis": "In post-war France, a boy watches his father build a boat in the family garden and begins to imagine a wider life beyond their home.",
+      "the_mood": "Quiet, sun-faded and nostalgic, unfolding like a remembered childhood where family distance, craft and imagination gently share the same space.",
+      "technique": [
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/feature-films-official",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "The Storm",
+      "original_title": "The Storm",
+      "year": 2024,
+      "runtime_minutes": 102,
+      "countries": [
+        "China"
+      ],
+      "directors": [
+        "Zhigang Yang"
+      ],
+      "synopsis": "A torrential storm reveals a century-old sunken ship and a shifting world of masks, theatre and buried stories.",
+      "the_mood": "Dense, fluid and uncanny, turning ink-like rain, theatrical spectacle and unstable identities into a sweeping visual fever dream.",
+      "technique": [
+        "2D computer animation",
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-storm"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-storm",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Director is also known as Busifan."
+    },
+    {
+      "title": "ChaO",
+      "original_title": "ChaO",
+      "year": 2025,
+      "runtime_minutes": 90,
+      "countries": [
+        "Japan"
+      ],
+      "directors": [
+        "Yasuhiro Aoki"
+      ],
+      "synopsis": "In a future where humans and mermaids live together, an ordinary office worker is suddenly proposed to by a mermaid princess.",
+      "the_mood": "Bright, exuberant and romantically strange, overflowing with elastic movement, aquatic fantasy and sincere emotional sweetness.",
+      "technique": [
+        "Drawing on paper",
+        "2D computer animation",
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-official/chao"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Jury Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/le-festival/2025-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-official/chao",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "Endless Cookie",
+      "original_title": "Endless Cookie",
+      "year": 2025,
+      "runtime_minutes": 97,
+      "countries": [
+        "Canada"
+      ],
+      "directors": [
+        "Seth Scriver",
+        "Pete Scriver"
+      ],
+      "synopsis": "Two half-brothers use stories, memories and improvised animation to explore the very different worlds in which they grew up.",
+      "the_mood": "Loose, handmade and affectionate, tumbling through family memory with comic digressions, rough textures and a strong sense of lived-in intimacy.",
+      "technique": [
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/competition/2025/feature-films-contrechampdless-cookie"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "award",
+          "award_name": "Contrechamp Grand Prix",
+          "award_result": "grand_prize",
+          "award_level": "grand_prize",
+          "source_url": "https://www.annecyfestival.com/en/le-festival/2025-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/competition/2025/feature-films-contrechampdless-cookie",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Contrechamp Grand Prix is treated as the top prize of the Contrechamp feature competition."
+    },
+    {
+      "title": "The Square",
+      "original_title": "Gwang-jang",
+      "year": 2024,
+      "runtime_minutes": 73,
+      "countries": [
+        "South Korea"
+      ],
+      "directors": [
+        "Bo-Sol Kim"
+      ],
+      "synopsis": "A Swedish diplomat in Pyongyang secretly meets a local traffic officer until her sudden disappearance draws him into suspicion and surveillance.",
+      "the_mood": "Restrained, lonely and quietly tense, with delicate cel textures holding a romance shaped by secrecy, distance and political fear.",
+      "technique": [
+        "Drawing on cels"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-contrechamp/the-square"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "award",
+          "award_name": "Contrechamp Jury Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/le-festival/2025-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-contrechamp/the-square",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Production year is 2024 although it screened at Annecy in 2025."
+    },
+    {
+      "title": "Little Amélie or the Character of Rain",
+      "original_title": "Amélie et la Métaphysique des tubes",
+      "year": 2025,
+      "runtime_minutes": 77,
+      "countries": [
+        "France"
+      ],
+      "directors": [
+        "Maïlys Vallade",
+        "Liane-Cho Han"
+      ],
+      "synopsis": "A small child in Japan awakens to language, family, nature, desire and the overwhelming intensity of discovering the world.",
+      "the_mood": "Radiant and sensorial, moving with the astonishment of early childhood through water, gardens, colour and sudden shadows of loss.",
+      "technique": [
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/little-amelie-or-the-character-rain"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Audience Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/le-festival/2025-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/little-amelie-or-the-character-rain",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Adapted from Amélie Nothomb's novel."
+    },
+    {
+      "title": "Olivia and the Invisible Earthquake",
+      "original_title": "L'Olívia i el terratrèmol invisible",
+      "year": 2025,
+      "runtime_minutes": 70,
+      "countries": [
+        "Spain",
+        "France",
+        "Belgium",
+        "Chile",
+        "Switzerland"
+      ],
+      "directors": [
+        "Irene Iborra Rizo"
+      ],
+      "synopsis": "After her family loses its home, a twelve-year-old girl turns instability into imaginative adventures while caring for her younger brother.",
+      "the_mood": "Inventive and resilient, using tactile stop-motion energy, neighbourhood warmth and playful fantasy to hold the anxiety of sudden precarity.",
+      "technique": [
+        "Animated objects",
+        "Stop-motion animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/olivia-and-the-invisible-earthquake"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Gan Foundation Award for Distribution",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/le-festival/2025-awards"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/olivia-and-the-invisible-earthquake",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "Memory Hotel",
+      "original_title": "Memory Hotel",
+      "year": 2025,
+      "runtime_minutes": 100,
+      "countries": [
+        "Germany",
+        "France"
+      ],
+      "directors": [
+        "Heinrich Sabl"
+      ],
+      "synopsis": "At the end of the Second World War, a girl loses her parents and memory inside a hotel occupied first by Nazis and then by Soviet soldiers.",
+      "the_mood": "Claustrophobic and haunted, with worn puppet surfaces, fractured memory and the heavy stillness of a place repeatedly claimed by violence.",
+      "technique": [
+        "Puppet animation",
+        "Mixed techniques"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-contrechamp/memory-hotel"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-contrechamp/memory-hotel",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "Allah Is Not Obliged",
+      "original_title": "Allah n'est pas obligé",
+      "year": 2025,
+      "runtime_minutes": 77,
+      "countries": [
+        "Belgium",
+        "Canada",
+        "France",
+        "Luxembourg"
+      ],
+      "directors": [
+        "Zaven Najjar"
+      ],
+      "synopsis": "A ten-year-old orphan trying to reach his aunt is drawn into war and forced to move between armed factions as a child soldier.",
+      "the_mood": "Harsh, vivid and bitterly ironic, confronting violence through a child's direct voice and a graphic world that never softens its moral confusion.",
+      "technique": [
+        "2D computer animation",
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-official/allah-not-obliged"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/archives/2025/the-festival/2025-official-selection/2025-feature-films-official/allah-not-obliged",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "A Magnificent Life",
+      "original_title": "Marcel et Monsieur Pagnol",
+      "year": 2025,
+      "runtime_minutes": 90,
+      "countries": [
+        "France",
+        "Luxembourg",
+        "Belgium"
+      ],
+      "directors": [
+        "Sylvain Chomet"
+      ],
+      "synopsis": "While writing about his childhood, Marcel Pagnol is visited by his younger self and revisits the people, cinema and places that shaped his life.",
+      "the_mood": "Elegant, nostalgic and lightly theatrical, turning artistic memory into a warm promenade through old studios, Provence and the pleasure of storytelling.",
+      "technique": [
+        "2D computer animation",
+        "Mixed techniques"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2025,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/magnificient-life"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection-2025/feature-films-official/magnificient-life",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Annecy's English page spells the title 'A Magnificient Life'; the standard English spelling is used here."
+    },
+    {
+      "title": "58th",
+      "original_title": "58th",
+      "year": 2026,
+      "runtime_minutes": 86,
+      "countries": [
+        "Philippines"
+      ],
+      "directors": [
+        "Carl Joseph E. Papa"
+      ],
+      "synopsis": "A family continues to seek recognition for a missing journalist whose disappearance is tied to the 2009 Maguindanao massacre.",
+      "the_mood": "Sober, intimate and unresolved, using rotoscoped memory to hold grief, political absence and a family's refusal to let one life disappear.",
+      "technique": [
+        "Rotoscope"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Contrechamp",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-contrechamp/58th"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-contrechamp/58th",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": "Runtime rounded from 1 h 25 min 58 sec."
+    },
+    {
+      "title": "Iron Boy",
+      "original_title": "Le Corset",
+      "year": 2026,
+      "runtime_minutes": 89,
+      "countries": [
+        "France",
+        "Belgium"
+      ],
+      "directors": [
+        "Louis Clichy"
+      ],
+      "synopsis": "A ten-year-old boy expected to inherit his family's farm begins collapsing without warning and discovers music after being fitted with a corset.",
+      "the_mood": "Tender, grounded and quietly liberating, moving from bodily constraint and rural expectation toward music, friendship and a widening sense of possibility.",
+      "technique": [
+        "Drawing on paper",
+        "2D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/iron-boy"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Jury Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/iron-boy"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Audience Award for a Feature Film",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/iron-boy"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Gan Foundation Award for Distribution",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/iron-boy"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/iron-boy",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "The Sunrise File",
+      "original_title": "The Sunrise File",
+      "year": 2026,
+      "runtime_minutes": 98,
+      "countries": [
+        "France",
+        "Luxembourg"
+      ],
+      "directors": [
+        "Rupert Wyatt",
+        "Emilie Phuong"
+      ],
+      "synopsis": "A secret agent recounts the difficult relationship between Israeli intelligence and a celebrated pair of Nazi hunters.",
+      "the_mood": "Cool, investigative and morally uneasy, revisiting historical memory through controlled 3D spaces, secrecy and the persistence of unfinished justice.",
+      "technique": [
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-sunrise-file"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-sunrise-file",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "The Violinist",
+      "original_title": "La Violinista",
+      "year": 2026,
+      "runtime_minutes": 114,
+      "countries": [
+        "Singapore",
+        "Spain",
+        "Italy"
+      ],
+      "directors": [
+        "Ervin Han",
+        "Raúl García"
+      ],
+      "synopsis": "A reporter investigating an elderly violinist uncovers a story of childhood friendship, music and separation during the Japanese occupation of Singapore.",
+      "the_mood": "Sweeping and bittersweet, carrying music across decades of war, lost intimacy and memory with a polished historical grandeur.",
+      "technique": [
+        "2D computer animation",
+        "3D computer animation"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-violinist"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Cristal for a Feature Film",
+          "award_result": "grand_prize",
+          "award_level": "grand_prize",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-violinist"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "SACEM Award for Best Original Soundtrack in a Feature Film",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-violinist"
+        }
+      ],
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official/the-violinist",
+        "tmdb": null,
+        "imdb": null
+      },
+      "notes": null
+    },
+    {
+      "title": "We Are Aliens",
+      "original_title": "我々は宇宙人",
+      "year": 2026,
+      "runtime_minutes": 117,
+      "countries": [
+        "Japan",
+        "France"
+      ],
+      "directors": [
+        "Kohei Kadowaki"
+      ],
+      "synopsis": "Two childhood friends who once called themselves aliens grow apart, carrying the wounds of bullying, intimacy and lost connection into adulthood.",
+      "the_mood": "Textured, rain-soaked and deeply wistful, following friendship through awkward movement, emotional rupture and the lingering ache of youth.",
+      "technique": [
+        "2D animation",
+        "Rotoscope"
+      ],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2026,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/the-festival/official-selection/feature-films/2026-feature-films-official"
+        },
+        {
+          "festival_name": "Cannes Directors' Fortnight",
+          "festival_year": 2026,
+          "section": "Directors' Fortnight",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.quinzaine-cineastes.fr/fr/film/we-are-aliens"
+        }
+      ],
+      "source_urls": {
+        "official": "https://www.charades.eu/movies/we-are-aliens",
+        "festival": "https://www.quinzaine-cineastes.fr/fr/film/we-are-aliens",
+        "tmdb": null,
+        "imdb": "https://www.imdb.com/title/tt41830798/"
+      },
+      "notes": null
+    }
+  ]
+}

@@ -11,6 +11,11 @@ import {
   fetchTmdbMovieDetails,
 } from "../lib/tmdb-film-matching.mjs";
 import { selectBestTrailerVideo } from "../lib/tmdb-trailer-selection.mjs";
+import {
+  buildTrailerSourceRecord,
+  buildYoutubeWatchUrl,
+  searchYoutubeTrailers,
+} from "../lib/youtube-trailer-search.mjs";
 
 applyAppEnv();
 
@@ -19,6 +24,7 @@ const scope = parseFilmScopeArgs(process.argv.slice(2));
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const tmdbApiKey = process.env.TMDB_API_KEY;
+const youtubeApiKey = process.env.YOUTUBE_API_KEY;
 
 if (!supabaseUrl || !supabaseKey || !tmdbApiKey) {
   throw new Error(
@@ -152,7 +158,7 @@ async function resolveYoutubeChannel(video) {
   return data.author_name ?? null;
 }
 
-async function getTrailerUrl(movie) {
+async function getTmdbTrailerSource(movie) {
   const selected = await selectBestTrailerVideo(movie, {
     resolveChannel: resolveYoutubeChannel,
   });
@@ -167,7 +173,62 @@ async function getTrailerUrl(movie) {
     }`
   );
 
-  return `https://www.youtube.com/watch?v=${selected.video.key}`;
+  // TMDB videos we accept are YouTube-only today; keep provider explicit.
+  return buildTrailerSourceRecord({
+    provider: "youtube",
+    videoId: selected.video.key,
+    url: buildYoutubeWatchUrl(selected.video.key),
+  });
+}
+
+async function getYoutubeFallbackTrailerSource(film) {
+  if (!youtubeApiKey) {
+    return null;
+  }
+
+  const selected = await searchYoutubeTrailers({
+    apiKey: youtubeApiKey,
+    film,
+  });
+
+  if (!selected?.video_id || !selected?.url) {
+    return null;
+  }
+
+  console.log(
+    `  YouTube fallback ${selected.video_id}: score=${selected.score}; ${selected.reasons.join("; ")}${
+      selected.channelTitle ? `; channel: ${selected.channelTitle}` : ""
+    }`
+  );
+
+  return buildTrailerSourceRecord({
+    provider: selected.provider,
+    videoId: selected.video_id,
+    url: selected.url,
+  });
+}
+
+async function resolveTrailerSource(film) {
+  const movie = await searchTmdbMovie(film);
+
+  if (movie?.id) {
+    const tmdbTrailer = await getTmdbTrailerSource(movie);
+    if (tmdbTrailer?.url) {
+      return tmdbTrailer;
+    }
+    console.log(`No confident TMDB trailer: ${film.title}`);
+  } else {
+    console.log(`No TMDB movie found: ${film.title}`);
+  }
+
+  // Vimeo / official site URLs are intentionally not automated.
+  const youtubeTrailer = await getYoutubeFallbackTrailerSource(film);
+  if (youtubeTrailer?.url) {
+    return youtubeTrailer;
+  }
+
+  console.log(`No trailer found: ${film.title}`);
+  return null;
 }
 
 async function main() {
@@ -182,23 +243,19 @@ async function main() {
 
   for (const film of films) {
     try {
-      const movie = await searchTmdbMovie(film);
+      const trailer = await resolveTrailerSource(film);
 
-      if (!movie?.id) {
-        console.log(`No TMDB movie found: ${film.title}`);
-        continue;
-      }
-
-      const trailerUrl = await getTrailerUrl(movie);
-
-      if (!trailerUrl) {
-        console.log(`No trailer found: ${film.title}`);
+      if (!trailer?.url) {
         continue;
       }
 
       const { error: updateError } = await supabase
         .from("films")
-        .update({ trailer_url: trailerUrl })
+        .update({
+          trailer_url: trailer.url,
+          trailer_provider: trailer.provider,
+          trailer_video_id: trailer.video_id,
+        })
         .eq("id", film.id);
 
       if (updateError) {
@@ -206,7 +263,9 @@ async function main() {
         continue;
       }
 
-      console.log(`Saved trailer: ${film.title}`);
+      console.log(
+        `Saved trailer: ${film.title} (${trailer.provider}:${trailer.video_id})`
+      );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       console.log(`Failed: ${film.title}: ${message}`);

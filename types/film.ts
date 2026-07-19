@@ -15,6 +15,8 @@ export type Film = {
     poster_url?: string | null;
     external_image_url?: string | null;
     trailer_url?: string | null;
+    trailer_provider?: string | null;
+    trailer_video_id?: string | null;
     availability?: string | null;
     synopsis?: string | null;
     technique?: string | null;
