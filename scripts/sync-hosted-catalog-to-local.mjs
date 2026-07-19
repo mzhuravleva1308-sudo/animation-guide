@@ -35,6 +35,7 @@ const LOCAL_SYNC_FILM_COLUMNS = [
   "the_mood",
   "personal_note",
   "status",
+  "catalog_visible",
   "cold_start_score",
   "cold_start_note",
   "normalized_title",

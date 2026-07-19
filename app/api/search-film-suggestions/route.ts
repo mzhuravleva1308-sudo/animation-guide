@@ -6,6 +6,7 @@ import {
   getSearchSuggestions,
 } from "@/lib/film-search-suggestions.mjs";
 import { isSearchQueryUsable } from "@/lib/film-search.mjs";
+import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
 import type { Film } from "@/types/film";
 
 const SUGGESTION_FILM_SELECT_FIELDS = [
@@ -37,10 +38,9 @@ export async function GET(request: Request) {
       });
     }
 
-    const { data, error } = await supabase
-      .from("films")
-      .select(SUGGESTION_FILM_SELECT_FIELDS)
-      .order("title");
+    const { data, error } = await applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(SUGGESTION_FILM_SELECT_FIELDS)
+    ).order("title");
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

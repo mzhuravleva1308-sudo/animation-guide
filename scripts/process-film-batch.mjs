@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { buildVideoLanguageList } from "../lib/tmdb-film-matching.mjs";
 import { checkFilmDuplicates } from "../lib/insert-film.mjs";
 import { normalizeRecognitionRow } from "../lib/festival-recognition-normalization.mjs";
+import { resolveCatalogVisibleForImport } from "../lib/public-catalog-films.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
 applyAppEnv();
@@ -389,6 +390,8 @@ function buildFilmInsertPayload(film) {
     technique: film.technique.join(", "),
     the_mood: film.the_mood,
     tmdb_id: identity.tmdb_id,
+    quick_filters: film.quick_filters ?? [],
+    catalog_visible: resolveCatalogVisibleForImport(film),
   };
 }
 
@@ -963,6 +966,9 @@ async function main() {
 
   if (options.file) {
     const validation = await validateFile(options.file);
+    for (const message of validation.warningMessages ?? []) {
+      console.warn(message);
+    }
     if (validation.errors.length) {
       throw new Error(
         `Invalid film import batch:\n${validation.messages

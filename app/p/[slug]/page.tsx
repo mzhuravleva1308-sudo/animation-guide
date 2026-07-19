@@ -14,6 +14,7 @@ import { buildFilmRatings } from "@/lib/film-ratings";
 import { normalizeFilms } from "@/lib/normalize-film";
 import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges";
 import { createProfilePageLoadTimer } from "@/lib/profile-page-load-log";
+import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -129,7 +130,9 @@ export default async function ProfilePage({
       )
       .eq("profile_id", profile.id)
       .order("core_index"),
-    supabase.from("films").select(FILM_SELECT_FIELDS).order("id"),
+    applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(FILM_SELECT_FIELDS)
+    ).order("id"),
     supabase
       .from("film_ratings")
       .select("film_id, rating")

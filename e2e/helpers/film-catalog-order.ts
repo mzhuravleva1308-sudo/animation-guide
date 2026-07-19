@@ -34,6 +34,7 @@ export async function getSmokeRatingFilmForProject(
   const { data, error } = await supabase
     .from("films")
     .select("id, title")
+    .eq("catalog_visible", true)
     .order("id")
     .range(offset, offset)
     .single();

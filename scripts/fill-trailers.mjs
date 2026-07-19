@@ -12,6 +12,10 @@ import {
 } from "../lib/tmdb-film-matching.mjs";
 import { selectBestTrailerVideo } from "../lib/tmdb-trailer-selection.mjs";
 import {
+  buildAutoTrailerWritePayload,
+  shouldAttemptTrailerLookup,
+} from "../lib/trailer-fill-policy.mjs";
+import {
   buildTrailerSourceRecord,
   buildYoutubeWatchUrl,
   searchYoutubeTrailers,
@@ -20,6 +24,8 @@ import {
 applyAppEnv();
 
 const scope = parseFilmScopeArgs(process.argv.slice(2));
+const force =
+  scope.passthrough.includes("--force") || process.argv.includes("--force");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -173,7 +179,6 @@ async function getTmdbTrailerSource(movie) {
     }`
   );
 
-  // TMDB videos we accept are YouTube-only today; keep provider explicit.
   return buildTrailerSourceRecord({
     provider: "youtube",
     videoId: selected.video.key,
@@ -196,7 +201,7 @@ async function getYoutubeFallbackTrailerSource(film) {
   }
 
   console.log(
-    `  YouTube fallback ${selected.video_id}: score=${selected.score}; ${selected.reasons.join("; ")}${
+    `  YouTube fallback ${selected.video_id}: score=${selected.score}; authority=${selected.channelAuthority?.tier ?? "other"}; ${selected.reasons.join("; ")}${
       selected.channelTitle ? `; channel: ${selected.channelTitle}` : ""
     }`
   );
@@ -231,17 +236,78 @@ async function resolveTrailerSource(film) {
   return null;
 }
 
+async function loadFilmsForTrailerFill() {
+  const baseSelect =
+    "id,title,original_title,director,country,synopsis,year,trailer_url,trailer_provider,trailer_video_id";
+
+  try {
+    return await loadScopedFilms(supabase, scope, {
+      select: `${baseSelect},trailer_source`,
+      applyFilters: force
+        ? undefined
+        : (query) => query.is("trailer_url", null),
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : String(error?.message ?? error ?? "");
+    if (!/trailer_source/i.test(message)) {
+      throw error;
+    }
+    console.log(
+      "Note: films.trailer_source missing; treating unmarked existing trailers as protected."
+    );
+    return loadScopedFilms(supabase, scope, {
+      select: baseSelect,
+      applyFilters: force
+        ? undefined
+        : (query) => query.is("trailer_url", null),
+    });
+  }
+}
+
+async function updateTrailerFields(filmId, payload) {
+  const { error } = await supabase.from("films").update(payload).eq("id", filmId);
+  if (!error) return null;
+
+  const missingSourceColumn =
+    /trailer_source/i.test(error.message ?? "") || error.code === "42703";
+  if (!missingSourceColumn || !("trailer_source" in payload)) {
+    return error;
+  }
+
+  const { trailer_source: _ignored, ...legacyPayload } = payload;
+  const { error: legacyError } = await supabase
+    .from("films")
+    .update(legacyPayload)
+    .eq("id", filmId);
+  return legacyError;
+}
+
 async function main() {
-  const films = await loadScopedFilms(supabase, scope, {
-    select:
-      "id,title,original_title,director,country,synopsis,year,trailer_url",
-    applyFilters: (query) => query.is("trailer_url", null),
-  });
+  const films = await loadFilmsForTrailerFill();
+
+  const eligible = films.filter((film) =>
+    shouldAttemptTrailerLookup(film, { force })
+  );
+  const skippedProtected = films.length - eligible.length;
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
-  console.log(`Films without trailer: ${films.length}`);
+  console.log(
+    `Films to fill: ${eligible.length} (force=${force}; protected/skipped=${skippedProtected})`
+  );
 
   for (const film of films) {
+    if (!shouldAttemptTrailerLookup(film, { force })) {
+      if (film.trailer_url) {
+        console.log(
+          `Skipped protected trailer: ${film.title} (source=${film.trailer_source ?? "unmarked"})`
+        );
+      }
+      continue;
+    }
+
     try {
       const trailer = await resolveTrailerSource(film);
 
@@ -249,14 +315,8 @@ async function main() {
         continue;
       }
 
-      const { error: updateError } = await supabase
-        .from("films")
-        .update({
-          trailer_url: trailer.url,
-          trailer_provider: trailer.provider,
-          trailer_video_id: trailer.video_id,
-        })
-        .eq("id", film.id);
+      const payload = buildAutoTrailerWritePayload(trailer);
+      const updateError = await updateTrailerFields(film.id, payload);
 
       if (updateError) {
         console.log(`Update error: ${film.title}: ${updateError.message}`);
@@ -264,7 +324,7 @@ async function main() {
       }
 
       console.log(
-        `Saved trailer: ${film.title} (${trailer.provider}:${trailer.video_id})`
+        `Saved trailer: ${film.title} (${payload.trailer_provider}:${payload.trailer_video_id}; source=${payload.trailer_source})`
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -273,4 +333,11 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : String(error?.message ?? error ?? "Unknown error");
+  console.error(`fill-trailers failed: ${message}`);
+  process.exitCode = 1;
+});

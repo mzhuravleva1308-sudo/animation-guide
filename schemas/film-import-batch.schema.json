@@ -45,7 +45,8 @@
         "the_mood",
         "technique",
         "festival_recognitions",
-        "source_urls"
+        "source_urls",
+        "quick_filters"
       ],
       "properties": {
         "title": {
@@ -118,6 +119,33 @@
               "type": "null"
             }
           ]
+        },
+        "quick_filters": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": ["sci-fi", "connection", "distance"]
+          },
+          "not": {
+            "allOf": [
+              {
+                "contains": {
+                  "const": "connection"
+                }
+              },
+              {
+                "contains": {
+                  "const": "distance"
+                }
+              }
+            ]
+          },
+          "description": "Manual quick filters written to films.quick_filters. connection = Light (emotional closeness); distance = Shadow (detachment). Omit both tonal tokens when the film is in the middle. connection and distance are mutually exclusive; sci-fi may combine with either tonal token or stand alone."
+        },
+        "catalog_visible": {
+          "type": "boolean",
+          "description": "When false, the film is soft-hidden from the public catalog. Defaults to true when omitted."
         }
       }
     },

@@ -37,7 +37,11 @@
         "imdb": null
       },
 
-      "notes": "Editorial notes only. This field is not imported into films."
+      "notes": "Editorial notes only. This field is not imported into films.",
+
+      "quick_filters": ["sci-fi", "distance"],
+
+      "catalog_visible": true
     }
   ]
 }

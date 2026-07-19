@@ -115,12 +115,65 @@ function duplicateErrors(data) {
   return errors;
 }
 
+/**
+ * Legacy batches may omit quick_filters. Default to [] with a warning so
+ * validation/import can proceed without treating omission as an error.
+ * Mutates film objects in place.
+ */
+export function applyLegacyQuickFiltersDefaults(data) {
+  const warnings = [];
+
+  for (const [filmIndex, film] of (data?.films ?? []).entries()) {
+    if (!film || typeof film !== "object" || Array.isArray(film)) continue;
+    if (Object.prototype.hasOwnProperty.call(film, "quick_filters")) continue;
+
+    film.quick_filters = [];
+    warnings.push({
+      instancePath: `/films/${filmIndex}/quick_filters`,
+      message:
+        "missing quick_filters; defaulting to [] for legacy batch compatibility",
+      keyword: "legacyQuickFilters",
+    });
+  }
+
+  return warnings;
+}
+
+/**
+ * Soft warnings for legacy batches that omit catalog_visible.
+ * Missing field defaults to true at import time and is not a schema error.
+ */
+export function collectCatalogVisibleWarnings(data) {
+  const warnings = [];
+
+  for (const [filmIndex, film] of (data?.films ?? []).entries()) {
+    if (!film || typeof film !== "object" || Array.isArray(film)) continue;
+    if (Object.prototype.hasOwnProperty.call(film, "catalog_visible")) continue;
+
+    warnings.push({
+      instancePath: `/films/${filmIndex}/catalog_visible`,
+      message:
+        "catalog_visible omitted; defaulting to true for public catalog visibility",
+      keyword: "legacyCatalogVisible",
+    });
+  }
+
+  return warnings;
+}
+
 export function validateFilmImportBatch(data, schema) {
+  const warnings = [
+    ...applyLegacyQuickFiltersDefaults(data),
+    ...collectCatalogVisibleWarnings(data),
+  ];
   const ajv = new Ajv({ allErrors: true, strict: false });
   const validate = ajv.compile(schema);
   const validAgainstSchema = validate(data);
   const schemaErrors = validAgainstSchema ? [] : validate.errors ?? [];
-  return [...schemaErrors, ...duplicateErrors(data)];
+  return {
+    errors: [...schemaErrors, ...duplicateErrors(data)],
+    warnings,
+  };
 }
 
 export function formatValidationErrors(errors, data) {
@@ -136,7 +189,12 @@ export function formatValidationErrors(errors, data) {
       errorPath += `/${error.params.additionalProperty}`;
     }
     const exactPath = pointerToPath(errorPath);
-    return `Film "${filmTitle(data, error.instancePath)}": ${exactPath} — ${error.message}`;
+    const prefix =
+      error.keyword === "legacyQuickFilters" ||
+      error.keyword === "legacyCatalogVisible"
+        ? "Warning"
+        : "Film";
+    return `${prefix} "${filmTitle(data, error.instancePath)}": ${exactPath} — ${error.message}`;
   });
 }
 
@@ -156,13 +214,23 @@ export async function validateFile(filePath) {
     throw new Error(`Could not read batch schema: ${error.message}`);
   }
 
-  const errors = validateFilmImportBatch(data, schema);
-  return { data, errors, messages: formatValidationErrors(errors, data) };
+  const { errors, warnings } = validateFilmImportBatch(data, schema);
+  return {
+    data,
+    errors,
+    warnings,
+    messages: formatValidationErrors(errors, data),
+    warningMessages: formatValidationErrors(warnings, data),
+  };
 }
 
 async function main() {
   const filePath = parseArgs(process.argv.slice(2));
   const result = await validateFile(filePath);
+
+  for (const message of result.warningMessages) {
+    console.warn(`- ${message}`);
+  }
 
   if (result.errors.length) {
     console.error(`Invalid film import batch: ${filePath}`);
@@ -173,6 +241,9 @@ async function main() {
 
   console.log(`Valid film import batch: ${filePath}`);
   console.log(`Films: ${result.data.films.length}`);
+  if (result.warnings.length) {
+    console.log(`Warnings: ${result.warnings.length}`);
+  }
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

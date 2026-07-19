@@ -3,6 +3,7 @@ import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges"
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { normalizeFilms } from "@/lib/normalize-film";
 import { sortFilmsByColdStart } from "@/lib/profile-film-scoring";
+import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
 import { supabase } from "@/lib/supabase";
 import { Film } from "@/types/film";
 
@@ -43,7 +44,9 @@ export default async function FilmsPage() {
     { data: awardRecognitionRows },
   ] = await Promise.all([
     getAuthUserSummary(),
-    supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS),
+    applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS)
+    ),
     supabase
       .from("film_festival_recognitions")
       .select("film_id")
