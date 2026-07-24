@@ -33,7 +33,7 @@ test.describe("Account control", () => {
   test("shows login link on the home page when signed out", async ({ page }) => {
     await page.goto("/");
 
-    await expect(page.getByRole("heading", { name: "Animation Guide" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
     await expect(page.getByTestId("auth-status")).toContainText("Log in");
     await expect(page.getByTestId("auth-email")).toHaveCount(0);
   });

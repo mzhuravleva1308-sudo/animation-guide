@@ -1,18 +1,16 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Home page", () => {
-  test("renders the landing page without crashing", async ({ page }) => {
+  test("renders the public catalog for guests", async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on("pageerror", (error) => consoleErrors.push(error.message));
 
     await page.goto("/");
 
-    await expect(
-      page.getByRole("heading", { name: "Animation Guide" })
-    ).toBeVisible();
-    await expect(
-      page.getByText("Personal animation guides are available by private link.")
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+    await expect(page.getByTestId("film-search-expand")).toBeVisible();
+    await expect(page.getByTestId("film-list")).toBeVisible();
+    await expect(page.getByTestId("auth-status")).toContainText("Log in");
     expect(consoleErrors).toEqual([]);
   });
 });

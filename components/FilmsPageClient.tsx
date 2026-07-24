@@ -1,9 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { UserRound } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCatalog from "@/components/FilmCatalog";
+import ResonaleBrand from "@/components/ResonaleBrand";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
 import {
   loadAuthenticatedProfileFilmState,
@@ -25,6 +27,7 @@ type FilmsPageClientProps = {
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError: string | null;
+  postAuthPath?: string;
 };
 
 type InteractionSnapshot = {
@@ -48,6 +51,7 @@ export default function FilmsPageClient({
   awardWinningFilmIds,
   pageSize,
   loadError,
+  postAuthPath = "/films",
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
   const [modalOpen, setModalOpen] = useState(false);
@@ -281,15 +285,9 @@ export default function FilmsPageClient({
 
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
-      <header className="mb-8">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1 className="text-3xl font-semibold">Animation Guide</h1>
-            <p className="mt-2 text-gray-600">
-              Find strange, beautiful, and emotionally resonant animated films to
-              watch next.
-            </p>
-          </div>
+      <header className="mb-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+          <ResonaleBrand />
 
           {auth ? (
             <AccountMenu
@@ -308,12 +306,21 @@ export default function FilmsPageClient({
                 setModalRestoreFocusElement(authTriggerRef.current);
                 setModalOpen(true);
               }}
-              className="shrink-0 text-sm text-gray-500 transition hover:text-gray-900"
+              className="inline-flex h-11 shrink-0 items-center gap-1.5 bg-transparent text-[20px] font-semibold tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
               data-testid="auth-status"
             >
+              <UserRound size={21} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
               Log in
             </button>
           )}
+        </div>
+
+        <div className="mt-8 mb-2">
+          <h1 className="sr-only">Resonale</h1>
+          <p className="whitespace-nowrap font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+            Find strange, beautiful, and emotionally resonant animated films to
+            watch next.
+          </p>
         </div>
       </header>
 
@@ -336,7 +343,7 @@ export default function FilmsPageClient({
       <EmailAuthModal
         open={modalOpen}
         onClose={handleModalClose}
-        postAuthPath="/films"
+        postAuthPath={postAuthPath}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />

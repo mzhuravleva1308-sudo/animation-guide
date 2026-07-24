@@ -2,7 +2,6 @@ import { Film } from "@/types/film";
 import type { QuickFilter, QuickFilterOption } from "@/components/QuickFilters";
 
 export const QUICK_FILTERS: QuickFilterOption[] = [
-  "all",
   "recent",
   "award-winners",
   "stop-motion",

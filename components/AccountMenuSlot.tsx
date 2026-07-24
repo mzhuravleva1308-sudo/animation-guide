@@ -10,10 +10,10 @@ export default async function AccountMenuSlot() {
     return (
       <Link
         href="/login"
-        className="inline-flex h-9 shrink-0 items-center gap-1.5 bg-transparent text-sm font-normal text-slate-700 transition hover:text-slate-900"
+        className="inline-flex h-11 shrink-0 items-center gap-1.5 bg-transparent text-[20px] font-semibold tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
         data-testid="auth-status"
       >
-        <UserRound size={18} strokeWidth={2} className="shrink-0" aria-hidden="true" />
+        <UserRound size={21} strokeWidth={1.75} className="shrink-0" aria-hidden="true" />
         Log in
       </Link>
     );

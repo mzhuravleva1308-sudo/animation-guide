@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { filmTitleFromCard } from "../helpers/profile-page";
+import { expandFilmSearch, filmTitleFromCard } from "../helpers/profile-page";
 
 test.describe("Public films catalog", () => {
   test("loads without a profile token and shows interactive film cards", async ({
@@ -10,10 +10,8 @@ test.describe("Public films catalog", () => {
 
     await page.goto("/films");
 
-    await expect(
-      page.getByRole("heading", { name: "Animation Guide" })
-    ).toBeVisible();
-    await expect(page.getByTestId("film-search-input")).toBeVisible();
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+    await expect(page.getByTestId("film-search-expand")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
     await expect(page.getByTestId("film-card").first()).toBeVisible();
     await expect(
@@ -28,7 +26,7 @@ test.describe("Public films catalog", () => {
     await expect(
       page.getByRole("button", { name: "Add to watchlist" }).first()
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "All films" })).toHaveCount(
+    await expect(page.getByRole("button", { name: "Films" })).toHaveCount(
       0
     );
     await expect(page.getByRole("button", { name: "Saved" })).toHaveCount(0);
@@ -40,7 +38,7 @@ test.describe("Public films catalog", () => {
   test("supports search without profile context", async ({ page }) => {
     await page.goto("/films");
 
-    const searchInput = page.getByTestId("film-search-input");
+    const searchInput = await expandFilmSearch(page);
     const firstTitle = await filmTitleFromCard(page.getByTestId("film-card").first());
     const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
 
@@ -59,7 +57,7 @@ test.describe("Public films catalog", () => {
     async function openSuggestionsOnFilms(page: import("@playwright/test").Page) {
       await page.goto("/films");
 
-      const searchInput = page.getByTestId("film-search-input");
+      const searchInput = await expandFilmSearch(page);
       const firstTitle = await filmTitleFromCard(
         page.getByTestId("film-card").first()
       );
@@ -94,7 +92,11 @@ test.describe("Public films catalog", () => {
     test("closes on outside click and keeps results", async ({ page }) => {
       const { searchInput, partialTitle } = await openSuggestionsOnFilms(page);
 
-      await page.getByRole("heading", { name: "Animation Guide" }).click();
+      await page
+        .getByText(
+          "Find strange, beautiful, and emotionally resonant animated films to watch next."
+        )
+        .click();
 
       await expect(
         page.getByTestId("film-search-suggestions-dropdown")

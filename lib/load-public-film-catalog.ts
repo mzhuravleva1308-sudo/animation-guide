@@ -1,0 +1,76 @@
+import { attachPublicFestivalBadges } from "@/lib/attach-public-festival-badges";
+import { getAuthUserSummary } from "@/lib/auth/session";
+import { normalizeFilms } from "@/lib/normalize-film";
+import { sortFilmsByColdStart } from "@/lib/profile-film-scoring";
+import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
+import { supabase } from "@/lib/supabase";
+import { Film } from "@/types/film";
+
+export const PUBLIC_CATALOG_PAGE_SIZE = 100;
+
+const PUBLIC_CATALOG_FILM_FIELDS = [
+  "id",
+  "title",
+  "original_title",
+  "director",
+  "year",
+  "country",
+  "duration_minutes",
+  "festival",
+  "poster_url",
+  "image_url",
+  "external_image_url",
+  "trailer_url",
+  "availability",
+  "synopsis",
+  "what_it_is",
+  "the_mood",
+  "technique",
+  "moods",
+  "aesthetic_tags",
+  "narrative_tags",
+  "cold_start_score",
+  "quick_filters",
+].join(", ");
+
+export async function loadPublicFilmCatalog() {
+  const [
+    auth,
+    { data: filmsData, error },
+    { data: awardRecognitionRows },
+  ] = await Promise.all([
+    getAuthUserSummary(),
+    applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS)
+    ),
+    supabase
+      .from("film_festival_recognitions")
+      .select("film_id")
+      .eq("import_source", "manual_verified_major_awards_v1")
+      .eq("recognition_type", "award")
+      .eq("award_result", "grand_prize"),
+  ]);
+
+  const films = sortFilmsByColdStart(
+    await attachPublicFestivalBadges(
+      supabase,
+      normalizeFilms((filmsData as Film[] | null) ?? [])
+    )
+  );
+
+  const awardWinningFilmIds = Array.from(
+    new Set(
+      (awardRecognitionRows ?? [])
+        .map((row) => row.film_id)
+        .filter((filmId): filmId is string => Boolean(filmId))
+    )
+  );
+
+  return {
+    auth,
+    films,
+    awardWinningFilmIds,
+    loadError: error?.message ?? null,
+    pageSize: PUBLIC_CATALOG_PAGE_SIZE,
+  };
+}

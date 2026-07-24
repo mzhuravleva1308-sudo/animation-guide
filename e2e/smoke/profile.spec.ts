@@ -22,6 +22,7 @@ import {
   firstUnratedFilmCard,
   gotoProfilePage,
   openProfileTab,
+  expandFilmSearch,
   rateFilmOnCard,
   unsaveAllVisibleFilms,
   waitForWatchlistButton,
@@ -92,9 +93,7 @@ test.describe("Profile page", () => {
 
       await gotoProfilePage(page, credentials);
 
-      await expect(
-        page.getByRole("button", { name: "All films" })
-      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "Films" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Watched" })).toBeVisible();
 
@@ -329,13 +328,14 @@ test.describe("Profile page", () => {
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
-      const searchInput = page.getByTestId("film-search-input");
-      await expect(searchInput).toBeVisible();
+      await expect(page.getByTestId("film-search-expand")).toBeVisible();
 
       await openProfileTab(page, "Saved");
-      await expect(searchInput).not.toBeVisible();
+      await expect(page.getByTestId("film-search-expand")).not.toBeVisible();
+      await expect(page.getByTestId("film-search-input")).not.toBeVisible();
 
       await openProfileTab(page, "All films");
+      const searchInput = await expandFilmSearch(page);
       await expect(searchInput).toBeVisible();
 
       await searchInput.fill("a");
@@ -359,7 +359,7 @@ test.describe("Profile page", () => {
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
-      const searchInput = page.getByTestId("film-search-input");
+      const searchInput = await expandFilmSearch(page);
       const firstTitle = await filmTitleFromCard(firstFilmCard(page));
       const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
 

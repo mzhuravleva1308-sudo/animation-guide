@@ -14,6 +14,7 @@ import { getFilmRating } from "@/lib/film-ratings";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
+import ResonaleBrand from "@/components/ResonaleBrand";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
@@ -66,7 +67,7 @@ const TAB_ITEMS: Array<{
   id: ProfileTab;
   label: string;
 }> = [
-  { id: "all", label: "All films" },
+  { id: "all", label: "Films" },
   { id: "saved", label: "Saved" },
   { id: "rated", label: "Watched" },
 ];
@@ -84,18 +85,18 @@ function getCoreProfileTags(core: ProfileTasteCore) {
 }
 
 function tabNavItemClass(isActive: boolean) {
-  return `inline-flex h-9 shrink-0 items-center bg-transparent px-0.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
+  return `inline-flex h-11 shrink-0 items-center bg-transparent px-0 text-[20px] font-semibold tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
     isActive
-      ? "font-medium text-slate-900"
-      : "font-normal text-slate-700 hover:text-slate-900"
+      ? "text-[#1A1B2E]"
+      : "text-[#5c5d6e] hover:text-[#1A1B2E]"
   }`;
 }
 
 function TabIcon({ tab }: { tab: ProfileTab }) {
   const iconProps = {
     className: "shrink-0",
-    size: 18 as const,
-    strokeWidth: 2 as const,
+    size: 21 as const,
+    strokeWidth: 1.75 as const,
     "aria-hidden": true as const,
   };
 
@@ -140,7 +141,6 @@ export default function ProfileTabs({
   loadError,
   accountMenu,
 }: ProfileTabsProps) {
-  const displayName = profileName?.trim() || null;
   const [activeTab, setActiveTab] = useState<ProfileTab>("all");
   const [activeQuickFilter, setActiveQuickFilter] =useState<QuickFilter>(null);
   const [allFilmsPage, setAllFilmsPage] = useState(1);
@@ -365,52 +365,53 @@ export default function ProfileTabs({
 
   return (
     <>
-      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 max-w-2xl flex-1">
-          <h1 className="text-3xl font-semibold">
-            {displayName ? `${displayName}’s Animation Guide` : "Animation Guide"}
-          </h1>
-          <p className="mt-2 text-gray-600">
+      <header className="mb-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+          <div className="flex min-w-0 flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-5">
+            <ResonaleBrand />
+
+            <nav
+              aria-label="Profile film lists"
+              className="flex max-w-full flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-5"
+            >
+              {TAB_ITEMS.map((tab) => {
+                const isActive = activeTab === tab.id;
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
+                    className={tabNavItemClass(isActive)}
+                    aria-pressed={isActive}
+                  >
+                    <span className="relative inline-flex items-center gap-1 whitespace-nowrap">
+                      <TabIcon tab={tab.id} />
+                      <span>{tab.label}</span>
+                      {isActive ? (
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute right-0 bottom-[-5px] left-0 h-px bg-[#B1A9D9]"
+                        />
+                      ) : null}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div className="flex shrink-0 items-center">
+            {accountMenu}
+          </div>
+        </div>
+
+        <div className="mt-8 mb-2">
+          <h1 className="sr-only">Resonale</h1>
+          <p className="whitespace-nowrap font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             Find strange, beautiful, and emotionally resonant animated films to
             watch next.
           </p>
-        </div>
-
-        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-3 sm:gap-0">
-          <nav
-            aria-label="Profile film lists"
-            className="flex max-w-full flex-wrap items-center justify-end gap-4 sm:gap-5"
-          >
-            {TAB_ITEMS.map((tab) => {
-              const isActive = activeTab === tab.id;
-
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleTabChange(tab.id)}
-                  className={tabNavItemClass(isActive)}
-                  aria-pressed={isActive}
-                >
-                  <span className="relative inline-flex items-center gap-1.5 whitespace-nowrap">
-                    <TabIcon tab={tab.id} />
-                    <span>{tab.label}</span>
-                    {isActive ? (
-                      <span
-                        aria-hidden="true"
-                        className="pointer-events-none absolute right-0 bottom-[-6px] left-0 h-px bg-slate-900"
-                      />
-                    ) : null}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
-          <span
-            aria-hidden="true"
-            className="ml-3 mr-3 hidden h-5 w-px shrink-0 self-center bg-slate-200 sm:block"
-          />
-          {accountMenu}
         </div>
       </header>
 
@@ -486,22 +487,26 @@ export default function ProfileTabs({
 
       {activeTab === "all" && (
         <>
-          <FilmSearch
-            onResultsChange={handleSearchResultsChange}
-            isLoading={searchState.isLoading}
-          />
-          <QuickFilters
-            activeFilter={activeQuickFilter}
-            onFilterChange={handleQuickFilterChange}
-            availableFilters={QUICK_FILTERS}
-          />
-          <div className="mt-3 mb-4 min-h-5" aria-live="polite">
-            {!isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
-              <p className="text-sm text-gray-500">
-                {totalAllFilmsCount} films in the guide
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <FilmSearch
+                onResultsChange={handleSearchResultsChange}
+                isLoading={searchState.isLoading}
+              />
+              <QuickFilters
+                activeFilter={activeQuickFilter}
+                onFilterChange={handleQuickFilterChange}
+                availableFilters={QUICK_FILTERS}
+              />
+            </div>
+            {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (
+              <p className="shrink-0 font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+                {totalAllFilmsCount}{" "}
+                {totalAllFilmsCount === 1 ? "film" : "films"}
               </p>
-            )}
-
+            ) : null}
+          </div>
+          <div className="mb-4 min-h-0" aria-live="polite">
             {searchState.error && isAllFilmsSearchActive && (
               <p className="text-sm text-red-600" data-testid="film-search-error">
                 {searchState.error}
@@ -513,7 +518,7 @@ export default function ProfileTabs({
               !searchState.error &&
               films.length > 0 && (
               <p
-                className="text-sm text-gray-500"
+                className="text-sm text-slate-500"
                 data-testid="film-search-results-count"
               >
                 {films.length} {films.length === 1 ? "film" : "films"} matched “
@@ -524,7 +529,7 @@ export default function ProfileTabs({
             {isSearchActive &&
               searchState.query.length > 0 &&
               searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-              <p className="text-sm text-gray-500" data-testid="film-search-hint">
+              <p className="text-sm text-slate-500" data-testid="film-search-hint">
                 Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to search.
               </p>
             )}
@@ -533,7 +538,7 @@ export default function ProfileTabs({
       )}
 
       {activeTab === "rated" && (
-        <p className="mb-4 text-sm text-gray-500">
+        <p className="mb-4 text-sm text-slate-500">
           Showing {localWatchedFilms.length} watched{" "}
           {localWatchedFilms.length === 1 ? "film" : "films"}
         </p>

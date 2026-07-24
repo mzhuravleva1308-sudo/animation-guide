@@ -112,25 +112,26 @@ export default function FilmCatalog({
 
   return (
     <>
-      <div className="mb-6 min-h-5">
-        {totalCount > 0 && (
-          <p className="text-sm text-gray-500">
-            {totalCount} films in the catalog
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <FilmSearch
+            onResultsChange={handleSearchResultsChange}
+            isLoading={searchState.isLoading}
+          />
+          <QuickFilters
+            activeFilter={activeQuickFilter}
+            onFilterChange={handleQuickFilterChange}
+            availableFilters={QUICK_FILTERS}
+          />
+        </div>
+        {!isShowingSearchResults && totalCount > 0 ? (
+          <p className="shrink-0 font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+            {totalCount} {totalCount === 1 ? "film" : "films"}
           </p>
-        )}
+        ) : null}
       </div>
 
-      <FilmSearch
-        onResultsChange={handleSearchResultsChange}
-        isLoading={searchState.isLoading}
-      />
-      <QuickFilters
-        activeFilter={activeQuickFilter}
-        onFilterChange={handleQuickFilterChange}
-        availableFilters={QUICK_FILTERS}
-      />
-
-      <div className="mb-6 min-h-5" aria-live="polite">
+      <div className="mb-4 min-h-0" aria-live="polite">
         {searchState.error && isShowingSearchResults && (
           <p className="text-sm text-red-600" data-testid="film-search-error">
             {searchState.error}
@@ -142,7 +143,7 @@ export default function FilmCatalog({
           !searchState.error &&
           visibleFilms.length > 0 && (
             <p
-              className="text-sm text-gray-500"
+              className="text-sm text-slate-500"
               data-testid="film-search-results-count"
             >
               {visibleFilms.length}{" "}
@@ -154,7 +155,7 @@ export default function FilmCatalog({
         {isSearchActive &&
           searchState.query.length > 0 &&
           searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-            <p className="text-sm text-gray-500" data-testid="film-search-hint">
+            <p className="text-sm text-slate-500" data-testid="film-search-hint">
               Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to
               search.
             </p>
