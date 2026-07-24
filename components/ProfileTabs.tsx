@@ -85,7 +85,7 @@ function getCoreProfileTags(core: ProfileTasteCore) {
 }
 
 function tabNavItemClass(isActive: boolean) {
-  return `inline-flex h-11 shrink-0 items-center bg-transparent px-0 text-[20px] font-semibold tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
+  return `inline-flex h-11 shrink-0 items-center bg-transparent px-0 text-[20px] font-normal tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
     isActive
       ? "text-[#1A1B2E]"
       : "text-[#5c5d6e] hover:text-[#1A1B2E]"
@@ -96,7 +96,7 @@ function TabIcon({ tab }: { tab: ProfileTab }) {
   const iconProps = {
     className: "shrink-0",
     size: 21 as const,
-    strokeWidth: 1.75 as const,
+    strokeWidth: 1.25 as const,
     "aria-hidden": true as const,
   };
 
@@ -408,7 +408,7 @@ export default function ProfileTabs({
 
         <div className="mt-8 mb-2">
           <h1 className="sr-only">Resonale</h1>
-          <p className="whitespace-nowrap font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+          <p className="whitespace-nowrap font-sans text-base font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             Find strange, beautiful, and emotionally resonant animated films to
             watch next.
           </p>
