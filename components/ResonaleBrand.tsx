@@ -106,8 +106,8 @@ export default function ResonaleBrand({ href = "/" }: ResonaleBrandProps) {
         Layout box matches the Resonale wordmark band so sibling nav
         centers against “esonale”, while ANIMATION GUIDE hangs below.
       */}
-      <span className="relative block h-7 w-[11.75rem] sm:h-8 sm:w-[14.25rem]">
-        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.4rem] left-0 h-10 w-auto max-w-none sm:top-[-0.55rem] sm:h-[3.25rem]" />
+      <span className="relative block h-[21px] w-[8.8125rem] sm:h-6 sm:w-[10.6875rem]">
+        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.3rem] left-0 h-[30px] w-auto max-w-none sm:top-[-0.4125rem] sm:h-[39px]" />
       </span>
     </Link>
   );

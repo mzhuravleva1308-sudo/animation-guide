@@ -283,7 +283,7 @@ export default function FilmSearch({
       ref={searchRootRef}
       className={
         isExpanded
-          ? "relative mb-0 w-full min-w-0 max-w-[13.5rem] sm:w-52"
+          ? "relative mb-0 w-full min-w-0 max-w-[10.125rem] sm:w-[9.75rem]"
           : "relative mb-0 shrink-0"
       }
       data-testid="film-search"
@@ -294,14 +294,14 @@ export default function FilmSearch({
           data-testid="film-search-expand"
           aria-label="Search films"
           onClick={expandSearch}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[#eef0f8] text-slate-700 transition hover:bg-[#e5e7f4] hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+          className="inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg bg-[#eef0f8] text-slate-700 transition hover:bg-[#e5e7f4] hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
         >
-          <Search size={15} strokeWidth={2} aria-hidden="true" />
+          <Search size={11} strokeWidth={2} aria-hidden="true" />
         </button>
       ) : (
         <div className="relative w-full min-w-0">
           <Search
-            size={15}
+            size={11}
             strokeWidth={2}
             aria-hidden="true"
             className="pointer-events-none absolute left-0 top-1/2 z-10 -translate-y-1/2 text-slate-500"
@@ -345,7 +345,7 @@ export default function FilmSearch({
             }}
             placeholder="Search…"
             aria-label="Search by title, director, or mood"
-            className="h-9 w-full min-w-0 rounded-none border-0 border-b border-slate-200 bg-transparent py-0 pl-5 pr-16 text-[15px] font-normal text-slate-900 placeholder:text-slate-500 shadow-none outline-none transition-[border-color,width] focus:border-slate-400 focus:outline-none focus:shadow-none focus-visible:border-slate-400 focus-visible:outline-none focus-visible:shadow-none"
+            className="h-[27px] w-full min-w-0 rounded-none border-0 border-b border-slate-200 bg-transparent py-0 pl-4 pr-12 text-[13px] font-normal text-slate-900 placeholder:text-slate-500 shadow-none outline-none transition-[border-color,width] focus:border-slate-400 focus:outline-none focus:shadow-none focus-visible:border-slate-400 focus-visible:outline-none focus-visible:shadow-none"
             autoComplete="off"
             role="combobox"
             aria-expanded={showSuggestionsDropdown}
@@ -354,7 +354,7 @@ export default function FilmSearch({
           <span
             data-testid="film-search-loading"
             aria-hidden={!showLoading}
-            className={`pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[11px] text-slate-500 ${
+            className={`pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[8.25px] text-slate-500 ${
               showLoading ? "visible" : "invisible"
             }`}
           >

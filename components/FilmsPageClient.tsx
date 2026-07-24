@@ -306,18 +306,18 @@ export default function FilmsPageClient({
                 setModalRestoreFocusElement(authTriggerRef.current);
                 setModalOpen(true);
               }}
-              className="inline-flex h-11 shrink-0 items-center gap-1.5 bg-transparent text-[20px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
+              className="inline-flex h-[33px] shrink-0 items-center gap-[4.5px] bg-transparent text-[15px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
               data-testid="auth-status"
             >
-              <UserRound size={21} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
+              <UserRound size={16} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
               Log in
             </button>
           )}
         </div>
 
-        <div className="mt-8 mb-2">
+        <div className="mt-6 mb-1.5">
           <h1 className="sr-only">Resonale</h1>
-          <p className="whitespace-nowrap font-sans text-base font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+          <p className="whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             Find strange, beautiful, and emotionally resonant animated films to
             watch next.
           </p>

@@ -24,10 +24,10 @@ export default function FilmsAuthControl({ auth }: FilmsAuthControlProps) {
       <button
         type="button"
         onClick={() => setModalOpen(true)}
-        className="inline-flex h-11 shrink-0 items-center gap-1.5 bg-transparent text-[20px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
+        className="inline-flex h-[33px] shrink-0 items-center gap-[4.5px] bg-transparent text-[15px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
         data-testid="auth-status"
       >
-        <UserRound size={21} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
+        <UserRound size={16} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
         Log in
       </button>
 

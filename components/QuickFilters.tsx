@@ -44,13 +44,13 @@ function FilterDivider() {
   return (
     <span
       aria-hidden="true"
-      className="mx-0.5 hidden h-4 w-px shrink-0 bg-[#d0d3e6] sm:block"
+      className="mx-0.5 hidden h-3 w-px shrink-0 bg-[#d0d3e6] sm:block"
     />
   );
 }
 
 function filterChipClass(isActive: boolean) {
-  return `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-3 font-sans text-[15px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
+  return `inline-flex h-[27px] shrink-0 items-center gap-[4.5px] rounded-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
     isActive
       ? "bg-[#5b5f8a] text-white shadow-sm"
       : "bg-[#eef0f8] text-[#5c5d6e] hover:bg-[#e5e7f4] hover:text-[#1A1B2E]"
@@ -76,7 +76,7 @@ function FilterChip({
       {option === "award-winners" ? (
         <>
           <Trophy
-            size={15}
+            size={11}
             strokeWidth={2}
             className={`shrink-0 ${isActive ? "text-white" : "text-[#5c5d6e]"}`}
             aria-hidden="true"
@@ -87,7 +87,7 @@ function FilterChip({
       ) : option === "recent" ? (
         <>
           <CalendarClock
-            size={15}
+            size={11}
             strokeWidth={2}
             className={`shrink-0 ${isActive ? "text-white" : "text-[#5c5d6e]"}`}
             aria-hidden="true"
@@ -117,7 +117,7 @@ export default function QuickFilters({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-2"
+      className="flex flex-wrap items-center gap-1.5"
       role="group"
       aria-label="Quick filters"
     >

@@ -112,8 +112,8 @@ export default function FilmCatalog({
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+      <div className="mb-[18px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
           <FilmSearch
             onResultsChange={handleSearchResultsChange}
             isLoading={searchState.isLoading}
@@ -125,7 +125,7 @@ export default function FilmCatalog({
           />
         </div>
         {!isShowingSearchResults && totalCount > 0 ? (
-          <p className="shrink-0 font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+          <p className="shrink-0 font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             {totalCount} {totalCount === 1 ? "film" : "films"}
           </p>
         ) : null}

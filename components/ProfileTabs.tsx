@@ -85,7 +85,7 @@ function getCoreProfileTags(core: ProfileTasteCore) {
 }
 
 function tabNavItemClass(isActive: boolean) {
-  return `inline-flex h-11 shrink-0 items-center bg-transparent px-0 text-[20px] font-normal tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
+  return `inline-flex h-[33px] shrink-0 items-center bg-transparent px-0 text-[15px] font-normal tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
     isActive
       ? "text-[#1A1B2E]"
       : "text-[#5c5d6e] hover:text-[#1A1B2E]"
@@ -95,7 +95,7 @@ function tabNavItemClass(isActive: boolean) {
 function TabIcon({ tab }: { tab: ProfileTab }) {
   const iconProps = {
     className: "shrink-0",
-    size: 21 as const,
+    size: 16 as const,
     strokeWidth: 1.25 as const,
     "aria-hidden": true as const,
   };
@@ -367,12 +367,12 @@ export default function ProfileTabs({
     <>
       <header className="mb-0">
         <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
-          <div className="flex min-w-0 flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-5">
+          <div className="flex min-w-0 flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-[15px]">
             <ResonaleBrand />
 
             <nav
               aria-label="Profile film lists"
-              className="flex max-w-full flex-wrap items-center gap-4 sm:flex-nowrap sm:gap-5"
+              className="flex max-w-full flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-[15px]"
             >
               {TAB_ITEMS.map((tab) => {
                 const isActive = activeTab === tab.id;
@@ -406,9 +406,9 @@ export default function ProfileTabs({
           </div>
         </div>
 
-        <div className="mt-8 mb-2">
+        <div className="mt-6 mb-1.5">
           <h1 className="sr-only">Resonale</h1>
-          <p className="whitespace-nowrap font-sans text-base font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+          <p className="whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             Find strange, beautiful, and emotionally resonant animated films to
             watch next.
           </p>
@@ -487,8 +487,8 @@ export default function ProfileTabs({
 
       {activeTab === "all" && (
         <>
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <div className="mb-[18px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               <FilmSearch
                 onResultsChange={handleSearchResultsChange}
                 isLoading={searchState.isLoading}
@@ -500,7 +500,7 @@ export default function ProfileTabs({
               />
             </div>
             {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (
-              <p className="shrink-0 font-sans text-[15px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+              <p className="shrink-0 font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
                 {totalAllFilmsCount}{" "}
                 {totalAllFilmsCount === 1 ? "film" : "films"}
               </p>
