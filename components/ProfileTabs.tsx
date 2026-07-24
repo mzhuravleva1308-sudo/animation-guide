@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import { getFilmRating } from "@/lib/film-ratings";
@@ -13,6 +20,11 @@ import {
   filterFilmsByQuickFilter,
   QUICK_FILTERS,
 } from "@/lib/quick-film-filters";
+import {
+  Bookmark,
+  CircleCheck,
+  Film as FilmIcon,
+} from "lucide-react";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -47,9 +59,13 @@ type ProfileTabsProps = {
   filmRatings?: Record<string, number>;
   showDebugScores?: boolean;
   loadError?: string | null;
+  accountMenu: ReactNode;
 };
 
-const TAB_LABELS: Array<{ id: ProfileTab; label: string }> = [
+const TAB_ITEMS: Array<{
+  id: ProfileTab;
+  label: string;
+}> = [
   { id: "all", label: "All films" },
   { id: "saved", label: "Saved" },
   { id: "rated", label: "Watched" },
@@ -67,12 +83,31 @@ function getCoreProfileTags(core: ProfileTasteCore) {
   return core.nearest_moods ?? [];
 }
 
-function tabButtonClass(isActive: boolean) {
-  return `rounded-full border px-4 py-2 text-sm font-medium ${
+function tabNavItemClass(isActive: boolean) {
+  return `inline-flex h-9 shrink-0 items-center bg-transparent px-0.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
     isActive
-      ? "border-black bg-black text-white"
-      : "border-gray-300 bg-white text-gray-700"
+      ? "font-medium text-slate-900"
+      : "font-normal text-slate-700 hover:text-slate-900"
   }`;
+}
+
+function TabIcon({ tab }: { tab: ProfileTab }) {
+  const iconProps = {
+    className: "shrink-0",
+    size: 18 as const,
+    strokeWidth: 2 as const,
+    "aria-hidden": true as const,
+  };
+
+  if (tab === "saved") {
+    return <Bookmark {...iconProps} />;
+  }
+
+  if (tab === "rated") {
+    return <CircleCheck {...iconProps} />;
+  }
+
+  return <FilmIcon {...iconProps} />;
 }
 
 function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
@@ -103,7 +138,9 @@ export default function ProfileTabs({
   filmRatings = {},
   showDebugScores = false,
   loadError,
+  accountMenu,
 }: ProfileTabsProps) {
+  const displayName = profileName?.trim() || null;
   const [activeTab, setActiveTab] = useState<ProfileTab>("all");
   const [activeQuickFilter, setActiveQuickFilter] =useState<QuickFilter>(null);
   const [allFilmsPage, setAllFilmsPage] = useState(1);
@@ -328,35 +365,54 @@ export default function ProfileTabs({
 
   return (
     <>
-      <div className="mb-6 flex flex-wrap gap-2">
-        {TAB_LABELS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabChange(tab.id)}
-            className={tabButtonClass(activeTab === tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === "all" && (
-        <div className="mb-6 min-h-5">
-          {!isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
-            <p className="text-sm text-gray-500">
-              {totalAllFilmsCount} films in the guide
-            </p>
-          )}
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0 max-w-2xl flex-1">
+          <h1 className="text-3xl font-semibold">
+            {displayName ? `${displayName}’s Animation Guide` : "Animation Guide"}
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Find strange, beautiful, and emotionally resonant animated films to
+            watch next.
+          </p>
         </div>
-      )}
 
-      {activeTab === "rated" && (
-        <p className="mb-6 text-sm text-gray-500">
-          Showing {localWatchedFilms.length} watched{" "}
-          {localWatchedFilms.length === 1 ? "film" : "films"}
-        </p>
-      )}
+        <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-3 sm:gap-0">
+          <nav
+            aria-label="Profile film lists"
+            className="flex max-w-full flex-wrap items-center justify-end gap-4 sm:gap-5"
+          >
+            {TAB_ITEMS.map((tab) => {
+              const isActive = activeTab === tab.id;
+
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => handleTabChange(tab.id)}
+                  className={tabNavItemClass(isActive)}
+                  aria-pressed={isActive}
+                >
+                  <span className="relative inline-flex items-center gap-1.5 whitespace-nowrap">
+                    <TabIcon tab={tab.id} />
+                    <span>{tab.label}</span>
+                    {isActive ? (
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-0 bottom-[-6px] left-0 h-px bg-slate-900"
+                      />
+                    ) : null}
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+          <span
+            aria-hidden="true"
+            className="ml-3 mr-3 hidden h-5 w-px shrink-0 self-center bg-slate-200 sm:block"
+          />
+          {accountMenu}
+        </div>
+      </header>
 
       {activeTab === "rated" && localWatchedFilms.length > 0 && (
         <section className="mb-8 rounded-2xl border border-gray-200 bg-white p-5">
@@ -439,7 +495,13 @@ export default function ProfileTabs({
             onFilterChange={handleQuickFilterChange}
             availableFilters={QUICK_FILTERS}
           />
-          <div className="mb-6 min-h-5" aria-live="polite">
+          <div className="mt-3 mb-4 min-h-5" aria-live="polite">
+            {!isAllFilmsSearchActive && totalAllFilmsCount > 0 && (
+              <p className="text-sm text-gray-500">
+                {totalAllFilmsCount} films in the guide
+              </p>
+            )}
+
             {searchState.error && isAllFilmsSearchActive && (
               <p className="text-sm text-red-600" data-testid="film-search-error">
                 {searchState.error}
@@ -468,6 +530,13 @@ export default function ProfileTabs({
             )}
           </div>
         </>
+      )}
+
+      {activeTab === "rated" && (
+        <p className="mb-4 text-sm text-gray-500">
+          Showing {localWatchedFilms.length} watched{" "}
+          {localWatchedFilms.length === 1 ? "film" : "films"}
+        </p>
       )}
 
       {loadError && (

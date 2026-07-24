@@ -20,7 +20,7 @@ export async function openProfileTab(
 ) {
   const tabButton = page.getByRole("button", { name: tabName, exact: true });
   await tabButton.click();
-  await expect(tabButton).toHaveClass(/bg-black/);
+  await expect(tabButton).toHaveAttribute("aria-pressed", "true");
 }
 
 export function filmList(page: Page) {

@@ -15,7 +15,7 @@ async function expectStableSearchInputWidth(
     const allFilmsTab = page.getByRole("button", { name: "All films" });
     await expect(allFilmsTab).toBeVisible();
     await allFilmsTab.click();
-    await expect(allFilmsTab).toHaveClass(/bg-black/);
+    await expect(allFilmsTab).toHaveAttribute("aria-pressed", "true");
   }
 
   await expect(page.getByTestId("film-search-input")).toBeVisible();
