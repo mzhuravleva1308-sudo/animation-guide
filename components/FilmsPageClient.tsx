@@ -286,7 +286,7 @@ export default function FilmsPageClient({
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
       <header className="mb-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
+        <div className="relative flex flex-wrap items-center justify-between gap-3 pb-5 sm:flex-nowrap">
           <ResonaleBrand />
 
           {auth ? (
@@ -313,9 +313,14 @@ export default function FilmsPageClient({
               Log in
             </button>
           )}
+
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-[#ececf4] from-0% via-[#ececf4] via-[58%] to-transparent to-[82%]"
+          />
         </div>
 
-        <div className="mt-6 mb-1.5">
+        <div className="mt-3 mb-1.5">
           <h1 className="sr-only">Resonale</h1>
           <p className="whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             Find strange, beautiful, and emotionally resonant animated films to
