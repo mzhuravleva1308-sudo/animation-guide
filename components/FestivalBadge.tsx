@@ -8,7 +8,7 @@ function LaurelBranch({ mirrored = false }: { mirrored?: boolean }) {
   return (
     <span
       aria-hidden="true"
-      className={`h-7 w-3.5 shrink-0 bg-current ${
+      className={`h-5 w-2.5 shrink-0 bg-current ${
         mirrored ? "scale-x-[-1]" : ""
       }`}
       style={{
@@ -42,7 +42,7 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
         data-testid={`festival-badge-${badge.id}`}
         tabIndex={0}
         aria-describedby={tooltipId}
-        className="inline-flex max-w-full cursor-help items-center gap-1 text-sm font-medium text-[#8a5b2d] outline-none"
+        className="inline-flex max-w-full cursor-help items-center gap-0.5 text-xs font-medium text-[#8a5b2d] outline-none"
       >
         <LaurelLeft />
         <span className="min-w-0 text-center tracking-[0.02em]">
