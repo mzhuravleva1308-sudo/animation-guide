@@ -60,9 +60,9 @@ function ResonaleLogoMark({ className }: { className?: string }) {
         y="35"
         fill={NAVY}
         fontFamily="var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif"
-        fontSize="32"
-        fontWeight="600"
-        letterSpacing="-0.04em"
+        fontSize="33.6"
+        fontWeight="500"
+        letterSpacing="-0.02em"
       >
         esonale
       </text>
