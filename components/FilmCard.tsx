@@ -142,7 +142,7 @@ export default function FilmCard(props: FilmCardProps) {
         )}
       </div>
 
-      <div className="flex min-h-0 flex-col p-4 sm:p-5">
+      <div className="flex min-h-0 flex-col p-4 sm:px-5 sm:py-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
       <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
       {techniquePills.length > 0 ? (
@@ -191,13 +191,13 @@ export default function FilmCard(props: FilmCardProps) {
   </div>
 
   {reason && (
-    <p className="mt-4 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
+    <p className="mt-3 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
       {reason}
     </p>
   )}
 
   {(synopsis || mood) && (
-    <div className="mt-3 space-y-2.5">
+    <div className="mt-2.5 space-y-2">
       {synopsis && (
         <p className="text-sm leading-6 text-gray-900">{synopsis}</p>
       )}
