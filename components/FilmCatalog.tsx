@@ -113,7 +113,7 @@ export default function FilmCatalog({
   return (
     <>
       <div className="mb-[18px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <FilmSearch
             onResultsChange={handleSearchResultsChange}
             isLoading={searchState.isLoading}
@@ -125,42 +125,51 @@ export default function FilmCatalog({
           />
         </div>
         {!isShowingSearchResults && totalCount > 0 ? (
-          <p className="shrink-0 font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+          <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
             {totalCount} {totalCount === 1 ? "film" : "films"}
           </p>
         ) : null}
       </div>
 
-      <div className="mb-4 min-h-0" aria-live="polite">
-        {searchState.error && isShowingSearchResults && (
-          <p className="text-sm text-red-600" data-testid="film-search-error">
-            {searchState.error}
-          </p>
-        )}
-
-        {isShowingSearchResults &&
-          !searchState.isLoading &&
-          !searchState.error &&
-          visibleFilms.length > 0 && (
-            <p
-              className="text-sm text-slate-500"
-              data-testid="film-search-results-count"
-            >
-              {visibleFilms.length}{" "}
-              {visibleFilms.length === 1 ? "film" : "films"} matched “
-              {searchState.query}”.
+      {(searchState.error && isShowingSearchResults) ||
+      (isShowingSearchResults &&
+        !searchState.isLoading &&
+        !searchState.error &&
+        visibleFilms.length > 0) ||
+      (isSearchActive &&
+        searchState.query.length > 0 &&
+        searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH) ? (
+        <div className="mb-2.5 min-h-0" aria-live="polite">
+          {searchState.error && isShowingSearchResults && (
+            <p className="text-sm text-red-600" data-testid="film-search-error">
+              {searchState.error}
             </p>
           )}
 
-        {isSearchActive &&
-          searchState.query.length > 0 &&
-          searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-            <p className="text-sm text-slate-500" data-testid="film-search-hint">
-              Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to
-              search.
-            </p>
-          )}
-      </div>
+          {isShowingSearchResults &&
+            !searchState.isLoading &&
+            !searchState.error &&
+            visibleFilms.length > 0 && (
+              <p
+                className="text-sm text-slate-500"
+                data-testid="film-search-results-count"
+              >
+                {visibleFilms.length}{" "}
+                {visibleFilms.length === 1 ? "film" : "films"} matched “
+                {searchState.query}”.
+              </p>
+            )}
+
+          {isSearchActive &&
+            searchState.query.length > 0 &&
+            searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
+              <p className="text-sm text-slate-500" data-testid="film-search-hint">
+                Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to
+                search.
+              </p>
+            )}
+        </div>
+      ) : null}
 
       {loadError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">

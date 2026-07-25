@@ -93,9 +93,15 @@ test.describe("Profile page", () => {
 
       await gotoProfilePage(page, credentials);
 
-      await expect(page.getByRole("button", { name: "Films" })).toBeVisible();
+      await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "All" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "All" })).toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
       await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Watched" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Films" })).toHaveCount(0);
 
       await expect(filmList(page)).toBeVisible();
       await expectTabHasFilms(page);

@@ -21,6 +21,7 @@ export default async function HomePage() {
       pageSize={catalog.pageSize}
       loadError={catalog.loadError}
       postAuthPath={POST_AUTH_PATH}
+      showSubtitle
     />
   );
 }

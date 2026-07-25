@@ -34,7 +34,10 @@ test.describe("Account control", () => {
     await page.goto("/");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toContainText("Log in");
+    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+      "aria-label",
+      "Log in"
+    );
     await expect(page.getByTestId("auth-email")).toHaveCount(0);
   });
 });

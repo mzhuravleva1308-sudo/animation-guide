@@ -5,7 +5,10 @@ test.describe("Films magic-link auth", () => {
     await page.goto("/films");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveText("Log in");
+    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+      "aria-label",
+      "Log in"
+    );
     await expect(page.getByTestId("account-menu-trigger")).toHaveCount(0);
   });
 

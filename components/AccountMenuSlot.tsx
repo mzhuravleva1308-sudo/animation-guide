@@ -1,21 +1,30 @@
-import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import AccountMenu from "@/components/AccountMenu";
+import {
+  HeaderIconLink,
+  HEADER_LOGIN_ICON,
+} from "@/components/HeaderIconControl";
 
 export default async function AccountMenuSlot() {
   const auth = await getAuthUserSummary();
 
   if (!auth) {
     return (
-      <Link
+      <HeaderIconLink
+        label="Log in"
         href="/login"
-        className="inline-flex h-[33px] shrink-0 items-center gap-[4.5px] bg-transparent text-[15px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
+        showLabel={false}
         data-testid="auth-status"
       >
-        <UserRound size={16} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
-        Log in
-      </Link>
+        <UserRound
+          size={HEADER_LOGIN_ICON.size}
+          strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
+          fill="none"
+          className="!h-[11px] !w-[11px] shrink-0"
+          aria-hidden="true"
+        />
+      </HeaderIconLink>
     );
   }
 

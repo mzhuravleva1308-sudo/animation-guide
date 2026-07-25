@@ -61,7 +61,7 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#B1A9D9]/70 bg-white text-xs font-semibold tracking-wide text-[#1A1B2E] transition hover:border-[#1A1B2E]/40 hover:text-[#1A1B2E]"
+        className="flex size-5 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-[#B1A9D9]/70 bg-white text-[8px] font-semibold leading-none tracking-wide text-[#1A1B2E] transition hover:border-[#1A1B2E]/40 hover:text-[#1A1B2E]"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}

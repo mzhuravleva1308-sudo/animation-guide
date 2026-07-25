@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { persistFilmRating } from "@/lib/film-profile-mutations";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { useToast } from "@/components/ToastProvider";
+import { catalogCircleControlClass } from "@/lib/catalog-control-size";
 
 type RatingChangeOptions = {
   skipOrderUpdate?: boolean;
@@ -141,7 +142,7 @@ export default function RatingButtons({
         <p className="mb-3 text-sm text-gray-500">My rating: {rating}/10</p>
       )}
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
           <button
             key={value}
@@ -150,7 +151,7 @@ export default function RatingButtons({
             aria-pressed={rating === value}
             disabled={isSaving}
             onClick={() => saveRating(value)}
-            className={`inline-flex h-10 w-10 min-h-10 min-w-10 shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
+            className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
               rating === value
                 ? "border-black bg-black text-white"
                 : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"

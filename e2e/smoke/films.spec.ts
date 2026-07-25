@@ -92,11 +92,7 @@ test.describe("Public films catalog", () => {
     test("closes on outside click and keeps results", async ({ page }) => {
       const { searchInput, partialTitle } = await openSuggestionsOnFilms(page);
 
-      await page
-        .getByText(
-          "Find strange, beautiful, and emotionally resonant animated films to watch next."
-        )
-        .click();
+      await page.getByTestId("film-list").click({ position: { x: 8, y: 8 } });
 
       await expect(
         page.getByTestId("film-search-suggestions-dropdown")

@@ -4,6 +4,10 @@ import { useState } from "react";
 import { UserRound } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
+import {
+  HeaderIconButton,
+  HEADER_LOGIN_ICON,
+} from "@/components/HeaderIconControl";
 import type { AuthUserSummary } from "@/lib/auth/session";
 
 type FilmsAuthControlProps = {
@@ -21,15 +25,20 @@ export default function FilmsAuthControl({ auth }: FilmsAuthControlProps) {
 
   return (
     <>
-      <button
-        type="button"
+      <HeaderIconButton
+        label="Log in"
+        showLabel={false}
         onClick={() => setModalOpen(true)}
-        className="inline-flex h-[33px] shrink-0 items-center gap-[4.5px] bg-transparent text-[15px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
         data-testid="auth-status"
       >
-        <UserRound size={16} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
-        Log in
-      </button>
+        <UserRound
+          size={HEADER_LOGIN_ICON.size}
+          strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
+          fill="none"
+          className="!h-[11px] !w-[11px] shrink-0"
+          aria-hidden="true"
+        />
+      </HeaderIconButton>
 
       <EmailAuthModal open={modalOpen} onClose={() => setModalOpen(false)} postAuthPath="/films" />
     </>

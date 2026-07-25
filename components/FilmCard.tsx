@@ -91,7 +91,7 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
+      className="mx-auto w-full max-w-[1520px] overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
     >
       <div
         data-testid="film-poster"

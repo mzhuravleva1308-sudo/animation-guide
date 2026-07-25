@@ -15,17 +15,14 @@ import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import { HeaderIconButton, HEADER_NAV_ICON } from "@/components/HeaderIconControl";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
   QUICK_FILTERS,
 } from "@/lib/quick-film-filters";
-import {
-  Bookmark,
-  CircleCheck,
-  Film as FilmIcon,
-} from "lucide-react";
+import { Bookmark, CircleCheck, Film as FilmIcon } from "lucide-react";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -63,15 +60,6 @@ type ProfileTabsProps = {
   accountMenu: ReactNode;
 };
 
-const TAB_ITEMS: Array<{
-  id: ProfileTab;
-  label: string;
-}> = [
-  { id: "all", label: "Films" },
-  { id: "saved", label: "Saved" },
-  { id: "rated", label: "Watched" },
-];
-
 function getCoreProfileTags(core: ProfileTasteCore) {
   if (core.core_type === "emotional") {
     return core.emotional_profile_tags ?? core.nearest_moods ?? [];
@@ -82,33 +70,6 @@ function getCoreProfileTags(core: ProfileTasteCore) {
   }
 
   return core.nearest_moods ?? [];
-}
-
-function tabNavItemClass(isActive: boolean) {
-  return `inline-flex h-[33px] shrink-0 items-center bg-transparent px-0 text-[15px] font-normal tracking-tight transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1B2E] ${
-    isActive
-      ? "text-[#1A1B2E]"
-      : "text-[#5c5d6e] hover:text-[#1A1B2E]"
-  }`;
-}
-
-function TabIcon({ tab }: { tab: ProfileTab }) {
-  const iconProps = {
-    className: "shrink-0",
-    size: 16 as const,
-    strokeWidth: 1.25 as const,
-    "aria-hidden": true as const,
-  };
-
-  if (tab === "saved") {
-    return <Bookmark {...iconProps} />;
-  }
-
-  if (tab === "rated") {
-    return <CircleCheck {...iconProps} />;
-  }
-
-  return <FilmIcon {...iconProps} />;
 }
 
 function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
@@ -365,59 +326,72 @@ export default function ProfileTabs({
 
   return (
     <>
-      <header className="mb-0">
-        <div className="relative flex flex-wrap items-center justify-between gap-3 pb-5 sm:flex-nowrap">
-          <div className="flex min-w-0 flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-[15px]">
-            <ResonaleBrand />
+      <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
+        <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+          <ResonaleBrand onClick={() => handleTabChange("all")} />
 
-            <nav
-              aria-label="Profile film lists"
-              className="flex max-w-full flex-wrap items-center gap-3 sm:flex-nowrap sm:gap-[15px]"
+          <nav
+            aria-label="Account and lists"
+            className="flex shrink-0 items-center gap-2 md:gap-3"
+          >
+            <HeaderIconButton
+              label="All"
+              active={activeTab === "all"}
+              onClick={() => handleTabChange("all")}
             >
-              {TAB_ITEMS.map((tab) => {
-                const isActive = activeTab === tab.id;
-
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => handleTabChange(tab.id)}
-                    className={tabNavItemClass(isActive)}
-                    aria-pressed={isActive}
-                  >
-                    <span className="relative inline-flex items-center gap-1 whitespace-nowrap">
-                      <TabIcon tab={tab.id} />
-                      <span>{tab.label}</span>
-                      {isActive ? (
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute right-0 bottom-[-5px] left-0 h-px bg-[#B1A9D9]"
-                        />
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          <div className="flex shrink-0 items-center">
+              <FilmIcon
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                fill="none"
+                className="shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
+            <HeaderIconButton
+              label="Saved"
+              active={activeTab === "saved"}
+              labelClassName="hidden lg:inline-block"
+              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] lg:after:hidden"
+              onClick={() => handleTabChange("saved")}
+            >
+              <Bookmark
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                fill="none"
+                className="shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
+            <HeaderIconButton
+              label="Watched"
+              active={activeTab === "rated"}
+              labelClassName="hidden md:inline-block"
+              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] md:after:hidden"
+              onClick={() => handleTabChange("rated")}
+            >
+              <CircleCheck
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                fill="none"
+                className="shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
             {accountMenu}
+          </nav>
+        </div>
+
+        {activeTab === "all" ? (
+          <div className="mt-[18px] mb-2.5">
+            <h1 className="sr-only">Resonale</h1>
+            <p className="font-sans text-[14px] font-normal leading-[1.18] tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none] sm:whitespace-nowrap">
+              Find strange, beautiful, and emotionally resonant animated films to
+              watch next.
+            </p>
           </div>
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-[#ececf4] from-0% via-[#ececf4] via-[58%] to-transparent to-[82%]"
-          />
-        </div>
-
-        <div className="mt-3 mb-1.5">
+        ) : (
           <h1 className="sr-only">Resonale</h1>
-          <p className="whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
-            Find strange, beautiful, and emotionally resonant animated films to
-            watch next.
-          </p>
-        </div>
+        )}
       </header>
 
       {activeTab === "rated" && localWatchedFilms.length > 0 && (
@@ -493,7 +467,7 @@ export default function ProfileTabs({
       {activeTab === "all" && (
         <>
           <div className="mb-[18px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
               <FilmSearch
                 onResultsChange={handleSearchResultsChange}
                 isLoading={searchState.isLoading}
@@ -505,45 +479,63 @@ export default function ProfileTabs({
               />
             </div>
             {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (
-              <p className="shrink-0 font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+              <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
                 {totalAllFilmsCount}{" "}
                 {totalAllFilmsCount === 1 ? "film" : "films"}
               </p>
             ) : null}
           </div>
-          <div className="mb-4 min-h-0" aria-live="polite">
-            {searchState.error && isAllFilmsSearchActive && (
-              <p className="text-sm text-red-600" data-testid="film-search-error">
-                {searchState.error}
-              </p>
-            )}
+          {(searchState.error && isAllFilmsSearchActive) ||
+          (isAllFilmsSearchActive &&
+            !searchState.isLoading &&
+            !searchState.error &&
+            films.length > 0) ||
+          (isSearchActive &&
+            searchState.query.length > 0 &&
+            searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH) ? (
+            <div className="mb-2.5 min-h-0" aria-live="polite">
+              {searchState.error && isAllFilmsSearchActive && (
+                <p
+                  className="text-sm text-red-600"
+                  data-testid="film-search-error"
+                >
+                  {searchState.error}
+                </p>
+              )}
 
-            {isAllFilmsSearchActive &&
-              !searchState.isLoading &&
-              !searchState.error &&
-              films.length > 0 && (
-              <p
-                className="text-sm text-slate-500"
-                data-testid="film-search-results-count"
-              >
-                {films.length} {films.length === 1 ? "film" : "films"} matched “
-                {searchState.query}”.
-              </p>
-            )}
+              {isAllFilmsSearchActive &&
+                !searchState.isLoading &&
+                !searchState.error &&
+                films.length > 0 && (
+                  <p
+                    className="text-sm text-slate-500"
+                    data-testid="film-search-results-count"
+                  >
+                    {films.length}{" "}
+                    {films.length === 1 ? "film" : "films"} matched “
+                    {searchState.query}”.
+                  </p>
+                )}
 
-            {isSearchActive &&
-              searchState.query.length > 0 &&
-              searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-              <p className="text-sm text-slate-500" data-testid="film-search-hint">
-                Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to search.
-              </p>
-            )}
-          </div>
+              {isSearchActive &&
+                searchState.query.length > 0 &&
+                searchState.query.length <
+                  filmSearchConstants.MIN_QUERY_LENGTH && (
+                  <p
+                    className="text-sm text-slate-500"
+                    data-testid="film-search-hint"
+                  >
+                    Type at least {filmSearchConstants.MIN_QUERY_LENGTH}{" "}
+                    characters to search.
+                  </p>
+                )}
+            </div>
+          ) : null}
         </>
       )}
 
       {activeTab === "rated" && (
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-3 mt-4 text-sm text-slate-500">
           Showing {localWatchedFilms.length} watched{" "}
           {localWatchedFilms.length === 1 ? "film" : "films"}
         </p>
@@ -563,7 +555,9 @@ export default function ProfileTabs({
           data-testid={
             isAllFilmsSearchActive ? "film-search-empty" : "profile-tab-empty"
           }
-          className="rounded-2xl border border-dashed p-8 text-gray-500"
+          className={`rounded-2xl border border-dashed p-8 text-gray-500${
+            activeTab === "saved" ? " mt-4" : ""
+          }`}
         >
           {isAllFilmsSearchActive
             ? `No films matched “${searchState.query}”. Try a partial title, director name, year, country, or mood tag.`
@@ -577,7 +571,7 @@ export default function ProfileTabs({
 
       <section
         data-testid={isAllFilmsSearchActive ? "film-search-results" : "film-list"}
-        className="grid gap-4"
+        className={`grid gap-4${activeTab === "saved" ? " mt-4" : ""}`}
       >
         {films.map((film, index) => {
           const score = scores[film.id] ?? null;

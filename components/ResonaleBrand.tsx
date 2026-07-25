@@ -1,7 +1,11 @@
 import Link from "next/link";
 
-const NAVY = "#1A1B2E";
-const LAVENDER = "#B1A9D9";
+/** Brand board colors — logo stroke / wordmark use a deep cool indigo (not UI chrome). */
+export const RESONALE_NAVY = "#23243D";
+export const RESONALE_LAVENDER = "#B1A9D9";
+
+const NAVY = RESONALE_NAVY;
+const LAVENDER = RESONALE_LAVENDER;
 const GUIDE_LABEL = "ANIMATION GUIDE";
 
 /**
@@ -93,12 +97,29 @@ function ResonaleLogoMark({ className }: { className?: string }) {
 
 type ResonaleBrandProps = {
   href?: string;
+  onClick?: () => void;
 };
 
-export default function ResonaleBrand({ href = "/" }: ResonaleBrandProps) {
+export default function ResonaleBrand({ href = "/", onClick }: ResonaleBrandProps) {
   return (
     <Link
       href={href}
+      onClick={(event) => {
+        if (!onClick) {
+          return;
+        }
+
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+          return;
+        }
+
+        if (event.button !== 0) {
+          return;
+        }
+
+        event.preventDefault();
+        onClick();
+      }}
       className="inline-flex shrink-0 items-center overflow-visible rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
       aria-label="Resonale home"
     >

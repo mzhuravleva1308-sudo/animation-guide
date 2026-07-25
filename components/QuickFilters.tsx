@@ -1,6 +1,7 @@
 "use client";
 
 import { CalendarClock, Trophy } from "lucide-react";
+import { catalogChipHeightClass } from "@/lib/catalog-control-size";
 
 export type QuickFilter =
   | "recent"
@@ -50,7 +51,7 @@ function FilterDivider() {
 }
 
 function filterChipClass(isActive: boolean) {
-  return `inline-flex h-[27px] shrink-0 items-center gap-[4.5px] rounded-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
+  return `inline-flex ${catalogChipHeightClass} shrink-0 items-center gap-[4.5px] rounded-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
     isActive
       ? "bg-[#5b5f8a] text-white shadow-sm"
       : "bg-[#eef0f8] text-[#5c5d6e] hover:bg-[#e5e7f4] hover:text-[#1A1B2E]"
@@ -117,7 +118,7 @@ export default function QuickFilters({
 
   return (
     <div
-      className="flex flex-wrap items-center gap-1.5"
+      className="contents"
       role="group"
       aria-label="Quick filters"
     >

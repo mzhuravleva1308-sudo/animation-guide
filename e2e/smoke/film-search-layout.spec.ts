@@ -13,10 +13,8 @@ async function expectStableSearchInputWidth(
   await page.goto(path);
 
   if (options?.openAllFilmsTab) {
-    const allFilmsTab = page.getByRole("button", { name: "Films" });
-    await expect(allFilmsTab).toBeVisible();
-    await allFilmsTab.click();
-    await expect(allFilmsTab).toHaveAttribute("aria-pressed", "true");
+    await page.getByRole("button", { name: "All", exact: true }).click();
+    await expect(page.getByTestId("film-search")).toBeVisible();
   }
 
   const input = await expandFilmSearch(page);

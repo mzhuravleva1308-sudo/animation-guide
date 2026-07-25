@@ -5,6 +5,7 @@ import { UserRound } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCatalog from "@/components/FilmCatalog";
+import { HeaderIconButton, HEADER_LOGIN_ICON } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
 import {
@@ -28,6 +29,7 @@ type FilmsPageClientProps = {
   pageSize: number;
   loadError: string | null;
   postAuthPath?: string;
+  showSubtitle?: boolean;
 };
 
 type InteractionSnapshot = {
@@ -52,6 +54,7 @@ export default function FilmsPageClient({
   pageSize,
   loadError,
   postAuthPath = "/films",
+  showSubtitle = false,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
   const [modalOpen, setModalOpen] = useState(false);
@@ -286,7 +289,7 @@ export default function FilmsPageClient({
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
       <header className="mb-0">
-        <div className="relative flex flex-wrap items-center justify-between gap-3 pb-5 sm:flex-nowrap">
+        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
           <ResonaleBrand />
 
           {auth ? (
@@ -295,9 +298,10 @@ export default function FilmsPageClient({
               profileName={auth.profile?.name ?? null}
             />
           ) : (
-            <button
-              ref={authTriggerRef}
-              type="button"
+            <HeaderIconButton
+              label="Log in"
+              showLabel={false}
+              buttonRef={authTriggerRef}
               onMouseDown={(event) => {
                 event.preventDefault();
               }}
@@ -306,44 +310,49 @@ export default function FilmsPageClient({
                 setModalRestoreFocusElement(authTriggerRef.current);
                 setModalOpen(true);
               }}
-              className="inline-flex h-[33px] shrink-0 items-center gap-[4.5px] bg-transparent text-[15px] font-normal tracking-tight text-[#5c5d6e] transition hover:text-[#1A1B2E]"
               data-testid="auth-status"
             >
-              <UserRound size={16} strokeWidth={1.25} className="shrink-0" aria-hidden="true" />
-              Log in
-            </button>
+              <UserRound
+                size={HEADER_LOGIN_ICON.size}
+                strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
+                fill="none"
+                className="!h-[11px] !w-[11px] shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
           )}
-
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-[#ececf4] from-0% via-[#ececf4] via-[58%] to-transparent to-[82%]"
-          />
         </div>
 
-        <div className="mt-3 mb-1.5">
+        {showSubtitle ? (
+          <div className="mt-[18px] mb-2.5">
+            <h1 className="sr-only">Resonale</h1>
+            <p className="font-sans text-[14px] font-normal leading-[1.18] tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none] sm:whitespace-nowrap">
+              Find strange, beautiful, and emotionally resonant animated films to
+              watch next.
+            </p>
+          </div>
+        ) : (
           <h1 className="sr-only">Resonale</h1>
-          <p className="whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
-            Find strange, beautiful, and emotionally resonant animated films to
-            watch next.
-          </p>
-        </div>
+        )}
       </header>
 
-      <FilmCatalog
-        films={films}
-        awardWinningFilmIds={awardWinningFilmIds}
-        pageSize={pageSize}
-        loadError={loadError}
-        interaction={{
-          profileId,
-          profileSlug,
-          savedFilmIds,
-          filmRatings,
-          onSavedChange: handleSavedChange,
-          onRatingChange: handleRatingChange,
-          onAuthRequired: auth ? undefined : handleAuthRequired,
-        }}
-      />
+      <div className={showSubtitle ? undefined : "mt-[18px]"}>
+        <FilmCatalog
+          films={films}
+          awardWinningFilmIds={awardWinningFilmIds}
+          pageSize={pageSize}
+          loadError={loadError}
+          interaction={{
+            profileId,
+            profileSlug,
+            savedFilmIds,
+            filmRatings,
+            onSavedChange: handleSavedChange,
+            onRatingChange: handleRatingChange,
+            onAuthRequired: auth ? undefined : handleAuthRequired,
+          }}
+        />
+      </div>
 
       <EmailAuthModal
         open={modalOpen}

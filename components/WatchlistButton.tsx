@@ -5,6 +5,10 @@ import { supabase } from "@/lib/supabase";
 import { persistFilmSave } from "@/lib/film-profile-mutations";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { useToast } from "@/components/ToastProvider";
+import {
+  CATALOG_CONTROL_SIZE_PX,
+  catalogCircleControlClass,
+} from "@/lib/catalog-control-size";
 
 type WatchlistButtonProps = {
   filmId: string;
@@ -153,6 +157,7 @@ export default function WatchlistButton({
   }
 
   const isDisabled = isLoading || isSaving || (!profileId && !onAuthRequired);
+  const iconSize = Math.round(CATALOG_CONTROL_SIZE_PX * (18 / 40));
 
   return (
     <button
@@ -161,15 +166,15 @@ export default function WatchlistButton({
       disabled={isDisabled}
       title={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
       aria-label={isInWatchlist ? "Remove from watchlist" : "Add to watchlist"}
-      className={`flex h-10 w-10 items-center justify-center rounded-full border transition ${
+      className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 transition ${
         isInWatchlist
           ? "border-black bg-black text-white"
           : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
       }`}
     >
       <svg
-        width="18"
-        height="18"
+        width={iconSize}
+        height={iconSize}
         viewBox="0 0 24 24"
         fill={isInWatchlist ? "currentColor" : "none"}
         stroke="currentColor"
@@ -177,6 +182,7 @@ export default function WatchlistButton({
         strokeLinecap="round"
         strokeLinejoin="round"
         aria-hidden="true"
+        className="shrink-0"
       >
         <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
       </svg>

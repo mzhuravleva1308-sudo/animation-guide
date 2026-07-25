@@ -283,7 +283,7 @@ export default function FilmSearch({
       ref={searchRootRef}
       className={
         isExpanded
-          ? "relative mb-0 w-full min-w-0 max-w-[10.125rem] sm:w-[9.75rem]"
+          ? "relative mb-0 w-[10.125rem] shrink-0 sm:w-[9.75rem]"
           : "relative mb-0 shrink-0"
       }
       data-testid="film-search"

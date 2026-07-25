@@ -19,12 +19,21 @@ export async function gotoProfilePage(
 
 export async function openProfileTab(
   page: Page,
-  tabName: "All films" | "Films" | "Saved" | "Watched"
+  tabName: "All films" | "Films" | "All" | "Saved" | "Watched"
 ) {
-  const buttonName = tabName === "All films" ? "Films" : tabName;
-  const tabButton = page.getByRole("button", { name: buttonName, exact: true });
+  const resolvedName =
+    tabName === "All films" || tabName === "Films" ? "All" : tabName;
+
+  const tabButton = page.getByRole("button", {
+    name: resolvedName,
+    exact: true,
+  });
   await tabButton.click();
   await expect(tabButton).toHaveAttribute("aria-pressed", "true");
+
+  if (resolvedName === "All") {
+    await expect(page.getByTestId("film-search")).toBeVisible();
+  }
 }
 
 export async function expandFilmSearch(page: Page) {
