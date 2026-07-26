@@ -15,6 +15,7 @@ export default async function FilmsPage() {
       pageSize={catalog.pageSize}
       loadError={catalog.loadError}
       postAuthPath="/films"
+      showSubtitle
     />
   );
 }

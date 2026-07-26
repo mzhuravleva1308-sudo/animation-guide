@@ -20,9 +20,11 @@ import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
+  QUICK_FILTER_DESCRIPTIONS,
   QUICK_FILTERS,
 } from "@/lib/quick-film-filters";
 import { Bookmark, CircleCheck, Film as FilmIcon } from "lucide-react";
+import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -50,7 +52,6 @@ type ProfileTabsProps = {
   allFilmsSorted: Film[];
   allFilmsScores: Record<string, FilmScore>;
   awardWinningFilmIds: string[];
-  isColdStartMode: boolean;
   savedFilms: Film[];
   watchedFilms: Film[];
   allFilmsPageSize: number;
@@ -93,7 +94,6 @@ export default function ProfileTabs({
   allFilmsSorted,
   allFilmsScores,
   awardWinningFilmIds,
-  isColdStartMode,
   savedFilms,
   watchedFilms,
   allFilmsPageSize,
@@ -118,6 +118,9 @@ export default function ProfileTabs({
     error: null as string | null,
   });
   const lastRatingOrderRef = useRef<Record<string, number>>({});
+  const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
+    localFilmRatings
+  );
 
   const handleSearchResultsChange = useCallback(
     (nextState: {
@@ -384,7 +387,7 @@ export default function ProfileTabs({
         {activeTab === "all" ? (
           <div className="mt-[18px] mb-2.5">
             <h1 className="sr-only">Resonale</h1>
-            <p className="font-sans text-[14px] font-normal leading-[1.18] tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none] sm:whitespace-nowrap">
+            <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
               Find strange, beautiful, and emotionally resonant animated films to
               watch next.
             </p>
@@ -466,22 +469,32 @@ export default function ProfileTabs({
 
       {activeTab === "all" && (
         <>
-          <div className="mb-[18px] flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-              <FilmSearch
-                onResultsChange={handleSearchResultsChange}
-                isLoading={searchState.isLoading}
-              />
-              <QuickFilters
-                activeFilter={activeQuickFilter}
-                onFilterChange={handleQuickFilterChange}
-                availableFilters={QUICK_FILTERS}
-              />
+          <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                <FilmSearch
+                  onResultsChange={handleSearchResultsChange}
+                  isLoading={searchState.isLoading}
+                />
+                <QuickFilters
+                  activeFilter={activeQuickFilter}
+                  onFilterChange={handleQuickFilterChange}
+                  availableFilters={QUICK_FILTERS}
+                />
+              </div>
+              {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (
+                <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+                  {totalAllFilmsCount}{" "}
+                  {totalAllFilmsCount === 1 ? "film" : "films"}
+                </p>
+              ) : null}
             </div>
-            {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (
-              <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
-                {totalAllFilmsCount}{" "}
-                {totalAllFilmsCount === 1 ? "film" : "films"}
+            {activeQuickFilter ? (
+              <p
+                data-testid="quick-filter-description"
+                className="mt-3.5 max-w-xl font-sans text-[14px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
+              >
+                {QUICK_FILTER_DESCRIPTIONS[activeQuickFilter]}
               </p>
             ) : null}
           </div>
@@ -575,10 +588,6 @@ export default function ProfileTabs({
       >
         {films.map((film, index) => {
           const score = scores[film.id] ?? null;
-          const reason =
-            !isAllFilmsSearchActive && activeTab === "all" && isColdStartMode
-              ? film.cold_start_note ?? undefined
-              : undefined;
 
           return (
             <FilmCard
@@ -593,9 +602,10 @@ export default function ProfileTabs({
               onSavedChange={handleSavedChange}
               onRatingChange={handleRatingChange}
               score={score}
-              reason={reason}
               showDebugScores={showDebugScores}
               lazyLoadPoster={index >= 3}
+              ratingOnboardingHint={getHintForIndex(index)}
+              onDismissRatingOnboarding={onDismissRatingOnboarding}
             />
           );
         })}

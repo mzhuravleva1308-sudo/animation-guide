@@ -71,6 +71,7 @@ export default function FilmsPageClient({
   const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
     {}
   );
+  const [ratingsReady, setRatingsReady] = useState(!initialAuth);
   const preAuthSnapshotRef = useRef<InteractionSnapshot | null>(null);
   const applyInFlightRef = useRef<Promise<void> | null>(null);
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
@@ -141,6 +142,7 @@ export default function FilmsPageClient({
     setAuth(initialAuth);
     setProfileId(initialAuth?.profile?.id);
     setProfileSlug(initialAuth?.profile?.slug);
+    setRatingsReady(!initialAuth);
   }, [initialAuth]);
 
   useEffect(() => {
@@ -152,8 +154,11 @@ export default function FilmsPageClient({
         setProfileSlug(undefined);
         setSavedFilmIds(new Set());
         setFilmRatings({});
+        setRatingsReady(true);
         return;
       }
+
+      setRatingsReady(false);
 
       for (let attempt = 0; attempt < 10; attempt += 1) {
         if (cancelled) {
@@ -163,12 +168,19 @@ export default function FilmsPageClient({
         const resolvedProfileId = await syncAuthenticatedInteractionState();
         if (resolvedProfileId) {
           await applyPendingActionForProfile(resolvedProfileId);
+          if (!cancelled) {
+            setRatingsReady(true);
+          }
           return;
         }
 
         await new Promise((resolve) => {
           window.setTimeout(resolve, 300);
         });
+      }
+
+      if (!cancelled) {
+        setRatingsReady(true);
       }
     }
 
@@ -202,6 +214,7 @@ export default function FilmsPageClient({
         const state = await loadAuthenticatedProfileFilmState(profile.profileId);
         setSavedFilmIds(state.savedFilmIds);
         setFilmRatings(state.filmRatings);
+        setRatingsReady(true);
       }
 
     setAuth({
@@ -326,7 +339,7 @@ export default function FilmsPageClient({
         {showSubtitle ? (
           <div className="mt-[18px] mb-2.5">
             <h1 className="sr-only">Resonale</h1>
-            <p className="font-sans text-[14px] font-normal leading-[1.18] tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none] sm:whitespace-nowrap">
+            <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
               Find strange, beautiful, and emotionally resonant animated films to
               watch next.
             </p>
