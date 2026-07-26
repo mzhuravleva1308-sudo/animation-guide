@@ -84,7 +84,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex w-fit max-w-[min(420px,calc(100vw-24px))] items-center gap-2 rounded-[11px] border px-4 py-2.5 text-left shadow-sm shadow-black/[0.04] ${
+            className={`pointer-events-auto flex w-fit max-w-[min(420px,calc(100vw-24px))] items-center gap-2 rounded-[11px] border px-4 py-2.5 text-left shadow-sm shadow-black/20 ${
               toast.variant === "error"
                 ? "border-stone-200 bg-white"
                 : "border-soft-panel-border bg-soft-panel"
