@@ -10,12 +10,12 @@ import {
   getFilmCardSynopsis,
 } from "@/lib/film-card-copy.mjs";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
 
 type FilmCardBaseProps = {
   film: Film;
-  reason?: string;
   score?: FilmScore | null;
   showDebugScores?: boolean;
   lazyLoadPoster?: boolean;
@@ -34,6 +34,8 @@ type FilmCardProfileProps = FilmCardBaseProps & {
     rating: number | null,
     options?: { skipOrderUpdate?: boolean }
   ) => void;
+  ratingOnboardingHint?: RatingOnboardingHint;
+  onDismissRatingOnboarding?: () => void;
 };
 
 type FilmCardPublicProps = FilmCardBaseProps & {
@@ -53,6 +55,8 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
     options?: { skipOrderUpdate?: boolean }
   ) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
+  ratingOnboardingHint?: RatingOnboardingHint;
+  onDismissRatingOnboarding?: () => void;
 };
 
 export type FilmCardProps =
@@ -63,7 +67,6 @@ export type FilmCardProps =
 export default function FilmCard(props: FilmCardProps) {
   const {
     film,
-    reason,
     score = null,
     showDebugScores = false,
     lazyLoadPoster = false,
@@ -190,12 +193,6 @@ export default function FilmCard(props: FilmCardProps) {
     )}
   </div>
 
-  {reason && (
-    <p className="mt-3 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
-      {reason}
-    </p>
-  )}
-
   {(synopsis || mood) && (
     <div className="mt-2.5 space-y-2">
       {synopsis && (
@@ -282,6 +279,8 @@ export default function FilmCard(props: FilmCardProps) {
         onAuthRequired={
           props.mode === "catalog" ? props.onAuthRequired : undefined
         }
+        ratingOnboardingHint={props.ratingOnboardingHint}
+        onDismissRatingOnboarding={props.onDismissRatingOnboarding}
       />
       <WatchlistButton
         filmId={film.id}

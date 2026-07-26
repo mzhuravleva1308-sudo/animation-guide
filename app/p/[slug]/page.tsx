@@ -69,7 +69,6 @@ const FILM_SELECT_FIELDS = [
   "personal_note",
   "status",
   "cold_start_score",
-  "cold_start_note",
   "created_at",
 ].join(", ");
 
@@ -250,7 +249,6 @@ export default async function ProfilePage({
         allFilmsSorted={allFilmsSorted}
         allFilmsScores={allFilmsScores}
         awardWinningFilmIds={awardWinningFilmIds}
-        isColdStartMode={isColdStartMode}
         savedFilms={savedFilms}
         watchedFilms={watchedFilms}
         allFilmsPageSize={ALL_FILMS_PAGE_SIZE}
