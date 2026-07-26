@@ -66,7 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     const timeoutId = window.setTimeout(() => {
       setToast((current) => (current?.id === toast.id ? null : current));
-    }, 170);
+    }, 180);
 
     return () => window.clearTimeout(timeoutId);
   }, [isExiting, toast]);
@@ -77,16 +77,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       <div
         aria-live="polite"
         aria-atomic="true"
-        className="pointer-events-none fixed inset-x-0 top-[calc(20px+env(safe-area-inset-top))] z-[100] flex justify-center sm:top-[calc(32px+env(safe-area-inset-top))]"
+        className="pointer-events-none fixed inset-x-0 bottom-[calc(16px+env(safe-area-inset-bottom))] z-[100] flex flex-col-reverse items-center gap-2 px-3 sm:bottom-7"
         data-testid="toast-region"
       >
         {toast && (
           <div
             key={toast.id}
             role="status"
-            className={`pointer-events-auto flex w-fit max-w-[420px] items-center gap-2 rounded-[13px] border border-stone-200 bg-white px-3.5 py-2 text-left shadow-md shadow-black/10 max-[639px]:w-[calc(100vw-24px)] ${
-              isExiting ? "toast-exit" : "toast-enter"
-            }`}
+            className={`pointer-events-auto flex w-fit max-w-[min(420px,calc(100vw-24px))] items-center gap-2 rounded-[11px] border px-4 py-2.5 text-left shadow-sm shadow-black/[0.04] ${
+              toast.variant === "error"
+                ? "border-stone-200 bg-white"
+                : "border-soft-panel-border bg-soft-panel"
+            } ${isExiting ? "toast-exit" : "toast-enter"}`}
             data-testid="toast"
           >
             <span
@@ -94,7 +96,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
                 toast.variant === "error"
                   ? "bg-red-100 text-red-700"
-                  : "bg-emerald-100 text-emerald-700"
+                  : "bg-soft-panel-hover text-soft-panel-fg"
               }`}
             >
               <svg viewBox="0 0 16 16" className="h-3 w-3 fill-none stroke-current stroke-2">
@@ -112,8 +114,22 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 )}
               </svg>
             </span>
-            <p className="min-w-0 text-[13px] font-normal leading-5 text-stone-700 max-[639px]:line-clamp-2 sm:whitespace-nowrap">
-              <span className="font-semibold text-stone-900">{toast.title}</span>{" "}
+            <p
+              className={`min-w-0 text-[13px] font-normal leading-5 sm:whitespace-nowrap ${
+                toast.variant === "error"
+                  ? "text-stone-700"
+                  : "text-soft-panel-fg"
+              }`}
+            >
+              <span
+                className={`font-semibold ${
+                  toast.variant === "error"
+                    ? "text-stone-900"
+                    : "text-soft-panel-fg"
+                }`}
+              >
+                {toast.title}
+              </span>{" "}
               {toast.text}
             </p>
           </div>

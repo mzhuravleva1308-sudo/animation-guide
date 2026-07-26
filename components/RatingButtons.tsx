@@ -154,15 +154,15 @@ export default function RatingButtons({
           data-hint-variant={ratingOnboardingHint}
           className={
             ratingOnboardingHint === "extended"
-              ? "mb-2 inline-flex w-fit max-w-full items-center gap-1 rounded-[10px] border border-[#e4e6f0] bg-[#f5f6fb] py-1 pl-2.5 pr-0.5"
-              : "mb-2 inline-flex w-fit max-w-full items-center gap-0.5 rounded-[9px] border border-[#eceef5] bg-[#f7f8fc] py-0.5 pl-2 pr-0.5"
+              ? "mb-2 inline-flex w-fit max-w-full items-center gap-1 rounded-[10px] border border-soft-panel-border bg-soft-panel py-1 pl-2.5 pr-0.5"
+              : "mb-2 inline-flex w-fit max-w-full items-center gap-0.5 rounded-[9px] border border-soft-panel-border-subtle bg-soft-panel-subtle py-0.5 pl-2 pr-0.5"
           }
         >
           <p
             className={
               ratingOnboardingHint === "extended"
-                ? "min-w-0 whitespace-nowrap text-[11px] leading-none tracking-tight text-[#5c5d6e]"
-                : "whitespace-nowrap text-[11px] leading-none tracking-tight text-[#5c5d6e]"
+                ? "min-w-0 whitespace-nowrap text-[11px] leading-none tracking-tight text-soft-panel-fg"
+                : "whitespace-nowrap text-[11px] leading-none tracking-tight text-soft-panel-fg"
             }
           >
             {RATING_ONBOARDING_HINT_COPY[ratingOnboardingHint]}
@@ -172,7 +172,7 @@ export default function RatingButtons({
             aria-label="Dismiss rating tip"
             data-testid="rating-onboarding-hint-dismiss"
             onClick={onDismissRatingOnboarding}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] leading-none text-[#9a9baf] transition hover:bg-[#e5e7f4]/50 hover:text-[#5c5d6e]"
+            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] leading-none text-soft-panel-fg-muted transition hover:bg-soft-panel-hover/50 hover:text-soft-panel-fg"
           >
             ×
           </button>

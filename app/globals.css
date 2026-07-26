@@ -7,11 +7,26 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Soft lavender-gray panels (onboarding hints, success toasts) */
+  --soft-panel-bg: #f5f6fb;
+  --soft-panel-border: #e4e6f0;
+  --soft-panel-fg: #5c5d6e;
+  --soft-panel-fg-muted: #9a9baf;
+  --soft-panel-bg-subtle: #f7f8fc;
+  --soft-panel-border-subtle: #eceef5;
+  --soft-panel-hover: #e5e7f4;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-soft-panel: var(--soft-panel-bg);
+  --color-soft-panel-border: var(--soft-panel-border);
+  --color-soft-panel-fg: var(--soft-panel-fg);
+  --color-soft-panel-fg-muted: var(--soft-panel-fg-muted);
+  --color-soft-panel-subtle: var(--soft-panel-bg-subtle);
+  --color-soft-panel-border-subtle: var(--soft-panel-border-subtle);
+  --color-soft-panel-hover: var(--soft-panel-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -36,12 +51,12 @@ body {
 @keyframes toast-enter {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -53,16 +68,16 @@ body {
 
   to {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(10px);
   }
 }
 
 .toast-enter {
-  animation: toast-enter 200ms ease-out both;
+  animation: toast-enter 180ms ease-out both;
 }
 
 .toast-exit {
-  animation: toast-exit 170ms ease-out both;
+  animation: toast-exit 180ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
