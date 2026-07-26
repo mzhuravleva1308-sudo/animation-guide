@@ -385,11 +385,15 @@ export default function ProfileTabs({
         </div>
 
         {activeTab === "all" ? (
-          <div className="mt-[18px] mb-2.5">
+          <div className="mt-[18px] mb-[22px]">
             <h1 className="sr-only">Resonale</h1>
             <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
               Find strange, beautiful, and emotionally resonant animated films to
               watch next.
+            </p>
+            <p className="mt-1 font-sans text-[14px] font-normal leading-[1.3] tracking-tight text-[#7a7b90] antialiased [font-synthesis:none] sm:whitespace-nowrap">
+              Independent, artist-led, and festival animation from around the
+              world.
             </p>
           </div>
         ) : (
