@@ -29,10 +29,13 @@ export const HEADER_LOGIN_ICON = {
 export function headerIconControlClass() {
   return [
     "inline-flex shrink-0 cursor-pointer items-center gap-[6px] whitespace-nowrap",
-    "bg-transparent p-0",
+    // Taller tap targets on mobile; width follows icon/label so the row still fits
+    "min-h-11 justify-center px-2.5 sm:min-h-0 sm:justify-start sm:px-0",
+    "bg-transparent",
     "font-sans text-[14px] font-normal leading-[1.18] tracking-tight",
     "antialiased [font-synthesis:none]",
     "text-[#1A1B2E] transition-[opacity,color] duration-150 ease-out",
+    "[&_svg]:h-[18px] [&_svg]:w-[18px] sm:[&_svg]:h-[15px] sm:[&_svg]:w-[15px]",
     "focus-visible:rounded-sm focus-visible:outline focus-visible:outline-1",
     "focus-visible:outline-offset-[3px] focus-visible:outline-[rgba(26,27,46,0.28)]",
   ].join(" ");
@@ -61,13 +64,13 @@ function headerNavIconWrapClass(isActive: boolean, iconActiveClassName?: string)
 
 export function headerLoginControlClass() {
   return [
-    "inline-flex size-5 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full",
+    "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full sm:size-5",
     "border border-[rgba(26,27,46,0.22)] bg-transparent p-0 leading-none",
     "text-[#1A1B2E] opacity-[0.58] transition-[opacity,border-color] duration-150 ease-out",
     "hover:opacity-100 hover:border-[rgba(26,27,46,0.45)]",
     "focus-visible:outline focus-visible:outline-1",
     "focus-visible:outline-offset-2 focus-visible:outline-[rgba(26,27,46,0.28)]",
-    "[&_svg]:!h-[11px] [&_svg]:!w-[11px] [&_svg]:shrink-0",
+    "[&_svg]:!h-[15px] [&_svg]:!w-[15px] [&_svg]:shrink-0 sm:[&_svg]:!h-[11px] sm:[&_svg]:!w-[11px]",
   ].join(" ");
 }
 

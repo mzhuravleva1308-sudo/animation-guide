@@ -21,7 +21,7 @@ export default async function AccountMenuSlot() {
           size={HEADER_LOGIN_ICON.size}
           strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
           fill="none"
-          className="!h-[11px] !w-[11px] shrink-0"
+          className="shrink-0"
           aria-hidden="true"
         />
       </HeaderIconLink>
