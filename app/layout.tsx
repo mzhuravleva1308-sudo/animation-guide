@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Animation Guide",
   description:
-    "A curated guide to strange, beautiful, and emotionally resonant animated films.",
+    "A curated guide to strange, beautiful and emotionally resonant animated films.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

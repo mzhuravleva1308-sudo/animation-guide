@@ -12,7 +12,7 @@ export async function gotoProfilePage(
   await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
   await expect(
     page.getByText(
-      "Find strange, beautiful, and emotionally resonant animated films to watch next."
+      "Find strange, beautiful and emotionally resonant animated films to watch next."
     )
   ).toBeVisible();
 }
