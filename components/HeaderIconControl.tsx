@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type FocusEvent,
   type MouseEventHandler,
   type ReactNode,
   type Ref,
@@ -98,11 +99,37 @@ function useDelayedTooltip() {
     setTipOpen(false);
   }, [clearShowTimer]);
 
-  useEffect(() => {
-    return () => clearShowTimer();
-  }, [clearShowTimer]);
+  /** Keyboard focus only — pointer clicks focus the control but should not open the tip. */
+  const onFocus = useCallback(
+    (event: FocusEvent<HTMLElement>) => {
+      if (event.currentTarget.matches(":focus-visible")) {
+        showTip();
+      }
+    },
+    [showTip]
+  );
 
-  return { tooltipId, tipOpen, showTip, hideTip };
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        hideTip();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      clearShowTimer();
+    };
+  }, [clearShowTimer, hideTip]);
+
+  return {
+    tooltipId,
+    tipOpen,
+    showTip,
+    hideTip,
+    onFocus,
+  };
 }
 
 function HeaderIconTooltip({
@@ -156,7 +183,7 @@ export function HeaderIconButton({
   children,
   "data-testid": testId,
 }: HeaderIconButtonProps) {
-  const { tooltipId, tipOpen, showTip, hideTip } = useDelayedTooltip();
+  const { tooltipId, tipOpen, showTip, hideTip, onFocus } = useDelayedTooltip();
   const isLoginIcon = !showLabel;
 
   return (
@@ -167,11 +194,15 @@ export function HeaderIconButton({
         aria-label={label}
         aria-pressed={typeof active === "boolean" ? active : undefined}
         aria-describedby={tipOpen ? tooltipId : undefined}
-        onClick={onClick}
+        onClick={() => {
+          hideTip();
+          onClick?.();
+        }}
+        onPointerDown={hideTip}
         onMouseDown={onMouseDown}
         onMouseEnter={showTip}
         onMouseLeave={hideTip}
-        onFocus={showTip}
+        onFocus={onFocus}
         onBlur={hideTip}
         className={
           isLoginIcon
@@ -223,7 +254,7 @@ export function HeaderIconLink({
   children,
   "data-testid": testId,
 }: HeaderIconLinkProps) {
-  const { tooltipId, tipOpen, showTip, hideTip } = useDelayedTooltip();
+  const { tooltipId, tipOpen, showTip, hideTip, onFocus } = useDelayedTooltip();
   const isLoginIcon = !showLabel;
 
   return (
@@ -232,9 +263,11 @@ export function HeaderIconLink({
         href={href}
         aria-label={label}
         aria-describedby={tipOpen ? tooltipId : undefined}
+        onClick={hideTip}
+        onPointerDown={hideTip}
         onMouseEnter={showTip}
         onMouseLeave={hideTip}
-        onFocus={showTip}
+        onFocus={onFocus}
         onBlur={hideTip}
         className={
           isLoginIcon
