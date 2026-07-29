@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { CatalogAnalyticsDashboard } from "@/components/CatalogAnalyticsDashboard";
+import { getAdminAccessStatus } from "@/lib/auth/require-admin";
 import { analyzeFilmCatalog } from "@/lib/catalog-analytics.mjs";
 import { CATALOG_ANALYTICS_FILM_FIELDS } from "@/lib/load-films-catalog.mjs";
 import { supabase } from "@/lib/supabase";
@@ -9,6 +11,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function CatalogAnalyticsPage() {
+  const access = await getAdminAccessStatus();
+
+  if (access === "unauthenticated") {
+    redirect("/login");
+  }
+
+  if (access !== "admin") {
+    notFound();
+  }
+
   const { data, error } = await supabase
     .from("films")
     .select(CATALOG_ANALYTICS_FILM_FIELDS)

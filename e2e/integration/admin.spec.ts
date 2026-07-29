@@ -1,52 +1,27 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Admin pages", () => {
-  test("import route shows deprecation notice", async ({ page }) => {
+  test("unauthenticated admin import redirects to login", async ({ page }) => {
     await page.goto("/admin/import");
-
-    await expect(
-      page.getByRole("heading", { name: "Manual film import disabled" })
-    ).toBeVisible();
-    await expect(page.getByText("controlled import pipeline")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("new film route shows deprecation notice", async ({ page }) => {
+  test("unauthenticated admin new redirects to login", async ({ page }) => {
     await page.goto("/admin/new");
-
-    await expect(
-      page.getByRole("heading", { name: "Manual film import disabled" })
-    ).toBeVisible();
-    await expect(page.getByText("deprecated")).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("catalog analytics route renders coverage dashboard", async ({ page }) => {
+  test("unauthenticated catalog analytics redirects to login", async ({
+    page,
+  }) => {
     await page.goto("/admin/catalog-analytics");
-
-    await expect(
-      page.getByRole("heading", { name: "Catalog analytics" })
-    ).toBeVisible();
-    await expect(page.getByText("Total films")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Country coverage" })).toBeVisible();
-    await expect(
-      page.getByRole("heading", { name: "Suggested curation gaps" })
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 
-  test("festival recognitions route renders festival QA tabs", async ({ page }) => {
+  test("unauthenticated festival recognitions redirects to login", async ({
+    page,
+  }) => {
     await page.goto("/admin/festival-recognitions");
-
-    await expect(
-      page.getByRole("heading", { name: "Festival recognitions" })
-    ).toBeVisible();
-    await expect(page.getByText("film_festival_claims")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /All candidates/i })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Annecy candidates/i })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Confirmed Annecy/i })
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/login/);
   });
 });

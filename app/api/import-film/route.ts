@@ -1,11 +1,12 @@
-import OpenAI from "openai";
 import { NextResponse } from "next/server";
-
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 
 export async function POST(request: Request) {
+  const access = await requireAdminApiAccess();
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
   try {
     const body = await request.json();
     const inputText = String(body.inputText || "").trim();
@@ -19,13 +20,18 @@ export async function POST(request: Request) {
 
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "Missing OPENAI_API_KEY" },
+        { error: "Import is not configured" },
         { status: 500 }
       );
     }
 
+    const OpenAI = (await import("openai")).default;
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const response = await client.responses.create({
-    model: "gpt-4o-mini",
+      model: "gpt-4o-mini",
       input: [
         {
           role: "system",
@@ -88,19 +94,16 @@ Rules:
       draft = JSON.parse(text);
     } catch {
       return NextResponse.json(
-        {
-          error: "The model returned invalid JSON",
-          raw: text,
-        },
+        { error: "Could not parse import result" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ draft });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown server error";
-
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Import failed" },
+      { status: 500 }
+    );
   }
 }

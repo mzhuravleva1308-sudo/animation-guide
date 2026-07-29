@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import {
   findFilmDuplicates,
   shouldBlockInsert,
@@ -19,6 +20,11 @@ function getAdminSupabase() {
 }
 
 export async function POST(request: Request) {
+  const access = await requireAdminApiAccess();
+  if (!access.ok) {
+    return NextResponse.json({ error: access.error }, { status: access.status });
+  }
+
   try {
     const body = await request.json();
     const incoming = body.film as FilmIdentity | undefined;
@@ -30,7 +36,7 @@ export async function POST(request: Request) {
     const adminSupabase = getAdminSupabase();
     if (!adminSupabase) {
       return NextResponse.json(
-        { error: "Missing Supabase admin configuration" },
+        { error: "Duplicate check is not configured" },
         { status: 500 }
       );
     }
@@ -48,10 +54,10 @@ export async function POST(request: Request) {
       blocked: blockResult.blocked,
       reason: blockResult.reason,
     });
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown server error";
-
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch {
+    return NextResponse.json(
+      { error: "Duplicate check failed" },
+      { status: 500 }
+    );
   }
 }
