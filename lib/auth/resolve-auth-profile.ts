@@ -4,6 +4,8 @@ export type AuthenticatedProfileSummary = {
   profileId: string;
   profileSlug: string;
   profileName: string | null;
+  tasteProfile: string | null;
+  tasteProfileUpdatedAt: string | null;
 };
 
 export async function resolveAuthenticatedProfile(): Promise<AuthenticatedProfileSummary | null> {
@@ -18,7 +20,7 @@ export async function resolveAuthenticatedProfile(): Promise<AuthenticatedProfil
 
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, slug, name")
+    .select("id, slug, name, taste_profile, taste_profile_updated_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -30,6 +32,8 @@ export async function resolveAuthenticatedProfile(): Promise<AuthenticatedProfil
     profileId: profile.id,
     profileSlug: profile.slug,
     profileName: profile.name ?? null,
+    tasteProfile: profile.taste_profile ?? null,
+    tasteProfileUpdatedAt: profile.taste_profile_updated_at ?? null,
   };
 }
 

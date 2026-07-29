@@ -147,12 +147,13 @@ ${JSON.stringify(ratedFilms, null, 2)}
   const tasteProfile =
     completion.choices[0]?.message?.content?.trim() ??
     "The system could not generate a taste profile yet.";
+  const tasteProfileUpdatedAt = new Date().toISOString();
 
   const { error: updateError } = await admin
     .from("profiles")
     .update({
       taste_profile: tasteProfile,
-      taste_profile_updated_at: new Date().toISOString(),
+      taste_profile_updated_at: tasteProfileUpdatedAt,
     })
     .eq("id", profile.id);
 
@@ -165,5 +166,6 @@ ${JSON.stringify(ratedFilms, null, 2)}
 
   return NextResponse.json({
     tasteProfile,
+    tasteProfileUpdatedAt,
   });
 }

@@ -12,6 +12,7 @@ import {
   HEADER_NAV_ICON,
 } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
 import {
   loadAuthenticatedProfileFilmState,
@@ -75,6 +76,10 @@ export default function FilmsPageClient({
   const [profileSlug, setProfileSlug] = useState<string | undefined>(
     initialAuth?.profile?.slug
   );
+  const [tasteProfile, setTasteProfile] = useState<string | null>(null);
+  const [tasteProfileUpdatedAt, setTasteProfileUpdatedAt] = useState<
+    string | null
+  >(null);
   const [savedFilmIds, setSavedFilmIds] = useState<Set<string>>(new Set());
   const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
     {}
@@ -89,6 +94,8 @@ export default function FilmsPageClient({
     if (!profile) {
       setProfileId(undefined);
       setProfileSlug(undefined);
+      setTasteProfile(null);
+      setTasteProfileUpdatedAt(null);
       setSavedFilmIds(new Set());
       setFilmRatings({});
       return null;
@@ -97,6 +104,8 @@ export default function FilmsPageClient({
     const state = await loadAuthenticatedProfileFilmState(profile.profileId);
     setProfileId(profile.profileId);
     setProfileSlug(profile.profileSlug);
+    setTasteProfile(profile.tasteProfile);
+    setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
     setSavedFilmIds(state.savedFilmIds);
     setFilmRatings(state.filmRatings);
     return profile.profileId;
@@ -164,6 +173,8 @@ export default function FilmsPageClient({
       if (!auth) {
         setProfileId(undefined);
         setProfileSlug(undefined);
+        setTasteProfile(null);
+        setTasteProfileUpdatedAt(null);
         setSavedFilmIds(new Set());
         setFilmRatings({});
         setRatingsReady(true);
@@ -221,6 +232,8 @@ export default function FilmsPageClient({
       if (profile) {
         setProfileId(profile.profileId);
         setProfileSlug(profile.profileSlug);
+        setTasteProfile(profile.tasteProfile);
+        setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
         await applyPendingActionForProfile(profile.profileId);
 
         const state = await loadAuthenticatedProfileFilmState(profile.profileId);
@@ -468,7 +481,44 @@ export default function FilmsPageClient({
       ) : (
         <>
           {activeTab === "watched" && listFilms.length > 0 ? (
-            <p className="mb-3 mt-4 text-sm text-slate-500">
+            <section
+              className="mb-8 rounded-2xl border border-gray-200 bg-white p-5"
+              data-testid="taste-profile"
+            >
+              <p className="mb-1 text-sm font-medium text-gray-500">
+                What the system knows about you
+              </p>
+
+              <h2 className="mb-3 text-xl font-semibold text-gray-900">
+                Your taste profile
+              </h2>
+
+              <p className="max-w-3xl whitespace-pre-line text-sm leading-6 text-gray-700">
+                {tasteProfile ??
+                  "No AI taste profile yet. Generate one from your rated films."}
+              </p>
+
+              {tasteProfileUpdatedAt ? (
+                <p className="mt-3 text-xs text-gray-400">
+                  Last updated:{" "}
+                  {new Date(tasteProfileUpdatedAt).toLocaleDateString()}
+                </p>
+              ) : null}
+
+              <UpdateTasteProfileButton
+                onUpdated={({
+                  tasteProfile: nextTasteProfile,
+                  tasteProfileUpdatedAt: nextUpdatedAt,
+                }) => {
+                  setTasteProfile(nextTasteProfile);
+                  setTasteProfileUpdatedAt(nextUpdatedAt);
+                }}
+              />
+            </section>
+          ) : null}
+
+          {activeTab === "watched" && listFilms.length > 0 ? (
+            <p className="mb-3 text-sm text-slate-500">
               Showing {listFilms.length} watched{" "}
               {listFilms.length === 1 ? "film" : "films"}
             </p>

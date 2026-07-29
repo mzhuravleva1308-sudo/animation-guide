@@ -3,7 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function UpdateTasteProfileButton() {
+type UpdateTasteProfileButtonProps = {
+  onUpdated?: (result: {
+    tasteProfile: string;
+    tasteProfileUpdatedAt: string;
+  }) => void;
+};
+
+export default function UpdateTasteProfileButton({
+  onUpdated,
+}: UpdateTasteProfileButtonProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -13,12 +22,22 @@ export default function UpdateTasteProfileButton() {
     setErrorMessage(null);
 
     const response = await fetch("/api/taste-profile", { method: "POST" });
+    const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const data = await response.json().catch(() => null);
       setErrorMessage(data?.error ?? "Could not update taste profile");
       setIsLoading(false);
       return;
+    }
+
+    if (
+      typeof data?.tasteProfile === "string" &&
+      typeof data?.tasteProfileUpdatedAt === "string"
+    ) {
+      onUpdated?.({
+        tasteProfile: data.tasteProfile,
+        tasteProfileUpdatedAt: data.tasteProfileUpdatedAt,
+      });
     }
 
     setIsLoading(false);
