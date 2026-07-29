@@ -1,48 +1,62 @@
 import { after, NextResponse } from "next/server";
 import { logProfileActivity } from "@/lib/log-profile-activity";
+import { createClient } from "@/lib/supabase/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type ProfileSaveRequest = {
-  profileId?: string;
   filmId?: string;
-  token?: string;
   saved?: boolean;
 };
 
 export async function POST(request: Request) {
-  let body: ProfileSaveRequest;
+  // Require an authenticated session. Token/slug/profileId from the client
+  // are not accepted as proof of identity.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  let body: ProfileSaveRequest;
   try {
     body = (await request.json()) as ProfileSaveRequest;
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { profileId, filmId, token, saved } = body;
+  const { filmId, saved } = body;
 
-  if (!profileId || !filmId || !token || typeof saved !== "boolean") {
+  if (!filmId || typeof saved !== "boolean") {
     return NextResponse.json({ error: "Invalid save request" }, { status: 400 });
   }
 
-  const supabase = getAdminSupabase();
-  const { data: profile, error: profileError } = await supabase
+  // Resolve the profile server-side by the authenticated user's id only.
+  const admin = getAdminSupabase();
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("id")
-    .eq("id", profileId)
-    .eq("share_token", token)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (profileError) {
-    console.error("Profile save authorization failed:", profileError);
-    return NextResponse.json({ error: "Could not authorize profile" }, { status: 500 });
+    console.error("[profile-save] profile lookup failed:", profileError);
+    return NextResponse.json({ error: "Could not resolve profile" }, { status: 500 });
   }
 
   if (!profile) {
-    return NextResponse.json({ error: "Invalid profile token" }, { status: 403 });
+    return NextResponse.json(
+      { error: "No profile found for this account", code: "profile_not_found" },
+      { status: 404 }
+    );
   }
 
+  const profileId = profile.id;
+
   if (saved) {
-    const { data: existingItem, error: existingError } = await supabase
+    const { data: existingItem, error: existingError } = await admin
       .from("profile_film_lists")
       .select("id")
       .eq("profile_id", profileId)
@@ -55,7 +69,7 @@ export async function POST(request: Request) {
     }
 
     if (!existingItem) {
-      const { error } = await supabase.from("profile_film_lists").insert({
+      const { error } = await admin.from("profile_film_lists").insert({
         profile_id: profileId,
         film_id: filmId,
         list_type: "to_watch",
@@ -66,7 +80,7 @@ export async function POST(request: Request) {
       }
     }
   } else {
-    const { error } = await supabase
+    const { error } = await admin
       .from("profile_film_lists")
       .delete()
       .eq("profile_id", profileId)

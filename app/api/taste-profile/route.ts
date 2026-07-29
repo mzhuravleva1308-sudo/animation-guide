@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { Film } from "@/types/film";
+import { createClient } from "@/lib/supabase/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 const openai = new OpenAI({
@@ -13,25 +14,26 @@ type RatingRow = {
 };
 
 export async function POST(request: Request) {
-  const { searchParams } = new URL(request.url);
+  // Require an authenticated session. slug+token query params are no longer
+  // accepted as proof of identity.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const slug = searchParams.get("slug");
-  const token = searchParams.get("token");
-
-  if (!slug || !token) {
+  if (!user) {
     return NextResponse.json(
-      { error: "Missing profile slug or token" },
-      { status: 400 }
+      { error: "Authentication required" },
+      { status: 401 }
     );
   }
 
-  const supabase = getAdminSupabase();
-  const { data: profile, error: profileError } = await supabase
+  const admin = getAdminSupabase();
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
-    .select("id, name, slug")
-    .eq("slug", slug)
-    .eq("share_token", token)
-    .single();
+    .select("id, name")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
   if (profileError || !profile) {
     return NextResponse.json(
@@ -40,7 +42,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: ratingsData, error: ratingsError } = await supabase
+  const { data: ratingsData, error: ratingsError } = await admin
     .from("film_ratings")
     .select("film_id, rating")
     .eq("profile_id", profile.id);
@@ -65,7 +67,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: filmsData, error: filmsError } = await supabase
+  const { data: filmsData, error: filmsError } = await admin
     .from("films")
     .select("*")
     .in("id", ratedFilmIds);
@@ -146,7 +148,7 @@ ${JSON.stringify(ratedFilms, null, 2)}
     completion.choices[0]?.message?.content?.trim() ??
     "The system could not generate a taste profile yet.";
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await admin
     .from("profiles")
     .update({
       taste_profile: tasteProfile,

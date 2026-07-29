@@ -9,197 +9,91 @@ type MutationResult = {
   error: MutationError | null;
 };
 
+// All mutations go through the authenticated session.
+// The server resolves the profile from session; the client only sends
+// the action data (filmId + rating/saved).
+
 export async function persistFilmRating({
-  profileId,
   filmId,
   rating,
-  profileToken,
 }: {
-  profileId: string;
   filmId: string;
   rating: number | null;
-  profileToken?: string;
 }): Promise<MutationResult> {
-  if (profileToken) {
-    const response = await fetch("/api/profile-rating", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  const response = await fetch("/api/profile-rating", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ filmId, rating }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    return {
+      error: {
+        message: body?.error ?? "Could not save film rating",
       },
-      body: JSON.stringify({
-        profileId,
-        filmId,
-        rating,
-        token: profileToken,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-      return {
-        error: {
-          message: body?.error ?? "Could not save film rating",
-        },
-      };
-    }
-
-    return { error: null };
+    };
   }
 
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (rating === null) {
-    const { error } = await supabase
-      .from("film_ratings")
-      .delete()
-      .eq("film_id", filmId)
-      .eq("profile_id", profileId);
-
-    if (error) {
-      return { error: { message: error.message } };
+  if (user) {
+    if (rating === null) {
+      logProfileActivityClient({ filmId, eventType: "rating_removed" });
+      logProfileActivityClient({ filmId, eventType: "film_unwatched" });
+    } else {
+      logProfileActivityClient({ filmId, eventType: "rating_set", eventData: { rating } });
+      logProfileActivityClient({ filmId, eventType: "film_watched", eventData: { rating } });
     }
-
-    logProfileActivityClient({
-      profileId,
-      filmId,
-      eventType: "rating_removed",
-    });
-    logProfileActivityClient({
-      profileId,
-      filmId,
-      eventType: "film_unwatched",
-    });
-
-    return { error: null };
   }
-
-  const { error } = await supabase.from("film_ratings").upsert(
-    {
-      film_id: filmId,
-      profile_id: profileId,
-      rating,
-      updated_at: new Date().toISOString(),
-    },
-    {
-      onConflict: "film_id,profile_id",
-    }
-  );
-
-  if (error) {
-    return { error: { message: error.message } };
-  }
-
-  logProfileActivityClient({
-    profileId,
-    filmId,
-    eventType: "rating_set",
-    eventData: { rating },
-  });
-  logProfileActivityClient({
-    profileId,
-    filmId,
-    eventType: "film_watched",
-    eventData: { rating },
-  });
 
   return { error: null };
 }
 
 export async function persistFilmSave({
-  profileId,
   filmId,
   saved,
-  profileToken,
 }: {
-  profileId: string;
   filmId: string;
   saved: boolean;
-  profileToken?: string;
 }): Promise<MutationResult> {
-  if (profileToken) {
-    const response = await fetch("/api/profile-save", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  const response = await fetch("/api/profile-save", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ filmId, saved }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    return {
+      error: {
+        message: body?.error ?? "Could not save film",
       },
-      body: JSON.stringify({
-        profileId,
-        filmId,
-        saved,
-        token: profileToken,
-      }),
-    });
-
-    if (!response.ok) {
-      const body = (await response.json().catch(() => null)) as
-        | { error?: string }
-        | null;
-      return {
-        error: {
-          message: body?.error ?? "Could not save film",
-        },
-      };
-    }
-
-    return { error: null };
+    };
   }
 
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (saved) {
-    const { data: existingItem, error: existingError } = await supabase
-      .from("profile_film_lists")
-      .select("id")
-      .eq("film_id", filmId)
-      .eq("profile_id", profileId)
-      .eq("list_type", "to_watch")
-      .maybeSingle();
-
-    if (existingError) {
-      return { error: { message: existingError.message } };
-    }
-
-    if (existingItem) {
-      return { error: null };
-    }
-
-    const { error } = await supabase.from("profile_film_lists").insert({
-      film_id: filmId,
-      profile_id: profileId,
-      list_type: "to_watch",
-    });
-
-    if (error) {
-      return { error: { message: error.message } };
-    }
-
+  if (user) {
     logProfileActivityClient({
-      profileId,
       filmId,
-      eventType: "film_saved",
+      eventType: saved ? "film_saved" : "film_unsaved",
     });
-
-    return { error: null };
   }
-
-  const { error } = await supabase
-    .from("profile_film_lists")
-    .delete()
-    .eq("film_id", filmId)
-    .eq("profile_id", profileId)
-    .eq("list_type", "to_watch");
-
-  if (error) {
-    return { error: { message: error.message } };
-  }
-
-  logProfileActivityClient({
-    profileId,
-    filmId,
-    eventType: "film_unsaved",
-  });
 
   return { error: null };
 }

@@ -44,7 +44,6 @@ type ProfileTasteCore = {
 type ProfileTabsProps = {
   profileSlug: string;
   profileId: string;
-  token: string;
   profileName: string;
   tasteProfile: string | null;
   tasteProfileUpdatedAt: string | null;
@@ -86,7 +85,6 @@ function buildInitialRatingOrder(watchedFilms: Film[]): Record<string, number> {
 export default function ProfileTabs({
   profileSlug,
   profileId,
-  token,
   profileName,
   tasteProfile,
   tasteProfileUpdatedAt,
@@ -423,7 +421,7 @@ export default function ProfileTabs({
             </p>
           )}
 
-          <UpdateTasteProfileButton profileSlug={profileSlug} token={token} />
+          <UpdateTasteProfileButton />
         </section>
       )}
 
@@ -600,7 +598,7 @@ export default function ProfileTabs({
               film={film}
               profileId={profileId}
               profileSlug={profileSlug}
-              profileToken={token}
+
               initialRating={getFilmRating(localFilmRatings, film.id)}
               savedFilmIds={savedFilmIds}
               onSavedChange={handleSavedChange}

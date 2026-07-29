@@ -29,12 +29,10 @@ function getSessionStorage(): Storage | null {
 }
 
 export async function applyPendingFilmAction({
-  profileId,
   storage = getSessionStorage(),
 }: {
-  profileId: string;
   storage?: Storage | null;
-}): Promise<ApplyPendingFilmActionResult> {
+} = {}): Promise<ApplyPendingFilmActionResult> {
   const pendingAction = readPendingFilmAction(storage);
 
   if (!pendingAction) {
@@ -45,15 +43,14 @@ export async function applyPendingFilmAction({
     return { status: "already_applied", actionId: pendingAction.id };
   }
 
+  // The server resolves the profile from the authenticated session.
   const mutationResult =
     pendingAction.type === "save"
       ? await persistFilmSave({
-          profileId,
           filmId: pendingAction.filmId,
           saved: pendingAction.saved,
         })
       : await persistFilmRating({
-          profileId,
           filmId: pendingAction.filmId,
           rating: pendingAction.rating,
         });

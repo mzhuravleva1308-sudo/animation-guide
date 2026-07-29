@@ -14,7 +14,6 @@ type WatchlistButtonProps = {
   filmId: string;
   profileSlug?: string;
   profileId?: string;
-  profileToken?: string;
   isSaved?: boolean;
   onSavedChange?: (saved: boolean) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
@@ -24,7 +23,6 @@ export default function WatchlistButton({
   filmId,
   profileSlug = "maria",
   profileId: profileIdFromProps,
-  profileToken,
   isSaved,
   onSavedChange,
   onAuthRequired,
@@ -129,10 +127,8 @@ export default function WatchlistButton({
 
     try {
       ({ error } = await persistFilmSave({
-        profileId,
         filmId,
         saved: nextSaved,
-        profileToken,
       }));
     } catch (cause) {
       error = {

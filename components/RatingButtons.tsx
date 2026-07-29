@@ -17,7 +17,6 @@ type RatingChangeOptions = {
 type RatingButtonsProps = {
   filmId: string;
   profileId?: string;
-  profileToken?: string;
   initialRating?: number | null;
   onRatingChange?: (
     filmId: string,
@@ -40,7 +39,6 @@ function normalizeRating(value: number | null | undefined): number | null {
 export default function RatingButtons({
   filmId,
   profileId,
-  profileToken,
   initialRating = null,
   onRatingChange,
   onAuthRequired,
@@ -110,10 +108,8 @@ export default function RatingButtons({
 
     try {
       ({ error } = await persistFilmRating({
-        profileId,
         filmId,
         rating: nextRating,
-        profileToken,
       }));
     } catch (cause) {
       error = {
