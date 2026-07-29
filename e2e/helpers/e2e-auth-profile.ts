@@ -72,22 +72,20 @@ export async function findAuthUserIdByEmail(email: string): Promise<string | nul
   return user?.id ?? null;
 }
 
-export async function createPasswordUserWithoutProfileForTests(
-  email: string,
-  password: string
+export async function createConfirmedEmailUserWithoutProfileForTests(
+  email: string
 ): Promise<string> {
   await deleteAuthUserByEmail(email);
 
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase.auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
   });
 
   if (error || !data.user) {
     throw new Error(
-      `Failed to create password auth user for ${email}: ${
+      `Failed to create confirmed email auth user for ${email}: ${
         error?.message ?? "unknown error"
       }`
     );

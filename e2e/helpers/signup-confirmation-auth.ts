@@ -17,25 +17,21 @@ export async function getSignupConfirmationSkipReason(): Promise<string | null> 
   );
 }
 
-export async function requestPasswordSignUp(
+export async function requestLoginMagicLink(
   page: Page,
-  email: string,
-  password: string
+  email: string
 ): Promise<Date> {
   const sentAfter = new Date();
 
   await page.goto("/login");
   await page.getByTestId("login-email").fill(email);
-  await page.getByTestId("login-password").fill(password);
-  await page.getByTestId("login-create-account").click();
-  await page
-    .getByTestId("login-message")
-    .waitFor({ state: "visible", timeout: 10_000 });
+  await page.getByTestId("login-send-link").click();
+  await page.getByTestId("login-sent-heading").waitFor({ timeout: 10_000 });
 
   return sentAfter;
 }
 
-export async function completeSignupConfirmation(
+export async function completeLoginMagicLinkSignIn(
   page: Page,
   email: string,
   sentAfter: Date
@@ -43,7 +39,10 @@ export async function completeSignupConfirmation(
   const confirmationUrl = await waitForMailpitAuthLink({ email, sentAfter });
 
   await page.goto(confirmationUrl);
-  await page.waitForURL(/\/my-profile(?:\/|$|\?)|\/p\/[^/?#]+/, {
+  await page.waitForURL((url) => {
+    const pathname = new URL(url).pathname;
+    return pathname === "/" || pathname.startsWith("/p/");
+  }, {
     timeout: 20_000,
   });
 

@@ -5,8 +5,6 @@ import {
   getProjectProfileId,
 } from "./project-profile-credentials";
 
-const PROJECT_RATING_AUTH_PASSWORD = "E2eRatingTestPassword1!";
-
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -76,7 +74,6 @@ export async function ensureProjectRatingAuthUser(
   if (!user) {
     const { data, error } = await supabase.auth.admin.createUser({
       email,
-      password: PROJECT_RATING_AUTH_PASSWORD,
       email_confirm: true,
     });
 
@@ -89,13 +86,12 @@ export async function ensureProjectRatingAuthUser(
     user = data.user;
   } else {
     const { error } = await supabase.auth.admin.updateUserById(user.id, {
-      password: PROJECT_RATING_AUTH_PASSWORD,
       email_confirm: true,
     });
 
     if (error) {
       throw new Error(
-        `Failed to refresh auth password for ${email}: ${error.message}`
+        `Failed to confirm auth email for ${email}: ${error.message}`
       );
     }
   }
@@ -145,11 +141,27 @@ export async function signInProjectRatingUser(
   projectName: string
 ): Promise<void> {
   const email = getProjectRatingAuthEmail(projectName);
+  const supabase = createServiceRoleClient();
 
-  await page.goto("/login");
-  await page.getByTestId("login-email").fill(email);
-  await page.getByTestId("login-password").fill(PROJECT_RATING_AUTH_PASSWORD);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+  });
+
+  const hashedToken = data.properties?.hashed_token;
+  if (error || !hashedToken) {
+    throw new Error(
+      `Failed to generate magic link for ${email}: ${
+        error?.message ?? "missing hashed_token"
+      }`
+    );
+  }
+
+  const callbackUrl = `/auth/callback?token_hash=${encodeURIComponent(
+    hashedToken
+  )}&type=email&next=${encodeURIComponent("/")}`;
+
+  await page.goto(callbackUrl);
   await expect(page.getByTestId("account-menu-trigger")).toBeVisible({
     timeout: 15_000,
   });
