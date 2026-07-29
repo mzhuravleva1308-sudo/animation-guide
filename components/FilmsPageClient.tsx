@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { UserRound } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bookmark, CircleCheck, Film as FilmIcon, UserRound } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
+import FilmCard from "@/components/FilmCard";
 import FilmCatalog from "@/components/FilmCatalog";
-import { HeaderIconButton, HEADER_LOGIN_ICON } from "@/components/HeaderIconControl";
+import {
+  HeaderIconButton,
+  HEADER_LOGIN_ICON,
+  HEADER_NAV_ICON,
+} from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
 import {
@@ -21,6 +26,8 @@ import {
   type PendingFilmActionInput,
 } from "@/lib/pending-film-action";
 import { Film } from "@/types/film";
+
+type CatalogTab = "all" | "saved" | "watched";
 
 type FilmsPageClientProps = {
   auth: AuthUserSummary | null;
@@ -53,10 +60,11 @@ export default function FilmsPageClient({
   awardWinningFilmIds,
   pageSize,
   loadError,
-  postAuthPath = "/films",
+  postAuthPath = "/",
   showSubtitle = false,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
+  const [activeTab, setActiveTab] = useState<CatalogTab>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLockScrollY, setModalLockScrollY] = useState(0);
   const [modalRestoreFocusElement, setModalRestoreFocusElement] =
@@ -102,9 +110,7 @@ export default function FilmsPageClient({
       }
 
       applyInFlightRef.current = (async () => {
-        const result = await applyPendingFilmAction({
-          profileId: resolvedProfileId,
-        });
+        const result = await applyPendingFilmAction();
 
         if (result.status === "applied") {
           const appliedAction = result.action;
@@ -144,6 +150,12 @@ export default function FilmsPageClient({
     setProfileSlug(initialAuth?.profile?.slug);
     setRatingsReady(!initialAuth);
   }, [initialAuth]);
+
+  useEffect(() => {
+    if (!auth && activeTab !== "all") {
+      setActiveTab("all");
+    }
+  }, [auth, activeTab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -217,16 +229,16 @@ export default function FilmsPageClient({
         setRatingsReady(true);
       }
 
-    setAuth({
-      email: getUserDisplayEmail(user),
-      profile: profile
-        ? {
-            id: profile.profileId,
-            slug: profile.profileSlug,
-            name: profile.profileName ?? profile.profileSlug,
-          }
-        : null,
-    });
+      setAuth({
+        email: getUserDisplayEmail(user),
+        profile: profile
+          ? {
+              id: profile.profileId,
+              slug: profile.profileSlug,
+              name: profile.profileName ?? profile.profileSlug,
+            }
+          : null,
+      });
     }
 
     const {
@@ -264,6 +276,12 @@ export default function FilmsPageClient({
     []
   );
 
+  const openAuthModal = useCallback((restoreFocus: HTMLElement | null = null) => {
+    setModalLockScrollY(window.scrollY);
+    setModalRestoreFocusElement(restoreFocus);
+    setModalOpen(true);
+  }, []);
+
   const handleAuthRequired = useCallback(
     (action: PendingFilmActionInput) => {
       setModalLockScrollY(window.scrollY);
@@ -299,44 +317,119 @@ export default function FilmsPageClient({
     setModalOpen(false);
   }, [revertPreAuthSnapshot]);
 
+  const handleTabChange = useCallback(
+    (tab: CatalogTab) => {
+      if ((tab === "saved" || tab === "watched") && !auth) {
+        openAuthModal(authTriggerRef.current);
+        return;
+      }
+
+      setActiveTab(tab);
+    },
+    [auth, openAuthModal]
+  );
+
+  const savedFilms = useMemo(
+    () => films.filter((film) => savedFilmIds.has(film.id)),
+    [films, savedFilmIds]
+  );
+
+  const watchedFilms = useMemo(
+    () =>
+      films.filter((film) => {
+        const rating = filmRatings[film.id];
+        return typeof rating === "number";
+      }),
+    [films, filmRatings]
+  );
+
+  const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
+  const showCatalogSubtitle = showSubtitle && activeTab === "all";
+
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
-      <header className="mb-0">
-        <div className="flex flex-wrap items-center justify-between gap-3 sm:flex-nowrap">
-          <ResonaleBrand />
+      <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
+        <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+          <ResonaleBrand onClick={() => handleTabChange("all")} />
 
-          {auth ? (
-            <AccountMenu
-              email={auth.email}
-              profileName={auth.profile?.name ?? null}
-            />
-          ) : (
+          <nav
+            aria-label="Catalog and lists"
+            className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-3"
+          >
             <HeaderIconButton
-              label="Log in"
-              showLabel={false}
-              buttonRef={authTriggerRef}
-              onMouseDown={(event) => {
-                event.preventDefault();
-              }}
-              onClick={() => {
-                setModalLockScrollY(window.scrollY);
-                setModalRestoreFocusElement(authTriggerRef.current);
-                setModalOpen(true);
-              }}
-              data-testid="auth-status"
+              label="All"
+              active={activeTab === "all"}
+              onClick={() => handleTabChange("all")}
             >
-              <UserRound
-                size={HEADER_LOGIN_ICON.size}
-                strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
+              <FilmIcon
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
                 fill="none"
                 className="shrink-0"
                 aria-hidden="true"
               />
             </HeaderIconButton>
-          )}
+            <HeaderIconButton
+              label="Saved"
+              active={activeTab === "saved"}
+              labelClassName="hidden lg:inline-block"
+              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] lg:after:hidden"
+              onClick={() => handleTabChange("saved")}
+              data-testid="nav-saved"
+            >
+              <Bookmark
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                fill="none"
+                className="shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
+            <HeaderIconButton
+              label="Watched"
+              active={activeTab === "watched"}
+              labelClassName="hidden md:inline-block"
+              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] md:after:hidden"
+              onClick={() => handleTabChange("watched")}
+              data-testid="nav-watched"
+            >
+              <CircleCheck
+                size={HEADER_NAV_ICON.size}
+                strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                fill="none"
+                className="shrink-0"
+                aria-hidden="true"
+              />
+            </HeaderIconButton>
+            {auth ? (
+              <AccountMenu
+                email={auth.email}
+                profileName={auth.profile?.name ?? null}
+              />
+            ) : (
+              <HeaderIconButton
+                label="Log in"
+                showLabel={false}
+                buttonRef={authTriggerRef}
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                }}
+                onClick={() => openAuthModal(authTriggerRef.current)}
+                data-testid="auth-status"
+              >
+                <UserRound
+                  size={HEADER_LOGIN_ICON.size}
+                  strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
+                  fill="none"
+                  className="shrink-0"
+                  aria-hidden="true"
+                />
+              </HeaderIconButton>
+            )}
+          </nav>
         </div>
 
-        {showSubtitle ? (
+        {showCatalogSubtitle ? (
           <div className="mt-[18px] mb-[22px]">
             <h1 className="sr-only">Resonale</h1>
             <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
@@ -353,23 +446,78 @@ export default function FilmsPageClient({
         )}
       </header>
 
-      <div className={showSubtitle ? undefined : "mt-[18px]"}>
-        <FilmCatalog
-          films={films}
-          awardWinningFilmIds={awardWinningFilmIds}
-          pageSize={pageSize}
-          loadError={loadError}
-          interaction={{
-            profileId,
-            profileSlug,
-            savedFilmIds,
-            filmRatings,
-            onSavedChange: handleSavedChange,
-            onRatingChange: handleRatingChange,
-            onAuthRequired: auth ? undefined : handleAuthRequired,
-          }}
-        />
-      </div>
+      {activeTab === "all" ? (
+        <div className={showCatalogSubtitle ? undefined : "mt-[18px]"}>
+          <FilmCatalog
+            films={films}
+            awardWinningFilmIds={awardWinningFilmIds}
+            pageSize={pageSize}
+            loadError={loadError}
+            interaction={{
+              profileId,
+              profileSlug,
+              savedFilmIds,
+              filmRatings,
+              ratingsReady,
+              onSavedChange: handleSavedChange,
+              onRatingChange: handleRatingChange,
+              onAuthRequired: auth ? undefined : handleAuthRequired,
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          {activeTab === "watched" && listFilms.length > 0 ? (
+            <p className="mb-3 mt-4 text-sm text-slate-500">
+              Showing {listFilms.length} watched{" "}
+              {listFilms.length === 1 ? "film" : "films"}
+            </p>
+          ) : null}
+
+          {loadError ? (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+              {loadError}
+            </div>
+          ) : null}
+
+          {!loadError && listFilms.length === 0 ? (
+            <div
+              data-testid="profile-tab-empty"
+              className="mt-4 rounded-2xl border border-dashed p-8 text-gray-500"
+            >
+              {activeTab === "saved"
+                ? "No saved films yet."
+                : "No watched films yet."}
+            </div>
+          ) : null}
+
+          {!loadError && listFilms.length > 0 ? (
+            <section
+              data-testid="film-list"
+              className={`grid gap-4${activeTab === "saved" ? " mt-4" : ""}`}
+            >
+              {listFilms.map((film, index) => (
+                <FilmCard
+                  key={film.id}
+                  mode="catalog"
+                  film={film}
+                  profileId={profileId}
+                  profileSlug={profileSlug}
+                  initialRating={
+                    typeof filmRatings[film.id] === "number"
+                      ? filmRatings[film.id]
+                      : null
+                  }
+                  savedFilmIds={savedFilmIds}
+                  onSavedChange={handleSavedChange}
+                  onRatingChange={handleRatingChange}
+                  lazyLoadPoster={index >= 3}
+                />
+              ))}
+            </section>
+          ) : null}
+        </>
+      )}
 
       <EmailAuthModal
         open={modalOpen}

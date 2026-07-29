@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+
 import { useEffect, useId, useRef, useState } from "react";
 
 type AccountMenuProps = {
@@ -96,14 +96,6 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
           </div>
 
           <div className="py-1">
-            <Link
-              href="/my-profile"
-              role="menuitem"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
-            >
-              My guide
-            </Link>
             <form action="/auth/logout" method="post" role="none">
               <button
                 type="submit"

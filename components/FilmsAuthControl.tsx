@@ -40,7 +40,7 @@ export default function FilmsAuthControl({ auth }: FilmsAuthControlProps) {
         />
       </HeaderIconButton>
 
-      <EmailAuthModal open={modalOpen} onClose={() => setModalOpen(false)} postAuthPath="/films" />
+      <EmailAuthModal open={modalOpen} onClose={() => setModalOpen(false)} postAuthPath="/" />
     </>
   );
 }
