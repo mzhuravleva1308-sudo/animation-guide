@@ -89,7 +89,11 @@ export default async function ProfilePage({
   const profileSlug = routeParams.slug;
   const token = queryParams?.token;
 
-  const { data: profile } = await supabase
+  // Private profile rows are RLS-protected. Share-link access uses the
+  // server-only service-role client after verifying slug + share_token.
+  const adminSupabase = getAdminSupabase();
+
+  const { data: profile } = await adminSupabase
     .from("profiles")
     .select("id, name, slug, taste_profile, taste_profile_updated_at")
     .eq("slug", profileSlug)
@@ -112,7 +116,6 @@ export default async function ProfilePage({
   }
 
   const logProfilePageLoad = createProfilePageLoadTimer();
-  const adminSupabase = getAdminSupabase();
 
   const [
     { data: tasteCoresData },
@@ -122,7 +125,7 @@ export default async function ProfilePage({
     { data: scoreRows },
     { data: awardRecognitionRows },
   ] = await Promise.all([
-    supabase
+    adminSupabase
       .from("profile_taste_cores")
       .select(
         "id, core_index, core_type, name, strength, coverage, maturity, nearest_moods, emotional_profile_tags, aesthetic_profile_tags"
@@ -132,12 +135,12 @@ export default async function ProfilePage({
     applyPublicCatalogVisibilityFilter(
       supabase.from("films").select(FILM_SELECT_FIELDS)
     ).order("id"),
-    supabase
+    adminSupabase
       .from("film_ratings")
       .select("film_id, rating")
       .eq("profile_id", profile.id)
       .order("film_id"),
-    supabase
+    adminSupabase
       .from("profile_film_lists")
       .select("film_id")
       .eq("profile_id", profile.id)
