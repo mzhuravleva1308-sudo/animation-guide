@@ -5,10 +5,10 @@ import {
   ProfileActivityLogInput,
 } from "@/lib/profile-activity-types";
 
-type ClientProfileActivityInput = Pick<
-  ProfileActivityLogInput,
-  "profileId" | "filmId" | "eventType" | "eventData"
->;
+type ClientProfileActivityInput = Omit<
+  Pick<ProfileActivityLogInput, "profileId" | "filmId" | "eventType" | "eventData">,
+  "profileId"
+> & { profileId?: string };
 
 function sendProfileActivityLog(input: ClientProfileActivityInput) {
   void fetch("/api/profile-activity", {

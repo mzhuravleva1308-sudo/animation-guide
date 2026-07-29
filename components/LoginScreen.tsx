@@ -5,7 +5,6 @@ import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthCallbackUrl } from "@/lib/auth/callback-url";
 import { resolveAuthOrigin } from "@/lib/auth/callback-origin";
-import { provisionAuthProfile } from "@/lib/auth/provision-auth-profile-client";
 import {
   getOAuthSignInLabel,
   type OAuthProvider,
@@ -16,9 +15,7 @@ type LoginScreenProps = {
   oauthProviders: OAuthProvider[];
 };
 
-type EmailMode = "password" | "email-link";
-
-type LoadingAction = "sign-in" | "sign-up" | OAuthProvider | null;
+type LoadingAction = OAuthProvider | null;
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -42,9 +39,6 @@ function oauthButtonClassName(provider: OAuthProvider): string {
 }
 
 export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailMode, setEmailMode] = useState<EmailMode>("password");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<LoadingAction>(null);
 
@@ -55,91 +49,6 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
     );
 
     return getAuthCallbackUrl(authOrigin);
-  }
-
-  async function finishBrowserAuth() {
-    try {
-      const result = await provisionAuthProfile();
-
-      if (!result.ok) {
-        setMessage(`${result.message} (${result.auth_error})`);
-        setLoading(null);
-        return false;
-      }
-
-      window.location.assign(POST_AUTH_PATH);
-      return true;
-    } catch {
-      setMessage(
-        "We signed you in, but couldn't set up your personal guide. (profile_provision_failed)"
-      );
-      setLoading(null);
-      return false;
-    }
-  }
-
-  async function handlePasswordSignIn(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!email.trim()) {
-      setMessage("Enter your email address.");
-      return;
-    }
-
-    setLoading("sign-in");
-    setMessage(null);
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(null);
-      return;
-    }
-
-    await finishBrowserAuth();
-  }
-
-  async function handlePasswordSignUp() {
-    if (!email.trim()) {
-      setMessage("Enter your email address.");
-      return;
-    }
-
-    if (!password) {
-      setMessage("Enter a password to create your account.");
-      return;
-    }
-
-    setLoading("sign-up");
-    setMessage(null);
-
-    const supabase = createClient();
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getAuthRedirectUrl(),
-      },
-    });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(null);
-      return;
-    }
-
-    if (data.session) {
-      await finishBrowserAuth();
-      return;
-    }
-
-    setMessage("Check your email to confirm your account.");
-    setLoading(null);
   }
 
   async function handleOAuthSignIn(provider: OAuthProvider) {
@@ -170,7 +79,6 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
   }
 
   const isBusy = loading !== null;
-  const isPasswordMode = emailMode === "password";
 
   return (
     <div className="mt-8 space-y-6">
@@ -198,104 +106,19 @@ export default function LoginScreen({ oauthProviders }: LoginScreenProps) {
       ) : null}
 
       <section
-        aria-labelledby={
-          isPasswordMode ? "login-email-heading" : "login-email-link-heading"
-        }
+        aria-labelledby="login-email-link-heading"
         className="rounded-lg border border-gray-200 bg-white p-4"
       >
-        {isPasswordMode ? (
-          <>
-            <h2 id="login-email-heading" className="text-sm font-medium text-gray-900">
-              Email sign-in
-            </h2>
-            <form className="mt-4 space-y-3" onSubmit={handlePasswordSignIn}>
-            <div>
-              <label htmlFor="login-email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="login-email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Email address"
-                data-testid="login-email"
-              />
-            </div>
-            <div>
-              <label htmlFor="login-password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                minLength={6}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                placeholder="Password"
-                data-testid="login-password"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isBusy}
-              className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-            >
-              {loading === "sign-in" ? "Signing in..." : "Sign in"}
-            </button>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-              <button
-                type="button"
-                disabled={isBusy}
-                onClick={() => {
-                  setEmailMode("email-link");
-                  setMessage(null);
-                }}
-                className="text-gray-600 hover:text-gray-900 disabled:opacity-60"
-                data-testid="login-use-email-link"
-              >
-                Email me a sign-in link
-              </button>
-              <button
-                type="button"
-                disabled={isBusy}
-                onClick={() => void handlePasswordSignUp()}
-                className="text-gray-600 hover:text-gray-900 disabled:opacity-60"
-                data-testid="login-create-account"
-              >
-                {loading === "sign-up" ? "Creating account..." : "Create account"}
-              </button>
-            </div>
-          </form>
-          </>
-        ) : (
-          <>
-            <h2 id="login-email-link-heading" className="text-sm font-medium text-gray-900">
-              Email link
-            </h2>
-            <EmailMagicLinkAuthForm testIdPrefix="login" postAuthPath={POST_AUTH_PATH} />
-            <button
-              type="button"
-              disabled={isBusy}
-              onClick={() => {
-                setEmailMode("password");
-                setMessage(null);
-              }}
-              className="mt-3 text-sm text-gray-600 hover:text-gray-900 disabled:opacity-60"
-              data-testid="login-use-password"
-            >
-              Sign in with password instead
-            </button>
-          </>
-        )}
+        <h2
+          id="login-email-link-heading"
+          className="text-sm font-medium text-gray-900"
+        >
+          Email link
+        </h2>
+        <EmailMagicLinkAuthForm
+          testIdPrefix="login"
+          postAuthPath={POST_AUTH_PATH}
+        />
       </section>
 
       {message ? (

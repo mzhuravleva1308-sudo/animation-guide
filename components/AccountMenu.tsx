@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+
 import { useEffect, useId, useRef, useState } from "react";
 
 type AccountMenuProps = {
@@ -61,7 +61,7 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200/80 bg-white text-xs font-medium tracking-wide text-gray-600 shadow-sm transition hover:border-gray-300 hover:text-gray-900"
+        className="flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border border-[#B1A9D9]/70 bg-white text-[11px] font-semibold leading-none tracking-wide text-[#1A1B2E] transition hover:border-[#1A1B2E]/40 hover:text-[#1A1B2E] sm:size-5 sm:text-[8px]"
         aria-expanded={open}
         aria-haspopup="menu"
         aria-controls={menuId}
@@ -96,14 +96,6 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
           </div>
 
           <div className="py-1">
-            <Link
-              href="/my-profile"
-              role="menuitem"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              onClick={() => setOpen(false)}
-            >
-              My guide
-            </Link>
             <form action="/auth/logout" method="post" role="none">
               <button
                 type="submit"

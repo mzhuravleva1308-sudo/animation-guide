@@ -3,7 +3,7 @@ import {
   assertFilmSavedInProfile,
   countProfilesForUserId,
   countSavedListRowsForFilm,
-  createPasswordUserWithoutProfileForTests,
+  createConfirmedEmailUserWithoutProfileForTests,
   deleteAuthUserByEmailForTests,
   findAuthUserIdByEmail,
   findProfileByUserId,
@@ -131,10 +131,7 @@ test.describe("Films auth profile provisioning with Mailpit", () => {
     page,
   }) => {
     const email = uniquePersonalGuideTestEmail("existing-auth-user");
-    const userId = await createPasswordUserWithoutProfileForTests(
-      email,
-      "local-test-password"
-    );
+    const userId = await createConfirmedEmailUserWithoutProfileForTests(email);
 
     try {
       const sentAfter = await requestFilmsMagicLink(page, email);

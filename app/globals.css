@@ -5,43 +5,67 @@
 @source "../lib";
 
 :root {
+  /* Resonale is light-only; ignore system prefers-color-scheme. */
+  color-scheme: light;
   --background: #ffffff;
   --foreground: #171717;
+  /* Dusty dark indigo — success toasts */
+  --soft-panel-bg: #3f4260;
+  --soft-panel-border: #343754;
+  --soft-panel-fg: #ffffff;
+  --soft-panel-fg-muted: rgba(255, 255, 255, 0.72);
+  --soft-panel-hover: rgba(255, 255, 255, 0.14);
+  /* Cool lavender-gray — rating onboarding hints */
+  --hint-panel-bg: #f5f6fb;
+  --hint-panel-border: #e4e6f0;
+  --hint-panel-fg: #5c5d6e;
+  --hint-panel-fg-muted: #9a9baf;
+  --hint-panel-bg-subtle: #f7f8fc;
+  --hint-panel-border-subtle: #eceef5;
+  --hint-panel-hover: #e5e7f4;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-soft-panel: var(--soft-panel-bg);
+  --color-soft-panel-border: var(--soft-panel-border);
+  --color-soft-panel-fg: var(--soft-panel-fg);
+  --color-soft-panel-fg-muted: var(--soft-panel-fg-muted);
+  --color-soft-panel-hover: var(--soft-panel-hover);
+  --color-hint-panel: var(--hint-panel-bg);
+  --color-hint-panel-border: var(--hint-panel-border);
+  --color-hint-panel-fg: var(--hint-panel-fg);
+  --color-hint-panel-fg-muted: var(--hint-panel-fg-muted);
+  --color-hint-panel-subtle: var(--hint-panel-bg-subtle);
+  --color-hint-panel-border-subtle: var(--hint-panel-border-subtle);
+  --color-hint-panel-hover: var(--hint-panel-hover);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 html {
+  color-scheme: light;
   scrollbar-gutter: stable;
+  background-color: #ffffff;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #ffffff;
+  background-color: #ffffff;
+  color: #171717;
   font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
 }
 
 @keyframes toast-enter {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.98);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -53,16 +77,16 @@ body {
 
   to {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(10px);
   }
 }
 
 .toast-enter {
-  animation: toast-enter 200ms ease-out both;
+  animation: toast-enter 180ms ease-out both;
 }
 
 .toast-exit {
-  animation: toast-exit 170ms ease-out both;
+  animation: toast-exit 180ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -92,5 +116,31 @@ body {
 
   to {
     opacity: 0;
+  }
+}
+
+@keyframes resonale-guide-letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.45em);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resonale-guide-letter {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: resonale-guide-letter-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resonale-guide-letter {
+    opacity: 1;
+    animation: none;
   }
 }

@@ -6,6 +6,7 @@ import {
   isSearchQueryUsable,
   searchFilms,
 } from "@/lib/film-search.mjs";
+import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
 import type { Film } from "@/types/film";
 
 const SEARCH_FILM_SELECT_FIELDS = [
@@ -43,10 +44,9 @@ export async function GET(request: Request) {
       });
     }
 
-    const { data, error } = await supabase
-      .from("films")
-      .select(SEARCH_FILM_SELECT_FIELDS)
-      .order("title");
+    const { data, error } = await applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS)
+    ).order("title");
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

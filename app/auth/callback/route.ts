@@ -88,7 +88,7 @@ async function finalizeAuthenticatedCallback(
     };
   }
 
-  if (!profile?.id || !profile.slug || !profile.share_token) {
+  if (!profile?.id || !profile.slug) {
     return {
       kind: "profile_error",
       redirectPath: appendAuthCallbackErrorToPath(
@@ -133,7 +133,6 @@ async function finalizeAuthenticatedCallback(
   return {
     kind: "success",
     redirectPath: resolvePostAuthRedirectPath({
-      profile,
       nextPath,
       hadPendingAction,
       authCallbackType,

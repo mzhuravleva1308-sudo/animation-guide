@@ -3,6 +3,7 @@ import {
   ensureProjectE2eProfile,
 } from "../helpers/project-profile-credentials";
 import { profilePagePath } from "../helpers/profile-credentials";
+import { expandFilmSearch } from "../helpers/profile-page";
 
 async function expectStableSearchInputWidth(
   page: import("@playwright/test").Page,
@@ -12,15 +13,11 @@ async function expectStableSearchInputWidth(
   await page.goto(path);
 
   if (options?.openAllFilmsTab) {
-    const allFilmsTab = page.getByRole("button", { name: "All films" });
-    await expect(allFilmsTab).toBeVisible();
-    await allFilmsTab.click();
-    await expect(allFilmsTab).toHaveClass(/bg-black/);
+    await page.getByRole("button", { name: "All", exact: true }).click();
+    await expect(page.getByTestId("film-search")).toBeVisible();
   }
 
-  await expect(page.getByTestId("film-search-input")).toBeVisible();
-
-  const input = page.getByTestId("film-search-input");
+  const input = await expandFilmSearch(page);
   const searchSection = page.getByTestId("film-search");
   const main = page.locator("main");
 

@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { FestivalRecognitionsDashboard } from "@/components/FestivalRecognitionsDashboard";
+import { getAdminAccessStatus } from "@/lib/auth/require-admin";
 import { getFestivalAdminSupabase } from "@/lib/get-festival-admin-supabase.mjs";
 import { loadFestivalAdminData } from "@/lib/load-festival-recognitions-admin.mjs";
 
@@ -7,6 +9,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export default async function FestivalRecognitionsAdminPage() {
+  const access = await getAdminAccessStatus();
+
+  if (access === "unauthenticated") {
+    redirect("/login");
+  }
+
+  if (access !== "admin") {
+    notFound();
+  }
+
   const supabase = getFestivalAdminSupabase();
   const { allClaims, annecyClaims, confirmedAnnecyPresence, recognitions } =
     await loadFestivalAdminData(supabase);

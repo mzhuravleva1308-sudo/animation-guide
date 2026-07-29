@@ -63,10 +63,11 @@ test.describe("Profile auth compatibility", () => {
   test("opens an existing shared profile without signing in", async ({ page }) => {
     await page.goto(profilePagePath(credentials));
 
-    await expect(
-      page.getByRole("heading", { name: "Animation Guide", level: 1 })
-    ).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveText("Log in");
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+      "aria-label",
+      "Log in"
+    );
     await expect(page.getByTestId("account-menu-trigger")).toHaveCount(0);
     await expect(page.getByTestId("film-list")).toBeVisible();
   });
@@ -156,9 +157,7 @@ test.describe("Profile auth compatibility", () => {
     await expect(page).toHaveURL(
       new RegExp(`/p/${credentials.slug}\\?token=${encodeURIComponent(credentials.token).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
     );
-    await expect(
-      page.getByRole("heading", { name: "Animation Guide", level: 1 })
-    ).toBeVisible();
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
   });
 
   test("preserves seeded ratings after auth callback for a linked user", async ({

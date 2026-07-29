@@ -1,7 +1,7 @@
 {
     "name": "Animation Guide",
     "short_name": "Animation",
-    "description": "A curated guide to strange, beautiful, and emotionally resonant animated films.",
+    "description": "A curated guide to strange, beautiful and emotionally resonant animated films.",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",

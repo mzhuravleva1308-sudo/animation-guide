@@ -30,21 +30,29 @@ function FilmCardSkeleton() {
 export default function ProfileLoading() {
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl p-8" aria-busy="true" aria-label="Loading profile">
-      <header className="mb-8 flex items-start justify-between gap-4">
-        <div className="min-w-0 flex-1">
-          <SkeletonBlock className="mb-3 h-9 w-72 max-w-full" />
+      <header className="mb-8">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <SkeletonBlock className="h-7 w-40" />
+          <div className="ml-auto flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <SkeletonBlock className="h-8 w-20 rounded-lg" />
+            <SkeletonBlock className="h-8 w-16 rounded-lg" />
+            <SkeletonBlock className="h-8 w-20 rounded-lg" />
+            <SkeletonBlock className="h-5 w-14" />
+          </div>
+        </div>
+        <div className="max-w-2xl">
           <SkeletonBlock className="h-5 w-full max-w-lg" />
         </div>
-        <SkeletonBlock className="h-9 w-9 shrink-0 rounded-full" />
       </header>
 
-      <div className="mb-6 flex flex-wrap gap-2">
-        <SkeletonBlock className="h-10 w-24 rounded-full" />
-        <SkeletonBlock className="h-10 w-20 rounded-full" />
-        <SkeletonBlock className="h-10 w-24 rounded-full" />
+      <SkeletonBlock className="mb-3 h-11 w-full rounded-xl" />
+      <div className="mb-3 flex flex-wrap gap-2">
+        <SkeletonBlock className="h-8 w-16 rounded-full" />
+        <SkeletonBlock className="h-8 w-20 rounded-full" />
+        <SkeletonBlock className="h-8 w-28 rounded-full" />
+        <SkeletonBlock className="h-8 w-24 rounded-full" />
       </div>
-
-      <SkeletonBlock className="mb-6 h-4 w-40" />
+      <SkeletonBlock className="mb-4 h-4 w-40" />
 
       <section className="grid gap-4">
         <FilmCardSkeleton />

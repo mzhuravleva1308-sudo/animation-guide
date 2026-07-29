@@ -1,6 +1,11 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
+import {
+  describeFilmScope,
+  loadScopedFilms,
+  parseFilmScopeArgs,
+} from "./film-scope.mjs";
 
 applyAppEnv();
 
@@ -22,6 +27,8 @@ if (!openaiApiKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
+const scope = parseFilmScopeArgs(process.argv.slice(2));
+const dryRun = scope.passthrough.includes("--dry-run");
 
 function normalizeTag(tag) {
   return tag.trim().toLowerCase();
@@ -39,28 +46,45 @@ function buildAestheticText(film) {
 }
 
 async function getFilms() {
-  const { data, error } = await supabase
-    .from("films")
-    .select("id, title, aesthetic_tags")
-    .not("aesthetic_tags", "is", null)
-    .order("title");
+  return loadScopedFilms(supabase, scope, {
+    select: "id, title, aesthetic_tags",
+    applyFilters: (query) =>
+      query.not("aesthetic_tags", "is", null).order("title"),
+  }).then((films) => films.filter((film) => film.aesthetic_tags?.length));
+}
 
-  if (error) throw error;
+function isValidEmbedding(value) {
+  const expectedDimensions = Number(process.env.OPENAI_EMBEDDING_DIMENSIONS);
+  const vector = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.replace(/^\[/, "").replace(/\]$/, "").split(",").map(Number)
+      : null;
 
-  return (data ?? []).filter((film) => film.aesthetic_tags?.length);
+  return (
+    Array.isArray(vector) &&
+    vector.length > 0 &&
+    vector.every(Number.isFinite) &&
+    (!Number.isInteger(expectedDimensions) ||
+      expectedDimensions <= 0 ||
+      vector.length === expectedDimensions)
+  );
 }
 
 async function getExistingEmbeddings() {
   const { data, error } = await supabase
     .from("film_aesthetic_embeddings")
-    .select("film_id, aesthetic_text");
+    .select("film_id, aesthetic_text, embedding");
 
   if (error) throw error;
 
   const map = new Map();
 
   for (const row of data ?? []) {
-    map.set(row.film_id, row.aesthetic_text);
+    map.set(row.film_id, {
+      aestheticText: row.aesthetic_text,
+      valid: isValidEmbedding(row.embedding),
+    });
   }
 
   return map;
@@ -68,7 +92,7 @@ async function getExistingEmbeddings() {
 
 async function createEmbedding(input) {
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
     input,
   });
 
@@ -77,16 +101,24 @@ async function createEmbedding(input) {
 
 async function main() {
   const films = await getFilms();
-  const existing = await getExistingEmbeddings();
+  const existingById = await getExistingEmbeddings();
 
+  console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with aesthetic tags: ${films.length}`);
 
   for (const film of films) {
     const aestheticText = buildAestheticText(film);
-    const existingText = existing.get(film.id);
+    const existing = existingById.get(film.id);
 
-    if (existingText === aestheticText) {
+    if (existing?.aestheticText === aestheticText && existing.valid) {
       console.log(`Embedding exists: ${film.title}`);
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`[dry-run] would create aesthetic embedding: ${film.title}`);
+      console.log(`  film_id: ${film.id}`);
+      console.log(`  ${aestheticText}`);
       continue;
     }
 

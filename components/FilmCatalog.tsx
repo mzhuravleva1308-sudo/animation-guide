@@ -8,15 +8,19 @@ import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
+  QUICK_FILTER_DESCRIPTIONS,
   QUICK_FILTERS,
 } from "@/lib/quick-film-filters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 
 type FilmCatalogInteractionProps = {
   profileId?: string;
   profileSlug?: string;
   savedFilmIds: Set<string>;
   filmRatings: Record<string, number | null>;
+  /** False while authenticated ratings are still loading from the server. */
+  ratingsReady?: boolean;
   onSavedChange: (film: Film, saved: boolean) => void;
   onRatingChange: (
     filmId: string,
@@ -50,12 +54,19 @@ export default function FilmCatalog({
     isActive: false,
     error: null as string | null,
   });
+  const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
+    interaction?.filmRatings,
+    {
+      enabled: Boolean(interaction),
+      ratingsReady: interaction?.ratingsReady ?? true,
+    }
+  );
 
   const awardWinningFilmIdSet = useMemo(
     () => new Set(awardWinningFilmIds),
     [awardWinningFilmIds]
   );
-  
+
   const quickFilteredFilms = useMemo(
     () =>
       filterFilmsByQuickFilter(
@@ -112,54 +123,74 @@ export default function FilmCatalog({
 
   return (
     <>
-      <div className="mb-6 min-h-5">
-        {totalCount > 0 && (
-          <p className="text-sm text-gray-500">
-            {totalCount} films in the catalog
+      <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+            <FilmSearch
+              onResultsChange={handleSearchResultsChange}
+              isLoading={searchState.isLoading}
+            />
+            <QuickFilters
+              activeFilter={activeQuickFilter}
+              onFilterChange={handleQuickFilterChange}
+              availableFilters={QUICK_FILTERS}
+            />
+          </div>
+          {!isShowingSearchResults && totalCount > 0 ? (
+            <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
+              {totalCount} {totalCount === 1 ? "film" : "films"}
+            </p>
+          ) : null}
+        </div>
+        {activeQuickFilter ? (
+          <p
+            data-testid="quick-filter-description"
+            className="mt-3.5 max-w-xl font-sans text-[14px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
+          >
+            {QUICK_FILTER_DESCRIPTIONS[activeQuickFilter]}
           </p>
-        )}
+        ) : null}
       </div>
 
-      <FilmSearch
-        onResultsChange={handleSearchResultsChange}
-        isLoading={searchState.isLoading}
-      />
-      <QuickFilters
-        activeFilter={activeQuickFilter}
-        onFilterChange={handleQuickFilterChange}
-        availableFilters={QUICK_FILTERS}
-      />
-
-      <div className="mb-6 min-h-5" aria-live="polite">
-        {searchState.error && isShowingSearchResults && (
-          <p className="text-sm text-red-600" data-testid="film-search-error">
-            {searchState.error}
-          </p>
-        )}
-
-        {isShowingSearchResults &&
-          !searchState.isLoading &&
-          !searchState.error &&
-          visibleFilms.length > 0 && (
-            <p
-              className="text-sm text-gray-500"
-              data-testid="film-search-results-count"
-            >
-              {visibleFilms.length}{" "}
-              {visibleFilms.length === 1 ? "film" : "films"} matched “
-              {searchState.query}”.
+      {(searchState.error && isShowingSearchResults) ||
+      (isShowingSearchResults &&
+        !searchState.isLoading &&
+        !searchState.error &&
+        visibleFilms.length > 0) ||
+      (isSearchActive &&
+        searchState.query.length > 0 &&
+        searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH) ? (
+        <div className="mb-2.5 min-h-0" aria-live="polite">
+          {searchState.error && isShowingSearchResults && (
+            <p className="text-sm text-red-600" data-testid="film-search-error">
+              {searchState.error}
             </p>
           )}
 
-        {isSearchActive &&
-          searchState.query.length > 0 &&
-          searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
-            <p className="text-sm text-gray-500" data-testid="film-search-hint">
-              Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to
-              search.
-            </p>
-          )}
-      </div>
+          {isShowingSearchResults &&
+            !searchState.isLoading &&
+            !searchState.error &&
+            visibleFilms.length > 0 && (
+              <p
+                className="text-sm text-slate-500"
+                data-testid="film-search-results-count"
+              >
+                {visibleFilms.length}{" "}
+                {visibleFilms.length === 1 ? "film" : "films"} matched “
+                {searchState.query}”.
+              </p>
+            )}
+
+          {isSearchActive &&
+            searchState.query.length > 0 &&
+            searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
+              <p className="text-sm text-slate-500" data-testid="film-search-hint">
+                Type at least {filmSearchConstants.MIN_QUERY_LENGTH} characters to
+                search.
+              </p>
+            )}
+        </div>
+      ) : null}
 
       {loadError && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
@@ -210,6 +241,8 @@ export default function FilmCatalog({
               })
             }
             onAuthRequired={interaction?.onAuthRequired}
+            ratingOnboardingHint={getHintForIndex(index)}
+            onDismissRatingOnboarding={onDismissRatingOnboarding}
           />
         ))}
       </section>

@@ -11,6 +11,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const MIGRATION_FILES = [
   "supabase/migrations/20260629_add_film_semantic_descriptions.sql",
   "supabase/migrations/20260630_add_film_editorial_copy.sql",
+  "supabase/migrations/20260719_add_film_catalog_visible.sql",
 ];
 
 function parseArgs(argv) {

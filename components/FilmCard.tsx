@@ -10,12 +10,12 @@ import {
   getFilmCardSynopsis,
 } from "@/lib/film-card-copy.mjs";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
 
 type FilmCardBaseProps = {
   film: Film;
-  reason?: string;
   score?: FilmScore | null;
   showDebugScores?: boolean;
   lazyLoadPoster?: boolean;
@@ -25,7 +25,6 @@ type FilmCardProfileProps = FilmCardBaseProps & {
   mode?: "profile";
   profileId: string;
   profileSlug: string;
-  profileToken: string;
   initialRating: number | null;
   savedFilmIds: Set<string>;
   onSavedChange: (film: Film, saved: boolean) => void;
@@ -34,6 +33,8 @@ type FilmCardProfileProps = FilmCardBaseProps & {
     rating: number | null,
     options?: { skipOrderUpdate?: boolean }
   ) => void;
+  ratingOnboardingHint?: RatingOnboardingHint;
+  onDismissRatingOnboarding?: () => void;
 };
 
 type FilmCardPublicProps = FilmCardBaseProps & {
@@ -53,6 +54,8 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
     options?: { skipOrderUpdate?: boolean }
   ) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
+  ratingOnboardingHint?: RatingOnboardingHint;
+  onDismissRatingOnboarding?: () => void;
 };
 
 export type FilmCardProps =
@@ -63,7 +66,6 @@ export type FilmCardProps =
 export default function FilmCard(props: FilmCardProps) {
   const {
     film,
-    reason,
     score = null,
     showDebugScores = false,
     lazyLoadPoster = false,
@@ -91,7 +93,7 @@ export default function FilmCard(props: FilmCardProps) {
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
+      className="mx-auto w-full max-w-[1520px] overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
     >
       <div
         data-testid="film-poster"
@@ -142,7 +144,7 @@ export default function FilmCard(props: FilmCardProps) {
         )}
       </div>
 
-      <div className="flex min-h-0 flex-col p-4 sm:p-5">
+      <div className="flex min-h-0 flex-col p-4 sm:px-5 sm:py-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
       <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
       {techniquePills.length > 0 ? (
@@ -190,14 +192,8 @@ export default function FilmCard(props: FilmCardProps) {
     )}
   </div>
 
-  {reason && (
-    <p className="mt-4 rounded-xl bg-stone-50 px-4 py-3 text-sm leading-6 text-stone-700">
-      {reason}
-    </p>
-  )}
-
   {(synopsis || mood) && (
-    <div className="mt-3 space-y-2.5">
+    <div className="mt-2.5 space-y-2">
       {synopsis && (
         <p className="text-sm leading-6 text-gray-900">{synopsis}</p>
       )}
@@ -274,22 +270,18 @@ export default function FilmCard(props: FilmCardProps) {
       <RatingButtons
         filmId={film.id}
         profileId={props.profileId}
-        profileToken={
-          props.mode === "profile" ? props.profileToken : undefined
-        }
         initialRating={props.initialRating}
         onRatingChange={props.onRatingChange}
         onAuthRequired={
           props.mode === "catalog" ? props.onAuthRequired : undefined
         }
+        ratingOnboardingHint={props.ratingOnboardingHint}
+        onDismissRatingOnboarding={props.onDismissRatingOnboarding}
       />
       <WatchlistButton
         filmId={film.id}
         profileSlug={props.profileSlug}
         profileId={props.profileId}
-        profileToken={
-          props.mode === "profile" ? props.profileToken : undefined
-        }
         isSaved={props.savedFilmIds.has(film.id)}
         onSavedChange={(saved) => props.onSavedChange(film, saved)}
         onAuthRequired={

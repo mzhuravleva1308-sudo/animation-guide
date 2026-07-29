@@ -1,24 +1,33 @@
 import { after, NextResponse } from "next/server";
 import { logProfileActivity } from "@/lib/log-profile-activity";
+import { createClient } from "@/lib/supabase/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type ProfileRatingRequest = {
-  profileId?: string;
   filmId?: string;
-  token?: string;
   rating?: number | null;
 };
 
 export async function POST(request: Request) {
-  let body: ProfileRatingRequest;
+  // Require an authenticated session. Token/slug/profileId from the client
+  // are not accepted as proof of identity.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
+  if (!user) {
+    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  }
+
+  let body: ProfileRatingRequest;
   try {
     body = (await request.json()) as ProfileRatingRequest;
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { profileId, filmId, token, rating } = body;
+  const { filmId, rating } = body;
   const validRating =
     rating === null ||
     (typeof rating === "number" &&
@@ -26,32 +35,36 @@ export async function POST(request: Request) {
       rating >= 1 &&
       rating <= 10);
 
-  if (!profileId || !filmId || !token || !validRating) {
+  if (!filmId || !validRating) {
     return NextResponse.json({ error: "Invalid rating request" }, { status: 400 });
   }
 
-  const supabase = getAdminSupabase();
-  const { data: profile, error: profileError } = await supabase
+  // Resolve the profile server-side by the authenticated user's id only.
+  const admin = getAdminSupabase();
+  const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("id")
-    .eq("id", profileId)
-    .eq("share_token", token)
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (profileError) {
-    console.error("Profile rating authorization failed:", profileError);
-    return NextResponse.json({ error: "Could not authorize profile" }, { status: 500 });
+    console.error("[profile-rating] profile lookup failed:", profileError);
+    return NextResponse.json({ error: "Could not resolve profile" }, { status: 500 });
   }
 
   if (!profile) {
-    return NextResponse.json({ error: "Invalid profile token" }, { status: 403 });
+    return NextResponse.json(
+      { error: "No profile found for this account", code: "profile_not_found" },
+      { status: 404 }
+    );
   }
 
+  const profileId = profile.id;
   const eventType = rating === null ? "rating_removed" : "rating_set";
   const eventData = rating === null ? undefined : { rating };
 
   if (rating === null) {
-    const { error } = await supabase
+    const { error } = await admin
       .from("film_ratings")
       .delete()
       .eq("film_id", filmId)
@@ -61,7 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
   } else {
-    const { error } = await supabase.from("film_ratings").upsert(
+    const { error } = await admin.from("film_ratings").upsert(
       {
         film_id: filmId,
         profile_id: profileId,

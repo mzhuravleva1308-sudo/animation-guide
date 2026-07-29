@@ -4,7 +4,6 @@ export type AuthProfileProvisionResponse =
       profile: {
         id: string;
         slug: string;
-        share_token: string;
       };
     }
   | {

@@ -27,7 +27,6 @@ export async function POST() {
       profile: {
         id: profile.id,
         slug: profile.slug,
-        share_token: profile.share_token,
       },
     });
   } catch (error) {

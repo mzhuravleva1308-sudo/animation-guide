@@ -1,20 +1,20 @@
 import { test, expect } from "@playwright/test";
 import {
   countProfilesForUserId,
-  createPasswordUserWithoutProfileForTests,
+  createConfirmedEmailUserWithoutProfileForTests,
   deleteAuthUserByEmailForTests,
   findAuthUserIdByEmail,
   findProfileByUserId,
   uniquePersonalGuideTestEmail,
 } from "../helpers/e2e-auth-profile";
 import {
-  completeSignupConfirmation,
+  completeLoginMagicLinkSignIn,
   getSignupConfirmationSkipReason,
-  requestPasswordSignUp,
+  requestLoginMagicLink,
   uniqueSignupTestEmail,
 } from "../helpers/signup-confirmation-auth";
 
-test.describe("Password sign-up email confirmation with Mailpit", () => {
+test.describe("Email magic-link sign-in with Mailpit", () => {
   let skipReason: string | null = null;
 
   test.beforeAll(async () => {
@@ -24,28 +24,25 @@ test.describe("Password sign-up email confirmation with Mailpit", () => {
   test.beforeEach(async () => {
     test.skip(
       skipReason !== null,
-      skipReason ?? "Mailpit signup-confirmation prerequisites missing."
+      skipReason ?? "Mailpit magic-link prerequisites missing."
     );
   });
 
-  test("confirms email, establishes a session, and redirects to my-profile", async ({
+  test("sends a magic link, establishes a session, and provisions a profile", async ({
     page,
   }) => {
     const email = uniqueSignupTestEmail();
-    const password = "local-test-password";
 
-    const sentAfter = await requestPasswordSignUp(page, email, password);
-    await expect(page.getByTestId("login-message")).toContainText(
-      /check your email/i
-    );
+    const sentAfter = await requestLoginMagicLink(page, email);
+    await expect(page.getByTestId("login-sent-heading")).toBeVisible();
 
-    const confirmationUrl = await completeSignupConfirmation(
+    const confirmationUrl = await completeLoginMagicLinkSignIn(
       page,
       email,
       sentAfter
     );
 
-    expect(confirmationUrl).toMatch(/token_hash=.*type=signup/i);
+    expect(confirmationUrl).toMatch(/token_hash=.*type=email/i);
     const userId = await findAuthUserIdByEmail(email);
     expect(userId).toBeTruthy();
     await expect.poll(async () => countProfilesForUserId(userId!)).toBe(1);
@@ -59,26 +56,33 @@ test.describe("Password sign-up email confirmation with Mailpit", () => {
   });
 });
 
-test.describe("Password sign-in profile recovery", () => {
-  test("creates a missing profile after password sign-in", async ({ page }) => {
-    const email = uniquePersonalGuideTestEmail("password-recovery");
-    const password = "local-test-password";
-    const userId = await createPasswordUserWithoutProfileForTests(
-      email,
-      password
+test.describe("Magic-link profile recovery", () => {
+  let skipReason: string | null = null;
+
+  test.beforeAll(async () => {
+    skipReason = await getSignupConfirmationSkipReason();
+  });
+
+  test.beforeEach(async () => {
+    test.skip(
+      skipReason !== null,
+      skipReason ?? "Mailpit magic-link prerequisites missing."
     );
+  });
+
+  test("creates a missing profile after magic-link sign-in", async ({
+    page,
+  }) => {
+    const email = uniquePersonalGuideTestEmail("magic-link-recovery");
+    const userId = await createConfirmedEmailUserWithoutProfileForTests(email);
 
     try {
-      await page.goto("/login");
-      await page.getByTestId("login-email").fill(email);
-      await page.getByTestId("login-password").fill(password);
-      await page.getByRole("button", { name: "Sign in" }).click();
+      const sentAfter = await requestLoginMagicLink(page, email);
+      await completeLoginMagicLinkSignIn(page, email, sentAfter);
 
-      await expect(page).toHaveURL(/\/p\/[^/?#]+\?token=/, {
-        timeout: 20_000,
-      });
       await expect.poll(async () => countProfilesForUserId(userId)).toBe(1);
       expect((await findProfileByUserId(userId))?.user_id).toBe(userId);
+      await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     } finally {
       await deleteAuthUserByEmailForTests(email);
     }

@@ -66,8 +66,11 @@ Requires `.env.hosted.local` (copy from `.env.hosted.example`).
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | JWT anon key from Supabase Dashboard | Baked into client bundle at build time |
 | `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` | Canonical public origin (https, no trailing slash) |
 | `SUPABASE_SERVICE_ROLE_KEY` | service role JWT | Server-only; optional for some features, required for admin scripts |
+| `ADMIN_USER_ID` | Supabase Auth user UUID | Server-only. Required for `/admin/*` and admin APIs (`/api/import-film`, `/api/films/check-duplicate`). If missing, admin access is denied. Set separately and intentionally for Preview. |
 
 **Do not set** `ALLOW_LOCAL_STACK_ENV` in Production or Preview. That flag exists only in `.env.e2e` for Playwright builds.
+
+**Admin access:** `ADMIN_USER_ID` must be the auth `user.id` UUID (not email). It is never exposed to the client. Production should set it only for the operator account that needs festival QA / import tooling. Leave Preview unset unless you explicitly need admin there.
 
 **Build guard:** `npm run build` and `next.config.ts` call `validateProductionBuildEnv`. A production build **fails** if:
 
@@ -107,6 +110,7 @@ Copy from `.env.example`. Example:
 ```bash
 OPENAI_API_KEY=sk-...
 TMDB_API_KEY=...
+YOUTUBE_API_KEY=...
 ```
 
 Do **not** put hosted Supabase URLs here. If you still have them from an older setup, `npm run dev` ignores them and prints a warning.

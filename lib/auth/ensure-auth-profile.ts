@@ -5,7 +5,9 @@ export type EnsuredAuthProfile = {
   id: string;
   slug: string;
   name: string | null;
-  share_token: string;
+  // share_token is still in the DB row (NOT NULL, Phase A); runtime no longer
+  // uses it for authorization. Will be dropped in Phase B.
+  share_token: string | null;
   user_id: string;
 };
 

@@ -10,6 +10,7 @@ import {
 applyAppEnv();
 
 const scope = parseFilmScopeArgs(process.argv.slice(2));
+const dryRun = scope.passthrough.includes("--dry-run");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -50,17 +51,38 @@ async function getFilms() {
   });
 }
 
+function isValidEmbedding(value) {
+  const expectedDimensions = Number(process.env.OPENAI_EMBEDDING_DIMENSIONS);
+  const vector = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+      ? value.replace(/^\[/, "").replace(/\]$/, "").split(",").map(Number)
+      : null;
+
+  return (
+    Array.isArray(vector) &&
+    vector.length > 0 &&
+    vector.every(Number.isFinite) &&
+    (!Number.isInteger(expectedDimensions) ||
+      expectedDimensions <= 0 ||
+      vector.length === expectedDimensions)
+  );
+}
+
 async function getExistingFilmEmbeddings() {
   const { data, error } = await supabase
     .from("film_mood_embeddings")
-    .select("film_id, mood_text");
+    .select("film_id, mood_text, embedding");
 
   if (error) throw error;
 
   const map = new Map();
 
   for (const row of data ?? []) {
-    map.set(row.film_id, row.mood_text);
+    map.set(row.film_id, {
+      moodText: row.mood_text,
+      valid: isValidEmbedding(row.embedding),
+    });
   }
 
   return map;
@@ -68,7 +90,7 @@ async function getExistingFilmEmbeddings() {
 
 async function createEmbedding(input) {
   const response = await openai.embeddings.create({
-    model: "text-embedding-3-small",
+    model: process.env.OPENAI_EMBEDDING_MODEL ?? "text-embedding-3-small",
     input,
   });
 
@@ -77,17 +99,24 @@ async function createEmbedding(input) {
 
 async function main() {
   const films = (await getFilms()).filter((film) => film.moods?.length);
-  const existing = await getExistingFilmEmbeddings();
+  const existingById = await getExistingFilmEmbeddings();
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with moods: ${films.length}`);
 
   for (const film of films) {
     const moodText = buildMoodText(film);
-    const existingMoodText = existing.get(film.id);
+    const existing = existingByFilmId(existingById, film.id);
 
-    if (existingMoodText === moodText) {
+    if (existing?.moodText === moodText && existing.valid) {
       console.log(`Embedding exists: ${film.title}`);
+      continue;
+    }
+
+    if (dryRun) {
+      console.log(`[dry-run] would create embedding: ${film.title}`);
+      console.log(`  film_id: ${film.id}`);
+      console.log(`  ${moodText}`);
       continue;
     }
 
@@ -114,6 +143,10 @@ async function main() {
   }
 
   console.log("\nDone");
+}
+
+function existingByFilmId(map, filmId) {
+  return map.get(filmId);
 }
 
 main().catch((error) => {

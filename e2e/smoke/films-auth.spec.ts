@@ -4,10 +4,11 @@ test.describe("Films magic-link auth", () => {
   test("shows a subtle login control when signed out", async ({ page }) => {
     await page.goto("/films");
 
-    await expect(
-      page.getByRole("heading", { name: "Animation Guide" })
-    ).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveText("Log in");
+    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+      "aria-label",
+      "Log in"
+    );
     await expect(page.getByTestId("account-menu-trigger")).toHaveCount(0);
   });
 

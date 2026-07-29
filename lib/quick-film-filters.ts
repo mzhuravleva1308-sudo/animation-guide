@@ -2,7 +2,6 @@ import { Film } from "@/types/film";
 import type { QuickFilter, QuickFilterOption } from "@/components/QuickFilters";
 
 export const QUICK_FILTERS: QuickFilterOption[] = [
-  "all",
   "recent",
   "award-winners",
   "stop-motion",
@@ -10,6 +9,19 @@ export const QUICK_FILTERS: QuickFilterOption[] = [
   "connection",
   "distance",
 ];
+
+export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
+  recent: "Animated films released in the last three years.",
+  "award-winners":
+    "Films that won top prizes at major animation festivals.",
+  "stop-motion":
+    "Animation made with puppets, models and other physical materials.",
+  "sci-fi": "Stories shaped by technology, space and imagined futures.",
+  connection:
+    "Films with more warmth, connection and emotional closeness.",
+  distance:
+    "Films with more distance, isolation and emotional darkness.",
+};
 
 function isStopMotionTechnique(technique: string | null | undefined) {
   const value = (technique ?? "").toLowerCase();

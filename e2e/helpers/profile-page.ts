@@ -9,18 +9,42 @@ export async function gotoProfilePage(
   credentials: ProfileTestCredentials
 ) {
   await page.goto(profilePagePath(credentials));
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Animation Guide"
-  );
+  await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+  await expect(
+    page.getByText(
+      "Find strange, beautiful and emotionally resonant animated films to watch next."
+    )
+  ).toBeVisible();
 }
 
 export async function openProfileTab(
   page: Page,
-  tabName: "All films" | "Saved" | "Watched"
+  tabName: "All films" | "Films" | "All" | "Saved" | "Watched"
 ) {
-  const tabButton = page.getByRole("button", { name: tabName, exact: true });
+  const resolvedName =
+    tabName === "All films" || tabName === "Films" ? "All" : tabName;
+
+  const tabButton = page.getByRole("button", {
+    name: resolvedName,
+    exact: true,
+  });
   await tabButton.click();
-  await expect(tabButton).toHaveClass(/bg-black/);
+  await expect(tabButton).toHaveAttribute("aria-pressed", "true");
+
+  if (resolvedName === "All") {
+    await expect(page.getByTestId("film-search")).toBeVisible();
+  }
+}
+
+export async function expandFilmSearch(page: Page) {
+  const input = page.getByTestId("film-search-input");
+  if (await input.isVisible()) {
+    return input;
+  }
+
+  await page.getByTestId("film-search-expand").click();
+  await expect(input).toBeVisible();
+  return input;
 }
 
 export function filmList(page: Page) {
@@ -146,9 +170,7 @@ export async function unsaveAllVisibleFilms(page: Page) {
   await expectTabIsEmpty(page);
 
   await page.reload();
-  await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Animation Guide"
-  );
+  await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
   await openProfileTab(page, "Saved");
   await expectTabIsEmpty(page);
 }
