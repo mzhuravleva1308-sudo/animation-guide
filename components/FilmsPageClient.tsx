@@ -88,6 +88,21 @@ export default function FilmsPageClient({
   const preAuthSnapshotRef = useRef<InteractionSnapshot | null>(null);
   const applyInFlightRef = useRef<Promise<void> | null>(null);
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
+  /** Bumped on local save/rating edits so in-flight server sync cannot clobber them. */
+  const interactionGenerationRef = useRef(0);
+
+  const bumpInteractionGeneration = useCallback(() => {
+    interactionGenerationRef.current += 1;
+  }, []);
+
+  const applyServerFilmRatings = useCallback(
+    (serverRatings: Record<string, number | null>) => {
+      // Always prefer in-memory edits (including explicit null unrates) over a
+      // stale fetch that started before the latest optimistic change landed.
+      setFilmRatings((current) => ({ ...serverRatings, ...current }));
+    },
+    []
+  );
 
   const syncAuthenticatedInteractionState = useCallback(async () => {
     const profile = await resolveAuthenticatedProfile();
@@ -101,15 +116,18 @@ export default function FilmsPageClient({
       return null;
     }
 
+    const generationAtStart = interactionGenerationRef.current;
     const state = await loadAuthenticatedProfileFilmState(profile.profileId);
     setProfileId(profile.profileId);
     setProfileSlug(profile.profileSlug);
     setTasteProfile(profile.tasteProfile);
     setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
-    setSavedFilmIds(state.savedFilmIds);
-    setFilmRatings(state.filmRatings);
+    if (generationAtStart === interactionGenerationRef.current) {
+      setSavedFilmIds(state.savedFilmIds);
+    }
+    applyServerFilmRatings(state.filmRatings);
     return profile.profileId;
-  }, []);
+  }, [applyServerFilmRatings]);
 
   const applyPendingActionForProfile = useCallback(
     async (resolvedProfileId: string) => {
@@ -123,6 +141,7 @@ export default function FilmsPageClient({
 
         if (result.status === "applied") {
           const appliedAction = result.action;
+          bumpInteractionGeneration();
           if (appliedAction.type === "save") {
             setSavedFilmIds((current) => {
               const next = new Set(current);
@@ -134,10 +153,11 @@ export default function FilmsPageClient({
               return next;
             });
           } else {
-            setFilmRatings((current) => ({
-              ...current,
-              [appliedAction.filmId]: appliedAction.rating,
-            }));
+            setFilmRatings((current) => {
+              const next = { ...current };
+              next[appliedAction.filmId] = appliedAction.rating;
+              return next;
+            });
           }
         } else if (result.status === "error") {
           console.error("Failed to apply pending film action:", result.message);
@@ -150,7 +170,7 @@ export default function FilmsPageClient({
         applyInFlightRef.current = null;
       }
     },
-    []
+    [bumpInteractionGeneration]
   );
 
   useEffect(() => {
@@ -236,9 +256,12 @@ export default function FilmsPageClient({
         setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
         await applyPendingActionForProfile(profile.profileId);
 
+        const generationAtStart = interactionGenerationRef.current;
         const state = await loadAuthenticatedProfileFilmState(profile.profileId);
-        setSavedFilmIds(state.savedFilmIds);
-        setFilmRatings(state.filmRatings);
+        if (generationAtStart === interactionGenerationRef.current) {
+          setSavedFilmIds(state.savedFilmIds);
+        }
+        applyServerFilmRatings(state.filmRatings);
         setRatingsReady(true);
       }
 
@@ -267,26 +290,32 @@ export default function FilmsPageClient({
     };
   }, [applyPendingActionForProfile]);
 
-  const handleSavedChange = useCallback((film: Film, saved: boolean) => {
-    setSavedFilmIds((current) => {
-      const next = new Set(current);
-      if (saved) {
-        next.add(film.id);
-      } else {
-        next.delete(film.id);
-      }
-      return next;
-    });
-  }, []);
+  const handleSavedChange = useCallback(
+    (film: Film, saved: boolean) => {
+      bumpInteractionGeneration();
+      setSavedFilmIds((current) => {
+        const next = new Set(current);
+        if (saved) {
+          next.add(film.id);
+        } else {
+          next.delete(film.id);
+        }
+        return next;
+      });
+    },
+    [bumpInteractionGeneration]
+  );
 
   const handleRatingChange = useCallback(
     (filmId: string, rating: number | null) => {
+      bumpInteractionGeneration();
       setFilmRatings((current) => ({
         ...current,
+        // Keep explicit null so a stale server fetch cannot revive an unrate.
         [filmId]: rating,
       }));
     },
-    []
+    [bumpInteractionGeneration]
   );
 
   const openAuthModal = useCallback((restoreFocus: HTMLElement | null = null) => {
@@ -319,10 +348,11 @@ export default function FilmsPageClient({
       return;
     }
 
+    bumpInteractionGeneration();
     setSavedFilmIds(snapshot.savedFilmIds);
     setFilmRatings(snapshot.filmRatings);
     preAuthSnapshotRef.current = null;
-  }, []);
+  }, [bumpInteractionGeneration]);
 
   const handleModalClose = useCallback(() => {
     clearPendingFilmActionFromSession();
@@ -356,11 +386,23 @@ export default function FilmsPageClient({
     [films, filmRatings]
   );
 
+  // All is the unrated queue: rated films leave immediately via optimistic
+  // filmRatings updates (no reload), and return when the rating is cleared.
+  const unratedFilms = useMemo(
+    () =>
+      films.filter((film) => typeof filmRatings[film.id] !== "number"),
+    [films, filmRatings]
+  );
+
   const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
   const showCatalogSubtitle = showSubtitle && activeTab === "all";
 
   return (
-    <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
+    <main
+      className="mx-auto w-full min-w-0 max-w-5xl p-8"
+      data-testid="films-page"
+      data-ratings-ready={ratingsReady ? "true" : "false"}
+    >
       <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
         <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <ResonaleBrand onClick={() => handleTabChange("all")} />
@@ -462,7 +504,7 @@ export default function FilmsPageClient({
       {activeTab === "all" ? (
         <div className={showCatalogSubtitle ? undefined : "mt-[18px]"}>
           <FilmCatalog
-            films={films}
+            films={unratedFilms}
             awardWinningFilmIds={awardWinningFilmIds}
             pageSize={pageSize}
             loadError={loadError}
