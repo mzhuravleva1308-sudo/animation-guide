@@ -1,8 +1,4 @@
 import { test, expect } from "@playwright/test";
-import {
-  ensureProjectE2eProfile,
-} from "../helpers/project-profile-credentials";
-import { profilePagePath } from "../helpers/profile-credentials";
 import { expandFilmSearch } from "../helpers/profile-page";
 
 async function expectStableSearchInputWidth(
@@ -91,11 +87,10 @@ test.describe("Film search layout stability", () => {
     await expectStableSearchInputWidth(page, "/films");
   });
 
-  test("keeps profile All films search input width stable while typing", async ({
+  test("keeps home All films search input width stable while typing", async ({
     page,
-  }, testInfo) => {
-    const credentials = await ensureProjectE2eProfile(testInfo.project.name);
-    await expectStableSearchInputWidth(page, profilePagePath(credentials), {
+  }) => {
+    await expectStableSearchInputWidth(page, "/", {
       openAllFilmsTab: true,
     });
   });

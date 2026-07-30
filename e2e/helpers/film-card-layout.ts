@@ -13,6 +13,32 @@ export function firstFilmCardWithTrailer(page: Page, cardList: Locator) {
     .first();
 }
 
+export async function findFilmCardWithTrailerInList(page: Page) {
+  const cardInList = () => firstFilmCardWithTrailer(page, filmCardsLocator(page));
+
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const card = cardInList();
+    if ((await card.count()) > 0) {
+      await card.scrollIntoViewIfNeeded();
+      return card;
+    }
+
+    const nextButton = page.getByRole("button", { name: "Next", exact: true });
+    if ((await nextButton.count()) === 0) {
+      break;
+    }
+
+    await nextButton.click();
+    await expect(page.getByTestId("film-list")).toBeVisible();
+  }
+
+  return null;
+}
+
+function filmCardsLocator(page: Page) {
+  return page.getByTestId("film-list").getByTestId("film-card");
+}
+
 export async function expectTrailerOverlayLayout(
   card: Locator,
   expectations: TrailerOverlayExpectations = {}

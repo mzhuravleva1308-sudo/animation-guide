@@ -103,9 +103,19 @@ export default function FilmCatalog({
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const currentPage = Math.min(page, totalPages);
 
+  const filmRatings = interaction?.filmRatings;
+
   const visibleFilms = useMemo(() => {
+    const excludeRated = (list: Film[]) => {
+      if (!filmRatings) {
+        return list;
+      }
+
+      return list.filter((film) => typeof filmRatings[film.id] !== "number");
+    };
+
     if (isSearchActive && isSearchReady) {
-      return searchState.films;
+      return excludeRated(searchState.films);
     }
 
     const start = (currentPage - 1) * pageSize;
@@ -117,6 +127,7 @@ export default function FilmCatalog({
     isSearchActive,
     isSearchReady,
     searchState.films,
+    filmRatings,
   ]);
 
   const isShowingSearchResults = isSearchActive && isSearchReady;
