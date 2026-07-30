@@ -11,8 +11,14 @@ New films must go through the **controlled import pipeline** so each record gets
 
 - Duplicate detection (`lib/insert-film.mjs`, `lib/film-duplicate-check.mjs`)
 - Validation and normalized title fields
-- Poster fetching/caching (`scripts/cache-posters.mjs`)
+- Poster fetching/caching (`scripts/cache-posters.mjs`) — catalog readiness requires a Storage `poster_url` in `film-posters`
 - Post-import enrichment (`npm run after-films`)
+
+Hosted poster health check (read-only):
+
+```bash
+npm run hosted:audit-posters
+```
 
 For a **single new film**, run scoped enrichment so only that row is processed:
 

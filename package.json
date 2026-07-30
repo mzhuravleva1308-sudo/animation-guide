@@ -30,6 +30,7 @@
     "hosted:migrate": "APP_ENV=hosted node scripts/apply-hosted-migrations.mjs",
     "hosted:sync-editorial": "APP_ENV=hosted node scripts/sync-local-editorial-copy-to-hosted.mjs",
     "hosted:verify": "APP_ENV=hosted node scripts/verify-hosted-film-fields.mjs",
+    "hosted:audit-posters": "APP_ENV=hosted node scripts/audit-hosted-posters.mjs",
     "profile-tags": "node scripts/build-profile-tags.mjs",
     "rebuild-profile-scores": "node scripts/rebuild-profile-film-scores.mjs",
     "generate-top-picks": "node scripts/generate-top-picks.mjs",
