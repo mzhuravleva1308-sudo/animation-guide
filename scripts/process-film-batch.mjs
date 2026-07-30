@@ -8,6 +8,10 @@ import { buildVideoLanguageList } from "../lib/tmdb-film-matching.mjs";
 import { checkFilmDuplicates } from "../lib/insert-film.mjs";
 import { normalizeRecognitionRow } from "../lib/festival-recognition-normalization.mjs";
 import { resolveCatalogVisibleForImport } from "../lib/public-catalog-films.mjs";
+import {
+  describeMissingStoragePoster,
+  isCachedPosterUrl,
+} from "../lib/film-poster.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
 applyAppEnv();
@@ -151,13 +155,22 @@ function immutableFieldsChanged(before, after) {
   return false;
 }
 
-function readiness(film, moodEmbedding, aestheticEmbedding) {
+function resolveSupabaseUrl(options = {}) {
+  return options.supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+}
+
+function hasStoragePoster(film, options = {}) {
+  return isCachedPosterUrl(film?.poster_url, resolveSupabaseUrl(options));
+}
+
+function readiness(film, moodEmbedding, aestheticEmbedding, options = {}) {
   const metadata = ["title", "year", "synopsis", "the_mood", "technique"].every(
     (field) => nonEmpty(film[field])
   );
   const moods = hasTags(film.moods);
   const aestheticTags = hasTags(film.aesthetic_tags);
-  const image = nonEmpty(film.poster_url) || nonEmpty(film.image_url);
+  // Catalog requires a Storage-backed poster_url; external image_url is not enough.
+  const image = hasStoragePoster(film, options);
   const rankingReady = moods && aestheticTags && moodEmbedding && aestheticEmbedding;
   return {
     metadata,
@@ -170,6 +183,19 @@ function readiness(film, moodEmbedding, aestheticEmbedding) {
     rankingReady,
     catalogReady: rankingReady && metadata && image,
   };
+}
+
+function assertStoragePosters(films, options = {}) {
+  const missing = films.filter((film) => !hasStoragePoster(film, options));
+  if (!missing.length) {
+    return;
+  }
+
+  throw new Error(
+    `Storage poster required after media stage:\n${missing
+      .map((film) => `- ${describeMissingStoragePoster(film)}`)
+      .join("\n")}`
+  );
 }
 
 function logFilm(stage, film, message) {
@@ -697,6 +723,14 @@ export async function processFilmImportBatch({
       if (!state?.rankingReady) {
         throw new Error("Film did not become ranking-ready");
       }
+      if (!options.skipMedia && !state?.catalogReady) {
+        const film =
+          pipelineResult?.films?.find((row) => row.id === createdFilmId) ?? {
+            id: createdFilmId,
+            title,
+          };
+        throw new Error(describeMissingStoragePoster(film));
+      }
 
       const status = state.catalogReady
         ? FILM_STATUS.CATALOG_READY
@@ -800,7 +834,10 @@ export async function processFilmBatch({
   const allInitiallyReady = initial.films.every(
     (film) => initialStates.get(film.id).rankingReady
   );
-  if (allInitiallyReady && !options.rebuildAllProfiles) {
+  const needsPosterCache =
+    !options.skipMedia &&
+    initial.films.some((film) => !hasStoragePoster(film));
+  if (allInitiallyReady && !needsPosterCache && !options.rebuildAllProfiles) {
     console.log("Fully ranking-ready batch: no-op (use --rebuild-all-profiles to enqueue).");
     printTable(initial.films, initialStates);
     return { noOp: true, profiles, states: initialStates, films: initial.films };
@@ -820,7 +857,7 @@ export async function processFilmBatch({
     for (const film of initial.films) {
       logFilm("enrichment", film, `${hasTags(film.moods) ? "skip moods" : "would fill moods"}; ${hasTags(film.aesthetic_tags) ? "skip aesthetic tags" : "would fill aesthetic tags"}`);
       logFilm("embeddings", film, `${initialStates.get(film.id).moodEmbedding ? "skip mood" : "would create mood"}; ${initialStates.get(film.id).aestheticEmbedding ? "skip aesthetic" : "would create aesthetic"}`);
-      logFilm("media", film, options.skipMedia ? "skipped (--skip-media)" : "would fill missing image/video");
+      logFilm("media", film, options.skipMedia ? "skipped (--skip-media)" : "would fill images, cache posters, fill trailers");
     }
     console.log(`Profiles that would be enqueued: ${profiles.map((profile) => profile.slug ?? profile.id).join(", ")}`);
     printTable(initial.films, initialStates);
@@ -897,6 +934,16 @@ export async function processFilmBatch({
           false
         );
       }
+
+      // Always attempt caching for the batch; cache-posters skips rows that
+      // already have poster_url (unless --force, which this path never passes).
+      try {
+        await runScript("cache-posters.mjs", filmIds, false);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`cache-posters reported failures: ${message}`);
+      }
+
       if (filmsMissingTrailers.length) {
         await runScript(
           "fill-trailers.mjs",
@@ -905,7 +952,14 @@ export async function processFilmBatch({
         );
       }
       current = await loadState(supabase, filmIds);
-      for (const film of current.films) logFilm("media", film, `image=${nonEmpty(film.poster_url) || nonEmpty(film.image_url) ? "available" : "missing"}; video=${nonEmpty(film.trailer_url) ? "available" : "missing"}`);
+      assertStoragePosters(current.films);
+      for (const film of current.films) {
+        logFilm(
+          "media",
+          film,
+          `image=${hasStoragePoster(film) ? "storage" : "missing"}; video=${nonEmpty(film.trailer_url) ? "available" : "missing"}`
+        );
+      }
     }
     const finalStates = new Map(
       current.films.map((film) => [
@@ -920,6 +974,9 @@ export async function processFilmBatch({
     printTable(current.films, finalStates);
     const notReady = current.films.filter((film) => !finalStates.get(film.id).rankingReady);
     if (notReady.length) throw new Error(`Ranking readiness failed: ${notReady.map((film) => film.title).join(", ")}`);
+    if (!options.skipMedia) {
+      assertStoragePosters(current.films);
+    }
     const immutableAfter = await loadState(supabase, filmIds);
     for (const film of immutableAfter.films) {
       if (immutableFieldsChanged(snapshots.get(film.id), film)) {
