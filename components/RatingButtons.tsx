@@ -140,7 +140,7 @@ export default function RatingButtons({
 
   return (
     <div
-      className="relative z-10"
+      className="relative z-10 min-w-0"
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
@@ -179,23 +179,30 @@ export default function RatingButtons({
         <p className="mb-3 text-sm text-gray-500">My rating: {rating}/10</p>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
-        {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-label={`Rate ${value} out of 10`}
-            aria-pressed={rating === value}
-            disabled={isSaving}
-            onClick={() => saveRating(value)}
-            className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
-              rating === value
-                ? "border-black bg-black text-white"
-                : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {value}
-          </button>
+      <div className="flex min-w-0 flex-wrap gap-1.5">
+        {[
+          [1, 2, 3, 4, 5],
+          [6, 7, 8, 9, 10],
+        ].map((group) => (
+          <div key={group[0]} className="flex gap-1.5">
+            {group.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-label={`Rate ${value} out of 10`}
+                aria-pressed={rating === value}
+                disabled={isSaving}
+                onClick={() => saveRating(value)}
+                className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
+                  rating === value
+                    ? "border-black bg-black text-white"
+                    : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </div>
