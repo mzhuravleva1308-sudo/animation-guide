@@ -16,10 +16,16 @@ export function lockBodyScroll(scrollY = window.scrollY): () => void {
     paddingRight: body.style.paddingRight,
   };
 
+  const scrollbarWidth =
+    window.innerWidth - document.documentElement.clientWidth;
+
   body.style.overflow = "hidden";
   body.style.position = "fixed";
   body.style.top = `-${scrollY}px`;
   body.style.width = "100%";
+  if (scrollbarWidth > 0) {
+    body.style.paddingRight = `${scrollbarWidth}px`;
+  }
 
   return () => {
     body.style.overflow = snapshot.overflow;

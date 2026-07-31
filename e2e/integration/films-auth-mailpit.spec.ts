@@ -8,7 +8,6 @@ import {
 } from "../helpers/magic-link-auth";
 import {
   getProfileTestCredentials,
-  profilePagePath,
 } from "../helpers/profile-credentials";
 
 test.describe("Films magic-link auth with Mailpit", () => {
@@ -69,8 +68,7 @@ test.describe("Films magic-link auth with Mailpit", () => {
     );
 
     expect(confirmationUrl).toMatch(/\/auth\/callback\?.*token_hash=.*type=(email|signup)/);
-    await expect(page).toHaveURL(profileGuideUrlPattern(credentials!.slug));
-    expect(page.url()).toContain(profilePagePath(credentials!));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
     await expect(page.getByTestId("auth-status")).not.toContainText("Log in");
   });

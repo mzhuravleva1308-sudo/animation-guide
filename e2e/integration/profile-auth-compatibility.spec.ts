@@ -60,32 +60,25 @@ test.describe("Profile auth compatibility", () => {
     );
   });
 
-  test("opens an existing shared profile without signing in", async ({ page }) => {
+  test("retired share links redirect guests to login", async ({ page }) => {
     await page.goto(profilePagePath(credentials));
 
-    await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveAttribute(
-      "aria-label",
-      "Log in"
-    );
-    await expect(page.getByTestId("account-menu-trigger")).toHaveCount(0);
-    await expect(page.getByTestId("film-list")).toBeVisible();
-  });
-
-  test("rejects missing or invalid share tokens", async ({ page }) => {
-    await page.goto(`/p/${credentials.slug}`);
-    await expect(
-      page.getByRole("heading", { name: "Profile not found" })
-    ).toBeVisible();
-
-    await page.goto(`/p/${credentials.slug}?token=wrong-token`);
-    await expect(
-      page.getByRole("heading", { name: "Profile not found" })
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/login\?error=profile_link_retired/);
     await expect(page.getByTestId("film-list")).toHaveCount(0);
   });
 
-  test("does not link user_id when viewing a public share link", async ({
+  test("rejects missing or invalid share tokens with the retired-link redirect", async ({
+    page,
+  }) => {
+    await page.goto(`/p/${credentials.slug}`);
+    await expect(page).toHaveURL(/\/login\?error=profile_link_retired/);
+
+    await page.goto(`/p/${credentials.slug}?token=wrong-token`);
+    await expect(page).toHaveURL(/\/login\?error=profile_link_retired/);
+    await expect(page.getByTestId("film-list")).toHaveCount(0);
+  });
+
+  test("does not link user_id when a guest opens the catalog", async ({
     page,
   }) => {
     await unlinkE2eProfileUser();
@@ -123,10 +116,10 @@ test.describe("Profile auth compatibility", () => {
 
     const sentAfter = await requestFilmsMagicLink(page, email);
     await completeFilmsMagicLinkSignIn(page, email, sentAfter, {
-      waitForUrl: /\/films(?:\?|$)/,
+      waitForUrl: (url) => url.pathname === "/",
     });
 
-    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    await expect(page).toHaveURL(/\/(?:\?[^/]*)?$/);
     expect(await countProfilesForUserId(userId)).toBe(1);
 
     const after = await getE2eProfileSnapshot();
@@ -137,7 +130,7 @@ test.describe("Profile auth compatibility", () => {
     expect(after.user_id).toBe(userId);
   });
 
-  test("linked user opens the personal zone via my-profile", async ({ page }) => {
+  test("linked user opening /my-profile lands on the catalog", async ({ page }) => {
     test.skip(
       magicLinkFlowSkipReason !== null,
       magicLinkFlowSkipReason ?? "Mailpit magic-link prerequisites missing."
@@ -150,14 +143,13 @@ test.describe("Profile auth compatibility", () => {
 
     const sentAfter = await requestFilmsMagicLink(page, email);
     await completeFilmsMagicLinkSignIn(page, email, sentAfter, {
-      waitForUrl: /\/films(?:\?|$)/,
+      waitForUrl: (url) => url.pathname === "/",
     });
 
     await page.goto("/my-profile");
-    await expect(page).toHaveURL(
-      new RegExp(`/p/${credentials.slug}\\?token=${encodeURIComponent(credentials.token).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`)
-    );
+    await expect(page).toHaveURL(/\/(?:\?[^/]*)?$/);
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
+    await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
   });
 
   test("preserves seeded ratings after auth callback for a linked user", async ({
@@ -178,10 +170,10 @@ test.describe("Profile auth compatibility", () => {
 
     const sentAfter = await requestFilmsMagicLink(page, email);
     await completeFilmsMagicLinkSignIn(page, email, sentAfter, {
-      waitForUrl: /\/films(?:\?|$)/,
+      waitForUrl: (url) => url.pathname === "/",
     });
 
-    await page.goto(profilePagePath(credentials));
+    await gotoProfilePage(page, credentials);
     await openProfileTab(page, "Watched");
     await expect(
       page.locator(`[data-testid="film-card"][data-film-id="${E2E_SEED_FILM_ID}"]`)

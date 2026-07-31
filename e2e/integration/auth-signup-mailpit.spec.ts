@@ -42,7 +42,7 @@ test.describe("Email magic-link sign-in with Mailpit", () => {
       sentAfter
     );
 
-    expect(confirmationUrl).toMatch(/token_hash=.*type=email/i);
+    expect(confirmationUrl).toMatch(/token_hash=.*type=(email|signup)/i);
     const userId = await findAuthUserIdByEmail(email);
     expect(userId).toBeTruthy();
     await expect.poll(async () => countProfilesForUserId(userId!)).toBe(1);

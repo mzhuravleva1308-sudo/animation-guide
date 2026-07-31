@@ -32,10 +32,14 @@ test.describe("Account control", () => {
   });
 });
 
-test.describe("My profile", () => {
-  test("redirects unauthenticated users to login", async ({ page }) => {
-    await page.goto("/my-profile");
-
-    await expect(page).toHaveURL(/\/login$/);
+test.describe("Retired user routes", () => {
+  test("redirects /my-profile, /films, /saved, and /watched to the catalog", async ({
+    page,
+  }) => {
+    for (const path of ["/my-profile", "/films", "/saved", "/watched"]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.getByTestId("film-list")).toBeVisible();
+    }
   });
 });

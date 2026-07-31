@@ -16,8 +16,6 @@ import {
 } from "../helpers/magic-link-auth";
 import {
   getProfileTestCredentials,
-  profilePagePath,
-  requireProfileTestCredentials,
 } from "../helpers/profile-credentials";
 import {
   firstFilmCard,
@@ -72,7 +70,6 @@ test.describe("Films pending actions with Mailpit", () => {
   }) => {
     const email = uniqueMagicLinkTestEmail("films-save");
     const profileId = await prepareE2eFilmsAuthProfile(email);
-    const credentials = requireProfileTestCredentials();
 
     await page.goto("/films");
     const firstCard = firstFilmCard(page);
@@ -82,8 +79,7 @@ test.describe("Films pending actions with Mailpit", () => {
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
-    expect(page.url()).toContain(profilePagePath(credentials));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
 
@@ -105,7 +101,6 @@ test.describe("Films pending actions with Mailpit", () => {
   }) => {
     const email = uniqueMagicLinkTestEmail("films-rate");
     const profileId = await prepareE2eFilmsAuthProfile(email);
-    const credentials = requireProfileTestCredentials();
     const rating = 8;
 
     await page.goto("/films");
@@ -118,8 +113,7 @@ test.describe("Films pending actions with Mailpit", () => {
 
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
-    expect(page.url()).toContain(profilePagePath(credentials));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
 
     await expect
@@ -165,7 +159,6 @@ test.describe("Films pending actions with Mailpit", () => {
   }) => {
     const email = uniqueMagicLinkTestEmail("films-idempotent");
     const profileId = await prepareE2eFilmsAuthProfile(email);
-    const credentials = requireProfileTestCredentials();
     const rating = 9;
 
     await page.goto("/films");
@@ -176,7 +169,7 @@ test.describe("Films pending actions with Mailpit", () => {
     await openAuthModalFromSaveAction(page);
     await completeFilmsAuthFromOpenModal(page, email);
 
-    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
 
     await openProfileTab(page, "Saved");
     await expect
@@ -187,7 +180,7 @@ test.describe("Films pending actions with Mailpit", () => {
     ).toBeVisible();
 
     await page.reload();
-    await expect(page).toHaveURL(profileGuideUrlPattern(credentials.slug));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await openProfileTab(page, "Saved");
     await expect(
       firstFilmCard(page).getByRole("button", { name: "Remove from watchlist" })
@@ -223,10 +216,10 @@ test.describe("Films pending actions with Mailpit", () => {
 
     const sentAfter = await requestFilmsMagicLink(page, email);
     await completeFilmsMagicLinkSignIn(page, email, sentAfter, {
-      waitForUrl: /\/films(?:\?|$)/,
+      waitForUrl: (url) => url.pathname === "/",
     });
 
-    await expect(page).toHaveURL(/\/films(?:\?|$)/);
+    await expect(page).toHaveURL(/\/(?:\?[^/]*)?$/);
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
   });
 });

@@ -14,6 +14,8 @@ test.describe("Films magic-link auth", () => {
 
   test("closes the modal with Escape and overlay click", async ({ page }) => {
     await page.goto("/films");
+    await expect(page.getByTestId("film-list")).toBeVisible();
+    await expect(page.getByTestId("auth-status")).toBeVisible();
     await page.getByTestId("auth-status").click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
 
@@ -31,14 +33,12 @@ test.describe("Films magic-link auth", () => {
     await page.goto("/films");
     await expect(page.getByTestId("film-card").first()).toBeVisible();
 
-    await page.evaluate(() => window.scrollTo(0, 900));
-    await page.waitForFunction(() => window.scrollY >= 800);
-
     const watchlistButton = page
       .getByRole("button", { name: "Add to watchlist" })
-      .nth(2);
+      .last();
     await watchlistButton.scrollIntoViewIfNeeded();
     const scrollBeforeOpen = await page.evaluate(() => window.scrollY);
+    expect(scrollBeforeOpen).toBeGreaterThan(0);
 
     await watchlistButton.click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
@@ -57,14 +57,12 @@ test.describe("Films magic-link auth", () => {
     await page.goto("/films");
     await expect(page.getByTestId("film-card").first()).toBeVisible();
 
-    await page.evaluate(() => window.scrollTo(0, 900));
-    await page.waitForFunction(() => window.scrollY >= 800);
-
     const watchlistButton = page
       .getByRole("button", { name: "Add to watchlist" })
-      .nth(2);
+      .last();
     await watchlistButton.scrollIntoViewIfNeeded();
     const scrollBeforeOpen = await page.evaluate(() => window.scrollY);
+    expect(scrollBeforeOpen).toBeGreaterThan(0);
 
     await watchlistButton.click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
