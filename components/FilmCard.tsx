@@ -2,7 +2,9 @@ import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import { normalizeFilmTagList } from "@/lib/film-tags";
 import { getFilmTechniquePills } from "@/lib/film-technique";
-import RatingButtons from "@/components/RatingButtons";
+import RatingButtons, {
+  RatingOnboardingHintChip,
+} from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import {
@@ -258,28 +260,32 @@ export default function FilmCard(props: FilmCardProps) {
   )}
 
   {showInteractionControls && (
-    <div className="mt-auto flex items-end justify-between gap-6 pt-4">
-      <RatingButtons
-        filmId={film.id}
-        profileId={props.profileId}
-        initialRating={props.initialRating}
-        onRatingChange={props.onRatingChange}
-        onAuthRequired={
-          props.mode === "catalog" ? props.onAuthRequired : undefined
-        }
-        ratingOnboardingHint={props.ratingOnboardingHint}
-        onDismissRatingOnboarding={props.onDismissRatingOnboarding}
+    <div className="mt-auto flex flex-col gap-2 pt-4">
+      <RatingOnboardingHintChip
+        hint={props.ratingOnboardingHint}
+        onDismiss={props.onDismissRatingOnboarding}
       />
-      <WatchlistButton
-        filmId={film.id}
-        profileSlug={props.profileSlug}
-        profileId={props.profileId}
-        isSaved={props.savedFilmIds.has(film.id)}
-        onSavedChange={(saved) => props.onSavedChange(film, saved)}
-        onAuthRequired={
-          props.mode === "catalog" ? props.onAuthRequired : undefined
-        }
-      />
+      <div className="flex items-end justify-between gap-3 sm:gap-6">
+        <RatingButtons
+          filmId={film.id}
+          profileId={props.profileId}
+          initialRating={props.initialRating}
+          onRatingChange={props.onRatingChange}
+          onAuthRequired={
+            props.mode === "catalog" ? props.onAuthRequired : undefined
+          }
+        />
+        <WatchlistButton
+          filmId={film.id}
+          profileSlug={props.profileSlug}
+          profileId={props.profileId}
+          isSaved={props.savedFilmIds.has(film.id)}
+          onSavedChange={(saved) => props.onSavedChange(film, saved)}
+          onAuthRequired={
+            props.mode === "catalog" ? props.onAuthRequired : undefined
+          }
+        />
+      </div>
     </div>
   )}
 </div>
