@@ -12,6 +12,10 @@ import {
   sortFilmsByColdStart,
   sortFilmsForDualModeCatalog,
 } from "@/lib/profile-film-scoring";
+import {
+  assertCacheablePublicCatalogBase,
+  isPublicCatalogBaseLoadError,
+} from "@/lib/public-catalog-base-cache.mjs";
 import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
 import { supabase } from "@/lib/supabase";
 import { getAdminSupabase } from "@/lib/supabase/admin";
@@ -248,12 +252,29 @@ async function loadPublicCatalogBaseUncached(): Promise<PublicCatalogBase> {
  * - Personalized sort + list hydration happen in loadPublicFilmCatalog() AFTER this returns.
  * - Stale window: up to `revalidate` seconds after film/badge/poster URL changes on `/`
  *   (no revalidatePath/Tag in import/admin flows today).
+ * - Failed loads (`loadError` set) throw inside the cached callback so `unstable_cache`
+ *   does not persist an empty error payload for the revalidate window.
  */
 const loadCachedPublicCatalogBase = unstable_cache(
-  loadPublicCatalogBaseUncached,
-  ["public-film-catalog-base", "fields-v2-slim", "badges-slim"],
+  async (): Promise<PublicCatalogBase> =>
+    assertCacheablePublicCatalogBase(
+      await loadPublicCatalogBaseUncached()
+    ) as PublicCatalogBase,
+  ["public-film-catalog-base", "fields-v2-slim", "badges-slim", "no-error-cache-v1"],
   { revalidate: 120 }
 );
+
+async function loadPublicCatalogBase(): Promise<PublicCatalogBase> {
+  try {
+    return await loadCachedPublicCatalogBase();
+  } catch (error) {
+    if (isPublicCatalogBaseLoadError(error)) {
+      return error.publicCatalogBase as PublicCatalogBase;
+    }
+    // Unexpected throw from the cache layer — re-fetch once outside the cache.
+    return loadPublicCatalogBaseUncached();
+  }
+}
 
 function ratingsRecordFromRows(
   ratings: ProfileRatingRow[]
@@ -270,8 +291,8 @@ function ratingsRecordFromRows(
 export async function loadPublicFilmCatalog() {
   const timer = createCatalogPageLoadTimer();
 
-  // Kick off shared public work immediately (cacheable).
-  const publicBasePromise = timeAsyncStage(() => loadCachedPublicCatalogBase());
+  // Kick off shared public work immediately (cacheable on success only).
+  const publicBasePromise = timeAsyncStage(() => loadPublicCatalogBase());
 
   // Resolve auth first so personalization can overlap remaining public work
   // (films/badges on cache miss), instead of waiting for badges then ratings.
