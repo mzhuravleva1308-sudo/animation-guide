@@ -266,18 +266,20 @@ export default function FilmCard(props: FilmCardProps) {
   )}
 
   {showInteractionControls && (
-    <div className="mt-auto flex items-end justify-between gap-6 pt-4">
-      <RatingButtons
-        filmId={film.id}
-        profileId={props.profileId}
-        initialRating={props.initialRating}
-        onRatingChange={props.onRatingChange}
-        onAuthRequired={
-          props.mode === "catalog" ? props.onAuthRequired : undefined
-        }
-        ratingOnboardingHint={props.ratingOnboardingHint}
-        onDismissRatingOnboarding={props.onDismissRatingOnboarding}
-      />
+    <div className="mt-auto flex items-end gap-3 pt-4 sm:gap-6">
+      <div className="min-w-0 flex-1">
+        <RatingButtons
+          filmId={film.id}
+          profileId={props.profileId}
+          initialRating={props.initialRating}
+          onRatingChange={props.onRatingChange}
+          onAuthRequired={
+            props.mode === "catalog" ? props.onAuthRequired : undefined
+          }
+          ratingOnboardingHint={props.ratingOnboardingHint}
+          onDismissRatingOnboarding={props.onDismissRatingOnboarding}
+        />
+      </div>
       <WatchlistButton
         filmId={film.id}
         profileSlug={props.profileSlug}
