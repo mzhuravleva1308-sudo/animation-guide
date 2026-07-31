@@ -100,27 +100,19 @@ export default function FilmCard(props: FilmCardProps) {
         className="relative h-72 w-full overflow-hidden bg-gray-100 sm:h-full sm:min-h-full sm:overflow-visible"
       >
         {posterUrl ? (
-  <>
-    <img
-      src={posterUrl}
-      alt={film.title}
-      loading={lazyLoadPoster ? "lazy" : "eager"}
-      decoding="async"
-      className="relative z-10 h-full w-full object-cover"
-    />
-
-<img
-  src={posterUrl}
-  alt=""
-  aria-hidden="true"
-  className="pointer-events-none absolute inset-y-0 left-full z-0 h-full w-6 -translate-x-5 scale-110 object-cover blur-lg opacity-20 brightness-75 sm:w-7 md:w-8"
-/>
-  </>
-) : (
-  <div className="flex h-full items-center justify-center text-sm text-gray-400">
-    No image
-  </div>
-)}
+          <img
+            src={posterUrl}
+            alt={film.title}
+            loading={lazyLoadPoster ? "lazy" : "eager"}
+            decoding="async"
+            fetchPriority={lazyLoadPoster ? "auto" : "high"}
+            className="relative z-10 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">
+            No image
+          </div>
+        )}
 
         {film.trailer_url && (
           <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">

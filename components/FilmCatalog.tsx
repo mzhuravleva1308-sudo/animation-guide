@@ -234,7 +234,7 @@ export default function FilmCatalog({
             key={film.id}
             mode={interaction ? "catalog" : "public"}
             film={film}
-            lazyLoadPoster={index >= 3}
+            lazyLoadPoster={index >= 1}
             profileId={interaction?.profileId}
             profileSlug={interaction?.profileSlug}
             initialRating={interaction?.filmRatings[film.id] ?? null}

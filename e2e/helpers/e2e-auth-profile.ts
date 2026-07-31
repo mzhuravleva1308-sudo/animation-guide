@@ -72,6 +72,31 @@ export async function findAuthUserIdByEmail(email: string): Promise<string | nul
   return user?.id ?? null;
 }
 
+/** Profile linked to the auth user after callback provisioning (may differ from E2E slug when auto-link misses). */
+export async function findProfileIdForAuthEmail(
+  email: string
+): Promise<string | null> {
+  const userId = await findAuthUserIdByEmail(email);
+  if (!userId) {
+    return null;
+  }
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(
+      `Failed to load profile for auth email ${email}: ${error.message}`
+    );
+  }
+
+  return data?.id ?? null;
+}
+
 export async function createConfirmedEmailUserWithoutProfileForTests(
   email: string
 ): Promise<string> {

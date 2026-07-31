@@ -134,6 +134,11 @@ export async function findFilmCardInAllFilmsList(page: Page, filmId: string) {
 }
 
 export async function expectTabIsEmpty(page: Page) {
+  await expect(page.getByTestId("films-page")).toHaveAttribute(
+    "data-ratings-ready",
+    "true"
+  );
+  await expect(page.getByTestId("profile-tab-loading")).toHaveCount(0);
   await expect(filmCards(page)).toHaveCount(0);
   await expect(tabEmptyState(page)).toBeVisible();
 }

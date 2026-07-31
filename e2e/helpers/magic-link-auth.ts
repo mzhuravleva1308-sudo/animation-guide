@@ -34,7 +34,7 @@ export async function completeFilmsMagicLinkSignIn(
   page: Page,
   email: string,
   sentAfter: Date,
-  options?: { waitForUrl?: RegExp }
+  options?: { waitForUrl?: RegExp | ((url: URL) => boolean) }
 ): Promise<string> {
   const confirmationUrl = await waitForMailpitMagicLink({ email, sentAfter });
 
