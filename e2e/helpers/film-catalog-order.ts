@@ -25,12 +25,28 @@ const SMOKE_RATING_FILM_OFFSET_BY_PROJECT: Record<string, number> = {
 export async function getSmokeRatingFilmForProject(
   projectName: string
 ): Promise<CatalogFilmRef> {
-  const offset = SMOKE_RATING_FILM_OFFSET_BY_PROJECT[projectName] ?? 0;
+  const preferredOffset = SMOKE_RATING_FILM_OFFSET_BY_PROJECT[projectName] ?? 0;
   const supabase = createClient(
     requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
     requireEnv("SUPABASE_SERVICE_ROLE_KEY")
   );
 
+  const { count, error: countError } = await supabase
+    .from("films")
+    .select("id", { count: "exact", head: true })
+    .eq("catalog_visible", true);
+
+  if (countError) {
+    throw new Error(
+      `Failed to count catalog films for ${projectName}: ${countError.message}`
+    );
+  }
+
+  if (!count || count < 1) {
+    throw new Error(`No catalog_visible films available for ${projectName}`);
+  }
+
+  const offset = preferredOffset % count;
   const { data, error } = await supabase
     .from("films")
     .select("id, title")

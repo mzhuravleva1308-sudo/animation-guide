@@ -165,4 +165,9 @@ export async function signInProjectRatingUser(
   await expect(page.getByTestId("account-menu-trigger")).toBeVisible({
     timeout: 15_000,
   });
+  await expect(page.getByTestId("films-page")).toHaveAttribute(
+    "data-ratings-ready",
+    "true",
+    { timeout: 15_000 }
+  );
 }

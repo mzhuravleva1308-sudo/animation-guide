@@ -7,7 +7,7 @@ import {
   ensureProjectRatingAuthUser,
   signInProjectRatingUser,
 } from "../helpers/project-profile-auth";
-import { countRatingRowsForFilm } from "../helpers/e2e-auth-profile";
+import { countRatingRowsForFilm, assertFilmRatingInProfile } from "../helpers/e2e-auth-profile";
 import { getSmokeRatingFilmForProject } from "../helpers/film-catalog-order";
 import {
   expectTabHasFilms,
@@ -24,6 +24,7 @@ import {
   openProfileTab,
   expandFilmSearch,
   rateFilmOnCard,
+  searchPartialFromTitle,
   unsaveAllVisibleFilms,
   waitForWatchlistButton,
 } from "../helpers/profile-page";
@@ -33,19 +34,14 @@ import {
 } from "../helpers/reset-e2e-profile";
 import {
   expectTrailerOverlayLayout,
-  firstFilmCardWithTrailer,
+  findFilmCardWithTrailerInList,
 } from "../helpers/film-card-layout";
 
 test.describe("Profile page", () => {
-  test("shows a friendly message for invalid share links", async ({ page }) => {
+  test("retired share links redirect to login", async ({ page }) => {
     await page.goto("/p/invalid-slug?token=invalid-token");
 
-    await expect(
-      page.getByRole("heading", { name: "Profile not found" })
-    ).toBeVisible();
-    await expect(
-      page.getByText("This profile is private or the link is invalid.")
-    ).toBeVisible();
+    await expect(page).toHaveURL(/\/login\?error=profile_link_retired/);
   });
 
   test.describe("authenticated E2E profile", () => {
@@ -76,16 +72,17 @@ test.describe("Profile page", () => {
       await resetE2eProfile(credentials);
     });
 
-    test.beforeEach(async () => {
+    test.beforeEach(async ({ page }, testInfo) => {
       test.skip(
         resetFailed,
         resetFailureMessage || "E2E profile reset failed in beforeAll."
       );
 
       profileId = await resetE2eProfile(credentials);
+      await signInProjectRatingUser(page, testInfo.project.name);
     });
 
-    test("loads film cards and tab navigation for a valid share link", async ({
+    test("loads film cards and tab navigation when signed in", async ({
       page,
     }) => {
       const consoleErrors: string[] = [];
@@ -101,7 +98,9 @@ test.describe("Profile page", () => {
       );
       await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Watched" })).toBeVisible();
-      await expect(page.getByRole("button", { name: "Films" })).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Films", exact: true })
+      ).toHaveCount(0);
 
       await expect(filmList(page)).toBeVisible();
       await expectTabHasFilms(page);
@@ -128,7 +127,6 @@ test.describe("Profile page", () => {
       );
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
 
-      await signInProjectRatingUser(page, testInfo.project.name);
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
@@ -162,9 +160,16 @@ test.describe("Profile page", () => {
         .toBe(1);
 
       await page.reload();
+      await expect(page.getByTestId("films-page")).toHaveAttribute(
+        "data-ratings-ready",
+        "true",
+        { timeout: 15_000 }
+      );
       await openProfileTab(page, "Watched");
       const reloadedWatchedCard = filmCardByFilmId(page, smokeRatingFilm.id);
-      await expect(reloadedWatchedCard.getByText(`My rating: ${rating}/10`)).toBeVisible();
+      await expect(reloadedWatchedCard.getByText(`My rating: ${rating}/10`)).toBeVisible({
+        timeout: 15_000,
+      });
       await expect(
         reloadedWatchedCard.getByRole("button", { name: `Rate ${rating} out of 10` })
       ).toHaveAttribute("aria-pressed", "true");
@@ -180,7 +185,63 @@ test.describe("Profile page", () => {
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
     });
 
-    test("share-token profile can save a rating without login", async ({
+    test("changing a rating updates the UI and Watched tab", async ({
+      page,
+    }, testInfo) => {
+      const firstRating = 8;
+      const secondRating = 5;
+      const smokeRatingFilm = await getSmokeRatingFilmForProject(
+        testInfo.project.name
+      );
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+
+      const card = await findFilmCardInAllFilmsList(page, smokeRatingFilm.id);
+      await rateFilmOnCard(card, firstRating);
+      await openProfileTab(page, "Watched");
+      const watchedCard = filmCardByFilmId(page, smokeRatingFilm.id);
+      await expect(watchedCard.getByText(`My rating: ${firstRating}/10`)).toBeVisible();
+
+      await rateFilmOnCard(watchedCard, secondRating);
+      await expect(watchedCard.getByText(`My rating: ${secondRating}/10`)).toBeVisible();
+      await expect(
+        watchedCard.getByRole("button", {
+          name: `Rate ${secondRating} out of 10`,
+        })
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect
+        .poll(async () => {
+          try {
+            await assertFilmRatingInProfile(
+              profileId,
+              smokeRatingFilm.id,
+              secondRating
+            );
+            return true;
+          } catch {
+            return false;
+          }
+        })
+        .toBe(true);
+
+      await page.reload();
+      await expect(page.getByTestId("films-page")).toHaveAttribute(
+        "data-ratings-ready",
+        "true",
+        { timeout: 15_000 }
+      );
+      await openProfileTab(page, "Watched");
+      await expect(
+        filmCardByFilmId(page, smokeRatingFilm.id).getByText(
+          `My rating: ${secondRating}/10`
+        )
+      ).toBeVisible({ timeout: 15_000 });
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+    });
+
+    test("rating persists after save without relying on share-token links", async ({
       page,
     }, testInfo) => {
       const rating = 6;
@@ -206,6 +267,11 @@ test.describe("Profile page", () => {
       await expect(page.getByTestId("toast")).toContainText(
         "Saved to Watched and added to your taste profile."
       );
+      await expect(
+        filmList(page).locator(
+          `[data-testid="film-card"][data-film-id="${smokeRatingFilm.id}"]`
+        )
+      ).toHaveCount(0);
       releaseRequest();
       await expect
         .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
@@ -246,23 +312,50 @@ test.describe("Profile page", () => {
       ).toHaveAttribute("aria-pressed", "false");
     });
 
-    test('rated film leaves the "All films" queue', async ({ page }, testInfo) => {
-      await signInProjectRatingUser(page, testInfo.project.name);
+    test('rated film leaves the "All" queue immediately (before the API responds)', async ({
+      page,
+    }) => {
+      let releaseRequest!: () => void;
+      const requestReleased = new Promise<void>((resolve) => {
+        releaseRequest = resolve;
+      });
+      await page.route("**/api/profile-rating", async (route) => {
+        await requestReleased;
+        await route.continue();
+      });
+
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
       const card = firstUnratedFilmCard(page);
       const filmTitle = await filmTitleFromCard(card);
+      const filmId = await card.getAttribute("data-film-id");
+      expect(filmId).toBeTruthy();
 
       await rateFilmOnCard(card, 7);
 
+      // Must leave All from optimistic state — do not wait for the API.
+      await expect(
+        filmList(page).locator(
+          `[data-testid="film-card"][data-film-id="${filmId}"]`
+        )
+      ).toHaveCount(0);
       await expect(filmCardByTitle(page, filmTitle)).toHaveCount(0);
+
+      releaseRequest();
+
+      await expect
+        .poll(async () => countRatingRowsForFilm(profileId, filmId!))
+        .toBe(1);
 
       await openProfileTab(page, "Watched");
       await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
 
       await rateFilmOnCard(filmCardByTitle(page, filmTitle), 7);
       await expect(filmCardByTitle(page, filmTitle)).not.toBeVisible();
+      await expect
+        .poll(async () => countRatingRowsForFilm(profileId, filmId!))
+        .toBe(0);
 
       await openProfileTab(page, "All films");
       await expect(filmCardByTitle(page, filmTitle)).toBeVisible();
@@ -348,15 +441,14 @@ test.describe("Profile page", () => {
       await expect(page.getByTestId("film-search-hint")).toBeVisible();
 
       const firstTitle = await filmTitleFromCard(firstFilmCard(page));
-      const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+      const partialTitle = searchPartialFromTitle(firstTitle);
 
       await searchInput.fill(partialTitle);
-      await expect(page.getByTestId("film-search-results")).toBeVisible();
       await expect(
         page
           .getByTestId("film-search-results")
           .getByRole("button", { name: `Copy ${firstTitle}` })
-      ).toBeVisible();
+      ).toBeVisible({ timeout: 10_000 });
     });
 
     test("shows typeahead suggestions while typing and runs search on click", async ({
@@ -367,7 +459,7 @@ test.describe("Profile page", () => {
 
       const searchInput = await expandFilmSearch(page);
       const firstTitle = await filmTitleFromCard(firstFilmCard(page));
-      const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+      const partialTitle = searchPartialFromTitle(firstTitle);
 
       await searchInput.fill(partialTitle);
 
@@ -383,7 +475,11 @@ test.describe("Profile page", () => {
 
       await expect(searchInput).toHaveValue(firstTitle);
       await expect(dropdown).not.toBeVisible();
-      await expect(page.getByTestId("film-search-results")).toBeVisible({
+      await expect(
+        page
+          .getByTestId("film-search-results")
+          .getByRole("button", { name: `Copy ${firstTitle}` })
+      ).toBeVisible({
         timeout: 10_000,
       });
 
@@ -396,17 +492,22 @@ test.describe("Profile page", () => {
     }) => {
       await gotoProfilePage(page, credentials);
 
-      const cardWithTrailer = firstFilmCardWithTrailer(page, filmCards(page));
-      await expect(cardWithTrailer).toBeVisible();
+      const cardWithTrailer = await findFilmCardWithTrailerInList(page);
+      test.skip(
+        !cardWithTrailer,
+        "No films with trailers in the current catalog."
+      );
+
+      await expect(cardWithTrailer!).toBeVisible();
 
       await page.setViewportSize({ width: 1280, height: 800 });
-      await expectTrailerOverlayLayout(cardWithTrailer, {
+      await expectTrailerOverlayLayout(cardWithTrailer!, {
         maxWidthRatio: 0.48,
         maxHeight: 32,
       });
 
       await page.setViewportSize({ width: 390, height: 844 });
-      await expectTrailerOverlayLayout(cardWithTrailer, {
+      await expectTrailerOverlayLayout(cardWithTrailer!, {
         maxWidthRatio: 0.35,
         maxHeight: 32,
       });

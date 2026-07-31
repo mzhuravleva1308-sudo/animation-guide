@@ -1,20 +1,34 @@
 import { expect, type Page } from "@playwright/test";
-import {
-  profilePagePath,
-  type ProfileTestCredentials,
-} from "./profile-credentials";
+import type { ProfileTestCredentials } from "./profile-credentials";
 
+/**
+ * Opens the live catalog (/). Share-link profile URLs (/p/...?token=) are
+ * retired — authenticated profile state lives on the home catalog.
+ * `credentials` is kept for call-site compatibility (reset helpers still use it).
+ *
+ * Skips navigation when already on `/` so a preceding sign-in does not remount
+ * and race-overwrite optimistic rating state.
+ */
 export async function gotoProfilePage(
   page: Page,
-  credentials: ProfileTestCredentials
+  _credentials?: ProfileTestCredentials
 ) {
-  await page.goto(profilePagePath(credentials));
+  const pathname = new URL(page.url()).pathname;
+  if (pathname !== "/") {
+    await page.goto("/");
+  }
+
   await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
   await expect(
     page.getByText(
       "Find strange, beautiful and emotionally resonant animated films to watch next."
     )
   ).toBeVisible();
+  await expect(page.getByTestId("film-list")).toBeVisible();
+  await expect(page.getByTestId("films-page")).toHaveAttribute(
+    "data-ratings-ready",
+    "true"
+  );
 }
 
 export async function openProfileTab(
@@ -83,6 +97,13 @@ export async function filmTitleFromCard(
   return ariaLabel?.replace(/^Copy /, "") ?? "";
 }
 
+/** Partial query long enough to match, skipping leading articles like "The ". */
+export function searchPartialFromTitle(title: string): string {
+  const withoutArticle = title.replace(/^(the|a|an)\s+/i, "").trim();
+  const source = withoutArticle.length >= 2 ? withoutArticle : title.trim();
+  return source.slice(0, Math.min(4, source.length));
+}
+
 export function filmCardByFilmId(page: Page, filmId: string) {
   return page.locator(`[data-testid="film-card"][data-film-id="${filmId}"]`);
 }
@@ -113,6 +134,11 @@ export async function findFilmCardInAllFilmsList(page: Page, filmId: string) {
 }
 
 export async function expectTabIsEmpty(page: Page) {
+  await expect(page.getByTestId("films-page")).toHaveAttribute(
+    "data-ratings-ready",
+    "true"
+  );
+  await expect(page.getByTestId("profile-tab-loading")).toHaveCount(0);
   await expect(filmCards(page)).toHaveCount(0);
   await expect(tabEmptyState(page)).toBeVisible();
 }

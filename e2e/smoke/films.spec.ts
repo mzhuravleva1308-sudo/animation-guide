@@ -26,13 +26,25 @@ test.describe("Public films catalog", () => {
     await expect(
       page.getByRole("button", { name: "Add to watchlist" }).first()
     ).toBeVisible();
-    await expect(page.getByRole("button", { name: "Films" })).toHaveCount(
-      0
-    );
-    await expect(page.getByRole("button", { name: "Saved" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Watched" })).toHaveCount(0);
+    await expect(page.getByTestId("nav-saved")).toBeVisible();
+    await expect(page.getByTestId("nav-watched")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "All", exact: true })
+    ).toHaveAttribute("aria-pressed", "true");
 
     expect(consoleErrors).toEqual([]);
+  });
+
+  test("opens auth when a guest opens Saved or Watched", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByTestId("nav-saved").click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
+
+    await page.getByTestId("nav-watched").click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
   });
 
   test("supports search without profile context", async ({ page }) => {
@@ -40,7 +52,13 @@ test.describe("Public films catalog", () => {
 
     const searchInput = await expandFilmSearch(page);
     const firstTitle = await filmTitleFromCard(page.getByTestId("film-card").first());
-    const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+    // Prefer a distinctive substring — leading articles normalize away in search.
+    const distinctive = firstTitle
+      .replace(/^(the|a|an)\s+/i, "")
+      .trim()
+      .slice(0, Math.min(5, firstTitle.length));
+    const partialTitle =
+      distinctive.length >= 2 ? distinctive : firstTitle.slice(-4);
 
     await searchInput.fill(partialTitle);
     await expect(page.getByTestId("film-search-results")).toBeVisible({
@@ -61,7 +79,12 @@ test.describe("Public films catalog", () => {
       const firstTitle = await filmTitleFromCard(
         page.getByTestId("film-card").first()
       );
-      const partialTitle = firstTitle.slice(0, Math.min(4, firstTitle.length));
+      const distinctive = firstTitle
+        .replace(/^(the|a|an)\s+/i, "")
+        .trim()
+        .slice(0, Math.min(5, firstTitle.length));
+      const partialTitle =
+        distinctive.length >= 2 ? distinctive : firstTitle.slice(-4);
 
       await searchInput.fill(partialTitle);
 
@@ -92,7 +115,10 @@ test.describe("Public films catalog", () => {
     test("closes on outside click and keeps results", async ({ page }) => {
       const { searchInput, partialTitle } = await openSuggestionsOnFilms(page);
 
-      await page.getByTestId("film-list").click({ position: { x: 8, y: 8 } });
+      // Search replaces film-list with film-search-results.
+      await page.getByTestId("film-search-results").click({
+        position: { x: 8, y: 8 },
+      });
 
       await expect(
         page.getByTestId("film-search-suggestions-dropdown")
@@ -104,7 +130,11 @@ test.describe("Public films catalog", () => {
     test("closes when scrolling and keeps results", async ({ page }) => {
       const { searchInput, partialTitle } = await openSuggestionsOnFilms(page);
 
-      await page.evaluate(() => window.scrollBy(0, 200));
+      await page.evaluate(() => {
+        // Local catalogs can be short; ensure a scroll event can fire.
+        document.documentElement.style.minHeight = "2400px";
+        window.scrollBy(0, 400);
+      });
 
       await expect(
         page.getByTestId("film-search-suggestions-dropdown")

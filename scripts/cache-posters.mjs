@@ -5,8 +5,8 @@ import {
   buildPosterStoragePath,
   buildPublicPosterUrl,
   extensionForContentType,
+  filmNeedsPosterCache,
   getExternalImageSource,
-  isCachedPosterUrl,
 } from "../lib/film-poster.mjs";
 import {
   describeFilmScope,
@@ -50,21 +50,7 @@ async function downloadImage(url) {
 }
 
 function shouldCacheFilm(film) {
-  if (film.poster_url && !force) {
-    return false;
-  }
-
-  const sourceUrl = getExternalImageSource(film);
-
-  if (!sourceUrl) {
-    return false;
-  }
-
-  if (isCachedPosterUrl(sourceUrl, supabaseUrl)) {
-    return false;
-  }
-
-  return true;
+  return filmNeedsPosterCache(film, supabaseUrl, { force });
 }
 
 async function main() {

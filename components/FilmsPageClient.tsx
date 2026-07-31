@@ -26,7 +26,33 @@ import {
   storePendingFilmActionForSession,
   type PendingFilmActionInput,
 } from "@/lib/pending-film-action";
+import { resolveProfileListTabView } from "@/lib/profile-list-tab-view.mjs";
 import { Film } from "@/types/film";
+
+function ListTabSkeleton() {
+  return (
+    <div
+      data-testid="profile-tab-loading"
+      className="mt-4 grid gap-4"
+      aria-busy="true"
+      aria-label="Loading list"
+    >
+      {[0, 1, 2].map((index) => (
+        <div
+          key={index}
+          className="grid gap-5 rounded-2xl border border-gray-100 p-5 md:grid-cols-[160px_1fr]"
+        >
+          <div className="h-56 w-full animate-pulse rounded-xl bg-gray-200 md:h-60" />
+          <div className="space-y-4">
+            <div className="h-7 w-2/3 animate-pulse rounded-xl bg-gray-200" />
+            <div className="h-4 w-1/2 animate-pulse rounded-xl bg-gray-200" />
+            <div className="h-20 w-full animate-pulse rounded-xl bg-gray-200" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 type CatalogTab = "all" | "saved" | "watched";
 
@@ -38,6 +64,10 @@ type FilmsPageClientProps = {
   loadError: string | null;
   postAuthPath?: string;
   showSubtitle?: boolean;
+  /** SSR-hydrated ratings so Watched is ready on first paint. */
+  initialFilmRatings?: Record<string, number>;
+  /** SSR-hydrated saved ids so Saved is ready on first paint. */
+  initialSavedFilmIds?: string[];
 };
 
 type InteractionSnapshot = {
@@ -63,6 +93,8 @@ export default function FilmsPageClient({
   loadError,
   postAuthPath = "/",
   showSubtitle = false,
+  initialFilmRatings = {},
+  initialSavedFilmIds = [],
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
   const [activeTab, setActiveTab] = useState<CatalogTab>("all");
@@ -80,14 +112,34 @@ export default function FilmsPageClient({
   const [tasteProfileUpdatedAt, setTasteProfileUpdatedAt] = useState<
     string | null
   >(null);
-  const [savedFilmIds, setSavedFilmIds] = useState<Set<string>>(new Set());
-  const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
-    {}
+  const [savedFilmIds, setSavedFilmIds] = useState<Set<string>>(
+    () => new Set(initialSavedFilmIds)
   );
-  const [ratingsReady, setRatingsReady] = useState(!initialAuth);
+  const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
+    () => ({ ...initialFilmRatings })
+  );
+  // SSR always hydrates list state (possibly empty). Avoid a loading flash on `/`
+  // after auth redirect; only gate UI when auth appears client-side without SSR lists.
+  const [ratingsReady, setRatingsReady] = useState(true);
+  const listsHydratedFromSsrRef = useRef(initialAuth !== null);
   const preAuthSnapshotRef = useRef<InteractionSnapshot | null>(null);
   const applyInFlightRef = useRef<Promise<void> | null>(null);
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
+  /** Bumped on local save/rating edits so in-flight server sync cannot clobber them. */
+  const interactionGenerationRef = useRef(0);
+
+  const bumpInteractionGeneration = useCallback(() => {
+    interactionGenerationRef.current += 1;
+  }, []);
+
+  const applyServerFilmRatings = useCallback(
+    (serverRatings: Record<string, number | null>) => {
+      // Always prefer in-memory edits (including explicit null unrates) over a
+      // stale fetch that started before the latest optimistic change landed.
+      setFilmRatings((current) => ({ ...serverRatings, ...current }));
+    },
+    []
+  );
 
   const syncAuthenticatedInteractionState = useCallback(async () => {
     const profile = await resolveAuthenticatedProfile();
@@ -101,18 +153,21 @@ export default function FilmsPageClient({
       return null;
     }
 
+    const generationAtStart = interactionGenerationRef.current;
     const state = await loadAuthenticatedProfileFilmState(profile.profileId);
     setProfileId(profile.profileId);
     setProfileSlug(profile.profileSlug);
     setTasteProfile(profile.tasteProfile);
     setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
-    setSavedFilmIds(state.savedFilmIds);
-    setFilmRatings(state.filmRatings);
+    if (generationAtStart === interactionGenerationRef.current) {
+      setSavedFilmIds(state.savedFilmIds);
+    }
+    applyServerFilmRatings(state.filmRatings);
     return profile.profileId;
-  }, []);
+  }, [applyServerFilmRatings]);
 
   const applyPendingActionForProfile = useCallback(
-    async (resolvedProfileId: string) => {
+    async (_resolvedProfileId: string) => {
       if (applyInFlightRef.current) {
         await applyInFlightRef.current;
         return;
@@ -123,6 +178,7 @@ export default function FilmsPageClient({
 
         if (result.status === "applied") {
           const appliedAction = result.action;
+          bumpInteractionGeneration();
           if (appliedAction.type === "save") {
             setSavedFilmIds((current) => {
               const next = new Set(current);
@@ -134,10 +190,11 @@ export default function FilmsPageClient({
               return next;
             });
           } else {
-            setFilmRatings((current) => ({
-              ...current,
-              [appliedAction.filmId]: appliedAction.rating,
-            }));
+            setFilmRatings((current) => {
+              const next = { ...current };
+              next[appliedAction.filmId] = appliedAction.rating;
+              return next;
+            });
           }
         } else if (result.status === "error") {
           console.error("Failed to apply pending film action:", result.message);
@@ -150,15 +207,18 @@ export default function FilmsPageClient({
         applyInFlightRef.current = null;
       }
     },
-    []
+    [bumpInteractionGeneration]
   );
 
   useEffect(() => {
     setAuth(initialAuth);
     setProfileId(initialAuth?.profile?.id);
     setProfileSlug(initialAuth?.profile?.slug);
-    setRatingsReady(!initialAuth);
-  }, [initialAuth]);
+    setFilmRatings({ ...initialFilmRatings });
+    setSavedFilmIds(new Set(initialSavedFilmIds));
+    setRatingsReady(true);
+    listsHydratedFromSsrRef.current = initialAuth !== null;
+  }, [initialAuth, initialFilmRatings, initialSavedFilmIds]);
 
   useEffect(() => {
     if (!auth && activeTab !== "all") {
@@ -178,10 +238,16 @@ export default function FilmsPageClient({
         setSavedFilmIds(new Set());
         setFilmRatings({});
         setRatingsReady(true);
+        listsHydratedFromSsrRef.current = false;
         return;
       }
 
-      setRatingsReady(false);
+      // Client-only auth (modal / session establish) has no SSR list payload yet.
+      if (!listsHydratedFromSsrRef.current) {
+        setRatingsReady(false);
+      }
+
+      const initStartedAt = performance.now();
 
       for (let attempt = 0; attempt < 10; attempt += 1) {
         if (cancelled) {
@@ -192,7 +258,15 @@ export default function FilmsPageClient({
         if (resolvedProfileId) {
           await applyPendingActionForProfile(resolvedProfileId);
           if (!cancelled) {
+            const fromSsr = listsHydratedFromSsrRef.current;
             setRatingsReady(true);
+            listsHydratedFromSsrRef.current = true;
+            if (process.env.NODE_ENV === "development") {
+              console.info("[catalog] client lists ready", {
+                ms: Math.round(performance.now() - initStartedAt),
+                fromSsr,
+              });
+            }
           }
           return;
         }
@@ -236,9 +310,12 @@ export default function FilmsPageClient({
         setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
         await applyPendingActionForProfile(profile.profileId);
 
+        const generationAtStart = interactionGenerationRef.current;
         const state = await loadAuthenticatedProfileFilmState(profile.profileId);
-        setSavedFilmIds(state.savedFilmIds);
-        setFilmRatings(state.filmRatings);
+        if (generationAtStart === interactionGenerationRef.current) {
+          setSavedFilmIds(state.savedFilmIds);
+        }
+        applyServerFilmRatings(state.filmRatings);
         setRatingsReady(true);
       }
 
@@ -267,26 +344,32 @@ export default function FilmsPageClient({
     };
   }, [applyPendingActionForProfile]);
 
-  const handleSavedChange = useCallback((film: Film, saved: boolean) => {
-    setSavedFilmIds((current) => {
-      const next = new Set(current);
-      if (saved) {
-        next.add(film.id);
-      } else {
-        next.delete(film.id);
-      }
-      return next;
-    });
-  }, []);
+  const handleSavedChange = useCallback(
+    (film: Film, saved: boolean) => {
+      bumpInteractionGeneration();
+      setSavedFilmIds((current) => {
+        const next = new Set(current);
+        if (saved) {
+          next.add(film.id);
+        } else {
+          next.delete(film.id);
+        }
+        return next;
+      });
+    },
+    [bumpInteractionGeneration]
+  );
 
   const handleRatingChange = useCallback(
     (filmId: string, rating: number | null) => {
+      bumpInteractionGeneration();
       setFilmRatings((current) => ({
         ...current,
+        // Keep explicit null so a stale server fetch cannot revive an unrate.
         [filmId]: rating,
       }));
     },
-    []
+    [bumpInteractionGeneration]
   );
 
   const openAuthModal = useCallback((restoreFocus: HTMLElement | null = null) => {
@@ -319,10 +402,11 @@ export default function FilmsPageClient({
       return;
     }
 
+    bumpInteractionGeneration();
     setSavedFilmIds(snapshot.savedFilmIds);
     setFilmRatings(snapshot.filmRatings);
     preAuthSnapshotRef.current = null;
-  }, []);
+  }, [bumpInteractionGeneration]);
 
   const handleModalClose = useCallback(() => {
     clearPendingFilmActionFromSession();
@@ -356,11 +440,30 @@ export default function FilmsPageClient({
     [films, filmRatings]
   );
 
+  // All is the unrated queue: rated films leave immediately via optimistic
+  // filmRatings updates (no reload), and return when the rating is cleared.
+  const unratedFilms = useMemo(
+    () =>
+      films.filter((film) => typeof filmRatings[film.id] !== "number"),
+    [films, filmRatings]
+  );
+
   const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
+  // ratingsReady covers both filmRatings and savedFilmIds — they load together
+  // in loadAuthenticatedProfileFilmState, then pending actions apply before ready.
+  const listTabView = resolveProfileListTabView({
+    loadError,
+    listsReady: ratingsReady,
+    listLength: listFilms.length,
+  });
   const showCatalogSubtitle = showSubtitle && activeTab === "all";
 
   return (
-    <main className="mx-auto w-full min-w-0 max-w-5xl p-8">
+    <main
+      className="mx-auto w-full min-w-0 max-w-5xl p-8"
+      data-testid="films-page"
+      data-ratings-ready={ratingsReady ? "true" : "false"}
+    >
       <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
         <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <ResonaleBrand onClick={() => handleTabChange("all")} />
@@ -462,7 +565,7 @@ export default function FilmsPageClient({
       {activeTab === "all" ? (
         <div className={showCatalogSubtitle ? undefined : "mt-[18px]"}>
           <FilmCatalog
-            films={films}
+            films={unratedFilms}
             awardWinningFilmIds={awardWinningFilmIds}
             pageSize={pageSize}
             loadError={loadError}
@@ -480,7 +583,7 @@ export default function FilmsPageClient({
         </div>
       ) : (
         <>
-          {activeTab === "watched" && listFilms.length > 0 ? (
+          {activeTab === "watched" && listTabView === "list" ? (
             <section
               className="mb-8 rounded-2xl border border-gray-200 bg-white p-5"
               data-testid="taste-profile"
@@ -517,20 +620,22 @@ export default function FilmsPageClient({
             </section>
           ) : null}
 
-          {activeTab === "watched" && listFilms.length > 0 ? (
+          {activeTab === "watched" && listTabView === "list" ? (
             <p className="mb-3 text-sm text-slate-500">
               Showing {listFilms.length} watched{" "}
               {listFilms.length === 1 ? "film" : "films"}
             </p>
           ) : null}
 
-          {loadError ? (
+          {listTabView === "error" ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
               {loadError}
             </div>
           ) : null}
 
-          {!loadError && listFilms.length === 0 ? (
+          {listTabView === "loading" ? <ListTabSkeleton /> : null}
+
+          {listTabView === "empty" ? (
             <div
               data-testid="profile-tab-empty"
               className="mt-4 rounded-2xl border border-dashed p-8 text-gray-500"
@@ -541,7 +646,7 @@ export default function FilmsPageClient({
             </div>
           ) : null}
 
-          {!loadError && listFilms.length > 0 ? (
+          {listTabView === "list" ? (
             <section
               data-testid="film-list"
               className={`grid gap-4${activeTab === "saved" ? " mt-4" : ""}`}
@@ -561,7 +666,7 @@ export default function FilmsPageClient({
                   savedFilmIds={savedFilmIds}
                   onSavedChange={handleSavedChange}
                   onRatingChange={handleRatingChange}
-                  lazyLoadPoster={index >= 3}
+                  lazyLoadPoster={index >= 1}
                 />
               ))}
             </section>

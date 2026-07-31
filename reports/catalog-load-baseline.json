@@ -1,0 +1,57 @@
+{
+  "source": "hosted APP_ENV measure-public-catalog-load.mjs (pre-optimization)",
+  "measuredAt": "2026-07-31T10:49:59.680Z",
+  "filmsCount": 214,
+  "notes": [
+    "Waterfall after Promise.all(auth,films,awards): festivalBadges → ratings → scores(if≥7) → sort",
+    "festivalBadges dominated guest total (~815ms of ~958ms)",
+    "Poster dual <img> same src: 1 HTTP request (not double fetch); cache-control no-cache on HEAD probe; JPEG ~42–90KB"
+  ],
+  "results": [
+    {
+      "scenario": "guest",
+      "filmsMs": 141,
+      "festivalBadgesMs": 815,
+      "ratingsMs": null,
+      "scoresMs": null,
+      "normalizeSortMs": 2,
+      "totalMs": 958
+    },
+    {
+      "scenario": "auth-no-rating-ge-7",
+      "filmsMs": 150,
+      "festivalBadgesMs": 107,
+      "ratingsMs": 54,
+      "scoresMs": null,
+      "normalizeSortMs": 7,
+      "totalMs": 318
+    },
+    {
+      "scenario": "auth-rating-ge-7-with-scores",
+      "filmsMs": 263,
+      "festivalBadgesMs": 231,
+      "ratingsMs": 55,
+      "scoresMs": 64,
+      "normalizeSortMs": 1,
+      "totalMs": 614
+    },
+    {
+      "scenario": "auth-rating-ge-7-empty-scores",
+      "filmsMs": 112,
+      "festivalBadgesMs": 179,
+      "ratingsMs": 47,
+      "scoresMs": 64,
+      "normalizeSortMs": 7,
+      "totalMs": 409,
+      "forceEmptyScores": true
+    }
+  ],
+  "posters": {
+    "dualImgHttpFetches": 1,
+    "doubleHttpFetchConfirmed": false,
+    "eagerSlots": 3,
+    "heaviestBytes": 89845,
+    "contentType": "image/jpeg",
+    "cacheControlProbe": "no-cache (fetch HEAD/GET); browser response public,max-age=3600"
+  }
+}

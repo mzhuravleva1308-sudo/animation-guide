@@ -34,19 +34,24 @@ export async function completeFilmsMagicLinkSignIn(
   page: Page,
   email: string,
   sentAfter: Date,
-  options?: { waitForUrl?: RegExp }
+  options?: { waitForUrl?: RegExp | ((url: URL) => boolean) }
 ): Promise<string> {
   const confirmationUrl = await waitForMailpitMagicLink({ email, sentAfter });
 
   await page.goto(confirmationUrl);
   await page.waitForURL(
-    options?.waitForUrl ?? /\/(p\/[^/?#]+|films)(?:\?|$)/,
+    options?.waitForUrl ??
+      ((url) => {
+        const path = url.pathname;
+        return path === "/" || path === "/films" || /^\/p\//.test(path);
+      }),
     { timeout: 20_000 }
   );
 
   return confirmationUrl;
 }
 
-export function profileGuideUrlPattern(slug: string): RegExp {
-  return new RegExp(`/p/${slug}(?:\\?|$)`);
+/** Post-auth landing is the catalog at `/` (share-link guides are retired). */
+export function profileGuideUrlPattern(_slug?: string): RegExp {
+  return /\/(?:\?[^/]*)?$/;
 }
