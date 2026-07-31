@@ -8,7 +8,9 @@ import {
 } from "./mailpit";
 
 export function uniqueSignupTestEmail(prefix = "signup-confirm"): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.test`;
+  // Use a non-@example.test domain so E2E auto-link does not attach the shared
+  // e2e-test profile; this suite asserts fresh profile provisioning.
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}@signup.test`;
 }
 
 export async function getSignupConfirmationSkipReason(): Promise<string | null> {

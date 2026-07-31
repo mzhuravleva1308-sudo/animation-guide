@@ -6,7 +6,13 @@ async function expectStableSearchInputWidth(
   path: string,
   options?: { openAllFilmsTab?: boolean }
 ) {
-  await page.goto(path);
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    await page.goto(path);
+  } else {
+    await page.goto(path);
+  }
+  await expect(page.getByTestId("film-list")).toBeVisible();
+  await expect(page.getByTestId("film-search")).toBeVisible();
 
   if (options?.openAllFilmsTab) {
     await page.getByRole("button", { name: "All", exact: true }).click();
@@ -83,8 +89,12 @@ async function expectStableSearchInputWidth(
 }
 
 test.describe("Film search layout stability", () => {
-  test("keeps /films search input width stable while typing", async ({ page }) => {
-    await expectStableSearchInputWidth(page, "/films");
+  test("keeps catalog search input width stable while typing after /films redirect", async ({
+    page,
+  }) => {
+    await page.goto("/films");
+    await expect(page).toHaveURL(/\/(?:\?[^/]*)?$/);
+    await expectStableSearchInputWidth(page, page.url());
   });
 
   test("keeps home All films search input width stable while typing", async ({

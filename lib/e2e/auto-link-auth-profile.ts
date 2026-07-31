@@ -33,14 +33,38 @@ export async function autoLinkE2eProfileForAuthUser(
     },
   });
 
+  // Do not steal users already linked to a project-specific E2E profile
+  // (e.g. e2e-test-chromium used by smoke profile tests).
+  const { data: existingLink } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (existingLink?.id) {
+    return true;
+  }
+
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("id")
     .eq("slug", slug)
     .eq("share_token", token)
-    .single();
+    .maybeSingle();
 
-  if (profileError || !profile?.id) {
+  // Token can drift between .env.local and the seeded E2E profile. Fall back to
+  // slug-only lookup while E2E auto-link is explicitly enabled.
+  const profileId =
+    profile?.id ??
+    (
+      await supabase
+        .from("profiles")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle()
+    ).data?.id;
+
+  if (profileError || !profileId) {
     console.error("[e2e/auto-link] failed to load E2E profile", profileError);
     return false;
   }
@@ -58,7 +82,7 @@ export async function autoLinkE2eProfileForAuthUser(
   const { error: linkError } = await supabase
     .from("profiles")
     .update({ user_id: user.id })
-    .eq("id", profile.id);
+    .eq("id", profileId);
 
   if (linkError) {
     console.error("[e2e/auto-link] failed to link auth user to E2E profile", linkError);

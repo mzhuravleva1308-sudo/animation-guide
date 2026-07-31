@@ -7,7 +7,7 @@ import {
   ensureProjectRatingAuthUser,
   signInProjectRatingUser,
 } from "../helpers/project-profile-auth";
-import { countRatingRowsForFilm } from "../helpers/e2e-auth-profile";
+import { countRatingRowsForFilm, assertFilmRatingInProfile } from "../helpers/e2e-auth-profile";
 import { getSmokeRatingFilmForProject } from "../helpers/film-catalog-order";
 import {
   expectTabHasFilms,
@@ -182,6 +182,62 @@ test.describe("Profile page", () => {
       await expect
         .poll(async () => countRatingRowsForFilm(profileId, smokeRatingFilm.id))
         .toBe(0);
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+    });
+
+    test("changing a rating updates the UI and Watched tab", async ({
+      page,
+    }, testInfo) => {
+      const firstRating = 8;
+      const secondRating = 5;
+      const smokeRatingFilm = await getSmokeRatingFilmForProject(
+        testInfo.project.name
+      );
+      await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
+
+      await gotoProfilePage(page, credentials);
+      await openProfileTab(page, "All films");
+
+      const card = await findFilmCardInAllFilmsList(page, smokeRatingFilm.id);
+      await rateFilmOnCard(card, firstRating);
+      await openProfileTab(page, "Watched");
+      const watchedCard = filmCardByFilmId(page, smokeRatingFilm.id);
+      await expect(watchedCard.getByText(`My rating: ${firstRating}/10`)).toBeVisible();
+
+      await rateFilmOnCard(watchedCard, secondRating);
+      await expect(watchedCard.getByText(`My rating: ${secondRating}/10`)).toBeVisible();
+      await expect(
+        watchedCard.getByRole("button", {
+          name: `Rate ${secondRating} out of 10`,
+        })
+      ).toHaveAttribute("aria-pressed", "true");
+      await expect
+        .poll(async () => {
+          try {
+            await assertFilmRatingInProfile(
+              profileId,
+              smokeRatingFilm.id,
+              secondRating
+            );
+            return true;
+          } catch {
+            return false;
+          }
+        })
+        .toBe(true);
+
+      await page.reload();
+      await expect(page.getByTestId("films-page")).toHaveAttribute(
+        "data-ratings-ready",
+        "true",
+        { timeout: 15_000 }
+      );
+      await openProfileTab(page, "Watched");
+      await expect(
+        filmCardByFilmId(page, smokeRatingFilm.id).getByText(
+          `My rating: ${secondRating}/10`
+        )
+      ).toBeVisible({ timeout: 15_000 });
       await resetE2eProfileFilmRating(credentials, smokeRatingFilm.id);
     });
 

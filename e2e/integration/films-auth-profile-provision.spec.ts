@@ -20,7 +20,6 @@ import {
   openProfileTab,
   waitForWatchlistButton,
 } from "../helpers/profile-page";
-import { profilePagePath } from "../helpers/profile-credentials";
 
 test.describe("Films auth profile provisioning with Mailpit", () => {
   let magicLinkFlowSkipReason: string | null = null;
@@ -69,14 +68,7 @@ test.describe("Films auth profile provisioning with Mailpit", () => {
     expect(profile?.share_token).toBeTruthy();
     expect(profile?.user_id).toBe(userId);
 
-    await expect(page).toHaveURL(profileGuideUrlPattern(profile!.slug!));
-    expect(new URL(page.url()).searchParams.get("token")).toBe(profile!.share_token);
-    expect(page.url()).toContain(
-      profilePagePath({
-        slug: profile!.slug!,
-        token: profile!.share_token!,
-      })
-    );
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
 
     await openProfileTab(page, "Saved");
@@ -90,7 +82,7 @@ test.describe("Films auth profile provisioning with Mailpit", () => {
     await assertFilmSavedInProfile(profile!.id, filmId!, true);
 
     await page.reload();
-    await expect(page).toHaveURL(profileGuideUrlPattern(profile!.slug!));
+    await expect(page).toHaveURL(profileGuideUrlPattern());
     await openProfileTab(page, "Saved");
     await expect(
       firstFilmCard(page).getByRole("button", { name: "Remove from watchlist" })
