@@ -179,24 +179,45 @@ export default function RatingButtons({
         <p className="mb-3 text-sm text-gray-500">My rating: {rating}/10</p>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
-        {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-label={`Rate ${value} out of 10`}
-            aria-pressed={rating === value}
-            disabled={isSaving}
-            onClick={() => saveRating(value)}
-            className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
-              rating === value
-                ? "border-black bg-black text-white"
-                : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {value}
-          </button>
-        ))}
+      <div className="@container min-w-0 w-full">
+        <div className="flex flex-wrap gap-1.5">
+          {Array.from({ length: 10 }, (_, index) => index + 1).flatMap(
+            (value) => {
+              const button = (
+                <button
+                  key={value}
+                  type="button"
+                  aria-label={`Rate ${value} out of 10`}
+                  aria-pressed={rating === value}
+                  disabled={isSaving}
+                  onClick={() => saveRating(value)}
+                  className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
+                    rating === value
+                      ? "border-black bg-black text-white"
+                      : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {value}
+                </button>
+              );
+
+              // Force a 5+5 wrap when ten controls (27px + gap-1.5) do not fit.
+              // @[324px] = 10*27 + 9*6; hide the break once that width is available.
+              if (value !== 6) {
+                return [button];
+              }
+
+              return [
+                <span
+                  key="rating-row-break"
+                  aria-hidden="true"
+                  className="h-0 basis-full @[324px]:hidden"
+                />,
+                button,
+              ];
+            }
+          )}
+        </div>
       </div>
     </div>
   );
