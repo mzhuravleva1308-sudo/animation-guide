@@ -117,6 +117,18 @@ Optional repository variables:
 - `WEEKLY_FILM_IMPORT_STALE_MINUTES` (default 90)
 - `WEEKLY_FILM_IMPORT_LOW_QUEUE_THRESHOLD` (default **7** — warn when remaining pending is strictly below this)
 
+### Weekly film discovery (GitHub Actions)
+
+Separate from weekly import — see [WEEKLY_FILM_DISCOVERY.md](./WEEKLY_FILM_DISCOVERY.md). Remains disabled until you set repository variables:
+
+- `WEEKLY_FILM_DISCOVERY_ENABLED=1` — allow the workflow job to run
+- `WEEKLY_FILM_DISCOVERY_LIVE=1` — allow non-dry-run on the schedule
+
+Secrets (Resend recipient falls back to import email if unset):
+
+- `WEEKLY_FILM_DISCOVERY_REPORT_EMAIL` (optional; else `WEEKLY_FILM_IMPORT_REPORT_EMAIL`)
+- `RESEND_API_KEY`, hosted Supabase, `OPENAI_API_KEY`
+
 ## `.env.local` (secrets only)
 
 Copy from `.env.example`. Example:

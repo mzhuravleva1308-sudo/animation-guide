@@ -24,4 +24,11 @@ test.describe("Admin pages", () => {
     await page.goto("/admin/festival-recognitions");
     await expect(page).toHaveURL(/\/login/);
   });
+
+  test("unauthenticated film discovery redirects to login", async ({
+    page,
+  }) => {
+    await page.goto("/admin/film-discovery");
+    await expect(page).toHaveURL(/\/login/);
+  });
 });
