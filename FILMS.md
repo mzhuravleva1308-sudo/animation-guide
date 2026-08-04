@@ -1,5 +1,9 @@
 # Film data policy
 
+## Weekly import queue
+
+Candidate films for scheduled import live in Supabase `film_import_queue`. See [WEEKLY_FILM_IMPORT.md](./WEEKLY_FILM_IMPORT.md) for enqueueing, GitHub Actions schedule, secrets, and retries.
+
 ## Adding new films
 
 **Do not add new films manually** through:
