@@ -8,15 +8,18 @@ import { applyAppEnv } from "./load-app-env.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 
-const MIGRATION_FILES = [
+const DEFAULT_MIGRATION_FILES = [
   "supabase/migrations/20260629_add_film_semantic_descriptions.sql",
   "supabase/migrations/20260630_add_film_editorial_copy.sql",
   "supabase/migrations/20260719_add_film_catalog_visible.sql",
+  "supabase/migrations/20260807_film_discovery_candidates_media.sql",
 ];
 
 function parseArgs(argv) {
   let dbPassword = process.env.SUPABASE_DB_PASSWORD?.trim() || null;
   let databaseUrl = process.env.DATABASE_URL?.trim() || null;
+  /** @type {string[]} */
+  let onlyFiles = [];
 
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -40,10 +43,29 @@ function parseArgs(argv) {
 
     if (arg.startsWith("--database-url=")) {
       databaseUrl = arg.slice("--database-url=".length).trim() || null;
+      continue;
+    }
+
+    if (arg === "--file" || arg === "--only") {
+      const value = argv[index + 1]?.trim();
+      if (!value) {
+        throw new Error(`${arg} requires a migration path`);
+      }
+      onlyFiles.push(value);
+      index += 1;
+      continue;
+    }
+
+    if (arg.startsWith("--file=") || arg.startsWith("--only=")) {
+      const value = arg.slice(arg.indexOf("=") + 1).trim();
+      if (!value) {
+        throw new Error(`${arg} requires a migration path`);
+      }
+      onlyFiles.push(value);
     }
   }
 
-  return { dbPassword, databaseUrl };
+  return { dbPassword, databaseUrl, onlyFiles };
 }
 
 function getProjectRef(supabaseUrl) {
@@ -117,13 +139,19 @@ async function main() {
   }
 
   const projectRef = getProjectRef(supabaseUrl);
-  const { dbPassword, databaseUrl } = parseArgs(process.argv.slice(2));
+  const { dbPassword, databaseUrl, onlyFiles } = parseArgs(process.argv.slice(2));
   const accessToken = readAccessToken();
   const resolvedDatabaseUrl =
     databaseUrl || (dbPassword ? buildDatabaseUrl(projectRef, dbPassword) : null);
 
-  for (const relativePath of MIGRATION_FILES) {
+  const migrationFiles =
+    onlyFiles.length > 0 ? onlyFiles : DEFAULT_MIGRATION_FILES;
+
+  for (const relativePath of migrationFiles) {
     const filePath = path.join(REPO_ROOT, relativePath);
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`Migration file not found: ${relativePath}`);
+    }
     const sql = fs.readFileSync(filePath, "utf8");
 
     console.log(`Applying ${relativePath}...`);

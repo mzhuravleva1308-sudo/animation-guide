@@ -32,6 +32,7 @@
     "films:retry-queue": "node scripts/retry-film-import-queue.mjs",
     "films:discovery": "node scripts/run-weekly-film-discovery.mjs",
     "films:discovery-seed": "node scripts/import-film-discovery-candidates.mjs",
+    "films:discovery-media": "node scripts/run-film-discovery-media.mjs",
     "hosted:migrate": "APP_ENV=hosted node scripts/apply-hosted-migrations.mjs",
     "hosted:sync-editorial": "APP_ENV=hosted node scripts/sync-local-editorial-copy-to-hosted.mjs",
     "hosted:verify": "APP_ENV=hosted node scripts/verify-hosted-film-fields.mjs",

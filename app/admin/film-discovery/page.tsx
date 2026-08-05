@@ -25,7 +25,7 @@ export default async function FilmDiscoveryAdminPage() {
   const { data, error } = await supabase
     .from("film_discovery_candidates")
     .select(
-      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at"
+      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes"
     )
     .order("created_at", { ascending: false });
 

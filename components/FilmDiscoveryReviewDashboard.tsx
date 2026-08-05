@@ -19,11 +19,25 @@ export type DiscoveryCandidateRow = {
   reject_reason: string | null;
   source: string;
   created_at: string;
+  poster_url?: string | null;
+  poster_source_label?: string | null;
+  trailer_url?: string | null;
+  trailer_source_label?: string | null;
+  media_status?: string | null;
+  media_notes?: string | null;
 };
 
 function asUrlList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
+}
+
+function youtubeThumb(trailerUrl: string | null | undefined): string | null {
+  if (!trailerUrl) return null;
+  const match = trailerUrl.match(
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/
+  );
+  return match ? `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg` : null;
 }
 
 export function FilmDiscoveryReviewDashboard({
@@ -34,6 +48,7 @@ export function FilmDiscoveryReviewDashboard({
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [rejectDrafts, setRejectDrafts] = useState<Record<string, string>>({});
+  const [activeTrailerId, setActiveTrailerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -80,103 +95,203 @@ export function FilmDiscoveryReviewDashboard({
           Pending review ({pending.length})
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Approve marks an approved candidate only — it does not publish, enrich,
-          or show the film in the public catalog.
+          Review poster, trailer, and identity. Approve does not publish, enrich,
+          or write to the public catalog.
         </p>
 
         {pending.length === 0 ? (
           <p className="mt-4 text-sm text-gray-500">No candidates awaiting review.</p>
         ) : (
-          <ul className="mt-6 space-y-6">
-            {pending.map((film) => (
-              <li
-                key={film.id}
-                className="border-t border-gray-200 pt-6"
-                data-testid="discovery-candidate"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-lg font-medium">
-                      {film.title}{" "}
-                      <span className="text-gray-500">({film.year})</span>
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Original: {film.original_title ?? "—"} ·{" "}
-                      {(film.directors ?? []).join(", ") || "—"} ·{" "}
-                      {(film.countries ?? []).join(", ") || "—"} ·{" "}
-                      {film.runtime_minutes ?? "—"} min
-                    </p>
-                    <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">
-                      source: {film.source} · eligibility:{" "}
-                      {film.eligibility_result ?? "n/a"}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      data-testid="discovery-approve"
-                      disabled={isPending || pendingId === film.id}
-                      onClick={() => submit(film.id, "approve")}
-                      className="border border-black bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      type="button"
-                      data-testid="discovery-reject"
-                      disabled={isPending || pendingId === film.id}
-                      onClick={() => submit(film.id, "reject")}
-                      className="border border-gray-400 px-3 py-1.5 text-sm disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm text-gray-700">
-                  <span className="font-medium">Manager:</span>{" "}
-                  {film.manager_why ?? "—"}
-                </p>
-                <p className="mt-1 text-sm text-gray-700">
-                  <span className="font-medium">Researcher:</span>{" "}
-                  {film.researcher_why ?? "—"}
-                </p>
-                <div className="mt-2 text-sm text-gray-600">
-                  Sources:
-                  <ul className="list-disc pl-5">
-                    {asUrlList(film.source_urls).map((url) => (
-                      <li key={url}>
-                        <a
-                          href={url}
-                          className="underline"
-                          target="_blank"
-                          rel="noreferrer"
+          <ul className="mt-6 space-y-10">
+            {pending.map((film) => {
+              const thumb = youtubeThumb(film.trailer_url);
+              const mediaLabel = film.media_status ?? "media_pending";
+              return (
+                <li
+                  key={film.id}
+                  className="border-t border-gray-200 pt-6"
+                  data-testid="discovery-candidate"
+                >
+                  <div className="grid gap-6 md:grid-cols-[160px_1fr]">
+                    <div>
+                      {film.poster_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={film.poster_url}
+                          alt={`Poster for ${film.title}`}
+                          data-testid="discovery-poster"
+                          className="aspect-[2/3] w-full object-cover bg-gray-100"
+                        />
+                      ) : (
+                        <div
+                          className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500"
+                          data-testid="discovery-poster-missing"
                         >
-                          {url}
-                        </a>
-                      </li>
-                    ))}
-                    {asUrlList(film.source_urls).length === 0 ? (
-                      <li>—</li>
-                    ) : null}
-                  </ul>
-                </div>
-                <label className="mt-3 block text-sm text-gray-600">
-                  Reject reason (optional)
-                  <input
-                    type="text"
-                    value={rejectDrafts[film.id] ?? ""}
-                    onChange={(event) =>
-                      setRejectDrafts((prev) => ({
-                        ...prev,
-                        [film.id]: event.target.value,
-                      }))
-                    }
-                    className="mt-1 w-full max-w-xl border border-gray-300 px-2 py-1"
-                    data-testid="discovery-reject-reason"
-                  />
-                </label>
-              </li>
-            ))}
+                          No poster found
+                        </div>
+                      )}
+                      {film.poster_source_label ? (
+                        <p className="mt-1 text-xs text-gray-500">
+                          {film.poster_source_label}
+                        </p>
+                      ) : null}
+                    </div>
+
+                    <div>
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-medium">
+                            {film.title}{" "}
+                            <span className="text-gray-500">({film.year})</span>
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Original: {film.original_title ?? "—"}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {(film.directors ?? []).join(", ") || "—"} ·{" "}
+                            {(film.countries ?? []).join(", ") || "—"} ·{" "}
+                            {film.runtime_minutes ?? "—"} min
+                          </p>
+                          <p className="mt-2 text-xs uppercase tracking-wide text-gray-500">
+                            source: {film.source} · eligibility:{" "}
+                            {film.eligibility_result ?? "n/a"} · media:{" "}
+                            <span data-testid="discovery-media-status">
+                              {mediaLabel}
+                            </span>
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            type="button"
+                            data-testid="discovery-approve"
+                            disabled={isPending || pendingId === film.id}
+                            onClick={() => submit(film.id, "approve")}
+                            className="border border-black bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            data-testid="discovery-reject"
+                            disabled={isPending || pendingId === film.id}
+                            onClick={() => submit(film.id, "reject")}
+                            className="border border-gray-400 px-3 py-1.5 text-sm disabled:opacity-50"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+
+                      <p className="mt-3 text-sm text-gray-700">
+                        <span className="font-medium">Manager:</span>{" "}
+                        {film.manager_why ?? "—"}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-700">
+                        <span className="font-medium">Researcher:</span>{" "}
+                        {film.researcher_why ?? "—"}
+                      </p>
+                      {film.media_notes ? (
+                        <p
+                          className="mt-2 text-sm text-amber-800"
+                          data-testid="discovery-media-notes"
+                        >
+                          Media notes: {film.media_notes}
+                        </p>
+                      ) : null}
+
+                      <div className="mt-3">
+                        {film.trailer_url ? (
+                          <div data-testid="discovery-trailer">
+                            {activeTrailerId === film.id ? (
+                              <p className="text-sm">
+                                <a
+                                  href={film.trailer_url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="underline"
+                                >
+                                  Open trailer
+                                </a>
+                                {film.trailer_source_label
+                                  ? ` · ${film.trailer_source_label}`
+                                  : ""}
+                              </p>
+                            ) : (
+                              <button
+                                type="button"
+                                className="relative block overflow-hidden border border-gray-200"
+                                onClick={() => setActiveTrailerId(film.id)}
+                                data-testid="discovery-trailer-open"
+                              >
+                                {thumb ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={thumb}
+                                    alt={`Trailer preview for ${film.title}`}
+                                    className="h-28 w-48 object-cover"
+                                  />
+                                ) : (
+                                  <span className="block px-3 py-6 text-sm">
+                                    Open trailer
+                                  </span>
+                                )}
+                                <span className="absolute inset-0 flex items-center justify-center bg-black/30 text-xs font-medium text-white">
+                                  Trailer
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        ) : (
+                          <p
+                            className="text-sm text-gray-500"
+                            data-testid="discovery-trailer-missing"
+                          >
+                            No trailer found
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="mt-2 text-sm text-gray-600">
+                        Sources:
+                        <ul className="list-disc pl-5">
+                          {asUrlList(film.source_urls).map((url) => (
+                            <li key={url}>
+                              <a
+                                href={url}
+                                className="underline"
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {url}
+                              </a>
+                            </li>
+                          ))}
+                          {asUrlList(film.source_urls).length === 0 ? (
+                            <li>—</li>
+                          ) : null}
+                        </ul>
+                      </div>
+
+                      <label className="mt-3 block text-sm text-gray-600">
+                        Reject reason (optional)
+                        <input
+                          type="text"
+                          value={rejectDrafts[film.id] ?? ""}
+                          onChange={(event) =>
+                            setRejectDrafts((prev) => ({
+                              ...prev,
+                              [film.id]: event.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full max-w-xl border border-gray-300 px-2 py-1"
+                          data-testid="discovery-reject-reason"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -193,6 +308,7 @@ export function FilmDiscoveryReviewDashboard({
               <li key={film.id}>
                 <span className="font-medium">{film.review_status}</span> —{" "}
                 {film.title} ({film.year})
+                {film.media_status ? ` · ${film.media_status}` : ""}
                 {film.reject_reason ? ` · ${film.reject_reason}` : ""}
               </li>
             ))}

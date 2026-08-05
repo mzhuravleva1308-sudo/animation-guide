@@ -121,3 +121,32 @@ API: `POST /api/admin/film-discovery/review` with `{ id, action, reject_reason? 
 | Email | discovery report | import run report |
 
 Approved discovery candidates are **not** auto-enqueued into `film_import_queue` in v1.
+
+## Media curator
+
+Order: Manager → Researcher → Eligibility → **Media curator** → email → manual approve/reject.
+
+Media curator fills staging-only external poster/trailer fields (TMDB `poster_path` → `image.tmdb.org/t/p/w500`, YouTube trailer via existing TMDB/YouTube selection). It does **not** write `films`, Storage `film-posters`, synopsis, mood, or festivals.
+
+Trailer priority:
+
+1. TMDB `Trailer` + `official=true` (prefer `iso_639_1=en` among ties)
+2. Other TMDB `Trailer` on identity-confirmed match
+3. Official TMDB `Teaser` only if no Trailer
+4. YouTube Data API **search** fallback (never replaces a TMDB Trailer; skipped after first 429 in a run)
+5. Otherwise `media_partial` / `media_failed` — no random video
+
+TMDB Clip is **not** accepted for discovery staging (`allowClip: false`). Production `fill-trailers` still allows official/trusted Clips.
+
+Channel resolve for TMDB Clip trust uses YouTube **oEmbed** (not Search API quota).
+
+Statuses: `media_pending` | `media_complete` | `media_partial` | `media_failed` | `media_needs_review`.
+
+Media-only for existing seeds:
+
+```bash
+APP_ENV=hosted npm run films:discovery-media -- --source manual_seed --dry-run
+WEEKLY_FILM_DISCOVERY_MEDIA_CONFIRM=1 APP_ENV=hosted npm run films:discovery-media -- --source manual_seed
+```
+
+Requires migration `20260807_film_discovery_candidates_media.sql` before real writes.

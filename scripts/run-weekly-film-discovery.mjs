@@ -22,6 +22,7 @@ import {
 } from "../lib/film-discovery-workflow.mjs";
 import { sendWeeklyFilmDiscoveryEmail } from "../lib/send-weekly-film-discovery-email.mjs";
 import { DISCOVERY_ELIGIBILITY } from "../lib/film-discovery.mjs";
+import { curateDiscoveryMedia } from "../lib/film-discovery-media.mjs";
 
 function parseArgs(argv) {
   const options = {
@@ -118,6 +119,21 @@ async function main() {
           ? raw.fix_hints.map(String)
           : [],
       };
+    },
+    mediaCuratorFn: async (candidate) => {
+      const tmdbApiKey = process.env.TMDB_API_KEY;
+      if (!tmdbApiKey) {
+        return {
+          media_status: "media_failed",
+          media_notes: "TMDB_API_KEY missing; media curator skipped",
+          poster_url: null,
+          trailer_url: null,
+        };
+      }
+      return curateDiscoveryMedia(candidate, {
+        tmdbApiKey,
+        youtubeApiKey: process.env.YOUTUBE_API_KEY,
+      });
     },
     persistFn: async (batch, candidates) => {
       const { data: insertedBatch, error: batchError } = await supabase
