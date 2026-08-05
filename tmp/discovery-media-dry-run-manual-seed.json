@@ -1,0 +1,110 @@
+
+> animationpre@0.1.0 films:discovery-media
+> node scripts/run-film-discovery-media.mjs --source manual_seed --dry-run
+
+{
+  "ok": true,
+  "dryRun": true,
+  "databaseMutated": false,
+  "writes_to_films_table": false,
+  "review_status_unchanged": true,
+  "enrich_full": false,
+  "publish": false,
+  "tallies": {
+    "total": 50,
+    "would_update": 50,
+    "skipped_complete": 0,
+    "with_poster": 50,
+    "with_trailer": 25,
+    "media_complete": 25,
+    "media_partial": 25,
+    "media_failed": 0,
+    "media_needs_review": 0
+  },
+  "sample": [
+    {
+      "id": "48100115-12ac-4733-a176-fd50453bce34",
+      "title": "Art College 1994",
+      "year": 2023,
+      "media_status": "media_partial",
+      "poster_url": "https://image.tmdb.org/t/p/w500/qLF8O01Vi9p1e2Czj19SWDbGbo4.jpg",
+      "trailer_url": null,
+      "poster_source_label": "TMDB poster_path (theatrical)",
+      "trailer_source_label": null,
+      "media_notes": "YouTube search unavailable: YouTube search failed (429) for \"Art College 1994 2023 official teaser\"",
+      "skipped": false
+    },
+    {
+      "id": "cf62020d-9e3e-41ab-bd91-89a9f5c4d1ac",
+      "title": "Aya of Yop City",
+      "year": 2013,
+      "media_status": "media_complete",
+      "poster_url": "https://image.tmdb.org/t/p/w500/eK4vyU14EqJpDFOAEfXqyWdmIYz.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=A_RL1MEVIMU",
+      "poster_source_label": "TMDB poster_path (theatrical)",
+      "trailer_source_label": "TMDB Trailer (TMDB marks video as official)",
+      "media_notes": null,
+      "skipped": false
+    },
+    {
+      "id": "9db5c5ea-6855-4553-b3f4-d02775925a0c",
+      "title": "Black Butterflies",
+      "year": 2024,
+      "media_status": "media_partial",
+      "poster_url": "https://image.tmdb.org/t/p/w500/rGUhYFoEWAvH3bDxkFoJVi7QjFh.jpg",
+      "trailer_url": null,
+      "poster_source_label": "TMDB poster_path (theatrical)",
+      "trailer_source_label": null,
+      "media_notes": "YouTube search unavailable: YouTube search failed (429) for \"Black Butterflies 2024 official teaser\"",
+      "skipped": false
+    },
+    {
+      "id": "85507699-0652-4b33-812a-88c93b57a813",
+      "title": "Blood Tea and Red String",
+      "year": 2006,
+      "media_status": "media_partial",
+      "poster_url": "https://image.tmdb.org/t/p/w500/uLjGWaK6riaa8jSuSmaE5FNFRtR.jpg",
+      "trailer_url": null,
+      "poster_source_label": "TMDB poster_path (theatrical)",
+      "trailer_source_label": null,
+      "media_notes": "YouTube search unavailable: YouTube search failed (429) for \"Blood Tea and Red String 2006 official trailer\"",
+      "skipped": false
+    },
+    {
+      "id": "c974bdd4-a4fe-4e50-816d-c639b6753469",
+      "title": "Bob Spit: We Do Not Like People",
+      "year": 2021,
+      "media_status": "media_partial",
+      "poster_url": "https://image.tmdb.org/t/p/w500/tv1JcxHfNtpjZQ4pCkVDpKeSF2W.jpg",
+      "trailer_url": null,
+      "poster_source_label": "TMDB poster_path (theatrical)",
+      "trailer_source_label": null,
+      "media_notes": "YouTube search unavailable: YouTube search failed (429) for \"Bob Spit: We Do Not Like People 2021 official trailer\"",
+      "skipped": false
+    }
+  ],
+  "media_complete_example": {
+    "id": "cf62020d-9e3e-41ab-bd91-89a9f5c4d1ac",
+    "title": "Aya of Yop City",
+    "year": 2013,
+    "media_status": "media_complete",
+    "poster_url": "https://image.tmdb.org/t/p/w500/eK4vyU14EqJpDFOAEfXqyWdmIYz.jpg",
+    "trailer_url": "https://www.youtube.com/watch?v=A_RL1MEVIMU",
+    "poster_source_label": "TMDB poster_path (theatrical)",
+    "trailer_source_label": "TMDB Trailer (TMDB marks video as official)",
+    "media_notes": null,
+    "skipped": false
+  },
+  "media_partial_example": {
+    "id": "48100115-12ac-4733-a176-fd50453bce34",
+    "title": "Art College 1994",
+    "year": 2023,
+    "media_status": "media_partial",
+    "poster_url": "https://image.tmdb.org/t/p/w500/qLF8O01Vi9p1e2Czj19SWDbGbo4.jpg",
+    "trailer_url": null,
+    "poster_source_label": "TMDB poster_path (theatrical)",
+    "trailer_source_label": null,
+    "media_notes": "YouTube search unavailable: YouTube search failed (429) for \"Art College 1994 2023 official teaser\"",
+    "skipped": false
+  }
+}
