@@ -36,7 +36,16 @@ export default async function FilmDiscoveryAdminPage() {
         "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes"
       )
       .order("created_at", { ascending: false });
-    data = fallback.data;
+    data = (fallback.data ?? []).map((row) => ({
+      ...row,
+      synopsis: null,
+      the_mood: null,
+      technique: null,
+      moods: null,
+      content_status: null,
+      content_note: null,
+      content_revision_count: null,
+    }));
     error = fallback.error;
   }
 
