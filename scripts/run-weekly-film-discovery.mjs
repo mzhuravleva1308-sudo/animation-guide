@@ -23,6 +23,8 @@ import {
 import { sendWeeklyFilmDiscoveryEmail } from "../lib/send-weekly-film-discovery-email.mjs";
 import { DISCOVERY_ELIGIBILITY } from "../lib/film-discovery.mjs";
 import { curateDiscoveryMedia } from "../lib/film-discovery-media.mjs";
+import { curateDiscoveryContent } from "../lib/film-discovery-content.mjs";
+import { curateDiscoveryContent } from "../lib/film-discovery-content.mjs";
 
 function parseArgs(argv) {
   const options = {
@@ -133,6 +135,18 @@ async function main() {
       return curateDiscoveryMedia(candidate, {
         tmdbApiKey,
         youtubeApiKey: process.env.YOUTUBE_API_KEY,
+      });
+    },
+    contentCuratorFn: async (candidate) => {
+      if (!openai) {
+        return {
+          content_status: "failed",
+          content_note: "OPENAI_API_KEY missing; content curator skipped",
+        };
+      }
+      return curateDiscoveryContent(candidate, {
+        openai,
+        tmdbApiKey: process.env.TMDB_API_KEY,
       });
     },
     persistFn: async (batch, candidates) => {

@@ -1,0 +1,257 @@
+{
+  "version": "resonale-mood-writing-guide-v2",
+  "generated_at": "2026-08-07T07:04:07.581Z",
+  "corpus_size": 200,
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-v2",
+    "sections": {
+      "purpose": "To guide writers in crafting distinctive, concise, and film-specific 'the_mood' lines for animated films, capturing the film's most salient emotional and sensory qualities in a manner consistent with the Resonale house style. The goal is to evoke the film's unique atmosphere through concrete, editorial language rather than formulaic or ornamental phrasing.",
+      "core_principles": [
+        "Favor specificity: reference concrete sensory details, contrasts, and narrative rhythms.",
+        "Let the sentence move dynamically, often shifting or oscillating between moods or qualities—but only as suits the film.",
+        "Use varied syntax and avoid formulaic repetition, especially in openings.",
+        "Adj+Adj openings are one optional tool, not the house default; natural, direct editorial language is encouraged.",
+        "Focus on the most distinctive mood dimensions for each film, rather than forcing all possible dimensions into every line.",
+        "Balance opposites or tensions (e.g., warmth vs. melancholy, humor vs. gravity) to reflect nuance, but only where relevant.",
+        "Integrate technique, setting, or era only if it shapes the mood experience.",
+        "Favor plain, concrete editorial language over ornamental or poetic phrasing."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Emotional Tone",
+          "detail": "Captures the prevailing feelings (e.g., melancholic, playful, tense, bittersweet). Use only those most central to the film."
+        },
+        {
+          "name": "Visual/Aural Texture",
+          "detail": "Describes color, light, sound, or tactile qualities (e.g., vibrant colors, muted tones, tactile puppet textures)."
+        },
+        {
+          "name": "Pace and Rhythm",
+          "detail": "Conveys the film's tempo and how it affects mood (e.g., slow and heavy, brisk and chaotic, rhythmic flow)."
+        },
+        {
+          "name": "Contrasts and Oscillations",
+          "detail": "Highlights shifts or tensions between moods, visuals, or narrative beats (e.g., warmth vs. isolation, humor vs. gravity). Use only if salient."
+        },
+        {
+          "name": "Atmospheric/Narrative Context",
+          "detail": "Situates mood within setting, era, or narrative context when relevant (e.g., rural summer, urban alienation, afterlife world)."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Sensory Specificity",
+          "why": "Grounds mood in concrete imagery or sound (e.g., 'tactile stop-motion textures', 'flickering campfire light')."
+        },
+        {
+          "principle": "Dynamic Movement",
+          "why": "Lets the mood line flow or oscillate, mirroring the film's tonal shifts, but only as suits the film."
+        },
+        {
+          "principle": "Integrated Technique References",
+          "why": "Mentions animation style only when it shapes the sensory or emotional experience (e.g., 'stark rotoscope textures')."
+        },
+        {
+          "principle": "Economical, Single-Sentence Structure",
+          "why": "Keeps the line concise and layered, but not overloaded."
+        },
+        {
+          "principle": "Syntax Variety",
+          "why": "A range of sentence structures (not just Adj+Adj) keeps the house style lively and film-specific."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "Adj+Adj opening (e.g., 'Bleak and haunting', 'Intimate and anxious')",
+          "when_weak": "When used as a default or template across films, or when not followed by film-specific detail.",
+          "when_ok": "When the adjectives are film-specific and the rest of the sentence is concrete and editorial."
+        },
+        {
+          "pattern": "\"with a steady rhythm\" or similar",
+          "when_weak": "When used as a template without specificity or when rhythm is not distinctive.",
+          "when_ok": "When the rhythm is central and described in a film-specific way."
+        },
+        {
+          "pattern": "Ornamental/poetic phrasing (e.g., 'melancholic embrace', 'tender contradictions', 'flickering with sparks of hope')",
+          "when_weak": "When language is literary or interchangeable, not editorial or film-rooted.",
+          "when_ok": "Rarely; only if the phrase is inseparable from the film's unique mood."
+        },
+        {
+          "pattern": "Packing all mood dimensions into one line",
+          "when_weak": "When it leads to dense, overloaded, or generic sentences.",
+          "when_ok": "When the film genuinely demands it and the result is clear and concrete."
+        },
+        {
+          "pattern": "\"underscored by\", \"marked by\", \"a blend of\"",
+          "when_weak": "When used as a shortcut for listing features rather than weaving them into the mood.",
+          "when_ok": "When the element is unusual or central to the film's experience."
+        },
+        {
+          "pattern": "Generic quirky/dreamlike/reflective",
+          "when_weak": "When used as a standalone descriptor or without sensory/narrative context.",
+          "when_ok": "When made concrete through imagery, pacing, or narrative detail."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Editorial Statement",
+          "principle": "Directly state the film's mood using plain, concrete language (e.g., 'Family memory tumbles through comic digressions and rough textures.')."
+        },
+        {
+          "type": "Contrasting Pair (optional)",
+          "principle": "Use 'X and Y' or 'X yet Y' to show tension or duality, but only if natural to the film."
+        },
+        {
+          "type": "Sensory Cascade",
+          "principle": "List visual, aural, and tactile qualities in a flowing sequence."
+        },
+        {
+          "type": "Oscillation/Movement",
+          "principle": "Describe how the mood shifts or oscillates between states, if this is central."
+        },
+        {
+          "type": "Setting/Technique Integration",
+          "principle": "Embed references to setting, animation style, or era when they shape the mood."
+        }
+      ],
+      "specificity_test": "Does the line evoke a unique, sensory, and emotionally layered experience, or could it describe any number of films? If the latter, add or sharpen concrete details, contrasts, or narrative context.",
+      "relationship_with_synopsis": "The_mood should complement, not repeat, the synopsis. It distills the film's emotional and sensory atmosphere, often referencing but not summarizing narrative events.",
+      "relationship_with_moods_tags": "The_mood line should not simply list mood tags; instead, it should synthesize and animate them through sensory, rhythmic, and contextual language.",
+      "good_examples": [
+        {
+          "title": "58th",
+          "the_mood": "Using rotoscoped memory, the film holds grief, political absence, and a family's refusal to let one life disappear.",
+          "why": "Direct, film-specific, and integrates technique and narrative context without ornamental phrasing."
+        },
+        {
+          "title": "Endless Cookie",
+          "the_mood": "Family memory tumbles through comic digressions, rough textures, and a strong sense of lived-in intimacy.",
+          "why": "Natural syntax, concrete detail, and avoids formulaic openings."
+        },
+        {
+          "title": "The Glassworker",
+          "the_mood": "The warmth of glass and music is set against gathering military tension and the ache of first love.",
+          "why": "Specific, film-rooted, and uses plain editorial language."
+        },
+        {
+          "title": "Padak",
+          "the_mood": "Cold, muted blues press in as frantic movements ripple through tight, waterlogged confines.",
+          "why": "Sensory specificity and natural syntax."
+        },
+        {
+          "title": "Bubble Bath",
+          "the_mood": "Playful irony sits inside brisk conversation and bright 2D color, catching urban life mid-contradiction.",
+          "why": "Editorial and concrete; drops repeated weave construction.",
+          "moods": [
+            "playful",
+            "witty",
+            "intimate"
+          ]
+        },
+        {
+          "title": "Tehran Taboo",
+          "the_mood": "Stark rotoscope textures and a restless urban rhythm that keep social pressure close to the surface.",
+          "why": "Technique and social context in plain editorial language, without ornamental flourish.",
+          "moods": [
+            "anxious",
+            "tense",
+            "bleak",
+            "intimate"
+          ]
+        },
+        {
+          "title": "The Weird Kidz",
+          "the_mood": "Flickering campfire light and sudden silences unsettle the rural night’s uneasy calm.",
+          "why": "Film-specific, concise, and avoids formulaic structure."
+        },
+        {
+          "title": "Aya of Yop City",
+          "the_mood": "Youthful energy fills bright 1970s Ivorian streets with intimate, everyday momentum.",
+          "why": "Setting-led and concrete; avoids weave/ornamental packing.",
+          "moods": [
+            "energetic",
+            "intimate",
+            "warm",
+            "playful"
+          ]
+        },
+        {
+          "title": "Blood Tea and Red String",
+          "the_mood": "Tactile stop-motion textures weave a bittersweet fairy tale through shadowed woods and delicate silence.",
+          "why": "Technique and narrative context in a natural structure."
+        },
+        {
+          "title": "Iron Boy",
+          "the_mood": "Moving from bodily constraint and rural expectation toward music, friendship and a widening sense of possibility.",
+          "moods": [
+            "tender",
+            "hopeful",
+            "intimate",
+            "bittersweet"
+          ],
+          "why": "Narrative movement and specificity without an Adj+Adj opening or poetic packing."
+        },
+        {
+          "title": "The Old Man Movie",
+          "the_mood": "Tactile stop-motion textures amplify the chaotic energy and lighthearted urgency of the countryside chase.",
+          "why": "Technique and mood integrated with plain syntax."
+        },
+        {
+          "title": "The Suicide Shop",
+          "the_mood": "Muted tones and dry irony weave through a cold, resigned rhythm that unsettles and amuses.",
+          "why": "Editorial, concrete, and avoids ornamental excess."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "Bleak and haunting, with gritty 2D textures that pulse with anxious tension and the relentless weight of past violence.",
+          "why": "Adj+Adj opening and ornamental layering; could fit many films."
+        },
+        {
+          "title": "Fragmented, surreal, and unsettling, with a cold, oppressive atmosphere and a mix of dark humor and paranoia.",
+          "why": "Overpacked with adjectives and dimensions; syntax is ornamental."
+        },
+        {
+          "title": "Slow, haunting, and visually stark, with an oppressive silence that amplifies the sense of isolation.",
+          "why": "Adj+Adj+Adj opening and ornamental phrasing."
+        },
+        {
+          "title": "Lush and surreal, with a haunting beauty that oscillates between vibrant color and oppressive darkness, creating a sense of unease and tension.",
+          "why": "Ornamental, overloaded, and formulaic structure."
+        },
+        {
+          "title": "Bleak and anxious, textured with muted earth tones and a slow, heavy rhythm that echoes rural hardship and simmering social tensions.",
+          "why": "Adj+Adj opening and generic descriptors."
+        },
+        {
+          "title": "Brisk and vibrant, bursting with musical clashes and cultural upheaval, where playful chaos meets hopeful rhythms in vivid 2D animation.",
+          "why": "Formulaic opening and ornamental phrasing."
+        },
+        {
+          "title": "Relentless and gritty, pulsing with raw energy and dark shadows, the 2D animation drives a fierce, unyielding rhythm.",
+          "why": "Adj+Adj opening and ornamental layering."
+        },
+        {
+          "title": "Melancholic and intimate, unfolding with slow, meditative rhythms through cold, dreamlike 2D animation textures.",
+          "why": "Adj+Adj opening and ornamental phrasing."
+        },
+        {
+          "title": "Intimate and anxious, with quiet rhythms that hold melancholic loss and fragile hope amid shifting, uncertain landscapes.",
+          "why": "Adj+Adj opening and ornamental layering."
+        },
+        {
+          "title": "On Happiness Road (batch draft)",
+          "the_mood": "Soft hues and a slow rhythm weave intimate memories into a gentle, melancholic embrace.",
+          "why": "Ornamental closing phrase; emotionally vague and interchangeable across quiet dramas.",
+          "acceptable_but_weak": true
+        }
+      ]
+    },
+    "analyst_notes": "This revision clarifies that adjective-pair openings are one tool among many, not the default. Writers are encouraged to use natural, film-specific syntax and to focus on the most distinctive mood dimensions, avoiding ornamental or overloaded phrasing. The examples and syntax library now model a broader range of sentence structures, supporting the house style's commitment to specificity, variety, and editorial concreteness."
+  },
+  "model": "gpt-4.1",
+  "consistency_pass": {
+    "at": "2026-08-07T07:04:42.938Z",
+    "note": "Removed good examples that contradicted the revised weak patterns (ornamental phrasing / weave cluster)."
+  }
+}

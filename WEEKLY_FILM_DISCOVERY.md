@@ -150,3 +150,18 @@ WEEKLY_FILM_DISCOVERY_MEDIA_CONFIRM=1 APP_ENV=hosted npm run films:discovery-med
 ```
 
 Requires migration `20260807_film_discovery_candidates_media.sql` before real writes.
+
+## Content curator + Content reviewer
+
+Order: … → Media curator → **Content curator** → **Content reviewer** → optional single revision → email → manual approve/reject.
+
+Staging fields mirror `films`: `synopsis`, `the_mood`, `technique`, `moods`, plus minimal service fields `content_status` (`pending` | `ready` | `ready_with_note` | `failed`), `content_note`, `content_revision_count` (0–1), `content_updated_at`. Reviewer/research diagnostics stay in dry-run JSON only. Style guide: `lib/film-discovery-content-style-guide.mjs` (`CONTENT_STYLE_GUIDE_VERSION`).
+
+Content-only backfill (no email, no films write):
+
+```bash
+APP_ENV=hosted npm run films:discovery-content -- --source manual_seed --dry-run
+WEEKLY_FILM_DISCOVERY_CONTENT_CONFIRM=1 APP_ENV=hosted npm run films:discovery-content -- --source manual_seed
+```
+
+Requires migration `20260808_film_discovery_candidates_content.sql` before real writes.

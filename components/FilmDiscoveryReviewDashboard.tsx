@@ -25,11 +25,35 @@ export type DiscoveryCandidateRow = {
   trailer_source_label?: string | null;
   media_status?: string | null;
   media_notes?: string | null;
+  synopsis?: string | null;
+  the_mood?: string | null;
+  technique?: string | null;
+  moods?: string[] | null;
+  content_status?: string | null;
+  content_note?: string | null;
+  content_revision_count?: number | null;
 };
 
 function asUrlList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value.filter((item): item is string => typeof item === "string");
+}
+
+function contentStatusLabel(status: string | null | undefined): string {
+  switch (status) {
+    case "ready":
+      return "ready";
+    case "ready_with_note":
+      return "ready with note";
+    case "failed":
+      return "failed";
+    case "pending":
+    case null:
+    case undefined:
+      return "pending";
+    default:
+      return status;
+  }
 }
 
 function youtubeThumb(trailerUrl: string | null | undefined): string | null {
@@ -157,6 +181,10 @@ export function FilmDiscoveryReviewDashboard({
                             {film.eligibility_result ?? "n/a"} · media:{" "}
                             <span data-testid="discovery-media-status">
                               {mediaLabel}
+                            </span>{" "}
+                            · content:{" "}
+                            <span data-testid="discovery-content-status">
+                              {contentStatusLabel(film.content_status)}
                             </span>
                           </p>
                         </div>
@@ -198,6 +226,39 @@ export function FilmDiscoveryReviewDashboard({
                           Media notes: {film.media_notes}
                         </p>
                       ) : null}
+
+                      <div className="mt-4 space-y-2" data-testid="discovery-content">
+                        <p className="text-sm text-gray-800" data-testid="discovery-synopsis">
+                          <span className="font-medium">Synopsis:</span>{" "}
+                          {film.synopsis ?? "—"}
+                        </p>
+                        <p
+                          className="border-l-2 border-gray-300 pl-3 text-sm italic text-gray-700"
+                          data-testid="discovery-the-mood"
+                        >
+                          {film.the_mood ?? "No mood yet"}
+                        </p>
+                        <p className="text-sm text-gray-700" data-testid="discovery-moods">
+                          <span className="font-medium">Moods:</span>{" "}
+                          {(film.moods ?? []).length
+                            ? (film.moods ?? []).join(", ")
+                            : "—"}
+                        </p>
+                        <p className="text-xs uppercase tracking-wide text-gray-500">
+                          Technique:{" "}
+                          <span data-testid="discovery-technique">
+                            {film.technique ?? "—"}
+                          </span>
+                        </p>
+                        {film.content_note ? (
+                          <p
+                            className="text-sm text-amber-800"
+                            data-testid="discovery-content-note"
+                          >
+                            Note: {film.content_note}
+                          </p>
+                        ) : null}
+                      </div>
 
                       <div className="mt-3">
                         {film.trailer_url ? (

@@ -22,12 +22,23 @@ export default async function FilmDiscoveryAdminPage() {
   }
 
   const supabase = getFestivalAdminSupabase();
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("film_discovery_candidates")
     .select(
-      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes"
+      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes, synopsis, the_mood, technique, moods, content_status, content_note, content_revision_count"
     )
     .order("created_at", { ascending: false });
+
+  if (error && /synopsis|the_mood|content_status|technique|content_note/i.test(error.message)) {
+    const fallback = await supabase
+      .from("film_discovery_candidates")
+      .select(
+        "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes"
+      )
+      .order("created_at", { ascending: false });
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     throw error;
