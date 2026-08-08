@@ -63,7 +63,7 @@ function parseArgs(argv) {
 }
 
 const CONTENT_SELECT =
-  "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, source, review_status, eligibility_result, media_status, content_status, synopsis, the_mood, technique, moods, aesthetic_tags, content_note, content_revision_count";
+  "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, source, review_status, eligibility_result, media_status, content_status, synopsis, the_mood, technique, moods, aesthetic_tags, quick_filters, content_note, content_revision_count";
 
 async function main() {
   applyAppEnv();

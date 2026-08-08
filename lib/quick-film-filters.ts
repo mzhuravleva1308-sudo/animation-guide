@@ -40,6 +40,8 @@ function isStopMotionTechnique(technique: string | null | undefined) {
   ].some((term) => value.includes(term));
 }
 
+export { isStopMotionTechnique };
+
 export function filterFilmsByQuickFilter(
   films: Film[],
   activeQuickFilter: QuickFilter,

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { buildDiscoveryCatalogFilterPills } from "@/lib/film-discovery-quick-filters.mjs";
 
 export type DiscoveryCandidateRow = {
   id: string;
@@ -30,6 +31,7 @@ export type DiscoveryCandidateRow = {
   technique?: string | null;
   moods?: string[] | null;
   aesthetic_tags?: string[] | null;
+  quick_filters?: string[] | null;
   content_status?: string | null;
   content_note?: string | null;
   content_revision_count?: number | null;
@@ -253,6 +255,43 @@ export function FilmDiscoveryReviewDashboard({
                             ? (film.aesthetic_tags ?? []).join(", ")
                             : "—"}
                         </p>
+                        <div
+                          className="text-sm text-gray-700"
+                          data-testid="discovery-catalog-filters"
+                        >
+                          <span className="font-medium">Catalog filters:</span>{" "}
+                          {(() => {
+                            const pills = buildDiscoveryCatalogFilterPills({
+                              year: film.year,
+                              technique: film.technique,
+                              quick_filters: film.quick_filters,
+                            });
+                            if (!pills.length) {
+                              return <span className="text-gray-500">—</span>;
+                            }
+                            return (
+                              <span className="mt-1 flex flex-wrap gap-1.5">
+                                {pills.map((pill) => (
+                                  <span
+                                    key={`${pill.source}-${pill.id}`}
+                                    className="inline-flex items-center border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-800"
+                                    title={
+                                      pill.source === "derived"
+                                        ? "Derived from year/technique"
+                                        : "Proposed quick_filters token"
+                                    }
+                                    data-testid={`discovery-catalog-filter-${pill.id}`}
+                                  >
+                                    {pill.label}
+                                    <span className="ml-1 text-[10px] uppercase tracking-wide text-gray-500">
+                                      {pill.source === "derived" ? "auto" : "proposed"}
+                                    </span>
+                                  </span>
+                                ))}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <p className="text-xs uppercase tracking-wide text-gray-500">
                           Technique:{" "}
                           <span data-testid="discovery-technique">
