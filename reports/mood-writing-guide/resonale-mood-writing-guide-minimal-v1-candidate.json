@@ -1,0 +1,179 @@
+{
+  "version": "resonale-mood-writing-guide-minimal-v1-candidate",
+  "generated_at": "2026-08-08T09:45:49.891Z",
+  "parent": null,
+  "reset_from": "resonale-mood-writing-guide-v2",
+  "activation_status": "candidate_not_activated",
+  "corpus_evidence": {
+    "catalog_films_sampled": 216,
+    "opening_kinds": {
+      "adj_pair": 149,
+      "visual_lead": 2,
+      "mood_lead": 28,
+      "other": 37
+    },
+    "note": "Adj+Adj / mood-first openings dominate the live catalog (~69% adj_pair). Visual-lead openings are rare. Repeated simple shapes are the working house style, not a defect."
+  },
+  "discarded_from_v2": [
+    "syntax variety for its own sake",
+    "Adj+Adj openings as weak/default-to-avoid pattern",
+    "avoidance of repeated openings as primary concern",
+    "Dynamic Movement / oscillation as preferred pattern",
+    "Sensory Cascade syntax type",
+    "metaphorical verbs as distinctiveness strategy",
+    "editorial richness / emotionally layered experience as goals",
+    "pressure to make every line structurally unique",
+    "long critic-elegant good examples (weave, mid-contradiction, ache, unsettles)",
+    "anti-example stack centered on Adj+Adj openings"
+  ],
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-minimal-v1-candidate",
+    "sections": {
+      "purpose": "Help a user understand the film’s emotional feel at a glance. Write like a thoughtful friend — clear and immediate — not like a film critic crafting a beautiful sentence.",
+      "core_principles": [
+        "First-words test: can someone understand the basic mood from the first few words?",
+        "Name the mood clearly first, then add 1–2 specifics that make it more useful for this film.",
+        "Default shape: [Mood], with [1–2 specifics]. This is a default, not a hard template.",
+        "Simple repeated sentence shapes are normal. Adj openings are normal. Structural uniformity is not a problem.",
+        "Variation is not a goal.",
+        "Specificity comes from the film (pace, setting, visuals, sound, technique, tonal contrast) — not from complex syntax or literary wording.",
+        "Prefer natural, simple English that is easy on first read.",
+        "Imagery or metaphor only when it is the clearest natural phrasing — never as a stylistic default.",
+        "Do not retell the synopsis or explain the film’s themes."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Core mood",
+          "detail": "The main emotional feel, named early (tense, dreamy, bleak, playful, etc.)."
+        },
+        {
+          "name": "Useful specifics",
+          "detail": "Optional 1–2 cues: pace, setting, visual style, sound, technique, or a distinctive tonal contrast."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Mood named up front",
+          "why": "Matches the glance test and the live catalog’s dominant house style."
+        },
+        {
+          "principle": "One or two film-owned cues",
+          "why": "Keeps the line useful without stacking style."
+        },
+        {
+          "principle": "Plain spoken English",
+          "why": "Easy to read aloud; no critic performance."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "Visual/technique lead that delays the mood",
+          "when_weak": "When the first words describe colors, lines, or animation before the emotional feel is clear.",
+          "when_ok": "Rarely; only if that visual cue is itself the fastest way to name the feel."
+        },
+        {
+          "pattern": "Film-criticism / poetic density",
+          "when_weak": "When the sentence sounds written to impress — stacked metaphors, elegant verbs, review-copy cadence.",
+          "when_ok": "Almost never as a goal."
+        },
+        {
+          "pattern": "Empty generic mood with no film cue",
+          "when_weak": "When the line could fit many unrelated films (quiet and emotional, tense atmosphere, etc.).",
+          "when_ok": "Never — always keep at least one useful film-specific cue when available."
+        },
+        {
+          "pattern": "Synopsis or theme paraphrase",
+          "when_weak": "When the line retells plot or explains what the film is saying.",
+          "when_ok": "Never for the_mood."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Default mood-first line",
+          "principle": "Start with the mood (often Adj+Adj or a short mood phrase), then with 1–2 specifics. Example shape: 'Quiet and heavy, with a slow pace and stark silence.' Repeated use of this shape across films is fine."
+        }
+      ],
+      "specificity_test": "Do the first few words name the mood? Is the rest easy on first read? Is there at least one concrete cue that belongs to this film?",
+      "relationship_with_synopsis": "Complement the synopsis. Describe watching-feel; do not retell plot.",
+      "relationship_with_moods_tags": "Do not list tags. Turn the main feelings into plain mood-first language.",
+      "good_examples": [
+        {
+          "title": "A Silent Voice",
+          "the_mood": "Quiet and heavy, with a slow pace that amplifies discomfort and isolation, contrasting moments of warmth with stark silence.",
+          "why": "Mood first; catalog house style; concrete pace/silence cues."
+        },
+        {
+          "title": "5 Centimeters per Second",
+          "the_mood": "Slow and melancholic, with a stark contrast between vibrant visuals and emotional distance.",
+          "why": "Immediate mood; one useful contrast."
+        },
+        {
+          "title": "Approved for Adoption",
+          "the_mood": "Warm and textured, with a mix of humor and melancholy, balancing light animation with moments of stark realism.",
+          "why": "Simple Adj opening; clear feel."
+        },
+        {
+          "title": "Another Day of Life",
+          "the_mood": "Urgent and chaotic, blending stark realism with stylized animation, punctuated by dark humor and tension.",
+          "why": "Mood first; specifics earn their place."
+        },
+        {
+          "title": "Seoul Station",
+          "the_mood": "Relentless and claustrophobic, with gritty 2D textures and urgent pacing that heighten urban dread.",
+          "why": "Glance-readable; discovery batch already worked this way."
+        },
+        {
+          "title": "Boys Go to Jupiter (mood-first model)",
+          "the_mood": "Dreamy and slow, with soft pastel Florida suburbia and sudden surreal daydream flashes.",
+          "why": "Default shape; film-owned cues without literary stacking."
+        },
+        {
+          "title": "Padak (mood-first model)",
+          "the_mood": "Claustrophobic and bleak, with cold blues and tight framing trapping a mackerel in slow dread.",
+          "why": "Mood first while keeping the film’s concrete image."
+        },
+        {
+          "title": "Fritz the Cat (mood-first model)",
+          "the_mood": "Restless and unhinged, with gritty 2D chaos and loud irreverent humor in late-60s New York nights.",
+          "why": "Mood first; keeps period/place."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "Visual-lead delay",
+          "the_mood": "Shadowy stop-motion puppets move with slow, deliberate rhythms, weaving eerie textures and a haunting, wordless tension in a dark forest.",
+          "why": "Technique/visuals first; literary density; mood arrives late."
+        },
+        {
+          "title": "Critic stacking",
+          "the_mood": "Rain-soaked Naples hums with muted colors and layered city sounds as quiet grief and fleeting connections unfold in slow, intimate rhythms.",
+          "why": "Sounds written to impress; hard to glance."
+        },
+        {
+          "title": "Empty generic",
+          "the_mood": "Quiet and emotional, with an intimate and reflective atmosphere.",
+          "why": "Mood-shaped but no film-owned cue."
+        },
+        {
+          "title": "Theme analysis",
+          "the_mood": "Gritty 2D animation pulses with chaotic energy, reflecting late-60s counterculture and social upheaval.",
+          "why": "Explains meaning instead of watching-feel."
+        }
+      ]
+    },
+    "analyst_notes": "Minimal reset guide. Built from the live catalog’s dominant mood-first / Adj+Adj house style and the product glance test. Deliberately omits v2 goals around syntax variety, anti-repetition, oscillation, and sensory cascade."
+  },
+  "size_vs_v2": {
+    "v2_chars": 10348,
+    "minimal_chars": 5549,
+    "reduction_ratio": 0.46,
+    "v2_core_principles": 8,
+    "minimal_core_principles": 9,
+    "v2_good_examples": 12,
+    "minimal_good_examples": 8,
+    "v2_weak_patterns": 6,
+    "minimal_weak_patterns": 4,
+    "v2_syntax_types": 5,
+    "minimal_syntax_types": 1
+  }
+}

@@ -42,9 +42,8 @@ function asUrlList(value: unknown): string[] {
 function contentStatusLabel(status: string | null | undefined): string {
   switch (status) {
     case "ready":
-      return "ready";
     case "ready_with_note":
-      return "ready with note";
+      return "ready";
     case "failed":
       return "failed";
     case "pending":
@@ -250,14 +249,6 @@ export function FilmDiscoveryReviewDashboard({
                             {film.technique ?? "—"}
                           </span>
                         </p>
-                        {film.content_note ? (
-                          <p
-                            className="text-sm text-amber-800"
-                            data-testid="discovery-content-note"
-                          >
-                            Note: {film.content_note}
-                          </p>
-                        ) : null}
                       </div>
 
                       <div className="mt-3">

@@ -1,9 +1,9 @@
 {
-  "version": "resonale-mood-writing-guide-v3",
-  "generated_at": "2026-08-08T10:16:31.938Z",
-  "parent": "resonale-mood-writing-guide-minimal-v1.2-candidate",
+  "version": "resonale-mood-writing-guide-minimal-v1.2-candidate",
+  "generated_at": "2026-08-08T10:12:38.525Z",
+  "parent": "resonale-mood-writing-guide-minimal-v1.1-candidate",
   "reset_from": "resonale-mood-writing-guide-v2",
-  "activation_status": "active",
+  "activation_status": "activated_as_v3",
   "corpus_evidence": {
     "catalog_films_sampled": 216,
     "opening_kinds": {
@@ -27,7 +27,7 @@
     "anti-example stack centered on Adj+Adj openings"
   ],
   "final_guide": {
-    "version": "resonale-mood-writing-guide-v3",
+    "version": "resonale-mood-writing-guide-minimal-v1.2-candidate",
     "sections": {
       "purpose": "Help a user understand the film’s emotional feel at a glance. Write like a thoughtful friend — clear and immediate — not like a film critic crafting a beautiful sentence.",
       "core_principles": [
@@ -110,117 +110,43 @@
       "good_examples": [
         {
           "title": "Boys Go to Jupiter",
-          "the_mood": "Dreamy and nostalgic, with pastel Florida suburbia and surreal teenage daydreams.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "dreamy",
-            "intimate",
-            "nostalgic",
-            "lighthearted"
-          ]
+          "the_mood": "Dreamy and nostalgic, with soft pastel Florida suburbia and sudden surreal daydreams.",
+          "why": "Mood first; place/image cues; no 2D/pacing filler."
         },
         {
           "title": "Padak",
-          "the_mood": "Tense and claustrophobic, with cold blues and tight aquarium close-ups trapping a struggling mackerel.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "tense",
-            "claustrophobic",
-            "melancholic",
-            "intense"
-          ]
+          "the_mood": "Tense and claustrophobic, with cold blues and tight framing around a mackerel trapped in an aquarium.",
+          "why": "Concrete film-owned image."
         },
         {
           "title": "The Art of Happiness",
           "the_mood": "Melancholic and intimate, with rainy Naples streets and quiet taxi conversations.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "melancholic",
-            "intimate",
-            "reflective",
-            "nostalgic"
-          ]
+          "why": "Place + behavior; no medium filler."
         },
         {
           "title": "Blood Tea and Red String",
-          "the_mood": "Haunting and mysterious, with shadowy forests and eerie stop-motion creatures vying over a cherished doll.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "dark",
-            "haunting",
-            "intense",
-            "mysterious",
-            "bittersweet"
-          ]
+          "the_mood": "Eerie and haunting, with strange stop-motion puppets moving slowly through a shadowy forest.",
+          "why": "Technique earned — distinctive puppets, not generic 2D."
         },
         {
           "title": "Revengeance",
-          "the_mood": "Energetic and gritty, with chaotic bounty hunter action and rough urban backdrops.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "energetic",
-            "gritty",
-            "chaotic",
-            "intense"
-          ]
-        },
-        {
-          "title": "Aya of Yop City",
-          "the_mood": "Energetic and lighthearted, with bustling 1970s Yopougon streets and lively youthful friendships.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "energetic",
-            "lighthearted",
-            "intimate",
-            "nostalgic"
-          ]
-        },
-        {
-          "title": "Fire and Ice",
-          "the_mood": "Intense and harsh, with icy landscapes and fierce battles between warriors and dark sorcery.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "intense",
-            "bleak",
-            "energetic",
-            "harsh",
-            "adventurous"
-          ]
+          "the_mood": "Loud and gritty, with cheap bounty-hunter pulp and rough, barely-held-together action.",
+          "why": "Pulp character over \"2D animation\"."
         },
         {
           "title": "Tehran Taboo",
-          "the_mood": "Tense and intimate, with shadowed Tehran streets and whispered secrets beneath strict social rules.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "tense",
-            "intimate",
-            "melancholic",
-            "hopeful",
-            "anxious"
-          ]
-        },
-        {
-          "title": "Fritz the Cat",
-          "the_mood": "Energetic and chaotic, with gritty late-60s New York scenes and irreverent rebellious behavior.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "energetic",
-            "chaotic",
-            "irreverent",
-            "gritty",
-            "rebellious"
-          ]
+          "the_mood": "Anxious and intimate, with Tehran’s secretive streets and brief fragile moments of hope.",
+          "why": "Place/social pressure; rotoscope only if it truly helps."
         },
         {
           "title": "Tux and Fanny",
-          "the_mood": "Gentle and lighthearted, with quiet forest life and simple shared moments between two friends.",
-          "why": "Approved hosted batch (minimal v1.2 generation style).",
-          "moods": [
-            "gentle",
-            "lighthearted",
-            "intimate",
-            "hopeful"
-          ]
+          "the_mood": "Gentle and unhurried, with soft forest light and the calm of everyday friendship.",
+          "why": "Simple recognizable cues."
+        },
+        {
+          "title": "Fire and Ice",
+          "the_mood": "Cold and urgent, with hard battles cutting across an icy wilderness.",
+          "why": "Landscape/action; no harsh pacing / 2D filler."
         }
       ],
       "anti_examples": [
@@ -246,7 +172,7 @@
         }
       ]
     },
-    "analyst_notes": "Active v3 = product-approved minimal mood-first guide (from v1.2 experiment). Mood named first; concrete film-owned after-clause; no pacing filler; no shared-medium 2D animation filler; Adj openings and repeated shapes OK."
+    "analyst_notes": "v1.2: keep mood-first + concrete after-clause; treat shared-medium labels (esp. plain 2D animation) as filler unless technique is distinctive."
   },
   "size_vs_v2": {
     "v2_chars": 10348,
@@ -307,22 +233,5 @@
     "Updated examples/anti-examples for 2D filler",
     "Specificity test includes swap-across-batch check for medium labels"
   ],
-  "activated_at": "2026-08-08T10:16:31.940Z",
-  "supersedes": "resonale-mood-writing-guide-v2",
-  "source_of_truth_batch": {
-    "artifact": "tmp/mood-minimal-v1.2-hosted-write-50.json",
-    "note": "Product-approved mood style from manual_seed hosted batch after v1.2 generation.",
-    "approved_example_titles": [
-      "Boys Go to Jupiter",
-      "Padak",
-      "The Art of Happiness",
-      "Blood Tea and Red String",
-      "Revengeance",
-      "Aya of Yop City",
-      "Fire and Ice",
-      "Tehran Taboo",
-      "Fritz the Cat",
-      "Tux and Fanny"
-    ]
-  }
+  "activated_at": "2026-08-08T10:16:31.940Z"
 }
