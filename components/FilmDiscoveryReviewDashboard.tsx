@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { buildDiscoveryCatalogFilterPills } from "@/lib/film-discovery-quick-filters.mjs";
+import { formatDiscoveryFestivalLabels } from "@/lib/film-discovery-festivals.mjs";
 
 export type DiscoveryCandidateRow = {
   id: string;
@@ -32,6 +33,13 @@ export type DiscoveryCandidateRow = {
   moods?: string[] | null;
   aesthetic_tags?: string[] | null;
   quick_filters?: string[] | null;
+  festival_recognitions?: Array<{
+    festival_name?: string | null;
+    festival_year?: number | null;
+    award_name?: string | null;
+    award_result?: string | null;
+    recognition_type?: string | null;
+  }> | null;
   content_status?: string | null;
   content_note?: string | null;
   content_revision_count?: number | null;
@@ -255,6 +263,18 @@ export function FilmDiscoveryReviewDashboard({
                             ? (film.aesthetic_tags ?? []).join(", ")
                             : "—"}
                         </p>
+                        <p
+                          className="text-sm text-gray-700"
+                          data-testid="discovery-festivals"
+                        >
+                          <span className="font-medium">Festivals / awards:</span>{" "}
+                          {(() => {
+                            const labels = formatDiscoveryFestivalLabels(
+                              film.festival_recognitions
+                            );
+                            return labels.length ? labels.join("; ") : "—";
+                          })()}
+                        </p>
                         <div
                           className="text-sm text-gray-700"
                           data-testid="discovery-catalog-filters"
@@ -265,6 +285,7 @@ export function FilmDiscoveryReviewDashboard({
                               year: film.year,
                               technique: film.technique,
                               quick_filters: film.quick_filters,
+                              festival_recognitions: film.festival_recognitions,
                             });
                             if (!pills.length) {
                               return <span className="text-gray-500">—</span>;
@@ -277,7 +298,7 @@ export function FilmDiscoveryReviewDashboard({
                                     className="inline-flex items-center border border-gray-300 bg-gray-50 px-2 py-0.5 text-xs text-gray-800"
                                     title={
                                       pill.source === "derived"
-                                        ? "Derived from year/technique"
+                                        ? "Derived from year/technique/festivals"
                                         : "Proposed quick_filters token"
                                     }
                                     data-testid={`discovery-catalog-filter-${pill.id}`}
