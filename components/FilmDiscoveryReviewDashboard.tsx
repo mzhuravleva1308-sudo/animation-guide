@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { buildDiscoveryCatalogFilterPills } from "@/lib/film-discovery-quick-filters.mjs";
+import { formatDiscoveryFestivalClaimLabels } from "@/lib/film-discovery-festival-participation.mjs";
 import { formatDiscoveryFestivalLabels } from "@/lib/film-discovery-festivals.mjs";
 
 export type DiscoveryCandidateRow = {
@@ -33,6 +34,11 @@ export type DiscoveryCandidateRow = {
   moods?: string[] | null;
   aesthetic_tags?: string[] | null;
   quick_filters?: string[] | null;
+  has_festival?: boolean | null;
+  festival_claims?: Array<{
+    festival_name?: string | null;
+    festival_year?: number | null;
+  }> | null;
   festival_recognitions?: Array<{
     festival_name?: string | null;
     festival_year?: number | null;
@@ -265,6 +271,25 @@ export function FilmDiscoveryReviewDashboard({
                         </p>
                         <p
                           className="text-sm text-gray-700"
+                          data-testid="discovery-has-festival"
+                        >
+                          <span className="font-medium">Festival filter:</span>{" "}
+                          {film.has_festival === true
+                            ? "yes"
+                            : film.has_festival === false
+                              ? "no"
+                              : "—"}
+                          {(() => {
+                            const labels = formatDiscoveryFestivalClaimLabels(
+                              film.festival_claims
+                            );
+                            return labels.length
+                              ? ` (${labels.join("; ")})`
+                              : "";
+                          })()}
+                        </p>
+                        <p
+                          className="text-sm text-gray-700"
                           data-testid="discovery-festivals"
                         >
                           <span className="font-medium">Festivals / awards:</span>{" "}
@@ -285,6 +310,8 @@ export function FilmDiscoveryReviewDashboard({
                               year: film.year,
                               technique: film.technique,
                               quick_filters: film.quick_filters,
+                              has_festival: film.has_festival,
+                              festival_claims: film.festival_claims,
                               festival_recognitions: film.festival_recognitions,
                             });
                             if (!pills.length) {
