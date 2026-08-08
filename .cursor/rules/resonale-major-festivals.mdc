@@ -1,0 +1,17 @@
+---
+description: Resonale major festivals canon for Festival participation filter
+globs: "**/film-discovery-festival*.mjs,**/ai-festival-discovery.mjs,**/resonale-major-festivals.mjs,**/fill-discovery-festival*.mjs"
+alwaysApply: false
+---
+
+# Resonale major festivals
+
+Festival **participation** (`has_festival` / Festival filter) counts **only** festivals in `lib/resonale-major-festivals.mjs` (35 entries).
+
+- Do not invent additional “major” festivals.
+- Oscar-qualifying alone ≠ major.
+- Cannes: Official Selection / Un Certain Regard / Première / Special Screenings / Critics’ Week / Directors’ Fortnight — **not** Marché du Film, Shorts Corner, pitch, WIP.
+- Hiroshima: include historical *Hiroshima International Animation Festival* for older films.
+- Award wins at non-major events (e.g. César, Golden Horse, Tokyo Anime Award) may still feed **Award winners**, but do **not** alone set Festival participation unless the festival is on the major list.
+
+When loading or correcting festival participation, filter through `filterClaimsToResonaleMajorFestivals` / `isResonaleMajorFestival`.
