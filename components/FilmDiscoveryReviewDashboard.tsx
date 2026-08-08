@@ -29,6 +29,7 @@ export type DiscoveryCandidateRow = {
   the_mood?: string | null;
   technique?: string | null;
   moods?: string[] | null;
+  aesthetic_tags?: string[] | null;
   content_status?: string | null;
   content_note?: string | null;
   content_revision_count?: number | null;
@@ -241,6 +242,15 @@ export function FilmDiscoveryReviewDashboard({
                           <span className="font-medium">Moods:</span>{" "}
                           {(film.moods ?? []).length
                             ? (film.moods ?? []).join(", ")
+                            : "—"}
+                        </p>
+                        <p
+                          className="text-sm text-gray-700"
+                          data-testid="discovery-aesthetic-tags"
+                        >
+                          <span className="font-medium">Material / aesthetic:</span>{" "}
+                          {(film.aesthetic_tags ?? []).length
+                            ? (film.aesthetic_tags ?? []).join(", ")
                             : "—"}
                         </p>
                         <p className="text-xs uppercase tracking-wide text-gray-500">

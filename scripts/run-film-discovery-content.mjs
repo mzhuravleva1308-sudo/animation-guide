@@ -3,6 +3,10 @@
  * Content curator + reviewer for film_discovery_candidates.
  * Does not write films, publish, change review_status/media_status, or send email.
  *
+ * Technique: Wikipedia/source research first; AI last-resort inference is ON by
+ * default when OpenAI is available (--skip-ai-technique to disable).
+ * Optional --with-web-search for Cartoon Brew / Animation Magazine site search.
+ *
  * Usage:
  *   APP_ENV=hosted node scripts/run-film-discovery-content.mjs --dry-run --source manual_seed
  *   WEEKLY_FILM_DISCOVERY_CONTENT_CONFIRM=1 APP_ENV=hosted node scripts/run-film-discovery-content.mjs --source manual_seed
@@ -16,6 +20,7 @@ import {
   runDiscoveryContentBatch,
 } from "../lib/film-discovery-content.mjs";
 import { DISCOVERY_CONTENT_STATUS } from "../lib/film-discovery.mjs";
+import { createTechniqueWebSearchState } from "../lib/film-discovery-technique-web-search.mjs";
 
 function parseArgs(argv) {
   const options = {
@@ -24,6 +29,8 @@ function parseArgs(argv) {
     source: null,
     limit: null,
     candidateId: null,
+    enableAiTechnique: true,
+    enableWebSearch: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -39,6 +46,10 @@ function parseArgs(argv) {
     } else if (arg === "--candidate-id") options.candidateId = argv[++index];
     else if (arg.startsWith("--candidate-id=")) {
       options.candidateId = arg.slice("--candidate-id=".length);
+    } else if (arg === "--skip-ai-technique") {
+      options.enableAiTechnique = false;
+    } else if (arg === "--with-web-search") {
+      options.enableWebSearch = true;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
@@ -52,7 +63,7 @@ function parseArgs(argv) {
 }
 
 const CONTENT_SELECT =
-  "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, source, review_status, eligibility_result, media_status, content_status, synopsis, the_mood, technique, moods, content_note, content_revision_count";
+  "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, source, review_status, eligibility_result, media_status, content_status, synopsis, the_mood, technique, moods, aesthetic_tags, content_note, content_revision_count";
 
 async function main() {
   applyAppEnv();
@@ -143,6 +154,11 @@ async function main() {
     skipEmail: true,
     openai,
     tmdbApiKey,
+    enableAiTechnique: options.enableAiTechnique,
+    enableWebSearch: options.enableWebSearch,
+    webSearchState: options.enableWebSearch
+      ? createTechniqueWebSearchState()
+      : undefined,
     // Use batch default curateFn so Wikipedia run-cache/budget is shared.
     updateFn: async (id, patch) => {
       const { error: updateError } = await supabase

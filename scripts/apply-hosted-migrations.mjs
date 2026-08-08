@@ -13,6 +13,8 @@ const DEFAULT_MIGRATION_FILES = [
   "supabase/migrations/20260630_add_film_editorial_copy.sql",
   "supabase/migrations/20260719_add_film_catalog_visible.sql",
   "supabase/migrations/20260807_film_discovery_candidates_media.sql",
+  "supabase/migrations/20260808_film_discovery_candidates_content.sql",
+  "supabase/migrations/20260808_film_discovery_candidates_aesthetic_tags.sql",
 ];
 
 function parseArgs(argv) {
