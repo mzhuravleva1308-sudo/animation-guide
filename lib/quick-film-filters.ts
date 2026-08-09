@@ -6,6 +6,7 @@ export const QUICK_FILTERS: QuickFilterOption[] = [
   "award-winners",
   "stop-motion",
   "sci-fi",
+  "sarcasm",
   "connection",
   "distance",
 ];
@@ -17,6 +18,8 @@ export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
   "stop-motion":
     "Animation made with puppets, models and other physical materials.",
   "sci-fi": "Stories shaped by technology, space and imagined futures.",
+  sarcasm:
+    "Darkly funny films with dry irony, cynicism and bite.",
   connection:
     "Films with more warmth, connection and emotional closeness.",
   distance:
@@ -69,6 +72,10 @@ export function filterFilmsByQuickFilter(
 
   if (activeQuickFilter === "sci-fi") {
     return films.filter((film) => film.quick_filters?.includes("sci-fi"));
+  }
+
+  if (activeQuickFilter === "sarcasm") {
+    return films.filter((film) => film.quick_filters?.includes("sarcasm"));
   }
 
   if (activeQuickFilter === "connection") {

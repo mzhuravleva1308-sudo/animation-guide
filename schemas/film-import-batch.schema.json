@@ -125,7 +125,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": ["sci-fi", "connection", "distance"]
+            "enum": ["sci-fi", "sarcasm", "connection", "distance"]
           },
           "not": {
             "allOf": [
@@ -141,7 +141,7 @@
               }
             ]
           },
-          "description": "Manual quick filters written to films.quick_filters. connection = Light (emotional closeness); distance = Shadow (detachment). Omit both tonal tokens when the film is in the middle. connection and distance are mutually exclusive; sci-fi may combine with either tonal token or stand alone."
+          "description": "Manual quick filters written to films.quick_filters. sarcasm = dry irony / cynicism / caustic black humor (not mere absurd or quirky comedy). connection = Light (emotional closeness); distance = Shadow (detachment). Omit both tonal tokens when the film is in the middle. connection and distance are mutually exclusive; sci-fi and sarcasm may combine with either tonal token or stand alone."
         },
         "catalog_visible": {
           "type": "boolean",

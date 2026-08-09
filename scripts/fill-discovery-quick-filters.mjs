@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Fill quick_filters (Sci-Fi / Light / Shadow tokens) on film_discovery_candidates.
- * Uses the same closed vocabulary as films.quick_filters.
+ * Fill quick_filters (Sci-Fi / Sarcasm / Light / Shadow tokens) on
+ * film_discovery_candidates. Uses the same closed vocabulary as films.quick_filters.
  * Does not touch films, synopsis, moods, aesthetic_tags, or technique.
  *
  * Usage:
@@ -134,7 +134,7 @@ async function main() {
           {
             role: "system",
             content:
-              "You assign only sci-fi / connection / distance quick_filters using the existing Resonale catalog contract. Return JSON only.",
+              "You assign only sci-fi / sarcasm / connection / distance quick_filters using the existing Resonale catalog contract. Return JSON only.",
           },
           { role: "user", content: buildPrompt(row) },
         ],

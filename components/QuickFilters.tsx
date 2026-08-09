@@ -8,6 +8,7 @@ export type QuickFilter =
   | "stop-motion"
   | "award-winners"
   | "sci-fi"
+  | "sarcasm"
   | "connection"
   | "distance"
   | null;
@@ -25,6 +26,7 @@ const FILTER_LABELS: Record<QuickFilterOption, string> = {
   "award-winners": "Award winners",
   "stop-motion": "Stop motion",
   "sci-fi": "Sci-Fi",
+  sarcasm: "Sarcasm",
   connection: "Light",
   distance: "Shadow",
 };
@@ -34,6 +36,7 @@ const DEFAULT_FILTERS: QuickFilterOption[] = [
   "award-winners",
   "stop-motion",
   "sci-fi",
+  "sarcasm",
   "connection",
   "distance",
 ];

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { buildDiscoveryCatalogFilterPills } from "@/lib/film-discovery-quick-filters.mjs";
+import { buildDiscoveryCatalogFilterPills, formatDiscoveryQuickFilterLabels } from "@/lib/film-discovery-quick-filters.mjs";
 import { formatDiscoveryFestivalClaimLabels } from "@/lib/film-discovery-festival-participation.mjs";
 import { formatDiscoveryFestivalLabels } from "@/lib/film-discovery-festivals.mjs";
 
@@ -298,6 +298,18 @@ export function FilmDiscoveryReviewDashboard({
                               film.festival_recognitions
                             );
                             return labels.length ? labels.join("; ") : "—";
+                          })()}
+                        </p>
+                        <p
+                          className="text-sm text-gray-700"
+                          data-testid="discovery-quick-filters"
+                        >
+                          <span className="font-medium">Quick filters:</span>{" "}
+                          {(() => {
+                            const labels = formatDiscoveryQuickFilterLabels(
+                              film.quick_filters
+                            );
+                            return labels.length ? labels.join(", ") : "—";
                           })()}
                         </p>
                         <div
