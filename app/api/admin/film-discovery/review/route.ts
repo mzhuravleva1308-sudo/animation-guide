@@ -6,6 +6,7 @@ import {
   buildRejectCandidatePatch,
 } from "@/lib/film-discovery-workflow.mjs";
 import { DISCOVERY_REVIEW_STATUS } from "@/lib/film-discovery.mjs";
+import { enqueueDiscoveryCandidateForRelease } from "@/lib/discovery-release-enqueue.mjs";
 
 function getAdminSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -25,9 +26,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const id = typeof body.id === "string" ? body.id : "";
-    const action = body.action === "approve" || body.action === "reject"
-      ? body.action
-      : null;
+    const action =
+      body.action === "approve" || body.action === "reject" ? body.action : null;
     const rejectReason =
       typeof body.reject_reason === "string" ? body.reject_reason : null;
 
@@ -84,6 +84,49 @@ export async function POST(request: Request) {
         { error: "Candidate was already reviewed" },
         { status: 409 }
       );
+    }
+
+    /** @type {Record<string, unknown> | null} */
+    let release = null;
+    if (action === "approve") {
+      const { data: fullCandidate, error: fullError } = await supabase
+        .from("film_discovery_candidates")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (fullError) throw fullError;
+
+      release = await enqueueDiscoveryCandidateForRelease(
+        supabase,
+        fullCandidate
+      );
+
+      const { data: afterRelease } = await supabase
+        .from("film_discovery_candidates")
+        .select(
+          "id, review_status, reject_reason, reviewed_at, release_status, release_queue_id, release_blockers"
+        )
+        .eq("id", id)
+        .maybeSingle();
+
+      return NextResponse.json({
+        ok: true,
+        candidate: afterRelease ?? updated,
+        release: {
+          status: release.status,
+          queueId: release.queueId,
+          blockers: release.blockers,
+          warnings: release.warnings,
+          catalogNote: release.catalogNote,
+        },
+        effects: {
+          published: false,
+          enriched: false,
+          inserted_into_films: false,
+          catalog_visible: false,
+          queued_for_release: release.status !== "blocked",
+        },
+      });
     }
 
     return NextResponse.json({

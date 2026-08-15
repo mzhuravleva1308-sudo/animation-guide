@@ -120,7 +120,9 @@ API: `POST /api/admin/film-discovery/review` with `{ id, action, reject_reason? 
 | Schedule | Thu 22:00 UTC (gated) | Fri 18:00 UTC |
 | Email | discovery report | import run report |
 
-Approved discovery candidates are **not** auto-enqueued into `film_import_queue` in v1.
+Approved discovery candidates are **auto-enqueued** into `film_import_queue` with `origin=discovery_release` and `catalog_visible=false`. Prep reuses the weekly import orchestrator (`process-film-batch`); public visibility is a separate **batch Go Live** on `/admin/film-releases` (one profile-score rebuild for the batch). Already-filled staging fields are preserved and never overwritten.
+
+See migration `20260815_discovery_release_queue.sql` for `release_status` / checklist columns.
 
 ## Media curator
 

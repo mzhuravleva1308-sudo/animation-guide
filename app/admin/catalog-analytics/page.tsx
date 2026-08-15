@@ -51,6 +51,9 @@ export default async function CatalogAnalyticsPage() {
           <Link href="/admin/film-discovery" className="hover:text-black">
             Film discovery review →
           </Link>
+          <Link href="/admin/film-releases" className="hover:text-black">
+            Film releases →
+          </Link>
           <Link href="/admin/festival-recognitions" className="hover:text-black">
             Festival recognitions →
           </Link>

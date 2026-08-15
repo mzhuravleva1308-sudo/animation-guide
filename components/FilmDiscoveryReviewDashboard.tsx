@@ -49,6 +49,10 @@ export type DiscoveryCandidateRow = {
   content_status?: string | null;
   content_note?: string | null;
   content_revision_count?: number | null;
+  release_status?: string | null;
+  release_queue_id?: string | null;
+  release_blockers?: string[] | null;
+  film_id?: string | null;
 };
 
 function asUrlList(value: unknown): string[] {
@@ -470,7 +474,24 @@ export function FilmDiscoveryReviewDashboard({
                 <span className="font-medium">{film.review_status}</span> —{" "}
                 {film.title} ({film.year})
                 {film.media_status ? ` · ${film.media_status}` : ""}
+                {film.release_status
+                  ? ` · release=${film.release_status}`
+                  : ""}
                 {film.reject_reason ? ` · ${film.reject_reason}` : ""}
+                {film.release_status &&
+                film.release_status !== "not_queued" &&
+                film.review_status === "approved" ? (
+                  <>
+                    {" "}
+                    ·{" "}
+                    <a
+                      href="/admin/film-releases"
+                      className="text-gray-600 underline hover:text-black"
+                    >
+                      In release queue
+                    </a>
+                  </>
+                ) : null}
               </li>
             ))}
           </ul>

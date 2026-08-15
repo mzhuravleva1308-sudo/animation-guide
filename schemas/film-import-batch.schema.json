@@ -146,6 +146,72 @@
         "catalog_visible": {
           "type": "boolean",
           "description": "When false, the film is soft-hidden from the public catalog. Defaults to true when omitted."
+        },
+        "origin": {
+          "type": "string",
+          "enum": ["discovery_release", "manual"],
+          "description": "Import origin. discovery_release defers profile score rebuild until batch Go Live."
+        },
+        "discovery_candidate_id": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+          "description": "Staging film_discovery_candidates.id when origin is discovery_release."
+        },
+        "moods": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "description": "Pre-filled emotional tags. When present, fill-emotional-tags is skipped."
+        },
+        "aesthetic_tags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "description": "Pre-filled material/aesthetic tags. When present, fill-aesthetic-tags is skipped."
+        },
+        "image_url": {
+          "$ref": "#/$defs/urlOrNull",
+          "description": "External poster URL to seed films.image_url. Leave films.poster_url empty so cache-posters writes Storage."
+        },
+        "external_image_url": {
+          "$ref": "#/$defs/urlOrNull"
+        },
+        "trailer_url": {
+          "$ref": "#/$defs/urlOrNull"
+        },
+        "trailer_provider": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trailer_video_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trailer_source": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },

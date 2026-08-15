@@ -12,6 +12,10 @@ import {
   describeMissingStoragePoster,
   isCachedPosterUrl,
 } from "../lib/film-poster.mjs";
+import { isNonEmptyFilmField } from "../lib/film-field-merge.mjs";
+import {
+  shouldDeferProfileEnqueueForFilm,
+} from "../lib/discovery-to-import-payload.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
 applyAppEnv();
@@ -31,15 +35,21 @@ const EMBEDDING_DIMENSIONS =
     ? configuredEmbeddingDimensions
     : null;
 const FILM_SELECT =
-  "id,title,year,synopsis,the_mood,technique,moods,aesthetic_tags,image_url,poster_url,external_image_url,trailer_url";
+  "id,title,year,synopsis,the_mood,technique,moods,aesthetic_tags,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
 const IMMUTABLE_FIELDS = [
   "synopsis",
   "the_mood",
   "technique",
+  "moods",
+  "aesthetic_tags",
   "image_url",
   "external_image_url",
   "poster_url",
   "trailer_url",
+  "trailer_provider",
+  "trailer_video_id",
+  "trailer_source",
+  "quick_filters",
 ];
 
 function parseArgs(argv) {
@@ -101,11 +111,11 @@ function parseArgs(argv) {
 }
 
 function nonEmpty(value) {
-  return typeof value === "string" ? Boolean(value.trim()) : value != null;
+  return isNonEmptyFilmField(value);
 }
 
 function hasTags(value) {
-  return Array.isArray(value) && value.some((tag) => String(tag).trim());
+  return Array.isArray(value) && value.some((tag) => nonEmpty(tag));
 }
 
 function parseEmbedding(value) {
@@ -404,7 +414,7 @@ function buildFilmIdentity(film) {
 
 function buildFilmInsertPayload(film) {
   const identity = buildFilmIdentity(film);
-  return {
+  const payload = {
     title: identity.title,
     original_title: identity.original_title,
     director: identity.director,
@@ -418,6 +428,62 @@ function buildFilmInsertPayload(film) {
     tmdb_id: identity.tmdb_id,
     quick_filters: film.quick_filters ?? [],
     catalog_visible: resolveCatalogVisibleForImport(film),
+  };
+
+  // Preserve-first optional fields from discovery (or manual) import payload.
+  // Never set poster_url here — cache-posters must write the Storage URL.
+  if (hasTags(film.moods)) payload.moods = film.moods;
+  if (hasTags(film.aesthetic_tags)) payload.aesthetic_tags = film.aesthetic_tags;
+  if (nonEmpty(film.image_url)) payload.image_url = film.image_url;
+  if (nonEmpty(film.external_image_url)) {
+    payload.external_image_url = film.external_image_url;
+  } else if (nonEmpty(film.image_url)) {
+    payload.external_image_url = film.image_url;
+  }
+  if (nonEmpty(film.trailer_url)) payload.trailer_url = film.trailer_url;
+  if (nonEmpty(film.trailer_provider)) {
+    payload.trailer_provider = film.trailer_provider;
+  }
+  if (nonEmpty(film.trailer_video_id)) {
+    payload.trailer_video_id = film.trailer_video_id;
+  }
+  if (nonEmpty(film.trailer_source)) {
+    payload.trailer_source = film.trailer_source;
+  }
+
+  return payload;
+}
+
+/**
+ * Build post-pipeline checklist patch for one imported film.
+ */
+function buildPipelineChecklistPatch(film, state, input) {
+  const moodsPreserved = hasTags(input?.moods);
+  const aestheticPreserved = hasTags(input?.aesthetic_tags);
+  const trailerPreserved = nonEmpty(input?.trailer_url);
+  return {
+    inserted: true,
+    moods: moodsPreserved ? "preserved" : state?.moods ? "filled" : "pending",
+    aesthetic_tags: aestheticPreserved
+      ? "preserved"
+      : state?.aestheticTags
+        ? "filled"
+        : "pending",
+    mood_embedding: state?.moodEmbedding ? "done" : "pending",
+    aesthetic_embedding: state?.aestheticEmbedding ? "done" : "pending",
+    image_sourced: Boolean(
+      nonEmpty(film?.image_url) || nonEmpty(film?.external_image_url)
+    ),
+    poster_cached_storage: Boolean(state?.image),
+    trailer: trailerPreserved
+      ? "preserved"
+      : state?.video
+        ? "filled"
+        : "pending",
+    profile_scores: shouldDeferProfileEnqueueForFilm(input)
+      ? "deferred"
+      : "pending",
+    catalog_visible: film?.catalog_visible === true,
   };
 }
 
@@ -697,6 +763,14 @@ export async function processFilmImportBatch({
         existingFilmId: entry.duplicate.existingFilmId,
         filmId: null,
         error: null,
+        deferProfileEnqueue: shouldDeferProfileEnqueueForFilm(entry.item.input),
+        checklist: {
+          inserted: false,
+          duplicate_skipped: true,
+          profile_scores: "deferred",
+          catalog_visible: false,
+        },
+        discoveryCandidateId: entry.item.input.discovery_candidate_id ?? null,
       });
       console.log(
         `[duplicate_skipped] ${title} — existing UUID ${entry.duplicate.existingFilmId}`
@@ -732,9 +806,14 @@ export async function processFilmImportBatch({
         throw new Error(describeMissingStoragePoster(film));
       }
 
+      const filmRow =
+        pipelineResult?.films?.find((row) => row.id === createdFilmId) ?? null;
       const status = state.catalogReady
         ? FILM_STATUS.CATALOG_READY
         : FILM_STATUS.RANKING_READY;
+      const deferProfileEnqueue = shouldDeferProfileEnqueueForFilm(
+        entry.item.input
+      );
       results.push({
         title,
         status,
@@ -742,6 +821,13 @@ export async function processFilmImportBatch({
         rankingReady: true,
         catalogReady: Boolean(state.catalogReady),
         error: null,
+        deferProfileEnqueue,
+        checklist: buildPipelineChecklistPatch(
+          filmRow,
+          state,
+          entry.item.input
+        ),
+        discoveryCandidateId: entry.item.input.discovery_candidate_id ?? null,
       });
       successfulFilmIds.push(createdFilmId);
       console.log(`[${status}] ${title} — ${createdFilmId}`);
@@ -755,6 +841,9 @@ export async function processFilmImportBatch({
         status: FILM_STATUS.FAILED_ROLLED_BACK,
         filmId: createdFilmId,
         error: message,
+        deferProfileEnqueue: shouldDeferProfileEnqueueForFilm(entry.item.input),
+        checklist: { inserted: false, failed: true },
+        discoveryCandidateId: entry.item.input.discovery_candidate_id ?? null,
       });
       console.error(`[failed_rolled_back] ${title} — ${message}`);
     }
@@ -762,20 +851,36 @@ export async function processFilmImportBatch({
 
   /** @type {unknown[]} */
   let jobs = [];
-  if (successfulFilmIds.length > 0) {
+  const filmsNeedingScores = results.filter(
+    (row) =>
+      (row.status === FILM_STATUS.RANKING_READY ||
+        row.status === FILM_STATUS.CATALOG_READY) &&
+      !row.deferProfileEnqueue
+  );
+  if (filmsNeedingScores.length > 0) {
     enqueueCallCount += 1;
     jobs = await enqueue(supabase, profiles);
-    console.log(`Enqueued profiles: ${jobs.length} (once for ${successfulFilmIds.length} successful film(s))`);
+    console.log(
+      `Enqueued profiles: ${jobs.length} (once for ${filmsNeedingScores.length} film(s); discovery-release deferred)`
+    );
     if (options.waitForJobs) {
       await waitForJobs(supabase, jobs, {
         ...options,
         sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
       });
-      await verifyCoverage(supabase, profiles, successfulFilmIds);
+      await verifyCoverage(
+        supabase,
+        profiles,
+        filmsNeedingScores.map((row) => row.filmId).filter(Boolean)
+      );
       console.log("Worker completion and successful-film coverage verified.");
     } else {
       console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
     }
+  } else if (successfulFilmIds.length > 0) {
+    console.log(
+      "Profile score rebuild deferred (discovery release / catalog_visible=false)."
+    );
   } else {
     console.log("No ranking-ready films — enqueue skipped.");
   }
@@ -1072,4 +1177,6 @@ export {
   readiness,
   validEmbedding,
   buildVideoLanguageList,
+  enqueueProfiles,
+  buildPipelineChecklistPatch,
 };

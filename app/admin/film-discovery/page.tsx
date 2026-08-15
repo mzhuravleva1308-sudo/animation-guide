@@ -25,11 +25,11 @@ export default async function FilmDiscoveryAdminPage() {
   let { data, error } = await supabase
     .from("film_discovery_candidates")
     .select(
-      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes, synopsis, the_mood, technique, moods, aesthetic_tags, quick_filters, has_festival, festival_claims, festival_recognitions, content_status, content_note, content_revision_count"
+      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes, synopsis, the_mood, technique, moods, aesthetic_tags, quick_filters, has_festival, festival_claims, festival_recognitions, content_status, content_note, content_revision_count, release_status, release_queue_id, release_blockers, film_id"
     )
     .order("created_at", { ascending: false });
 
-  if (error && /synopsis|the_mood|content_status|technique|content_note|aesthetic_tags|quick_filters|has_festival|festival_claims|festival_recognitions/i.test(error.message)) {
+  if (error && /synopsis|the_mood|content_status|technique|content_note|aesthetic_tags|quick_filters|has_festival|festival_claims|festival_recognitions|release_status/i.test(error.message)) {
     const fallback = await supabase
       .from("film_discovery_candidates")
       .select(
@@ -50,6 +50,10 @@ export default async function FilmDiscoveryAdminPage() {
       content_status: null,
       content_note: null,
       content_revision_count: null,
+      release_status: null,
+      release_queue_id: null,
+      release_blockers: null,
+      film_id: null,
     }));
     error = fallback.error;
   }
@@ -71,16 +75,24 @@ export default async function FilmDiscoveryAdminPage() {
           <h1 className="text-3xl font-semibold">Film discovery review</h1>
           <p className="mt-2 text-gray-600">
             Manual approve/reject for weekly discovery and seeded candidates.
-            Approved candidates stay out of the public catalog until a later
-            enrichment stage.
+            Approve enqueues a hidden prep card; public go-live is batched on
+            Film releases.
           </p>
         </div>
-        <Link
-          href="/admin/catalog-analytics"
-          className="text-sm text-gray-500 hover:text-black"
-        >
-          Catalog analytics →
-        </Link>
+        <div className="flex flex-col items-end gap-2 text-sm">
+          <Link
+            href="/admin/film-releases"
+            className="text-gray-500 hover:text-black"
+          >
+            Film releases →
+          </Link>
+          <Link
+            href="/admin/catalog-analytics"
+            className="text-gray-500 hover:text-black"
+          >
+            Catalog analytics →
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8">
