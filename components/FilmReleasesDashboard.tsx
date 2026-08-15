@@ -125,7 +125,7 @@ export function FilmReleasesDashboard({ rows }: { rows: ReleaseQueueRow[] }) {
       return;
     }
     setMessage(
-      `Released ${data.revealedCount ?? selectedIds.length} film(s); profile jobs=${data.profileJobs ?? "?"}`
+      `Released ${data.revealedCount ?? selectedIds.length} film(s); scored ${data.incrementalScores?.rowCount ?? 0} profile×film row(s)`
     );
     setSelected({});
     startTransition(() => router.refresh());

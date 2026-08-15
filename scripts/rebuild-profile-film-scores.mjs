@@ -4,6 +4,7 @@ import {
   buildBalancedScores,
   sortFilmsByScore,
 } from "../lib/profile-film-scoring.mjs";
+import { selectCandidateFilmsForScoring } from "../lib/profile-film-score-candidates.mjs";
 
 applyAppEnv();
 
@@ -525,8 +526,48 @@ async function upsertScores(profileId, scoreRows) {
   }
 }
 
-export async function calculateProfileScores(profile, allFilms) {
-  console.log(`\nRebuilding scores for ${profile.slug} (${profile.name})`);
+/**
+ * Upsert score rows without deleting other films for the profile.
+ * Used when scoring newly added films only.
+ */
+export async function upsertScoreRows(profileId, scoreRows) {
+  if (!scoreRows?.length) return;
+
+  for (let index = 0; index < scoreRows.length; index += UPSERT_BATCH_SIZE) {
+    const batch = scoreRows.slice(index, index + UPSERT_BATCH_SIZE).map((row) => ({
+      profile_id: profileId,
+      film_id: row.film_id,
+      emotional_score: row.emotional_score,
+      material_score: row.material_score,
+      computed_at: row.computed_at,
+    }));
+
+    const { error } = await supabase.from("profile_film_scores").upsert(batch, {
+      onConflict: "profile_id,film_id",
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+}
+
+export { selectCandidateFilmsForScoring } from "../lib/profile-film-score-candidates.mjs";
+
+export async function calculateProfileScores(profile, allFilms, options = {}) {
+  const filmIdsRestrict = Array.isArray(options.filmIds)
+    ? options.filmIds.filter(Boolean)
+    : null;
+  const quiet = Boolean(options.quiet);
+  const incremental = Boolean(filmIdsRestrict?.length);
+
+  if (!quiet) {
+    console.log(
+      `\nRebuilding scores for ${profile.slug} (${profile.name})${
+        incremental ? ` [incremental ${filmIdsRestrict.length} film(s)]` : ""
+      }`
+    );
+  }
 
   const tasteCores = await getTasteCores(profile.id);
   const aestheticCores = tasteCores.filter(
@@ -578,24 +619,38 @@ export async function calculateProfileScores(profile, allFilms) {
     .filter((film) => Number(film.rating ?? 0) >= 7)
     .sort(compareFilmsById);
 
-  const candidateFilms = allFilms
-    .filter((film) => !ratedFilmIds.has(film.id))
-    .sort(compareFilmsById);
+  const candidateFilms = selectCandidateFilmsForScoring(
+    allFilms,
+    ratings,
+    filmIdsRestrict,
+    compareFilmsById
+  );
 
   if (!candidateFilms.length) {
-    console.log("  No unrated films to score.");
+    if (!quiet) {
+      console.log(
+        incremental
+          ? "  No matching unrated films to score in this set."
+          : "  No unrated films to score."
+      );
+    }
     return [];
   }
 
-  const filmIds = allFilms.map((film) => film.id);
+  const embedFilmIds = [
+    ...new Set([
+      ...ratedFilms.map((film) => film.id),
+      ...candidateFilms.map((film) => film.id),
+    ]),
+  ];
 
   const filmMoodEmbeddingByFilmId = await getFilmEmbeddings(
     "film_mood_embeddings",
-    filmIds
+    embedFilmIds
   );
   const filmAestheticEmbeddingByFilmId = await getFilmEmbeddings(
     "film_aesthetic_embeddings",
-    filmIds
+    embedFilmIds
   );
 
   const computedAt = new Date().toISOString();
@@ -621,6 +676,10 @@ export async function calculateProfileScores(profile, allFilms) {
       computed_at: computedAt,
     };
   });
+
+  if (quiet) {
+    return scoreRows;
+  }
 
   const rawScoresByFilmId = new Map(
     scoreRows.map((row) => [
@@ -720,6 +779,56 @@ export async function calculateProfileScores(profile, allFilms) {
   });
 
   return scoreRows;
+}
+
+/**
+ * Score only newly added films for every profile (no full-catalog rebuild).
+ * Rating-triggered jobs keep using full rebuildProfileScores + replace-all.
+ *
+ * @param {string[]} filmIds
+ * @param {{ profiles?: object[], allFilms?: object[] }} [options]
+ */
+export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
+  const ids = [...new Set((filmIds ?? []).filter(Boolean))];
+  if (!ids.length) {
+    return { profileCount: 0, rowCount: 0, emptyProfiles: 0 };
+  }
+
+  const profiles = options.profiles ?? (await getProfiles());
+  const allFilms = options.allFilms ?? (await getAllFilms());
+
+  let rowCount = 0;
+  let emptyProfiles = 0;
+
+  console.log(
+    `\n▶ Incremental profile scores for ${ids.length} film(s) × ${profiles.length} profile(s)\n`
+  );
+
+  for (const profile of profiles) {
+    const scoreRows = await calculateProfileScores(profile, allFilms, {
+      filmIds: ids,
+      quiet: true,
+    });
+    if (!scoreRows.length) {
+      emptyProfiles += 1;
+      continue;
+    }
+    await upsertScoreRows(profile.id, scoreRows);
+    rowCount += scoreRows.length;
+    console.log(
+      `  ${profile.slug ?? profile.id}: upserted ${scoreRows.length} score row(s)`
+    );
+  }
+
+  console.log(
+    `\nDone incremental scores: profiles=${profiles.length}, rows=${rowCount}, empty=${emptyProfiles}\n`
+  );
+
+  return {
+    profileCount: profiles.length,
+    rowCount,
+    emptyProfiles,
+  };
 }
 
 export async function rebuildProfileScores(profile, allFilms) {

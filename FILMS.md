@@ -8,7 +8,7 @@ Candidate films for scheduled import live in Supabase `film_import_queue`. See [
 
 1. Admin **Approve** on `/admin/film-discovery` maps the candidate (preserve-first), enqueues `film_import_queue` (`origin=discovery_release`, hidden), and **starts prep immediately** (same `process-film-batch` pipeline via `after()` — embeddings + poster cache; profile scores deferred).
 2. Watch progress on `/admin/film-releases`.
-3. **Go live** on `/admin/film-releases` (batch): set `catalog_visible=true` for selected ready films, then enqueue `profile_score_rebuild_jobs` once for all profiles.
+3. **Go live** on `/admin/film-releases` (batch): set `catalog_visible=true` for selected ready films, then **score only those film IDs** for every profile (upsert; no full-catalog rebuild). Likes still enqueue `profile_score_rebuild_jobs` for a full per-profile rebuild.
 
 ## Adding new films
 

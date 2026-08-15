@@ -18,6 +18,14 @@ import {
 } from "../lib/discovery-to-import-payload.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
+/** Lazy so unit tests can import this file without SERVICE_ROLE_KEY. */
+async function defaultScoreNewFilms(filmIds, options = {}) {
+  const { scoreNewFilmsForAllProfiles } = await import(
+    "./rebuild-profile-film-scores.mjs"
+  );
+  return scoreNewFilmsForAllProfiles(filmIds, options);
+}
+
 applyAppEnv();
 
 const execFileAsync = promisify(execFile);
@@ -717,7 +725,9 @@ export async function processFilmImportBatch({
   batch,
   options,
   pipeline = processFilmBatch,
+  /** @deprecated Full rebuild enqueue — prefer scoreFilms for new films. */
   enqueue = enqueueProfiles,
+  scoreFilms = defaultScoreNewFilms,
 } = {}) {
   const profiles = await readProfiles(supabase);
   const classified = await classifyImportPlan(supabase, batch);
@@ -857,32 +867,27 @@ export async function processFilmImportBatch({
         row.status === FILM_STATUS.CATALOG_READY) &&
       !row.deferProfileEnqueue
   );
+  let incrementalScores = null;
   if (filmsNeedingScores.length > 0) {
+    const scoreFilmIds = filmsNeedingScores
+      .map((row) => row.filmId)
+      .filter(Boolean);
+    // New films: score only these ids for every profile (likes still use full rebuild jobs).
+    incrementalScores = await scoreFilms(scoreFilmIds, { profiles });
     enqueueCallCount += 1;
-    jobs = await enqueue(supabase, profiles);
     console.log(
-      `Enqueued profiles: ${jobs.length} (once for ${filmsNeedingScores.length} film(s); discovery-release deferred)`
+      `Incremental profile scores: rows=${incrementalScores?.rowCount ?? 0} for ${scoreFilmIds.length} film(s) × ${profiles.length} profile(s)`
     );
     if (options.waitForJobs) {
-      await waitForJobs(supabase, jobs, {
-        ...options,
-        sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-      });
-      await verifyCoverage(
-        supabase,
-        profiles,
-        filmsNeedingScores.map((row) => row.filmId).filter(Boolean)
-      );
-      console.log("Worker completion and successful-film coverage verified.");
-    } else {
-      console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
+      await verifyCoverage(supabase, profiles, scoreFilmIds);
+      console.log("Profile × film coverage verified after incremental scoring.");
     }
   } else if (successfulFilmIds.length > 0) {
     console.log(
       "Profile score rebuild deferred (discovery release / catalog_visible=false)."
     );
   } else {
-    console.log("No ranking-ready films — enqueue skipped.");
+    console.log("No ranking-ready films — scoring skipped.");
   }
 
   printBatchReport(results);
@@ -891,6 +896,7 @@ export async function processFilmImportBatch({
     results,
     successfulFilmIds,
     jobs,
+    incrementalScores,
     profiles,
     exitCode,
     enqueueCalled: enqueueCallCount > 0,
@@ -1101,17 +1107,36 @@ export async function processFilmBatch({
       return { deferredEnqueue: true, states: finalStates, films: current.films, profiles };
     }
 
-    onEnqueue();
-    const jobs = await enqueueProfiles(supabase, profiles);
-    console.log(`Enqueued profiles: ${jobs.length}`);
-    if (options.waitForJobs) {
-      await waitForJobs(supabase, jobs, { ...options, sleep });
-      await verifyCoverage(supabase, profiles, filmIds);
-      console.log("Worker completion and profile × film coverage verified.");
-    } else {
-      console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
+    if (options.rebuildAllProfiles) {
+      onEnqueue();
+      const jobs = await enqueueProfiles(supabase, profiles);
+      console.log(`Enqueued full profile rebuilds: ${jobs.length}`);
+      if (options.waitForJobs) {
+        await waitForJobs(supabase, jobs, { ...options, sleep });
+        await verifyCoverage(supabase, profiles, filmIds);
+        console.log("Worker completion and profile × film coverage verified.");
+      } else {
+        console.log("Check jobs with: select * from profile_score_rebuild_jobs;");
+      }
+      return { jobs, states: finalStates, profiles, films: current.films };
     }
-    return { jobs, states: finalStates, profiles, films: current.films };
+
+    onEnqueue();
+    const incrementalScores = await defaultScoreNewFilms(filmIds, { profiles });
+    console.log(
+      `Incremental profile scores: rows=${incrementalScores.rowCount} for ${filmIds.length} film(s) × ${profiles.length} profile(s)`
+    );
+    if (options.waitForJobs) {
+      await verifyCoverage(supabase, profiles, filmIds);
+      console.log("Profile × film coverage verified after incremental scoring.");
+    }
+    return {
+      jobs: [],
+      incrementalScores,
+      states: finalStates,
+      profiles,
+      films: current.films,
+    };
   } catch (error) {
     console.error("Batch stopped before enqueue:", error.message);
     throw error;

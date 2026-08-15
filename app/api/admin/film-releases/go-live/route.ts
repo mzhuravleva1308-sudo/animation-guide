@@ -3,6 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import { goLiveFilmBatch } from "@/lib/film-release-go-live.mjs";
 
+export const maxDuration = 300;
+
 function getAdminSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
