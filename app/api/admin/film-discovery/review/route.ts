@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
 import {
@@ -7,6 +7,11 @@ import {
 } from "@/lib/film-discovery-workflow.mjs";
 import { DISCOVERY_REVIEW_STATUS } from "@/lib/film-discovery.mjs";
 import { enqueueDiscoveryCandidateForRelease } from "@/lib/discovery-release-enqueue.mjs";
+import { runDiscoveryReleasePrepForQueueId } from "@/lib/run-discovery-release-prep.mjs";
+
+export const dynamic = "force-dynamic";
+/** Prep (embeddings + poster cache) continues after the Approve response via after(). */
+export const maxDuration = 300;
 
 function getAdminSupabase() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -86,8 +91,6 @@ export async function POST(request: Request) {
       );
     }
 
-    /** @type {Record<string, unknown> | null} */
-    let release = null;
     if (action === "approve") {
       const { data: fullCandidate, error: fullError } = await supabase
         .from("film_discovery_candidates")
@@ -96,10 +99,31 @@ export async function POST(request: Request) {
         .single();
       if (fullError) throw fullError;
 
-      release = await enqueueDiscoveryCandidateForRelease(
+      const release = await enqueueDiscoveryCandidateForRelease(
         supabase,
         fullCandidate
       );
+
+      const queueId =
+        typeof release.queueId === "string" ? release.queueId : null;
+      const shouldPrep =
+        Boolean(queueId) &&
+        release.status !== "blocked" &&
+        release.status !== "failed";
+
+      if (shouldPrep && queueId) {
+        after(async () => {
+          try {
+            await runDiscoveryReleasePrepForQueueId(supabase, queueId);
+          } catch (error) {
+            console.error("[discovery-release-prep] after(Approve) failed", {
+              queueId,
+              candidateId: id,
+              error,
+            });
+          }
+        });
+      }
 
       const { data: afterRelease } = await supabase
         .from("film_discovery_candidates")
@@ -118,6 +142,7 @@ export async function POST(request: Request) {
           blockers: release.blockers,
           warnings: release.warnings,
           catalogNote: release.catalogNote,
+          prepStarted: shouldPrep,
         },
         effects: {
           published: false,
@@ -125,6 +150,7 @@ export async function POST(request: Request) {
           inserted_into_films: false,
           catalog_visible: false,
           queued_for_release: release.status !== "blocked",
+          prep_started: shouldPrep,
         },
       });
     }

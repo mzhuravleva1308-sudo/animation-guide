@@ -103,7 +103,7 @@ export function FilmReleasesDashboard({ rows }: { rows: ReleaseQueueRow[] }) {
       setError(data.error ?? "Process prep failed");
       return;
     }
-    setMessage(data.message ?? "Prep started");
+    setMessage(data.message ?? "Prep finished");
     startTransition(() => router.refresh());
   }
 
@@ -136,14 +136,6 @@ export function FilmReleasesDashboard({ rows }: { rows: ReleaseQueueRow[] }) {
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={processPrep}
-          disabled={pending}
-          className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-        >
-          Process prep now
-        </button>
-        <button
-          type="button"
           onClick={selectAllReady}
           className="rounded border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
         >
@@ -157,7 +149,20 @@ export function FilmReleasesDashboard({ rows }: { rows: ReleaseQueueRow[] }) {
         >
           Go live selected ({selectedIds.length})
         </button>
+        <button
+          type="button"
+          onClick={processPrep}
+          disabled={pending}
+          className="rounded border border-gray-300 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+          title="Recovery only — Approve normally starts prep automatically"
+        >
+          Retry pending prep
+        </button>
       </div>
+      <p className="text-sm text-gray-500">
+        Prep starts automatically after Approve. Use Go live when a batch is
+        ready. Retry pending prep is only for recovery.
+      </p>
 
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
       {message ? <p className="text-sm text-green-700">{message}</p> : null}

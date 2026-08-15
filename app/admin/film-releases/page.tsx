@@ -95,7 +95,8 @@ export default async function FilmReleasesAdminPage() {
           <h1 className="text-3xl font-semibold">Film releases</h1>
           <p className="mt-2 text-gray-600">
             Discovery approvals land here as prep queue items (hidden cards).
-            Process prep, then Go live in a batch so profile scores rebuild once.
+            Prep starts automatically on Approve; Go live in a batch so profile
+            scores rebuild once.
           </p>
         </div>
         <div className="flex flex-col items-end gap-2 text-sm">
