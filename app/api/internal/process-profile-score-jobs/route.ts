@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  calculateProfileScores,
+  calculateAllProfileScoreArtifacts,
   getAllFilms,
 } from "@/scripts/rebuild-profile-film-scores.mjs";
 import { getAdminSupabase } from "@/lib/supabase/admin";
@@ -51,7 +51,9 @@ export async function GET(request: Request) {
       }
 
       const scoreRows = profile
-        ? await calculateProfileScores(profile, allFilms)
+        ? await calculateAllProfileScoreArtifacts(profile, allFilms, {
+            quiet: true,
+          })
         : [];
       const { data: applied, error: applyError } = await supabase.rpc(
         "replace_profile_film_scores_if_current",

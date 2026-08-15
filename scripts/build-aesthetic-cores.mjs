@@ -1,5 +1,6 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
+import { MEDIA_TYPES, normalizeMediaType } from "../lib/media-type.mjs";
 
 applyAppEnv();
 
@@ -179,18 +180,21 @@ async function getProfiles() {
     return data ?? [];
 }
 
-async function getRatedFilms(profileId) {
+async function getRatedFilms(profileId, mediaType) {
+    const normalizedMedia = normalizeMediaType(mediaType);
     const { data, error } = await supabase
         .from("film_ratings")
         .select(`
       rating,
-      films (
+      films!inner (
         id,
         title,
-        moods
+        moods,
+        media_type
       )
     `)
         .eq("profile_id", profileId)
+        .eq("films.media_type", normalizedMedia)
         .gte("rating", MIN_RATING);
 
     if (error) throw error;
@@ -199,14 +203,20 @@ async function getRatedFilms(profileId) {
         .map((row) => ({
             rating: row.rating,
             ...row.films,
+            media_type: normalizeMediaType(row.films?.media_type, normalizedMedia),
         }))
         .filter((film) => film.id && film.moods?.length);
 }
 
-async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) {
-    console.log(`\nProfile: ${profile.name}`);
+async function rebuildProfileCoresForMedia(
+    profile,
+    mediaType,
+    moodEmbeddings,
+    filmMoodEmbeddings
+) {
+    console.log(`\nProfile: ${profile.name} [${mediaType}]`);
 
-    const ratedFilms = await getRatedFilms(profile.id);
+    const ratedFilms = await getRatedFilms(profile.id, mediaType);
 
     const filmsWithEmbeddings = ratedFilms
         .map((film) => ({
@@ -221,6 +231,7 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
         .from("profile_taste_cores")
         .delete()
         .eq("profile_id", profile.id)
+        .eq("media_type", mediaType)
         .eq("core_type", "aesthetic");
 
     if (deleteError) throw deleteError;
@@ -256,6 +267,7 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
 
         const row = {
             profile_id: profile.id,
+            media_type: mediaType,
             core_type: "aesthetic",
             core_index: index + 1,
             strength,
@@ -270,11 +282,9 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
             updated_at: new Date().toISOString(),
         };
 
-        const { error } = await supabase
-            .from("profile_taste_cores")
-            .upsert(row, {
-                onConflict: "profile_id,core_type,core_index",
-            });
+        const { error } = await supabase.from("profile_taste_cores").upsert(row, {
+            onConflict: "profile_id,media_type,core_type,core_index",
+        });
 
         if (error) throw error;
 
@@ -282,6 +292,17 @@ async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) 
         console.log(`  films: ${row.film_titles.join(", ")}`);
         console.log(`  moods: ${row.nearest_moods.join(", ")}`);
         console.log(`  strength: ${strength}`);
+    }
+}
+
+async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) {
+    for (const mediaType of MEDIA_TYPES) {
+        await rebuildProfileCoresForMedia(
+            profile,
+            mediaType,
+            moodEmbeddings,
+            filmMoodEmbeddings
+        );
     }
 }
 

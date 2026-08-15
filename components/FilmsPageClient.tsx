@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bookmark, CircleCheck, Film as FilmIcon, UserRound } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
@@ -20,6 +21,11 @@ import {
 } from "@/lib/auth/resolve-auth-profile";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
+import {
+  MEDIA_TYPE,
+  crossMediaSortLabel,
+  oppositeMediaType,
+} from "@/lib/media-type";
 import { createClient } from "@/lib/supabase/client";
 import {
   clearPendingFilmActionFromSession,
@@ -68,6 +74,12 @@ type FilmsPageClientProps = {
   initialFilmRatings?: Record<string, number>;
   /** SSR-hydrated saved ids so Saved is ready on first paint. */
   initialSavedFilmIds?: string[];
+  /** Active catalog media (animation default). */
+  mediaType?: "animation" | "live_action";
+  /** Ranking mode query value. */
+  sortParam?: "native" | "cross_from_animation" | "cross_from_live_action";
+  /** Early-access Films tab (allowlisted emails only). */
+  showLiveActionTab?: boolean;
 };
 
 type InteractionSnapshot = {
@@ -95,7 +107,11 @@ export default function FilmsPageClient({
   showSubtitle = false,
   initialFilmRatings = {},
   initialSavedFilmIds = [],
+  mediaType = MEDIA_TYPE.animation,
+  sortParam = "native",
+  showLiveActionTab = false,
 }: FilmsPageClientProps) {
+  const router = useRouter();
   const [auth, setAuth] = useState(initialAuth);
   const [activeTab, setActiveTab] = useState<CatalogTab>("all");
   const [modalOpen, setModalOpen] = useState(false);
@@ -426,6 +442,44 @@ export default function FilmsPageClient({
     [auth, openAuthModal]
   );
 
+  const navigateCatalogRanking = useCallback(
+    (next: { media?: string; sort?: string }) => {
+      const params = new URLSearchParams();
+      const nextMedia = next.media ?? mediaType;
+      const nextSort = next.sort ?? sortParam;
+      if (nextMedia !== MEDIA_TYPE.animation) {
+        params.set("media", nextMedia);
+      }
+      if (nextSort !== "native") {
+        params.set("sort", nextSort);
+      }
+      const query = params.toString();
+      router.push(query ? `/?${query}` : "/");
+    },
+    [mediaType, router, sortParam]
+  );
+
+  const crossSourceMedia = oppositeMediaType(mediaType);
+  const crossSortParam =
+    crossSourceMedia === MEDIA_TYPE.animation
+      ? "cross_from_animation"
+      : "cross_from_live_action";
+  const isCrossSort = sortParam !== "native";
+  const catalogSubtitle =
+    mediaType === MEDIA_TYPE.liveAction
+      ? {
+          primary:
+            "Find quiet, strange and emotionally resonant films to watch next.",
+          secondary:
+            "Early access live-action catalog — scored separately from animation.",
+        }
+      : {
+          primary:
+            "Find strange, beautiful and emotionally resonant animated films to watch next.",
+          secondary:
+            "Independent, artist-led and festival animation from around the world.",
+        };
+
   const savedFilms = useMemo(
     () => films.filter((film) => savedFilmIds.has(film.id)),
     [films, savedFilmIds]
@@ -549,13 +603,96 @@ export default function FilmsPageClient({
           <div className="mt-[18px] mb-[22px]">
             <h1 className="sr-only">Resonale</h1>
             <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              Find strange, beautiful and emotionally resonant animated films to
-              watch next.
+              {catalogSubtitle.primary}
             </p>
             <p className="mt-1 font-sans text-[14px] font-normal leading-[1.3] tracking-tight text-[#7a7b90] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              Independent, artist-led and festival animation from around the
-              world.
+              {catalogSubtitle.secondary}
             </p>
+            {showLiveActionTab ? (
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <div
+                  className="inline-flex rounded-full border border-[#e4e2f0] bg-[#f7f6fb] p-0.5"
+                  role="tablist"
+                  aria-label="Catalog media"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mediaType === MEDIA_TYPE.animation}
+                    className={`rounded-full px-3 py-1.5 text-sm transition ${
+                      mediaType === MEDIA_TYPE.animation
+                        ? "bg-white text-[#2f3040] shadow-sm"
+                        : "text-[#7a7b90]"
+                    }`}
+                    onClick={() =>
+                      navigateCatalogRanking({
+                        media: MEDIA_TYPE.animation,
+                        sort: "native",
+                      })
+                    }
+                    data-testid="catalog-media-animation"
+                  >
+                    Animation
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={mediaType === MEDIA_TYPE.liveAction}
+                    className={`rounded-full px-3 py-1.5 text-sm transition ${
+                      mediaType === MEDIA_TYPE.liveAction
+                        ? "bg-white text-[#2f3040] shadow-sm"
+                        : "text-[#7a7b90]"
+                    }`}
+                    onClick={() =>
+                      navigateCatalogRanking({
+                        media: MEDIA_TYPE.liveAction,
+                        sort: "native",
+                      })
+                    }
+                    data-testid="catalog-media-live-action"
+                  >
+                    Films
+                  </button>
+                </div>
+                <div
+                  className="inline-flex flex-wrap gap-2"
+                  aria-label="Ranking mode"
+                >
+                  <button
+                    type="button"
+                    className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                      !isCrossSort
+                        ? "border-[#cfc8e8] bg-white text-[#2f3040]"
+                        : "border-transparent text-[#7a7b90]"
+                    }`}
+                    onClick={() =>
+                      navigateCatalogRanking({ media: mediaType, sort: "native" })
+                    }
+                    data-testid="catalog-sort-native"
+                  >
+                    Your {mediaType === MEDIA_TYPE.liveAction ? "film" : "animation"}{" "}
+                    taste
+                  </button>
+                  <button
+                    type="button"
+                    className={`rounded-full border px-3 py-1.5 text-sm transition ${
+                      isCrossSort
+                        ? "border-[#cfc8e8] bg-white text-[#2f3040]"
+                        : "border-transparent text-[#7a7b90]"
+                    }`}
+                    onClick={() =>
+                      navigateCatalogRanking({
+                        media: mediaType,
+                        sort: crossSortParam,
+                      })
+                    }
+                    data-testid="catalog-sort-cross"
+                  >
+                    {crossMediaSortLabel(crossSourceMedia)}
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <h1 className="sr-only">Resonale</h1>

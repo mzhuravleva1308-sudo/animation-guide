@@ -21,12 +21,13 @@ export {
   sortFilmsByColdStart,
   LIKED_HIGH_RATING_THRESHOLD,
   countLikedHighRatings,
+  countLikedHighRatingsForRanking,
   buildRawFilmScoresById,
   sortFilmsForDualModeCatalog,
   logColdStartDiagnostics,
 } from "./profile-film-scoring.mjs";
 
-export type CatalogSortMode = "cold-start" | "smart";
+export type CatalogSortMode = "cold-start" | "smart" | "smart-cross";
 
 export type SmartScoresFallbackCause = "empty-scores" | "query-error";
 

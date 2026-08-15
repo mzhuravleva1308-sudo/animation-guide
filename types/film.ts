@@ -35,6 +35,8 @@ export type Film = {
     personal_note?: string | null;
     status?: string | null;
     catalog_visible?: boolean;
+    /** Catalog partition: animation (default) or live_action. */
+    media_type?: "animation" | "live_action" | null;
     rating?: number | null;
     cold_start_score?: number | null;
     cold_start_note?: string | null;
