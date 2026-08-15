@@ -14,6 +14,7 @@ import {
   normalizeScoreMode,
   parseCatalogRankingParams,
   type CatalogRankingParams,
+  type MediaType,
 } from "@/lib/media-type";
 import { normalizeFilms } from "@/lib/normalize-film";
 import {
@@ -64,7 +65,7 @@ export const PUBLIC_CATALOG_FILM_FIELDS = [
 type ProfileRatingRow = {
   film_id: string;
   rating: number;
-  media_type?: string | null;
+  media_type: MediaType;
 };
 
 type ProfileFilmScoreRow = {
