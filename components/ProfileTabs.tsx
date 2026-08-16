@@ -25,6 +25,7 @@ import {
 } from "@/lib/quick-film-filters";
 import { Bookmark, CircleCheck, Film as FilmIcon } from "lucide-react";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
+import { MEDIA_TYPE } from "@/lib/media-type";
 
 export type ProfileTab = "all" | "saved" | "rated";
 
@@ -116,8 +117,31 @@ export default function ProfileTabs({
     error: null as string | null,
   });
   const lastRatingOrderRef = useRef<Record<string, number>>({});
+  const animationFilmIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const film of allFilmsSorted) {
+      if ((film.media_type ?? MEDIA_TYPE.animation) === MEDIA_TYPE.animation) {
+        ids.add(film.id);
+      }
+    }
+    for (const film of watchedFilms) {
+      if ((film.media_type ?? MEDIA_TYPE.animation) === MEDIA_TYPE.animation) {
+        ids.add(film.id);
+      }
+    }
+    for (const film of savedFilms) {
+      if ((film.media_type ?? MEDIA_TYPE.animation) === MEDIA_TYPE.animation) {
+        ids.add(film.id);
+      }
+    }
+    return ids;
+  }, [allFilmsSorted, watchedFilms, savedFilms]);
   const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
-    localFilmRatings
+    localFilmRatings,
+    {
+      mediaType: MEDIA_TYPE.animation,
+      scopeFilmIds: animationFilmIds,
+    }
   );
 
   const handleSearchResultsChange = useCallback(

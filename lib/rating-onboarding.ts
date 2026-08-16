@@ -5,6 +5,8 @@ export {
   RATING_ONBOARDING_HINT_COPY,
   getRatingOnboardingHint,
   hasAnyFilmRating,
+  hasLikedHighFilmRating,
+  ratingOnboardingHintsDismissedStorageKey,
   readRatingOnboardingHintsDismissed,
   writeRatingOnboardingHintsDismissed,
 } from "./rating-onboarding.mjs";

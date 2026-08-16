@@ -706,6 +706,11 @@ export default function FilmsPageClient({
     [catalogFilms, filmRatings]
   );
 
+  const ratingOnboardingFilmIds = useMemo(
+    () => catalogFilms.map((film) => film.id),
+    [catalogFilms]
+  );
+
   const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
   // ratingsReady covers both filmRatings and savedFilmIds — they load together
   // in loadAuthenticatedProfileFilmState, then pending actions apply before ready.
@@ -896,6 +901,7 @@ export default function FilmsPageClient({
                 savedFilmIds,
                 filmRatings,
                 ratingsReady,
+                ratingOnboardingFilmIds,
                 onSavedChange: handleSavedChange,
                 onRatingChange: handleRatingChange,
                 onAuthRequired: auth ? undefined : handleAuthRequired,

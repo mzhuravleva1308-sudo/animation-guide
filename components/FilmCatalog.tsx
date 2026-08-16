@@ -22,6 +22,11 @@ type FilmCatalogInteractionProps = {
   filmRatings: Record<string, number | null>;
   /** False while authenticated ratings are still loading from the server. */
   ratingsReady?: boolean;
+  /**
+   * Full catalog film IDs for this media (including already-rated). Used so
+   * onboarding can detect 7+ ratings even when rated films are hidden.
+   */
+  ratingOnboardingFilmIds?: Iterable<string>;
   onSavedChange: (film: Film, saved: boolean) => void;
   onRatingChange: (
     filmId: string,
@@ -62,11 +67,20 @@ export default function FilmCatalog({
     isActive: false,
     error: null as string | null,
   });
+  const ratingOnboardingFilmIds = useMemo(() => {
+    if (interaction?.ratingOnboardingFilmIds) {
+      return interaction.ratingOnboardingFilmIds;
+    }
+    return films.map((film) => film.id);
+  }, [films, interaction?.ratingOnboardingFilmIds]);
+
   const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
     interaction?.filmRatings,
     {
       enabled: Boolean(interaction),
       ratingsReady: interaction?.ratingsReady ?? true,
+      mediaType,
+      scopeFilmIds: ratingOnboardingFilmIds,
     }
   );
 
