@@ -127,7 +127,7 @@ type FilmsPageClientProps = {
     | "native"
     | "cross_from_animation"
     | "cross_from_live_action";
-  /** Early-access retired: Films tab is always shown. */
+  /** Films catalog tab is always public (guests + signed-in). */
   showLiveActionTab?: boolean;
 };
 
@@ -159,7 +159,7 @@ export default function FilmsPageClient({
   scoresLastComputedAt = null,
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
-  showLiveActionTab = false,
+  showLiveActionTab = true,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
   const [scoresLastComputedAtState, setScoresLastComputedAtState] = useState<

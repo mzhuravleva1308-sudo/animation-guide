@@ -6,7 +6,6 @@ import {
   timeSyncStage,
 } from "@/lib/catalog-page-load-log";
 import { getAuthUserSummary } from "@/lib/auth/session";
-import { canAccessLiveActionCatalog } from "@/lib/live-action-catalog-access";
 import {
   MEDIA_TYPE,
   SCORE_MODE,
@@ -367,25 +366,12 @@ function ratingsRecordFromRows(
 }
 
 function resolveCatalogRankingForViewer(
-  rawParams: { media?: string | null; sort?: string | null } | undefined,
-  email: string | null | undefined
+  rawParams: { media?: string | null; sort?: string | null } | undefined
 ): CatalogRankingParams & { showLiveActionTab: boolean } {
   const parsed = parseCatalogRankingParams(rawParams ?? {});
-  const showLiveActionTab = canAccessLiveActionCatalog(email);
 
-  if (!showLiveActionTab) {
-    return {
-      mediaType: MEDIA_TYPE.animation,
-      scoreMode: SCORE_MODE.native,
-      sourceMedia: MEDIA_TYPE.animation,
-      sortParam: "native",
-      showLiveActionTab: false,
-    };
-  }
-
-  // Catalog always ranks by that media's own taste cores/scores (native).
-  // Cross-media scores may still exist in the DB for later use, but are not
-  // exposed as a user-facing sort mode.
+  // Films (live-action) catalog is public for guests and signed-in users.
+  // Guests browse cold-start; rate/save still open the auth modal.
   return {
     mediaType: parsed.mediaType,
     scoreMode: SCORE_MODE.native,
@@ -405,10 +391,10 @@ export async function loadPublicFilmCatalog(options?: {
   const auth = authTimed.value;
   const profileId = auth?.profile?.id ?? null;
 
-  const ranking = resolveCatalogRankingForViewer(
-    { media: options?.media, sort: options?.sort },
-    auth?.email
-  );
+  const ranking = resolveCatalogRankingForViewer({
+    media: options?.media,
+    sort: options?.sort,
+  });
 
   const publicBasePromise = timeAsyncStage(() =>
     loadPublicCatalogBase(ranking.mediaType)

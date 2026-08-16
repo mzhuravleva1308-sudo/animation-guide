@@ -48,6 +48,32 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
   });
 
+  test("guest can open Films and is prompted to log in on rate or save", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await expect(page.getByTestId("nav-films")).toBeVisible();
+    await page.getByTestId("nav-films").click();
+    await expect(page.getByTestId("nav-films")).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(
+      page.getByText(
+        "Find distinctive, beautiful and emotionally resonant films to watch next."
+      )
+    ).toBeVisible();
+    await expect(page.getByTestId("film-card").first()).toBeVisible();
+
+    await page.getByRole("button", { name: "Rate 1 out of 10" }).first().click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Add to watchlist" }).first().click();
+    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+  });
   test("supports search without profile context", async ({ page }) => {
     await page.goto("/films");
 
