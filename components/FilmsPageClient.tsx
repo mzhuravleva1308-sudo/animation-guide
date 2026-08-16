@@ -652,9 +652,9 @@ export default function FilmsPageClient({
     activeMedia === MEDIA_TYPE.liveAction
       ? {
           primary:
-            "Find quiet, strange and emotionally resonant films to watch next.",
+            "Find distinctive, beautiful and emotionally resonant films to watch next.",
           secondary:
-            "Early access live-action catalog — ranked from your film taste.",
+            "Films with a world and pulse of their own, from independent voices and celebrated auteurs.",
         }
       : {
           primary:
