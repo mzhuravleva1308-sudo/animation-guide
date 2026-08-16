@@ -6,6 +6,7 @@ import { catalogChipHeightClass } from "@/lib/catalog-control-size";
 export type QuickFilter =
   | "recent"
   | "stop-motion"
+  | "landscapes"
   | "award-winners"
   | "sci-fi"
   | "sarcasm"
@@ -25,6 +26,7 @@ const FILTER_LABELS: Record<QuickFilterOption, string> = {
   recent: "Recent",
   "award-winners": "Award winners",
   "stop-motion": "Stop motion",
+  landscapes: "Landscapes",
   "sci-fi": "Sci-Fi",
   sarcasm: "Sarcasm",
   connection: "Light",

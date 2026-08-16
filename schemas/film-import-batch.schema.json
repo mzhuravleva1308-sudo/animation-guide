@@ -125,7 +125,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": ["sci-fi", "sarcasm", "connection", "distance"]
+            "enum": ["sci-fi", "sarcasm", "connection", "distance", "landscapes"]
           },
           "not": {
             "allOf": [

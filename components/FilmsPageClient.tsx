@@ -837,6 +837,7 @@ export default function FilmsPageClient({
               awardWinningFilmIds={catalogAwardIds}
               pageSize={pageSize}
               loadError={catalogLoadError}
+              mediaType={activeMedia}
               interaction={{
                 profileId,
                 profileSlug,

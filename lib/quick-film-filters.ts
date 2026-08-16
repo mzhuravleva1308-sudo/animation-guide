@@ -1,5 +1,6 @@
 import { Film } from "@/types/film";
 import type { QuickFilter, QuickFilterOption } from "@/components/QuickFilters";
+import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
 
 export const QUICK_FILTERS: QuickFilterOption[] = [
   "recent",
@@ -11,12 +12,32 @@ export const QUICK_FILTERS: QuickFilterOption[] = [
   "distance",
 ];
 
+/** Live-action catalog: Landscapes replaces Stop motion in the same slot. */
+export const LIVE_ACTION_QUICK_FILTERS: QuickFilterOption[] = [
+  "recent",
+  "award-winners",
+  "landscapes",
+  "sci-fi",
+  "sarcasm",
+  "connection",
+  "distance",
+];
+
+export function getQuickFiltersForMedia(
+  mediaType: MediaType = MEDIA_TYPE.animation
+): QuickFilterOption[] {
+  return mediaType === MEDIA_TYPE.liveAction
+    ? LIVE_ACTION_QUICK_FILTERS
+    : QUICK_FILTERS;
+}
+
 export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
-  recent: "Animated films released in the last three years.",
-  "award-winners":
-    "Films that won top prizes at major animation festivals.",
+  recent: "Films released in the last three years.",
+  "award-winners": "Films that won top prizes at major festivals.",
   "stop-motion":
     "Animation made with puppets, models and other physical materials.",
+  landscapes:
+    "Films shaped by place, outdoors and the feel of landscape.",
   "sci-fi": "Stories shaped by technology, space and imagined futures.",
   sarcasm:
     "Darkly funny films with dry irony, cynicism and bite.",
@@ -68,6 +89,11 @@ export function filterFilmsByQuickFilter(
 
   if (activeQuickFilter === "stop-motion") {
     return films.filter((film) => isStopMotionTechnique(film.technique));
+  }
+
+  if (activeQuickFilter === "landscapes") {
+    // Tagging not applied yet — chip is live; matches arrive once films are marked.
+    return films.filter((film) => film.quick_filters?.includes("landscapes"));
   }
 
   if (activeQuickFilter === "sci-fi") {
