@@ -103,6 +103,32 @@ NODE_ENV=production npm run env:inspect
 
 Production SMTP lives in the **Supabase Dashboard** (Authentication → SMTP). It is never loaded from this repo.
 
+### Weekly film import (GitHub Actions)
+
+Scheduled import uses **Resend** for the run report (not Supabase Auth SMTP). Set these as GitHub Actions secrets — see [WEEKLY_FILM_IMPORT.md](./WEEKLY_FILM_IMPORT.md):
+
+- `RESEND_API_KEY`
+- `WEEKLY_FILM_IMPORT_REPORT_EMAIL`
+- Hosted Supabase + `OPENAI_API_KEY` / `TMDB_API_KEY` / `YOUTUBE_API_KEY` (same as local hosted scripts)
+
+Optional repository variables:
+
+- `WEEKLY_FILM_IMPORT_BATCH_SIZE` (default **5**)
+- `WEEKLY_FILM_IMPORT_STALE_MINUTES` (default 90)
+- `WEEKLY_FILM_IMPORT_LOW_QUEUE_THRESHOLD` (default **7** — warn when remaining pending is strictly below this)
+
+### Weekly film discovery (GitHub Actions)
+
+Separate from weekly import — see [WEEKLY_FILM_DISCOVERY.md](./WEEKLY_FILM_DISCOVERY.md). Remains disabled until you set repository variables:
+
+- `WEEKLY_FILM_DISCOVERY_ENABLED=1` — allow the workflow job to run
+- `WEEKLY_FILM_DISCOVERY_LIVE=1` — allow non-dry-run on the schedule
+
+Secrets (Resend recipient falls back to import email if unset):
+
+- `WEEKLY_FILM_DISCOVERY_REPORT_EMAIL` (optional; else `WEEKLY_FILM_IMPORT_REPORT_EMAIL`)
+- `RESEND_API_KEY`, hosted Supabase, `OPENAI_API_KEY`
+
 ## `.env.local` (secrets only)
 
 Copy from `.env.example`. Example:

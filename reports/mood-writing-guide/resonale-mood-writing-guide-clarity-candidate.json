@@ -1,0 +1,234 @@
+{
+  "version": "resonale-mood-writing-guide-clarity-candidate",
+  "generated_at": "2026-08-08T08:52:36.130Z",
+  "corpus_size": 200,
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-clarity-candidate",
+    "sections": {
+      "purpose": "Help someone quickly understand what watching this animated film will feel like. Write like a thoughtful friend — clear, specific, and human — not like a film critic crafting a beautiful sentence. Clarity and ease should win over literary elegance, while keeping film-specific detail and personality.",
+      "core_principles": [
+        "Answer first: what will watching this film feel like?",
+        "Prefer the simplest natural sentence that still keeps a film-specific cue.",
+        "Favor concrete detail (image, place, sound, pace) over stylish wording.",
+        "Personality is welcome; literary performance is not the goal.",
+        "Vary sentence shape only when variation helps clarity or fits the film — not to prove range.",
+        "Adjective openings (including X and Y) are fine when natural; what hurts is batch-level interchangeable repetition.",
+        "Use only the most useful mood dimensions for this film; do not pack everything in.",
+        "Mention technique, setting, or era only when it shapes the watching experience.",
+        "Prefer plain spoken English over ornamental or critic-like phrasing."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Emotional Tone",
+          "detail": "Captures the prevailing feelings (e.g., melancholic, playful, tense, bittersweet). Use only those most central to the film."
+        },
+        {
+          "name": "Visual/Aural Texture",
+          "detail": "Describes color, light, sound, or tactile qualities (e.g., vibrant colors, muted tones, tactile puppet textures)."
+        },
+        {
+          "name": "Pace and Rhythm",
+          "detail": "Conveys the film's tempo and how it affects mood (e.g., slow and heavy, brisk and chaotic, rhythmic flow)."
+        },
+        {
+          "name": "Contrasts and Oscillations",
+          "detail": "Highlights shifts or tensions between moods, visuals, or narrative beats (e.g., warmth vs. isolation, humor vs. gravity). Use only if salient."
+        },
+        {
+          "name": "Atmospheric/Narrative Context",
+          "detail": "Situates mood within setting, era, or narrative context when relevant (e.g., rural summer, urban alienation, afterlife world)."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "First-read clarity",
+          "why": "A user should get the feeling quickly without unpacking a polished clause stack."
+        },
+        {
+          "principle": "One concrete film-owned cue",
+          "why": "A mackerel in a tank, rainy Naples, rotoscope Tehran, stop-motion forest — one owned detail beats three elegant abstractions."
+        },
+        {
+          "principle": "Plain watching-feel language",
+          "why": "Sounds like something a thoughtful friend could say aloud."
+        },
+        {
+          "principle": "Technique only when felt",
+          "why": "Mention animation style when it changes the sensation, not as decoration."
+        },
+        {
+          "principle": "Economical single line",
+          "why": "Short enough to scan; not overloaded."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "Critic / literary density (beautiful but effortful sentences)",
+          "when_weak": "When the line sounds written to impress — stacked imagery, elegant verbs, review-copy cadence — instead of helping a user.",
+          "when_ok": "Almost never as a goal; only if a simple film-owned phrase is also the most natural wording."
+        },
+        {
+          "pattern": "Interchangeable intensity or soft filler",
+          "when_weak": "When phrases like raw energy, relentless pulse, quiet tension, intimate moments could move to another film unchanged.",
+          "when_ok": "When tied to a concrete image, place, or movement unique to the film."
+        },
+        {
+          "pattern": "Batch-level repeated openings or templates",
+          "when_weak": "When many cards in one batch reuse the same opening shape or filler with little film-specific payoff — including repeated Adj+Adj or sensory-noun openings.",
+          "when_ok": "When an opening shape is natural for that film and not an interchangeable batch habit."
+        },
+        {
+          "pattern": "Ornamental/poetic phrasing",
+          "when_weak": "When language is literary or interchangeable, not film-rooted and easy to hear.",
+          "when_ok": "Rarely; only if the phrase is the simplest true way to name the feeling."
+        },
+        {
+          "pattern": "Packing all mood dimensions into one line",
+          "when_weak": "When density hurts first-read clarity.",
+          "when_ok": "When the film truly needs a simple contrast and the sentence stays easy."
+        },
+        {
+          "pattern": "Theme / mini-analysis instead of watching-feel",
+          "when_weak": "When the line explains meaning, history, or thesis rather than sensation.",
+          "when_ok": "Almost never in the_mood."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Plain watching-feel statement",
+          "principle": "Say the feeling directly with one concrete cue (e.g., 'Rainy Naples feels muted and unhurried, with quiet grief under everyday encounters.')."
+        },
+        {
+          "type": "Simple contrast (optional)",
+          "principle": "Use X and Y / X yet Y when the film's tension is central and still easy to hear."
+        },
+        {
+          "type": "Setting or technique cue",
+          "principle": "Lead with place, image, or technique when that is the fastest way to the feeling."
+        },
+        {
+          "type": "Adjective opening (optional)",
+          "principle": "Dreamy and slow..., Quiet and melancholic..., Cold and urgent... are allowed when natural and film-specific — do not avoid them as a rule."
+        }
+      ],
+      "specificity_test": "On first read, is the feeling clear? Does it help someone know what watching will feel like? Is there at least one cue that keeps it from fitting many unrelated films? If a more literary version exists, is this one clearer?",
+      "relationship_with_synopsis": "Complement the synopsis. Describe watching-feel; do not retell plot or argue the film's themes.",
+      "relationship_with_moods_tags": "Do not list mood tags. Turn the most relevant feelings into plain language about what watching feels like.",
+      "good_examples": [
+        {
+          "title": "Padak",
+          "the_mood": "Cold blues and tight framing trap the mackerel in mounting dread, the slow pace sharpening claustrophobia and melancholy.",
+          "why": "Concrete and clear; easy to picture; film-owned."
+        },
+        {
+          "title": "Boys Go to Jupiter",
+          "the_mood": "Soft pastel Florida suburbia drifts between drowsy stillness and sudden surreal daydream flashes.",
+          "why": "Natural friend voice with a specific place/dream feel."
+        },
+        {
+          "title": "Tux and Fanny",
+          "the_mood": "Soft forest light and quiet 2D color settle into calm everyday friendship with almost no hurry.",
+          "why": "Simple, specific, easy aloud."
+        },
+        {
+          "title": "Fritz the Cat",
+          "the_mood": "Gritty 2D chaos and loud irreverent humor race through late-60s New York nights that feel restless and unhinged.",
+          "why": "Energetic without sociology lecture or literary flourish."
+        },
+        {
+          "title": "The Fake",
+          "the_mood": "Muted colors and slow pacing tighten around a bleak town where cult pressure and private fear never loosen.",
+          "why": "Plain pressure; film-specific without critic cadence."
+        },
+        {
+          "title": "Endless Cookie",
+          "the_mood": "Family memory tumbles through comic digressions, rough textures, and a strong sense of lived-in intimacy.",
+          "why": "Still natural and specific; keep as a warm model."
+        },
+        {
+          "title": "Aya of Yop City",
+          "the_mood": "Youthful energy fills bright 1970s Ivorian streets with intimate, everyday momentum.",
+          "why": "Setting-led and easy."
+        },
+        {
+          "title": "Bubble Bath (clear Adj opening)",
+          "the_mood": "Wry and intimate city talk moves quickly, with bright 2D energy under the debates.",
+          "why": "Shows Adj opening can be good when clear and specific."
+        },
+        {
+          "title": "Fire and Ice",
+          "the_mood": "Frozen light and hard battle motion cut across icy wilderness, cold and urgent from start to finish.",
+          "why": "Harsh and plain; no elemental-struggle review copy."
+        },
+        {
+          "title": "58th",
+          "the_mood": "Using rotoscoped memory, the film holds grief, political absence, and a family's refusal to let one life disappear.",
+          "why": "Direct and film-owned; keep as a stronger long-form model when needed."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "Literary critic density",
+          "the_mood": "Shadowy stop-motion puppets move with slow, deliberate rhythms, weaving eerie textures and a haunting, wordless tension in a dark forest.",
+          "why": "Film-specific but effortful; 'weaving... wordless tension' sounds written to impress."
+        },
+        {
+          "title": "Elegant packing",
+          "the_mood": "Playful irony sits inside brisk conversation and bright 2D color, catching urban life mid-contradiction.",
+          "why": "Clever critic phrasing; harder than necessary."
+        },
+        {
+          "title": "Ornamental closing",
+          "the_mood": "Soft hues and a slow rhythm weave intimate memories into a gentle, melancholic embrace.",
+          "why": "Literary and interchangeable."
+        },
+        {
+          "title": "Overloaded interchangeable",
+          "the_mood": "Lush and surreal, with a haunting beauty that oscillates between vibrant color and oppressive darkness, creating a sense of unease and tension.",
+          "why": "Dense, ornamental, could fit many films."
+        },
+        {
+          "title": "Generic simplification (also bad)",
+          "the_mood": "Quiet and tense, with an intimate and emotional atmosphere.",
+          "why": "Simple but useless — lost all film-owned detail."
+        },
+        {
+          "title": "Theme instead of feel",
+          "the_mood": "Gritty 2D animation pulses with chaotic energy, reflecting late-60s counterculture and social upheaval.",
+          "why": "Sounds like analysis, not watching-feel."
+        }
+      ],
+      "priority_order": [
+        "Easy to understand on first read.",
+        "Gives a useful sense of what watching the film feels like.",
+        "Specific enough that it does not fit many unrelated films.",
+        "Natural, human English.",
+        "Elegant or evocative language only when it comes naturally."
+      ],
+      "clarity_self_check": [
+        "Would a thoughtful friend naturally say this sentence aloud?",
+        "Is this clearer than a more literary alternative that says the same thing?",
+        "If I remove one stylish phrase, does the film-specific cue still remain?"
+      ]
+    },
+    "analyst_notes": "Clarity candidate derived from v2. Keeps specificity and anti-ornamental intent; reframes voice to thoughtful-friend watching-feel; demotes variety/oscillation/cascade-as-goals; stops teaching Adj+Adj avoidance as a style rule; warns against both literary density and generic oversimplification."
+  },
+  "model": "gpt-4.1",
+  "consistency_pass": {
+    "at": "2026-08-07T07:04:42.938Z",
+    "note": "Removed good examples that contradicted the revised weak patterns (ornamental phrasing / weave cluster)."
+  },
+  "parent_version": "resonale-mood-writing-guide-v2",
+  "activation_status": "candidate_not_activated",
+  "change_log": [
+    "Rewrite purpose around thoughtful-friend watching-feel voice",
+    "Add explicit priority hierarchy (clarity → usefulness → specificity → natural English → elegance last)",
+    "Add soft friend-aloud / clearer-than-literary self-check",
+    "Reframe Adj+Adj weak pattern to batch repetition / interchangeable wording",
+    "Demote oscillation/cascade/variety-as-goal",
+    "Replace several good examples with clearer friend-voice models",
+    "Add anti-examples for beautiful-but-hard-to-parse critic lines",
+    "Keep ornamental weak pattern; expand with critic-density examples"
+  ],
+  "analysis_ref": "tmp/mood-guide-v2-clarity-review.json"
+}

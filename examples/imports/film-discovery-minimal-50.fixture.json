@@ -1,0 +1,605 @@
+{
+  "batch_name": "film-discovery-minimal-50-fixture",
+  "films": [
+    {
+      "title": "Resonale Seed Feature 01",
+      "original_title": "Resonale Seed Feature 01",
+      "year": 1991,
+      "directors": [
+        "Seed Director 01"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 71
+    },
+    {
+      "title": "Resonale Seed Feature 02",
+      "original_title": "Resonale Seed Feature 02",
+      "year": 1992,
+      "directors": [
+        "Seed Director 02"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 72
+    },
+    {
+      "title": "Resonale Seed Feature 03",
+      "original_title": "Resonale Seed Feature 03",
+      "year": 1993,
+      "directors": [
+        "Seed Director 03"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 73
+    },
+    {
+      "title": "Resonale Seed Feature 04",
+      "original_title": "Resonale Seed Feature 04",
+      "year": 1994,
+      "directors": [
+        "Seed Director 04"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 74
+    },
+    {
+      "title": "Resonale Seed Feature 05",
+      "original_title": "Resonale Seed Feature 05",
+      "year": 1995,
+      "directors": [
+        "Seed Director 05"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 75
+    },
+    {
+      "title": "Resonale Seed Feature 06",
+      "original_title": "Resonale Seed Feature 06",
+      "year": 1996,
+      "directors": [
+        "Seed Director 06"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 76
+    },
+    {
+      "title": "Resonale Seed Feature 07",
+      "original_title": "Resonale Seed Feature 07",
+      "year": 1997,
+      "directors": [
+        "Seed Director 07"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 77
+    },
+    {
+      "title": "Resonale Seed Feature 08",
+      "original_title": "Resonale Seed Feature 08",
+      "year": 1998,
+      "directors": [
+        "Seed Director 08"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Resonale Seed Feature 09",
+      "original_title": "Resonale Seed Feature 09",
+      "year": 1999,
+      "directors": [
+        "Seed Director 09"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 79
+    },
+    {
+      "title": "Resonale Seed Feature 10",
+      "original_title": "Resonale Seed Feature 10",
+      "year": 2000,
+      "directors": [
+        "Seed Director 10"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 80
+    },
+    {
+      "title": "Resonale Seed Feature 11",
+      "original_title": "Resonale Seed Feature 11",
+      "year": 2001,
+      "directors": [
+        "Seed Director 11"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 81
+    },
+    {
+      "title": "Resonale Seed Feature 12",
+      "original_title": "Resonale Seed Feature 12",
+      "year": 2002,
+      "directors": [
+        "Seed Director 12"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 82
+    },
+    {
+      "title": "Resonale Seed Feature 13",
+      "original_title": "Resonale Seed Feature 13",
+      "year": 2003,
+      "directors": [
+        "Seed Director 13"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 83
+    },
+    {
+      "title": "Resonale Seed Feature 14",
+      "original_title": "Resonale Seed Feature 14",
+      "year": 2004,
+      "directors": [
+        "Seed Director 14"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 84
+    },
+    {
+      "title": "Resonale Seed Feature 15",
+      "original_title": "Resonale Seed Feature 15",
+      "year": 2005,
+      "directors": [
+        "Seed Director 15"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 85
+    },
+    {
+      "title": "Resonale Seed Feature 16",
+      "original_title": "Resonale Seed Feature 16",
+      "year": 2006,
+      "directors": [
+        "Seed Director 16"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 86
+    },
+    {
+      "title": "Resonale Seed Feature 17",
+      "original_title": "Resonale Seed Feature 17",
+      "year": 2007,
+      "directors": [
+        "Seed Director 17"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 87
+    },
+    {
+      "title": "Resonale Seed Feature 18",
+      "original_title": "Resonale Seed Feature 18",
+      "year": 2008,
+      "directors": [
+        "Seed Director 18"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 88
+    },
+    {
+      "title": "Resonale Seed Feature 19",
+      "original_title": "Resonale Seed Feature 19",
+      "year": 2009,
+      "directors": [
+        "Seed Director 19"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 89
+    },
+    {
+      "title": "Resonale Seed Feature 20",
+      "original_title": "Resonale Seed Feature 20",
+      "year": 2010,
+      "directors": [
+        "Seed Director 20"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 90
+    },
+    {
+      "title": "Resonale Seed Feature 21",
+      "original_title": "Resonale Seed Feature 21",
+      "year": 2011,
+      "directors": [
+        "Seed Director 21"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 91
+    },
+    {
+      "title": "Resonale Seed Feature 22",
+      "original_title": "Resonale Seed Feature 22",
+      "year": 2012,
+      "directors": [
+        "Seed Director 22"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 92
+    },
+    {
+      "title": "Resonale Seed Feature 23",
+      "original_title": "Resonale Seed Feature 23",
+      "year": 2013,
+      "directors": [
+        "Seed Director 23"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 93
+    },
+    {
+      "title": "Resonale Seed Feature 24",
+      "original_title": "Resonale Seed Feature 24",
+      "year": 2014,
+      "directors": [
+        "Seed Director 24"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 94
+    },
+    {
+      "title": "Resonale Seed Feature 25",
+      "original_title": "Resonale Seed Feature 25",
+      "year": 2015,
+      "directors": [
+        "Seed Director 25"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 95
+    },
+    {
+      "title": "Resonale Seed Feature 26",
+      "original_title": "Resonale Seed Feature 26",
+      "year": 2016,
+      "directors": [
+        "Seed Director 26"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 96
+    },
+    {
+      "title": "Resonale Seed Feature 27",
+      "original_title": "Resonale Seed Feature 27",
+      "year": 2017,
+      "directors": [
+        "Seed Director 27"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 97
+    },
+    {
+      "title": "Resonale Seed Feature 28",
+      "original_title": "Resonale Seed Feature 28",
+      "year": 2018,
+      "directors": [
+        "Seed Director 28"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 98
+    },
+    {
+      "title": "Resonale Seed Feature 29",
+      "original_title": "Resonale Seed Feature 29",
+      "year": 2019,
+      "directors": [
+        "Seed Director 29"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 99
+    },
+    {
+      "title": "Resonale Seed Feature 30",
+      "original_title": "Resonale Seed Feature 30",
+      "year": 2020,
+      "directors": [
+        "Seed Director 30"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 100
+    },
+    {
+      "title": "Resonale Seed Feature 31",
+      "original_title": "Resonale Seed Feature 31",
+      "year": 2021,
+      "directors": [
+        "Seed Director 31"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 101
+    },
+    {
+      "title": "Resonale Seed Feature 32",
+      "original_title": "Resonale Seed Feature 32",
+      "year": 2022,
+      "directors": [
+        "Seed Director 32"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 102
+    },
+    {
+      "title": "Resonale Seed Feature 33",
+      "original_title": "Resonale Seed Feature 33",
+      "year": 2023,
+      "directors": [
+        "Seed Director 33"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 103
+    },
+    {
+      "title": "Resonale Seed Feature 34",
+      "original_title": "Resonale Seed Feature 34",
+      "year": 2024,
+      "directors": [
+        "Seed Director 34"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 104
+    },
+    {
+      "title": "Resonale Seed Feature 35",
+      "original_title": "Resonale Seed Feature 35",
+      "year": 1990,
+      "directors": [
+        "Seed Director 35"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 105
+    },
+    {
+      "title": "Resonale Seed Feature 36",
+      "original_title": "Resonale Seed Feature 36",
+      "year": 1991,
+      "directors": [
+        "Seed Director 36"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 106
+    },
+    {
+      "title": "Resonale Seed Feature 37",
+      "original_title": "Resonale Seed Feature 37",
+      "year": 1992,
+      "directors": [
+        "Seed Director 37"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 107
+    },
+    {
+      "title": "Resonale Seed Feature 38",
+      "original_title": "Resonale Seed Feature 38",
+      "year": 1993,
+      "directors": [
+        "Seed Director 38"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 108
+    },
+    {
+      "title": "Resonale Seed Feature 39",
+      "original_title": "Resonale Seed Feature 39",
+      "year": 1994,
+      "directors": [
+        "Seed Director 39"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 109
+    },
+    {
+      "title": "Resonale Seed Feature 40",
+      "original_title": "Resonale Seed Feature 40",
+      "year": 1995,
+      "directors": [
+        "Seed Director 40"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 70
+    },
+    {
+      "title": "Resonale Seed Feature 41",
+      "original_title": "Resonale Seed Feature 41",
+      "year": 1996,
+      "directors": [
+        "Seed Director 41"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 71
+    },
+    {
+      "title": "Resonale Seed Feature 42",
+      "original_title": "Resonale Seed Feature 42",
+      "year": 1997,
+      "directors": [
+        "Seed Director 42"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 72
+    },
+    {
+      "title": "Resonale Seed Feature 43",
+      "original_title": "Resonale Seed Feature 43",
+      "year": 1998,
+      "directors": [
+        "Seed Director 43"
+      ],
+      "countries": [
+        "Chile"
+      ],
+      "runtime_minutes": 73
+    },
+    {
+      "title": "Resonale Seed Feature 44",
+      "original_title": "Resonale Seed Feature 44",
+      "year": 1999,
+      "directors": [
+        "Seed Director 44"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 74
+    },
+    {
+      "title": "Resonale Seed Feature 45",
+      "original_title": "Resonale Seed Feature 45",
+      "year": 2000,
+      "directors": [
+        "Seed Director 45"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 75
+    },
+    {
+      "title": "Resonale Seed Feature 46",
+      "original_title": "Resonale Seed Feature 46",
+      "year": 2001,
+      "directors": [
+        "Seed Director 46"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 76
+    },
+    {
+      "title": "Resonale Seed Feature 47",
+      "original_title": "Resonale Seed Feature 47",
+      "year": 2002,
+      "directors": [
+        "Seed Director 47"
+      ],
+      "countries": [
+        "Iran"
+      ],
+      "runtime_minutes": 77
+    },
+    {
+      "title": "Resonale Seed Feature 48",
+      "original_title": "Resonale Seed Feature 48",
+      "year": 2003,
+      "directors": [
+        "Seed Director 48"
+      ],
+      "countries": [
+        "Japan"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Resonale Seed Feature 49",
+      "original_title": "Resonale Seed Feature 49",
+      "year": 2004,
+      "directors": [
+        "Seed Director 49"
+      ],
+      "countries": [
+        "France"
+      ],
+      "runtime_minutes": 79
+    },
+    {
+      "title": "Resonale Seed Feature 50",
+      "original_title": "Resonale Seed Feature 50",
+      "year": 2005,
+      "directors": [
+        "Seed Director 50"
+      ],
+      "countries": [
+        "Czech Republic"
+      ],
+      "runtime_minutes": 80
+    }
+  ]
+}

@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bookmark, CircleCheck, Film as FilmIcon, UserRound } from "lucide-react";
+import {
+  Bookmark,
+  CircleCheck,
+  Clapperboard,
+  Film as FilmIcon,
+  UserRound,
+} from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCard from "@/components/FilmCard";
@@ -20,6 +26,11 @@ import {
 } from "@/lib/auth/resolve-auth-profile";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
+import {
+  MEDIA_TYPE,
+  normalizeMediaType,
+  type MediaType,
+} from "@/lib/media-type";
 import { createClient } from "@/lib/supabase/client";
 import {
   clearPendingFilmActionFromSession,
@@ -28,6 +39,38 @@ import {
 } from "@/lib/pending-film-action";
 import { resolveProfileListTabView } from "@/lib/profile-list-tab-view.mjs";
 import { Film } from "@/types/film";
+
+type CatalogSlice = {
+  films: Film[];
+  awardWinningFilmIds: string[];
+  loadError: string | null;
+};
+
+type ListMediaFilter = "all" | MediaType;
+
+function catalogSliceKey(media: MediaType): string {
+  return `${media}|native`;
+}
+
+function syncCatalogUrl(media: MediaType) {
+  if (typeof window === "undefined") {
+    return;
+  }
+  const params = new URLSearchParams();
+  if (media !== MEDIA_TYPE.animation) {
+    params.set("media", media);
+  }
+  const query = params.toString();
+  const next = query ? `/?${query}` : "/";
+  const current = `${window.location.pathname}${window.location.search}`;
+  if (current !== next) {
+    window.history.replaceState(window.history.state, "", next);
+  }
+}
+
+function filmMediaType(film: Film): MediaType {
+  return normalizeMediaType(film.media_type, MEDIA_TYPE.animation);
+}
 
 function ListTabSkeleton() {
   return (
@@ -54,7 +97,7 @@ function ListTabSkeleton() {
   );
 }
 
-type CatalogTab = "all" | "saved" | "watched";
+type CatalogTab = "all" | "films" | "saved" | "watched";
 
 type FilmsPageClientProps = {
   auth: AuthUserSummary | null;
@@ -68,6 +111,15 @@ type FilmsPageClientProps = {
   initialFilmRatings?: Record<string, number>;
   /** SSR-hydrated saved ids so Saved is ready on first paint. */
   initialSavedFilmIds?: string[];
+  /** Active catalog media (animation default). */
+  mediaType?: "animation" | "live_action";
+  /** Legacy query value; catalog always ranks native for the active media. */
+  sortParam?:
+    | "native"
+    | "cross_from_animation"
+    | "cross_from_live_action";
+  /** Early-access Films tab (allowlisted emails only). */
+  showLiveActionTab?: boolean;
 };
 
 type InteractionSnapshot = {
@@ -95,9 +147,32 @@ export default function FilmsPageClient({
   showSubtitle = false,
   initialFilmRatings = {},
   initialSavedFilmIds = [],
+  mediaType: initialMediaType = MEDIA_TYPE.animation,
+  sortParam: _unusedSortParam = "native",
+  showLiveActionTab = false,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
-  const [activeTab, setActiveTab] = useState<CatalogTab>("all");
+  const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
+    initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
+  );
+  const [activeMedia, setActiveMedia] = useState<MediaType>(initialMediaType);
+  const [listMediaFilter, setListMediaFilter] =
+    useState<ListMediaFilter>("all");
+  const [catalogSlices, setCatalogSlices] = useState<
+    Record<string, CatalogSlice>
+  >(() => ({
+    [catalogSliceKey(initialMediaType)]: {
+      films,
+      awardWinningFilmIds,
+      loadError,
+    },
+  }));
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const catalogInflightRef = useRef(
+    new Map<string, Promise<CatalogSlice | null>>()
+  );
+  const catalogSlicesRef = useRef(catalogSlices);
+  catalogSlicesRef.current = catalogSlices;
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLockScrollY, setModalLockScrollY] = useState(0);
   const [modalRestoreFocusElement, setModalRestoreFocusElement] =
@@ -131,6 +206,73 @@ export default function FilmsPageClient({
   const bumpInteractionGeneration = useCallback(() => {
     interactionGenerationRef.current += 1;
   }, []);
+
+  const ensureCatalog = useCallback(async (media: MediaType) => {
+    const key = catalogSliceKey(media);
+    const cached = catalogSlicesRef.current[key];
+    if (cached) {
+      return cached;
+    }
+
+    const inflight = catalogInflightRef.current.get(key);
+    if (inflight) {
+      return inflight;
+    }
+
+    const request = (async (): Promise<CatalogSlice | null> => {
+      try {
+        const params = new URLSearchParams();
+        if (media !== MEDIA_TYPE.animation) {
+          params.set("media", media);
+        }
+        const query = params.toString();
+        const response = await fetch(
+          query ? `/api/catalog?${query}` : "/api/catalog"
+        );
+        if (!response.ok) {
+          console.error("[catalog] client fetch failed", response.status);
+          return null;
+        }
+        const payload = (await response.json()) as {
+          films?: Film[];
+          awardWinningFilmIds?: string[];
+          loadError?: string | null;
+        };
+        const slice: CatalogSlice = {
+          films: payload.films ?? [],
+          awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
+          loadError: payload.loadError ?? null,
+        };
+        setCatalogSlices((current) =>
+          current[key] ? current : { ...current, [key]: slice }
+        );
+        return slice;
+      } catch (error) {
+        console.error("[catalog] client fetch error", error);
+        return null;
+      } finally {
+        catalogInflightRef.current.delete(key);
+      }
+    })();
+
+    catalogInflightRef.current.set(key, request);
+    return request;
+  }, []);
+
+  const selectCatalog = useCallback(
+    async (media: MediaType) => {
+      const key = catalogSliceKey(media);
+      if (!catalogSlicesRef.current[key]) {
+        setCatalogLoading(true);
+        await ensureCatalog(media);
+        setCatalogLoading(false);
+      }
+      setActiveMedia(media);
+      setActiveTab(media === MEDIA_TYPE.liveAction ? "films" : "all");
+      syncCatalogUrl(media);
+    },
+    [ensureCatalog]
+  );
 
   const applyServerFilmRatings = useCallback(
     (serverRatings: Record<string, number | null>) => {
@@ -218,13 +360,42 @@ export default function FilmsPageClient({
     setSavedFilmIds(new Set(initialSavedFilmIds));
     setRatingsReady(true);
     listsHydratedFromSsrRef.current = initialAuth !== null;
-  }, [initialAuth, initialFilmRatings, initialSavedFilmIds]);
+    const key = catalogSliceKey(initialMediaType);
+    setCatalogSlices((current) => ({
+      ...current,
+      [key]: {
+        films,
+        awardWinningFilmIds,
+        loadError,
+      },
+    }));
+  }, [
+    initialAuth,
+    initialFilmRatings,
+    initialSavedFilmIds,
+    initialMediaType,
+    films,
+    awardWinningFilmIds,
+    loadError,
+  ]);
 
   useEffect(() => {
-    if (!auth && activeTab !== "all") {
+    if (!auth && activeTab !== "all" && activeTab !== "films") {
       setActiveTab("all");
     }
   }, [auth, activeTab]);
+
+  // Prefetch the other catalog so Films ↔ All feels like a local tab switch.
+  useEffect(() => {
+    if (!showLiveActionTab) {
+      return;
+    }
+    const otherMedia =
+      activeMedia === MEDIA_TYPE.liveAction
+        ? MEDIA_TYPE.animation
+        : MEDIA_TYPE.liveAction;
+    void ensureCatalog(otherMedia);
+  }, [showLiveActionTab, activeMedia, ensureCatalog]);
 
   useEffect(() => {
     let cancelled = false;
@@ -421,42 +592,88 @@ export default function FilmsPageClient({
         return;
       }
 
+      if (tab === "all") {
+        void selectCatalog(MEDIA_TYPE.animation);
+        return;
+      }
+
+      if (tab === "films") {
+        void selectCatalog(MEDIA_TYPE.liveAction);
+        return;
+      }
+
       setActiveTab(tab);
     },
-    [auth, openAuthModal]
+    [auth, openAuthModal, selectCatalog]
   );
 
-  const savedFilms = useMemo(
-    () => films.filter((film) => savedFilmIds.has(film.id)),
-    [films, savedFilmIds]
-  );
+  const isCatalogTab = activeTab === "all" || activeTab === "films";
+  const catalogSubtitle =
+    activeMedia === MEDIA_TYPE.liveAction
+      ? {
+          primary:
+            "Find quiet, strange and emotionally resonant films to watch next.",
+          secondary:
+            "Early access live-action catalog — ranked from your film taste.",
+        }
+      : {
+          primary:
+            "Find strange, beautiful and emotionally resonant animated films to watch next.",
+          secondary:
+            "Independent, artist-led and festival animation from around the world.",
+        };
 
-  const watchedFilms = useMemo(
-    () =>
-      films.filter((film) => {
-        const rating = filmRatings[film.id];
-        return typeof rating === "number";
-      }),
-    [films, filmRatings]
-  );
+  const currentSlice = catalogSlices[catalogSliceKey(activeMedia)] ?? null;
+  const catalogFilms = currentSlice?.films ?? [];
+  const catalogAwardIds = currentSlice?.awardWinningFilmIds ?? [];
+  const catalogLoadError = currentSlice?.loadError ?? loadError;
 
-  // All is the unrated queue: rated films leave immediately via optimistic
+  const libraryFilms = useMemo(() => {
+    const byId = new Map<string, Film>();
+    for (const slice of Object.values(catalogSlices)) {
+      for (const film of slice.films) {
+        byId.set(film.id, film);
+      }
+    }
+    return Array.from(byId.values());
+  }, [catalogSlices]);
+
+  const savedFilms = useMemo(() => {
+    const saved = libraryFilms.filter((film) => savedFilmIds.has(film.id));
+    if (listMediaFilter === "all") {
+      return saved;
+    }
+    return saved.filter((film) => filmMediaType(film) === listMediaFilter);
+  }, [libraryFilms, listMediaFilter, savedFilmIds]);
+
+  const watchedFilms = useMemo(() => {
+    const watched = libraryFilms.filter((film) => {
+      const rating = filmRatings[film.id];
+      return typeof rating === "number";
+    });
+    if (listMediaFilter === "all") {
+      return watched;
+    }
+    return watched.filter((film) => filmMediaType(film) === listMediaFilter);
+  }, [filmRatings, libraryFilms, listMediaFilter]);
+
+  // All/Films queues: rated films leave immediately via optimistic
   // filmRatings updates (no reload), and return when the rating is cleared.
   const unratedFilms = useMemo(
     () =>
-      films.filter((film) => typeof filmRatings[film.id] !== "number"),
-    [films, filmRatings]
+      catalogFilms.filter((film) => typeof filmRatings[film.id] !== "number"),
+    [catalogFilms, filmRatings]
   );
 
   const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
   // ratingsReady covers both filmRatings and savedFilmIds — they load together
   // in loadAuthenticatedProfileFilmState, then pending actions apply before ready.
   const listTabView = resolveProfileListTabView({
-    loadError,
+    loadError: catalogLoadError,
     listsReady: ratingsReady,
     listLength: listFilms.length,
   });
-  const showCatalogSubtitle = showSubtitle && activeTab === "all";
+  const showCatalogSubtitle = showSubtitle && isCatalogTab;
 
   return (
     <main
@@ -464,7 +681,7 @@ export default function FilmsPageClient({
       data-testid="films-page"
       data-ratings-ready={ratingsReady ? "true" : "false"}
     >
-      <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
+      <header className={isCatalogTab ? "mb-0" : "mb-[18px]"}>
         <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
           <ResonaleBrand onClick={() => handleTabChange("all")} />
 
@@ -485,6 +702,24 @@ export default function FilmsPageClient({
                 aria-hidden="true"
               />
             </HeaderIconButton>
+            {showLiveActionTab ? (
+              <HeaderIconButton
+                label="Films"
+                active={activeTab === "films"}
+                labelClassName="hidden sm:inline-block"
+                iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] sm:after:hidden"
+                onClick={() => handleTabChange("films")}
+                data-testid="nav-films"
+              >
+                <Clapperboard
+                  size={HEADER_NAV_ICON.size}
+                  strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                  fill="none"
+                  className="shrink-0"
+                  aria-hidden="true"
+                />
+              </HeaderIconButton>
+            ) : null}
             <HeaderIconButton
               label="Saved"
               active={activeTab === "saved"}
@@ -549,12 +784,10 @@ export default function FilmsPageClient({
           <div className="mt-[18px] mb-[22px]">
             <h1 className="sr-only">Resonale</h1>
             <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              Find strange, beautiful and emotionally resonant animated films to
-              watch next.
+              {catalogSubtitle.primary}
             </p>
             <p className="mt-1 font-sans text-[14px] font-normal leading-[1.3] tracking-tight text-[#7a7b90] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              Independent, artist-led and festival animation from around the
-              world.
+              {catalogSubtitle.secondary}
             </p>
           </div>
         ) : (
@@ -562,24 +795,61 @@ export default function FilmsPageClient({
         )}
       </header>
 
-      {activeTab === "all" ? (
+      {!isCatalogTab && showLiveActionTab ? (
+        <div
+          className="mb-4 inline-flex rounded-full border border-[#e4e2f0] bg-[#f7f6fb] p-0.5"
+          role="tablist"
+          aria-label="Filter by media"
+        >
+          {(
+            [
+              ["all", "All"],
+              [MEDIA_TYPE.animation, "Animation"],
+              [MEDIA_TYPE.liveAction, "Films"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={listMediaFilter === value}
+              className={`rounded-full px-3 py-1.5 text-sm transition ${
+                listMediaFilter === value
+                  ? "bg-white text-[#2f3040] shadow-sm"
+                  : "text-[#7a7b90]"
+              }`}
+              onClick={() => setListMediaFilter(value)}
+              data-testid={`list-media-filter-${value}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      {isCatalogTab ? (
         <div className={showCatalogSubtitle ? undefined : "mt-[18px]"}>
-          <FilmCatalog
-            films={unratedFilms}
-            awardWinningFilmIds={awardWinningFilmIds}
-            pageSize={pageSize}
-            loadError={loadError}
-            interaction={{
-              profileId,
-              profileSlug,
-              savedFilmIds,
-              filmRatings,
-              ratingsReady,
-              onSavedChange: handleSavedChange,
-              onRatingChange: handleRatingChange,
-              onAuthRequired: auth ? undefined : handleAuthRequired,
-            }}
-          />
+          {catalogLoading && !currentSlice ? (
+            <ListTabSkeleton />
+          ) : (
+            <FilmCatalog
+              films={unratedFilms}
+              awardWinningFilmIds={catalogAwardIds}
+              pageSize={pageSize}
+              loadError={catalogLoadError}
+              mediaType={activeMedia}
+              interaction={{
+                profileId,
+                profileSlug,
+                savedFilmIds,
+                filmRatings,
+                ratingsReady,
+                onSavedChange: handleSavedChange,
+                onRatingChange: handleRatingChange,
+                onAuthRequired: auth ? undefined : handleAuthRequired,
+              }}
+            />
+          )}
         </div>
       ) : (
         <>
@@ -629,7 +899,7 @@ export default function FilmsPageClient({
 
           {listTabView === "error" ? (
             <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
-              {loadError}
+              {catalogLoadError}
             </div>
           ) : null}
 

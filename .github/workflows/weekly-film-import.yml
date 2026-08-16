@@ -1,0 +1,86 @@
+name: Weekly film import
+
+# Friday 18:00 UTC ≈ Friday 20:00 Europe/Amsterdam (CEST) /
+# Friday 19:00 Europe/Amsterdam (CET). See WEEKLY_FILM_IMPORT.md.
+
+on:
+  schedule:
+    - cron: "0 18 * * 5"
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: "Number of pending films to claim (1–50)"
+        required: false
+        default: "5"
+      dry_run:
+        description: "Preview claimable films without importing or locking"
+        type: boolean
+        required: false
+        default: false
+      skip_email:
+        description: "Skip sending the Resend report email"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: weekly-film-import
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  import-films:
+    name: Import next film batch
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run weekly film import
+        id: import
+        env:
+          APP_ENV: hosted
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          WEEKLY_FILM_IMPORT_REPORT_EMAIL: ${{ secrets.WEEKLY_FILM_IMPORT_REPORT_EMAIL }}
+          WEEKLY_FILM_IMPORT_EMAIL_FROM: ${{ secrets.WEEKLY_FILM_IMPORT_EMAIL_FROM }}
+          WEEKLY_FILM_IMPORT_BATCH_SIZE: ${{ vars.WEEKLY_FILM_IMPORT_BATCH_SIZE }}
+          WEEKLY_FILM_IMPORT_STALE_MINUTES: ${{ vars.WEEKLY_FILM_IMPORT_STALE_MINUTES }}
+          WEEKLY_FILM_IMPORT_LOW_QUEUE_THRESHOLD: ${{ vars.WEEKLY_FILM_IMPORT_LOW_QUEUE_THRESHOLD }}
+          GITHUB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          BATCH_SIZE="${{ github.event.inputs.batch_size }}"
+          if [ -z "${BATCH_SIZE}" ]; then
+            BATCH_SIZE="${WEEKLY_FILM_IMPORT_BATCH_SIZE:-5}"
+          fi
+
+          ARGS=(--batch-size "${BATCH_SIZE}")
+
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS+=(--dry-run)
+          fi
+
+          if [ "${{ github.event.inputs.skip_email }}" = "true" ]; then
+            ARGS+=(--skip-email)
+          fi
+
+          echo "Running: node scripts/run-weekly-film-import.mjs ${ARGS[*]}"
+          node scripts/run-weekly-film-import.mjs "${ARGS[@]}"

@@ -1,0 +1,987 @@
+{
+  "version": "resonale-mood-writing-guide-v1",
+  "generated_at": "2026-08-06T21:17:15.363Z",
+  "model": "gpt-4.1",
+  "corpus_size": 200,
+  "excluded_record_count": 16,
+  "corpus_snapshot": {
+    "total_mood_records": 216,
+    "included_in_corpus": 200,
+    "excluded": 16,
+    "exclusion_reasons": {
+      "fails_mood_validator": 4,
+      "banned_phrases": 14,
+      "not_catalog_visible": 2
+    },
+    "near_duplicates": 0,
+    "repeated_openings": [
+      {
+        "opening": "warm and",
+        "count": 10
+      },
+      {
+        "opening": "vibrant and",
+        "count": 10
+      },
+      {
+        "opening": "playful and",
+        "count": 8
+      },
+      {
+        "opening": "bright and",
+        "count": 7
+      },
+      {
+        "opening": "cold and",
+        "count": 7
+      },
+      {
+        "opening": "slow and",
+        "count": 5
+      },
+      {
+        "opening": "dynamic and",
+        "count": 5
+      },
+      {
+        "opening": "lush and",
+        "count": 5
+      },
+      {
+        "opening": "fluid and",
+        "count": 5
+      },
+      {
+        "opening": "tense and",
+        "count": 5
+      },
+      {
+        "opening": "playful yet",
+        "count": 4
+      },
+      {
+        "opening": "calm and",
+        "count": 4
+      },
+      {
+        "opening": "lively and",
+        "count": 4
+      },
+      {
+        "opening": "darkly comedic,",
+        "count": 4
+      },
+      {
+        "opening": "colorful and",
+        "count": 4
+      },
+      {
+        "opening": "somber and",
+        "count": 4
+      },
+      {
+        "opening": "light and",
+        "count": 4
+      },
+      {
+        "opening": "darkly atmospheric,",
+        "count": 3
+      },
+      {
+        "opening": "surreal and",
+        "count": 3
+      }
+    ],
+    "stats": {
+      "word_count_min": 13,
+      "word_count_median": 20,
+      "word_count_max": 22,
+      "with_mood_tags": 200
+    }
+  },
+  "initial_guide": {
+    "version": "resonale-mood-writing-guide-v1",
+    "sections": {
+      "purpose": "To guide writers in crafting distinctive, evocative, and concise 'the_mood' lines for animated films, capturing the film's emotional landscape, visual style, and tonal complexity in a manner consistent with the Resonale house style.",
+      "core_principles": [
+        "Blend emotional tone, visual/aural qualities, and pacing into a single, flowing sentence.",
+        "Favor specificity: reference concrete sensory details, contrasts, and narrative rhythms.",
+        "Balance opposites or tensions (e.g., warmth vs. melancholy, humor vs. gravity) to reflect nuance.",
+        "Avoid generic adjectives or mood tags as standalone descriptors.",
+        "Use varied syntax and avoid formulaic repetition, especially in openings.",
+        "Let the sentence move dynamically, often shifting or oscillating between moods or qualities.",
+        "Integrate technique, setting, or era only if it shapes the mood experience."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Emotional Tone",
+          "detail": "Captures the prevailing feelings (e.g., melancholic, playful, tense, bittersweet)."
+        },
+        {
+          "name": "Visual/Aural Texture",
+          "detail": "Describes color, light, sound, or tactile qualities (e.g., vibrant colors, muted tones, tactile puppet textures)."
+        },
+        {
+          "name": "Pace and Rhythm",
+          "detail": "Conveys the film's tempo and how it affects mood (e.g., slow and heavy, brisk and chaotic, rhythmic flow)."
+        },
+        {
+          "name": "Contrasts and Oscillations",
+          "detail": "Highlights shifts or tensions between moods, visuals, or narrative beats (e.g., warmth vs. isolation, humor vs. gravity)."
+        },
+        {
+          "name": "Atmospheric/Narrative Context",
+          "detail": "Situates mood within setting, era, or narrative context when relevant (e.g., rural summer, urban alienation, afterlife world)."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Pairing Contrasting Qualities",
+          "why": "Creates nuance and complexity (e.g., 'Playful yet melancholic...')."
+        },
+        {
+          "principle": "Sensory Specificity",
+          "why": "Grounds mood in concrete imagery or sound (e.g., 'punctuated by moments of silence and absurdity')."
+        },
+        {
+          "principle": "Dynamic Movement",
+          "why": "Lets the mood line flow or oscillate, mirroring the film's tonal shifts (e.g., 'oscillates between festive cheer and unsettling tension')."
+        },
+        {
+          "principle": "Integrated Technique References",
+          "why": "Mentions animation style only when it shapes the sensory or emotional experience (e.g., 'tactile puppet textures')."
+        },
+        {
+          "principle": "Economical, Single-Sentence Structure",
+          "why": "Keeps the line concise yet layered, avoiding lists or fragments."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "\"X and Y, with a steady rhythm…\"",
+          "when_weak": "When used as a template without specificity or when 'steady rhythm' is not distinctive.",
+          "when_ok": "When the rhythm is central to the film's feel and is described in a way that connects to the film's unique qualities."
+        },
+        {
+          "pattern": "\"with a tense atmosphere\"",
+          "when_weak": "When 'tense atmosphere' is generic and not grounded in sensory or narrative detail.",
+          "when_ok": "When tension is described through specific contrasts or sensory cues."
+        },
+        {
+          "pattern": "\"underscored by\"",
+          "when_weak": "When used to tack on a mood element without integrating it into the sentence's flow.",
+          "when_ok": "When the underscoring element is vivid and meaningfully alters the mood (e.g., 'underscored by bursts of jazz and moments of quiet longing')."
+        },
+        {
+          "pattern": "\"marked by\"",
+          "when_weak": "When used as a shortcut for listing features rather than weaving them into the mood.",
+          "when_ok": "When the 'marking' feature is unusual or central to the film's experience."
+        },
+        {
+          "pattern": "\"a blend of\"",
+          "when_weak": "When it introduces a vague or generic mix of moods.",
+          "when_ok": "When the blend is surprising, specific, or evocative (e.g., 'a blend of vibrant colors and muted tones')."
+        },
+        {
+          "pattern": "\"raw energy\"",
+          "when_weak": "When 'raw energy' is used as a filler without describing how it manifests.",
+          "when_ok": "When it is paired with concrete details or contrasts (e.g., 'bursts of raw emotion')."
+        },
+        {
+          "pattern": "\"distinctive\"",
+          "when_weak": "When used as a placeholder for actual description.",
+          "when_ok": "When followed by a specific, unusual trait that defines the film's mood."
+        },
+        {
+          "pattern": "Generic quirky/dreamlike/reflective",
+          "when_weak": "When used as a standalone descriptor or without sensory/narrative context.",
+          "when_ok": "When made concrete through imagery, pacing, or narrative detail (e.g., 'dreamlike and bruised, drifting between artistic exhilaration...')."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Contrasting Pair",
+          "principle": "Use 'X and Y' or 'X yet Y' to show tension or duality."
+        },
+        {
+          "type": "Sensory Cascade",
+          "principle": "List visual, aural, and tactile qualities in a flowing sequence."
+        },
+        {
+          "type": "Oscillation/Movement",
+          "principle": "Describe how the mood shifts or oscillates between states."
+        },
+        {
+          "type": "Punctuated/Interrupted",
+          "principle": "Use 'punctuated by', 'contrasting', or 'balancing' to highlight shifts."
+        },
+        {
+          "type": "Setting/Technique Integration",
+          "principle": "Embed references to setting, animation style, or era when they shape the mood."
+        },
+        {
+          "type": "Atmospheric Statement",
+          "principle": "Open with a broad mood, then ground it in specifics (e.g., 'Lush and surreal, with a haunting beauty...')."
+        }
+      ],
+      "specificity_test": "Does the line evoke a unique, sensory, and emotionally layered experience, or could it describe any number of films? If the latter, add or sharpen concrete details, contrasts, or narrative context.",
+      "relationship_with_synopsis": "The_mood should complement, not repeat, the synopsis. It distills the film's emotional and sensory atmosphere, often referencing but not summarizing narrative events.",
+      "relationship_with_moods_tags": "The_mood line should not simply list mood tags; instead, it should synthesize and animate them through sensory, rhythmic, and contextual language.",
+      "good_examples": [
+        {
+          "title": "$9.99",
+          "the_mood": "Playful yet melancholic, with a mix of vibrant colors and muted tones, punctuated by moments of silence and absurdity.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "anxious",
+            "intimate",
+            "bleak",
+            "poetic"
+          ],
+          "why": "Balances emotional opposites, uses sensory detail, and avoids formulaic structure."
+        },
+        {
+          "title": "58th",
+          "the_mood": "Sober, intimate and unresolved, using rotoscoped memory to hold grief, political absence and a family's refusal to let one life disappear.",
+          "moods": [
+            "melancholic",
+            "anxious",
+            "bittersweet",
+            "hopeful",
+            "intimate",
+            "sad"
+          ],
+          "why": "Integrates animation technique and narrative context to create a layered mood."
+        },
+        {
+          "title": "A Magnificent Life",
+          "the_mood": "Elegant, nostalgic and lightly theatrical, turning artistic memory into a warm promenade through old studios, Provence and the pleasure of storytelling.",
+          "moods": [
+            "nostalgic",
+            "tender",
+            "bittersweet",
+            "intimate",
+            "dreamy",
+            "hopeful"
+          ],
+          "why": "Uses evocative setting and movement, with a poetic turn."
+        },
+        {
+          "title": "A Scanner Darkly",
+          "the_mood": "Fragmented, surreal, and unsettling, with a cold, oppressive atmosphere and a mix of dark humor and paranoia.",
+          "moods": [
+            "paranoid",
+            "alienated",
+            "dreamy",
+            "bleak",
+            "anxious",
+            "unsettling",
+            "fragile"
+          ],
+          "why": "Blends emotional, sensory, and narrative elements with specificity."
+        },
+        {
+          "title": "Angel's Egg",
+          "the_mood": "Slow, haunting, and visually stark, with an oppressive silence that amplifies the sense of isolation.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "eerie",
+            "dreamy",
+            "poetic",
+            "bleak"
+          ],
+          "why": "Sensory and emotional specificity; rhythm and atmosphere are central."
+        },
+        {
+          "title": "Another Day of Life",
+          "the_mood": "Urgent and chaotic, blending stark realism with stylized animation, punctuated by moments of dark humor and a pervasive sense of tension.",
+          "moods": [
+            "anxious",
+            "bleak",
+            "intense",
+            "restless",
+            "unsettling",
+            "poetic"
+          ],
+          "why": "Dynamic movement, technique integration, and emotional layering."
+        },
+        {
+          "title": "Belladonna of Sadness",
+          "the_mood": "Lush and surreal, with a haunting beauty that oscillates between vibrant color and oppressive darkness, creating a sense of unease and tension.",
+          "moods": [
+            "melancholic",
+            "bittersweet",
+            "eerie",
+            "anxious",
+            "bleak",
+            "poetic",
+            "unsettling"
+          ],
+          "why": "Rich sensory language and oscillation between moods."
+        },
+        {
+          "title": "ChaO",
+          "the_mood": "Bright, exuberant and romantically strange, overflowing with elastic movement, aquatic fantasy and sincere emotional sweetness.",
+          "moods": [
+            "dreamy",
+            "hopeful",
+            "tender",
+            "whimsical",
+            "intimate",
+            "playful"
+          ],
+          "why": "Inventive, specific, and avoids formulaic structure."
+        },
+        {
+          "title": "Endless Cookie",
+          "the_mood": "Loose, handmade and affectionate, tumbling through family memory with comic digressions, rough textures and a strong sense of lived-in intimacy.",
+          "moods": [
+            "melancholic",
+            "intimate",
+            "bittersweet",
+            "tender",
+            "hopeful",
+            "dreamy"
+          ],
+          "why": "Textural specificity and narrative context; lively movement."
+        },
+        {
+          "title": "Ghost Cat Anzu",
+          "the_mood": "Lively and warm, with a mix of playful humor and gentle melancholy, balancing lightness and darkness in a rural summer setting.",
+          "moods": [
+            "warm",
+            "eerie",
+            "bittersweet",
+            "gentle",
+            "strange",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Balances opposites, grounds mood in setting, and uses concrete contrasts."
+        },
+        {
+          "title": "Iron Boy",
+          "the_mood": "Tender, grounded and quietly liberating, moving from bodily constraint and rural expectation toward music, friendship and a widening sense of possibility.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "lonely",
+            "bittersweet",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Narrative movement and specificity; avoids generic descriptors."
+        },
+        {
+          "title": "Lucy Lost",
+          "the_mood": "Gentle, windswept and mysterious, combining childlike wonder, coastal melancholy and a warm story about memory, belonging and identity.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "eerie",
+            "anxious",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Sensory detail, narrative context, and emotional layering."
+        },
+        {
+          "title": "Marcel the Shell with Shoes On",
+          "the_mood": "Light and playful, with a mix of humor and melancholy, featuring a textured visual style that feels both intimate and expansive.",
+          "moods": [
+            "tender",
+            "vulnerable",
+            "bittersweet",
+            "hopeful",
+            "intimate",
+            "playful"
+          ],
+          "why": "Textural and emotional specificity, with a dynamic sentence."
+        },
+        {
+          "title": "Rock Bottom",
+          "the_mood": "Dreamlike and bruised, drifting between artistic exhilaration, hazy intimacy and the slow collapse of an idealised summer.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "anxious",
+            "bittersweet",
+            "intimate",
+            "hopeful"
+          ],
+          "why": "Inventive, concrete, and avoids formulaic structure; strong oscillation."
+        },
+        {
+          "title": "The Glassworker",
+          "the_mood": "Luminous and fragile, with the warmth of glass and music set against gathering military tension and the ache of first love.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "bittersweet",
+            "anxious",
+            "hopeful",
+            "intimate",
+            "gentle"
+          ],
+          "why": "Sensory specificity, narrative context, and emotional layering."
+        },
+        {
+          "title": "The Wolf House",
+          "the_mood": "Uneasy and surreal, with a disjointed pace that oscillates between tension and absurdity, featuring stark contrasts of light and shadow.",
+          "moods": [
+            "eerie",
+            "unsettling",
+            "anxious",
+            "bleak",
+            "melancholic",
+            "dreamy"
+          ],
+          "why": "Inventive structure, strong contrasts, and sensory detail."
+        },
+        {
+          "title": "We Are Aliens",
+          "the_mood": "Textured, rain-soaked and deeply wistful, following friendship through awkward movement, emotional rupture and the lingering ache of youth.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "lonely",
+            "bittersweet",
+            "intimate",
+            "anxious",
+            "hopeful"
+          ],
+          "why": "Concrete, poetic, and emotionally layered; avoids templates."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "Long Way North",
+          "the_mood": "Cold and adventurous, with a steady pace that balances moments of tension and warmth against a backdrop of stark, icy landscapes.",
+          "why": "Relies on the 'X and Y, with a steady pace that balances...' template; lacks distinctive detail.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Mars Express",
+          "the_mood": "Cold and gritty, with a steady pace that builds tension through sparse dialogue and stark visuals.",
+          "why": "Uses a formulaic structure and generic descriptors ('steady pace', 'stark visuals').",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Most Precious of Cargoes",
+          "the_mood": "Tense and urgent, with a stark contrast between the warmth of human connection and the coldness of the surrounding conflict.",
+          "why": "Generic use of 'tense and urgent' and 'stark contrast' without unique sensory cues.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Crossing",
+          "the_mood": "Tense and gritty, with a relentless pace and stark visuals that emphasize the harshness of survival.",
+          "why": "Relies on generic tension and 'stark visuals'; lacks inventive detail.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Swallows of Kabul",
+          "the_mood": "Somber and oppressive, with a slow, heavy pace that amplifies the tension and despair in a stark, muted visual landscape.",
+          "why": "Too reliant on mood tags and generic visual descriptors.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Summit of the Gods",
+          "the_mood": "Cold and stark, with a slow, deliberate pace that builds tension through silence and vast, unforgiving landscapes.",
+          "why": "Formulaic structure; lacks unique movement or imagery.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Tower",
+          "the_mood": "Grim and claustrophobic, with a slow, oppressive pace and stark contrasts between light and shadow.",
+          "why": "Generic use of 'stark contrasts' and 'oppressive pace'; not sufficiently specific.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Dozens of Norths",
+          "the_mood": "Cold and fragmented, with a slow, disorienting pace that oscillates between silence and sudden bursts of noise.",
+          "why": "Oscillation is present, but the line is built from generic descriptors and lacks a distinctive image.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Giovanni's Island",
+          "the_mood": "Calm and somber, with a slow pace, muted colors, and a sense of nostalgia mixed with tension from the surrounding conflict.",
+          "why": "Relies on a list of mood tags and generic visual cues.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Birdboy: The Forgotten Children",
+          "the_mood": "Dark and oppressive, with a slow, heavy pace and a stark contrast between the harsh environment and fleeting moments of warmth.",
+          "why": "Uses generic contrasts and lacks inventive movement or imagery.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Siren",
+          "the_mood": "Tense and haunting, with a mix of muted colors and stark contrasts, punctuated by moments of eerie silence and distant chaos.",
+          "why": "Generic use of 'tense', 'haunting', and 'stark contrasts'; not sufficiently distinctive.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Spine of Night",
+          "the_mood": "Dark, intense, and violent, with a heavy atmosphere that contrasts stark visuals and a relentless pace.",
+          "why": "Relies on mood tags and generic contrasts; lacks inventive specificity.",
+          "acceptable_but_weak": true
+        }
+      ]
+    },
+    "analyst_notes": "House style is defined by specificity, dynamic movement, and concrete sensory or narrative detail. Frequent patterns like 'X and Y, with a steady pace...' or 'with a tense atmosphere' are overused and only effective when paired with unique, film-specific imagery or context. Avoid formulaic openings and generic descriptors; instead, animate mood tags through inventive, layered language.",
+    "counts": {
+      "good_examples": 17,
+      "anti_examples": 12
+    }
+  },
+  "self_review": {
+    "verdict": "ACCEPT",
+    "issues": [],
+    "summary": "The guide is well-grounded in the Resonale corpus, avoids generic writing advice, and does not enshrine weak templates; instead, it explicitly warns against them. The rules are actionable, non-contradictory, and the guide is compact enough for prompt use. The examples are drawn directly from the corpus and meet the required counts, providing clear illustrations of both strong and weak patterns. No revision is needed."
+  },
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-v1",
+    "sections": {
+      "purpose": "To guide writers in crafting distinctive, evocative, and concise 'the_mood' lines for animated films, capturing the film's emotional landscape, visual style, and tonal complexity in a manner consistent with the Resonale house style.",
+      "core_principles": [
+        "Blend emotional tone, visual/aural qualities, and pacing into a single, flowing sentence.",
+        "Favor specificity: reference concrete sensory details, contrasts, and narrative rhythms.",
+        "Balance opposites or tensions (e.g., warmth vs. melancholy, humor vs. gravity) to reflect nuance.",
+        "Avoid generic adjectives or mood tags as standalone descriptors.",
+        "Use varied syntax and avoid formulaic repetition, especially in openings.",
+        "Let the sentence move dynamically, often shifting or oscillating between moods or qualities.",
+        "Integrate technique, setting, or era only if it shapes the mood experience."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Emotional Tone",
+          "detail": "Captures the prevailing feelings (e.g., melancholic, playful, tense, bittersweet)."
+        },
+        {
+          "name": "Visual/Aural Texture",
+          "detail": "Describes color, light, sound, or tactile qualities (e.g., vibrant colors, muted tones, tactile puppet textures)."
+        },
+        {
+          "name": "Pace and Rhythm",
+          "detail": "Conveys the film's tempo and how it affects mood (e.g., slow and heavy, brisk and chaotic, rhythmic flow)."
+        },
+        {
+          "name": "Contrasts and Oscillations",
+          "detail": "Highlights shifts or tensions between moods, visuals, or narrative beats (e.g., warmth vs. isolation, humor vs. gravity)."
+        },
+        {
+          "name": "Atmospheric/Narrative Context",
+          "detail": "Situates mood within setting, era, or narrative context when relevant (e.g., rural summer, urban alienation, afterlife world)."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Pairing Contrasting Qualities",
+          "why": "Creates nuance and complexity (e.g., 'Playful yet melancholic...')."
+        },
+        {
+          "principle": "Sensory Specificity",
+          "why": "Grounds mood in concrete imagery or sound (e.g., 'punctuated by moments of silence and absurdity')."
+        },
+        {
+          "principle": "Dynamic Movement",
+          "why": "Lets the mood line flow or oscillate, mirroring the film's tonal shifts (e.g., 'oscillates between festive cheer and unsettling tension')."
+        },
+        {
+          "principle": "Integrated Technique References",
+          "why": "Mentions animation style only when it shapes the sensory or emotional experience (e.g., 'tactile puppet textures')."
+        },
+        {
+          "principle": "Economical, Single-Sentence Structure",
+          "why": "Keeps the line concise yet layered, avoiding lists or fragments."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "\"X and Y, with a steady rhythm…\"",
+          "when_weak": "When used as a template without specificity or when 'steady rhythm' is not distinctive.",
+          "when_ok": "When the rhythm is central to the film's feel and is described in a way that connects to the film's unique qualities."
+        },
+        {
+          "pattern": "\"with a tense atmosphere\"",
+          "when_weak": "When 'tense atmosphere' is generic and not grounded in sensory or narrative detail.",
+          "when_ok": "When tension is described through specific contrasts or sensory cues."
+        },
+        {
+          "pattern": "\"underscored by\"",
+          "when_weak": "When used to tack on a mood element without integrating it into the sentence's flow.",
+          "when_ok": "When the underscoring element is vivid and meaningfully alters the mood (e.g., 'underscored by bursts of jazz and moments of quiet longing')."
+        },
+        {
+          "pattern": "\"marked by\"",
+          "when_weak": "When used as a shortcut for listing features rather than weaving them into the mood.",
+          "when_ok": "When the 'marking' feature is unusual or central to the film's experience."
+        },
+        {
+          "pattern": "\"a blend of\"",
+          "when_weak": "When it introduces a vague or generic mix of moods.",
+          "when_ok": "When the blend is surprising, specific, or evocative (e.g., 'a blend of vibrant colors and muted tones')."
+        },
+        {
+          "pattern": "\"raw energy\"",
+          "when_weak": "When 'raw energy' is used as a filler without describing how it manifests.",
+          "when_ok": "When it is paired with concrete details or contrasts (e.g., 'bursts of raw emotion')."
+        },
+        {
+          "pattern": "\"distinctive\"",
+          "when_weak": "When used as a placeholder for actual description.",
+          "when_ok": "When followed by a specific, unusual trait that defines the film's mood."
+        },
+        {
+          "pattern": "Generic quirky/dreamlike/reflective",
+          "when_weak": "When used as a standalone descriptor or without sensory/narrative context.",
+          "when_ok": "When made concrete through imagery, pacing, or narrative detail (e.g., 'dreamlike and bruised, drifting between artistic exhilaration...')."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Contrasting Pair",
+          "principle": "Use 'X and Y' or 'X yet Y' to show tension or duality."
+        },
+        {
+          "type": "Sensory Cascade",
+          "principle": "List visual, aural, and tactile qualities in a flowing sequence."
+        },
+        {
+          "type": "Oscillation/Movement",
+          "principle": "Describe how the mood shifts or oscillates between states."
+        },
+        {
+          "type": "Punctuated/Interrupted",
+          "principle": "Use 'punctuated by', 'contrasting', or 'balancing' to highlight shifts."
+        },
+        {
+          "type": "Setting/Technique Integration",
+          "principle": "Embed references to setting, animation style, or era when they shape the mood."
+        },
+        {
+          "type": "Atmospheric Statement",
+          "principle": "Open with a broad mood, then ground it in specifics (e.g., 'Lush and surreal, with a haunting beauty...')."
+        }
+      ],
+      "specificity_test": "Does the line evoke a unique, sensory, and emotionally layered experience, or could it describe any number of films? If the latter, add or sharpen concrete details, contrasts, or narrative context.",
+      "relationship_with_synopsis": "The_mood should complement, not repeat, the synopsis. It distills the film's emotional and sensory atmosphere, often referencing but not summarizing narrative events.",
+      "relationship_with_moods_tags": "The_mood line should not simply list mood tags; instead, it should synthesize and animate them through sensory, rhythmic, and contextual language.",
+      "good_examples": [
+        {
+          "title": "$9.99",
+          "the_mood": "Playful yet melancholic, with a mix of vibrant colors and muted tones, punctuated by moments of silence and absurdity.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "anxious",
+            "intimate",
+            "bleak",
+            "poetic"
+          ],
+          "why": "Balances emotional opposites, uses sensory detail, and avoids formulaic structure."
+        },
+        {
+          "title": "58th",
+          "the_mood": "Sober, intimate and unresolved, using rotoscoped memory to hold grief, political absence and a family's refusal to let one life disappear.",
+          "moods": [
+            "melancholic",
+            "anxious",
+            "bittersweet",
+            "hopeful",
+            "intimate",
+            "sad"
+          ],
+          "why": "Integrates animation technique and narrative context to create a layered mood."
+        },
+        {
+          "title": "A Magnificent Life",
+          "the_mood": "Elegant, nostalgic and lightly theatrical, turning artistic memory into a warm promenade through old studios, Provence and the pleasure of storytelling.",
+          "moods": [
+            "nostalgic",
+            "tender",
+            "bittersweet",
+            "intimate",
+            "dreamy",
+            "hopeful"
+          ],
+          "why": "Uses evocative setting and movement, with a poetic turn."
+        },
+        {
+          "title": "A Scanner Darkly",
+          "the_mood": "Fragmented, surreal, and unsettling, with a cold, oppressive atmosphere and a mix of dark humor and paranoia.",
+          "moods": [
+            "paranoid",
+            "alienated",
+            "dreamy",
+            "bleak",
+            "anxious",
+            "unsettling",
+            "fragile"
+          ],
+          "why": "Blends emotional, sensory, and narrative elements with specificity."
+        },
+        {
+          "title": "Angel's Egg",
+          "the_mood": "Slow, haunting, and visually stark, with an oppressive silence that amplifies the sense of isolation.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "eerie",
+            "dreamy",
+            "poetic",
+            "bleak"
+          ],
+          "why": "Sensory and emotional specificity; rhythm and atmosphere are central."
+        },
+        {
+          "title": "Another Day of Life",
+          "the_mood": "Urgent and chaotic, blending stark realism with stylized animation, punctuated by moments of dark humor and a pervasive sense of tension.",
+          "moods": [
+            "anxious",
+            "bleak",
+            "intense",
+            "restless",
+            "unsettling",
+            "poetic"
+          ],
+          "why": "Dynamic movement, technique integration, and emotional layering."
+        },
+        {
+          "title": "Belladonna of Sadness",
+          "the_mood": "Lush and surreal, with a haunting beauty that oscillates between vibrant color and oppressive darkness, creating a sense of unease and tension.",
+          "moods": [
+            "melancholic",
+            "bittersweet",
+            "eerie",
+            "anxious",
+            "bleak",
+            "poetic",
+            "unsettling"
+          ],
+          "why": "Rich sensory language and oscillation between moods."
+        },
+        {
+          "title": "ChaO",
+          "the_mood": "Bright, exuberant and romantically strange, overflowing with elastic movement, aquatic fantasy and sincere emotional sweetness.",
+          "moods": [
+            "dreamy",
+            "hopeful",
+            "tender",
+            "whimsical",
+            "intimate",
+            "playful"
+          ],
+          "why": "Inventive, specific, and avoids formulaic structure."
+        },
+        {
+          "title": "Endless Cookie",
+          "the_mood": "Loose, handmade and affectionate, tumbling through family memory with comic digressions, rough textures and a strong sense of lived-in intimacy.",
+          "moods": [
+            "melancholic",
+            "intimate",
+            "bittersweet",
+            "tender",
+            "hopeful",
+            "dreamy"
+          ],
+          "why": "Textural specificity and narrative context; lively movement."
+        },
+        {
+          "title": "Ghost Cat Anzu",
+          "the_mood": "Lively and warm, with a mix of playful humor and gentle melancholy, balancing lightness and darkness in a rural summer setting.",
+          "moods": [
+            "warm",
+            "eerie",
+            "bittersweet",
+            "gentle",
+            "strange",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Balances opposites, grounds mood in setting, and uses concrete contrasts."
+        },
+        {
+          "title": "Iron Boy",
+          "the_mood": "Tender, grounded and quietly liberating, moving from bodily constraint and rural expectation toward music, friendship and a widening sense of possibility.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "lonely",
+            "bittersweet",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Narrative movement and specificity; avoids generic descriptors."
+        },
+        {
+          "title": "Lucy Lost",
+          "the_mood": "Gentle, windswept and mysterious, combining childlike wonder, coastal melancholy and a warm story about memory, belonging and identity.",
+          "moods": [
+            "melancholic",
+            "lonely",
+            "bittersweet",
+            "eerie",
+            "anxious",
+            "hopeful",
+            "intimate"
+          ],
+          "why": "Sensory detail, narrative context, and emotional layering."
+        },
+        {
+          "title": "Marcel the Shell with Shoes On",
+          "the_mood": "Light and playful, with a mix of humor and melancholy, featuring a textured visual style that feels both intimate and expansive.",
+          "moods": [
+            "tender",
+            "vulnerable",
+            "bittersweet",
+            "hopeful",
+            "intimate",
+            "playful"
+          ],
+          "why": "Textural and emotional specificity, with a dynamic sentence."
+        },
+        {
+          "title": "Rock Bottom",
+          "the_mood": "Dreamlike and bruised, drifting between artistic exhilaration, hazy intimacy and the slow collapse of an idealised summer.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "anxious",
+            "bittersweet",
+            "intimate",
+            "hopeful"
+          ],
+          "why": "Inventive, concrete, and avoids formulaic structure; strong oscillation."
+        },
+        {
+          "title": "The Glassworker",
+          "the_mood": "Luminous and fragile, with the warmth of glass and music set against gathering military tension and the ache of first love.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "bittersweet",
+            "anxious",
+            "hopeful",
+            "intimate",
+            "gentle"
+          ],
+          "why": "Sensory specificity, narrative context, and emotional layering."
+        },
+        {
+          "title": "The Wolf House",
+          "the_mood": "Uneasy and surreal, with a disjointed pace that oscillates between tension and absurdity, featuring stark contrasts of light and shadow.",
+          "moods": [
+            "eerie",
+            "unsettling",
+            "anxious",
+            "bleak",
+            "melancholic",
+            "dreamy"
+          ],
+          "why": "Inventive structure, strong contrasts, and sensory detail."
+        },
+        {
+          "title": "We Are Aliens",
+          "the_mood": "Textured, rain-soaked and deeply wistful, following friendship through awkward movement, emotional rupture and the lingering ache of youth.",
+          "moods": [
+            "melancholic",
+            "tender",
+            "lonely",
+            "bittersweet",
+            "intimate",
+            "anxious",
+            "hopeful"
+          ],
+          "why": "Concrete, poetic, and emotionally layered; avoids templates."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "Long Way North",
+          "the_mood": "Cold and adventurous, with a steady pace that balances moments of tension and warmth against a backdrop of stark, icy landscapes.",
+          "why": "Relies on the 'X and Y, with a steady pace that balances...' template; lacks distinctive detail.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Mars Express",
+          "the_mood": "Cold and gritty, with a steady pace that builds tension through sparse dialogue and stark visuals.",
+          "why": "Uses a formulaic structure and generic descriptors ('steady pace', 'stark visuals').",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Most Precious of Cargoes",
+          "the_mood": "Tense and urgent, with a stark contrast between the warmth of human connection and the coldness of the surrounding conflict.",
+          "why": "Generic use of 'tense and urgent' and 'stark contrast' without unique sensory cues.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Crossing",
+          "the_mood": "Tense and gritty, with a relentless pace and stark visuals that emphasize the harshness of survival.",
+          "why": "Relies on generic tension and 'stark visuals'; lacks inventive detail.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Swallows of Kabul",
+          "the_mood": "Somber and oppressive, with a slow, heavy pace that amplifies the tension and despair in a stark, muted visual landscape.",
+          "why": "Too reliant on mood tags and generic visual descriptors.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Summit of the Gods",
+          "the_mood": "Cold and stark, with a slow, deliberate pace that builds tension through silence and vast, unforgiving landscapes.",
+          "why": "Formulaic structure; lacks unique movement or imagery.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Tower",
+          "the_mood": "Grim and claustrophobic, with a slow, oppressive pace and stark contrasts between light and shadow.",
+          "why": "Generic use of 'stark contrasts' and 'oppressive pace'; not sufficiently specific.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Dozens of Norths",
+          "the_mood": "Cold and fragmented, with a slow, disorienting pace that oscillates between silence and sudden bursts of noise.",
+          "why": "Oscillation is present, but the line is built from generic descriptors and lacks a distinctive image.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Giovanni's Island",
+          "the_mood": "Calm and somber, with a slow pace, muted colors, and a sense of nostalgia mixed with tension from the surrounding conflict.",
+          "why": "Relies on a list of mood tags and generic visual cues.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "Birdboy: The Forgotten Children",
+          "the_mood": "Dark and oppressive, with a slow, heavy pace and a stark contrast between the harsh environment and fleeting moments of warmth.",
+          "why": "Uses generic contrasts and lacks inventive movement or imagery.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Siren",
+          "the_mood": "Tense and haunting, with a mix of muted colors and stark contrasts, punctuated by moments of eerie silence and distant chaos.",
+          "why": "Generic use of 'tense', 'haunting', and 'stark contrasts'; not sufficiently distinctive.",
+          "acceptable_but_weak": true
+        },
+        {
+          "title": "The Spine of Night",
+          "the_mood": "Dark, intense, and violent, with a heavy atmosphere that contrasts stark visuals and a relentless pace.",
+          "why": "Relies on mood tags and generic contrasts; lacks inventive specificity.",
+          "acceptable_but_weak": true
+        }
+      ]
+    },
+    "analyst_notes": "House style is defined by specificity, dynamic movement, and concrete sensory or narrative detail. Frequent patterns like 'X and Y, with a steady pace...' or 'with a tense atmosphere' are overused and only effective when paired with unique, film-specific imagery or context. Avoid formulaic openings and generic descriptors; instead, animate mood tags through inventive, layered language.",
+    "counts": {
+      "good_examples": 17,
+      "anti_examples": 12
+    }
+  }
+}

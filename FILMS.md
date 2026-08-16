@@ -1,5 +1,15 @@
 # Film data policy
 
+## Weekly import queue
+
+Candidate films for scheduled import live in Supabase `film_import_queue`. See [WEEKLY_FILM_IMPORT.md](./WEEKLY_FILM_IMPORT.md) for enqueueing, GitHub Actions schedule, secrets, and retries.
+
+## Discovery approve → prep → batch Go Live
+
+1. Admin **Approve** on `/admin/film-discovery` maps the candidate (preserve-first), enqueues `film_import_queue` (`origin=discovery_release`, hidden), and **starts prep immediately** (same `process-film-batch` pipeline via `after()` — embeddings + poster cache; profile scores deferred).
+2. Watch progress on `/admin/film-releases`.
+3. **Go live** on `/admin/film-releases` (batch): set `catalog_visible=true` for selected ready films, then **score only those film IDs** for every profile (upsert; no full-catalog rebuild). Likes still enqueue `profile_score_rebuild_jobs` for a full per-profile rebuild.
+
 ## Adding new films
 
 **Do not add new films manually** through:
@@ -12,7 +22,7 @@ New films must go through the **controlled import pipeline** so each record gets
 - Duplicate detection (`lib/insert-film.mjs`, `lib/film-duplicate-check.mjs`)
 - Validation and normalized title fields
 - Poster fetching/caching (`scripts/cache-posters.mjs`) — catalog readiness requires a Storage `poster_url` in `film-posters`
-- Post-import enrichment (`npm run after-films`)
+- Post-import enrichment (`npm run after-films`) — or the discovery release prep path above
 
 Hosted poster health check (read-only):
 
@@ -39,7 +49,7 @@ Use Cursor-assisted import flows or scripts that call `insertFilmWithDuplicateCh
 
 ## Correcting existing films
 
-Manual database edits are acceptable **only for correcting existing records** (typos, missing metadata, fixing bad URLs). Do not use manual edits to create new film rows.
+Manual database edits are acceptable **only for correcting existing records** (typos, missing metadata, fixing bad URLs). Do not use manual edits to create new film rows. Never overwrite fields that are already filled when running enrichment scripts unless you intend a deliberate correction.
 
 ## Deprecated admin UI
 

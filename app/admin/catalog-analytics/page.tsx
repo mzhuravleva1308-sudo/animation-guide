@@ -47,12 +47,17 @@ export default async function CatalogAnalyticsPage() {
           </p>
         </div>
 
-        <Link
-          href="/admin/festival-recognitions"
-          className="text-sm text-gray-500 hover:text-black"
-        >
-          Festival recognitions →
-        </Link>
+        <div className="flex flex-col items-end gap-2 text-sm text-gray-500">
+          <Link href="/admin/film-discovery" className="hover:text-black">
+            Film discovery review →
+          </Link>
+          <Link href="/admin/film-releases" className="hover:text-black">
+            Film releases →
+          </Link>
+          <Link href="/admin/festival-recognitions" className="hover:text-black">
+            Festival recognitions →
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8">

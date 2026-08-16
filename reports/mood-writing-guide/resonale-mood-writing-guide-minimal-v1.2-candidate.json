@@ -1,0 +1,237 @@
+{
+  "version": "resonale-mood-writing-guide-minimal-v1.2-candidate",
+  "generated_at": "2026-08-08T10:12:38.525Z",
+  "parent": "resonale-mood-writing-guide-minimal-v1.1-candidate",
+  "reset_from": "resonale-mood-writing-guide-v2",
+  "activation_status": "activated_as_v3",
+  "corpus_evidence": {
+    "catalog_films_sampled": 216,
+    "opening_kinds": {
+      "adj_pair": 149,
+      "visual_lead": 2,
+      "mood_lead": 28,
+      "other": 37
+    },
+    "note": "Adj+Adj / mood-first openings dominate the live catalog (~69% adj_pair). Visual-lead openings are rare. Repeated simple shapes are the working house style, not a defect."
+  },
+  "discarded_from_v2": [
+    "syntax variety for its own sake",
+    "Adj+Adj openings as weak/default-to-avoid pattern",
+    "avoidance of repeated openings as primary concern",
+    "Dynamic Movement / oscillation as preferred pattern",
+    "Sensory Cascade syntax type",
+    "metaphorical verbs as distinctiveness strategy",
+    "editorial richness / emotionally layered experience as goals",
+    "pressure to make every line structurally unique",
+    "long critic-elegant good examples (weave, mid-contradiction, ache, unsettles)",
+    "anti-example stack centered on Adj+Adj openings"
+  ],
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-minimal-v1.2-candidate",
+    "sections": {
+      "purpose": "Help a user understand the film’s emotional feel at a glance. Write like a thoughtful friend — clear and immediate — not like a film critic crafting a beautiful sentence.",
+      "core_principles": [
+        "First-words test: can someone understand the basic mood from the first few words?",
+        "Name the mood clearly first, then add 1–2 specifics that make it more useful for this film.",
+        "Default shape: [Mood], with [1–2 specifics]. This is a default, not a hard template.",
+        "After naming the mood, say the most natural useful thing about THIS film: image, setting, sound, behavior, or distinctive contrast. Prefer what makes the film recognizable.",
+        "Do not fill the after-clause with batch-common medium labels. In a batch of mostly 2D films, \"with rough/soft/vivid 2D animation\" is usually interchangeable filler — skip it unless the technique itself is unusual or truly shapes the feel (e.g. stop-motion puppets, rotoscope, stark black-and-white).",
+        "Mention pace only when pace itself is central to the experience — not as a default intensifier.",
+        "Simple repeated sentence shapes are normal. Adj openings are normal. Structural uniformity is not a problem.",
+        "Variation is not a goal.",
+        "Prefer natural, simple English. Imagery only when it is the clearest phrasing — never critic prose.",
+        "Do not retell the synopsis or explain the film’s themes."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Core mood",
+          "detail": "The main emotional feel, named early."
+        },
+        {
+          "name": "Useful specifics",
+          "detail": "Film-owned cues first: setting, image, sound, behavior, distinctive contrast. Technique only when unusual or feel-defining. Pace only when central. Avoid default medium labels shared by most films in the batch."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Mood named up front",
+          "why": "Glance test / house style."
+        },
+        {
+          "principle": "Recognizable after-clause",
+          "why": "Point to something this film owns — place, image, behavior — not a shared medium label."
+        },
+        {
+          "principle": "Plain spoken English",
+          "why": "Easy to read; no critic performance."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "Abstract intensifier tail",
+          "when_weak": "Mood opening followed by interchangeable filler: slow/fast/energetic pacing, quiet moments, dark tension, bleak atmosphere, vibes.",
+          "when_ok": "When pace/silence/tension is distinctive for this film and paired with a recognizable cue."
+        },
+        {
+          "pattern": "Shared-medium technique filler",
+          "when_weak": "After-clause defaults to \"with [adj] 2D animation…\" (or similar batch-common medium) when almost every film shares that technique. Sounds concrete but is interchangeable.",
+          "when_ok": "When technique is distinctive (stop-motion puppets, rotoscope, stark B&W, unusual hybrid) and naming it helps the feel."
+        },
+        {
+          "pattern": "Visual/technique lead that delays the mood",
+          "when_weak": "First words describe medium before emotional feel.",
+          "when_ok": "Rarely; only if that cue is the fastest mood signal."
+        },
+        {
+          "pattern": "Film-criticism / poetic density",
+          "when_weak": "Written to impress; stacked metaphors; review-copy cadence.",
+          "when_ok": "Almost never as a goal."
+        },
+        {
+          "pattern": "Empty generic mood with no film cue",
+          "when_weak": "Could fit many unrelated films.",
+          "when_ok": "Never."
+        },
+        {
+          "pattern": "Synopsis or theme paraphrase",
+          "when_weak": "Retells plot or explains meaning.",
+          "when_ok": "Never for the_mood."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Default mood-first line",
+          "principle": "Start with the mood, then a concrete film-owned cue. Example: 'Dreamy and nostalgic, with soft pastel Florida suburbia and sudden surreal daydreams.' Do not default to 'with soft 2D animation…'."
+        }
+      ],
+      "specificity_test": "Do the first few words name the mood? Easy on first read? At least one cue this film owns? Could the after-clause move to another film in the same batch and still fit? If yes — especially if it only says 2D animation / pacing / moments — replace it.",
+      "relationship_with_synopsis": "Complement the synopsis. Describe watching-feel; do not retell plot.",
+      "relationship_with_moods_tags": "Do not list tags. Turn the main feelings into plain mood-first language.",
+      "good_examples": [
+        {
+          "title": "Boys Go to Jupiter",
+          "the_mood": "Dreamy and nostalgic, with soft pastel Florida suburbia and sudden surreal daydreams.",
+          "why": "Mood first; place/image cues; no 2D/pacing filler."
+        },
+        {
+          "title": "Padak",
+          "the_mood": "Tense and claustrophobic, with cold blues and tight framing around a mackerel trapped in an aquarium.",
+          "why": "Concrete film-owned image."
+        },
+        {
+          "title": "The Art of Happiness",
+          "the_mood": "Melancholic and intimate, with rainy Naples streets and quiet taxi conversations.",
+          "why": "Place + behavior; no medium filler."
+        },
+        {
+          "title": "Blood Tea and Red String",
+          "the_mood": "Eerie and haunting, with strange stop-motion puppets moving slowly through a shadowy forest.",
+          "why": "Technique earned — distinctive puppets, not generic 2D."
+        },
+        {
+          "title": "Revengeance",
+          "the_mood": "Loud and gritty, with cheap bounty-hunter pulp and rough, barely-held-together action.",
+          "why": "Pulp character over \"2D animation\"."
+        },
+        {
+          "title": "Tehran Taboo",
+          "the_mood": "Anxious and intimate, with Tehran’s secretive streets and brief fragile moments of hope.",
+          "why": "Place/social pressure; rotoscope only if it truly helps."
+        },
+        {
+          "title": "Tux and Fanny",
+          "the_mood": "Gentle and unhurried, with soft forest light and the calm of everyday friendship.",
+          "why": "Simple recognizable cues."
+        },
+        {
+          "title": "Fire and Ice",
+          "the_mood": "Cold and urgent, with hard battles cutting across an icy wilderness.",
+          "why": "Landscape/action; no harsh pacing / 2D filler."
+        }
+      ],
+      "anti_examples": [
+        {
+          "title": "2D medium filler",
+          "the_mood": "Dreamy and nostalgic, with soft 2D animation and surreal suburban Florida moments.",
+          "why": "Mood opening fine; \"soft 2D animation\" is batch-common filler — Florida/daydreams already carry it."
+        },
+        {
+          "title": "Pace filler",
+          "the_mood": "Tense and claustrophobic, with slow pacing that heightens the trapped feeling and moments of stark silence.",
+          "why": "Abstract intensifier tail; no film-owned cue."
+        },
+        {
+          "title": "Rough 2D default",
+          "the_mood": "Energetic and gritty, with rough 2D animation and chaotic bounty hunter action.",
+          "why": "Bounty hunter is good; \"rough 2D animation\" is unnecessary shared-medium filler."
+        },
+        {
+          "title": "Empty generic",
+          "the_mood": "Quiet and emotional, with an intimate and reflective atmosphere.",
+          "why": "No film-owned cue."
+        }
+      ]
+    },
+    "analyst_notes": "v1.2: keep mood-first + concrete after-clause; treat shared-medium labels (esp. plain 2D animation) as filler unless technique is distinctive."
+  },
+  "size_vs_v2": {
+    "v2_chars": 10348,
+    "minimal_chars": 5549,
+    "reduction_ratio": 0.46,
+    "v2_core_principles": 8,
+    "minimal_core_principles": 9,
+    "v2_good_examples": 12,
+    "minimal_good_examples": 8,
+    "v2_weak_patterns": 6,
+    "minimal_weak_patterns": 4,
+    "v2_syntax_types": 5,
+    "minimal_syntax_types": 1
+  },
+  "change_from_v1": {
+    "approach": "Small tighten of the existing minimal candidate — not a return to v2, not a long style manual.",
+    "keep_unchanged": [
+      "Mood-first / first-words test",
+      "Default shape [Mood], with [1–2 specifics]",
+      "Adj openings and structural repetition allowed",
+      "No syntax-variety goal",
+      "No literary/critic voice",
+      "No word bans (including pacing)"
+    ],
+    "add_or_reframe": [
+      {
+        "change": "Reframe the AFTER clause rule",
+        "text": "After naming the mood, say the most natural useful thing about THIS film. Prefer a concrete image, setting, sound, contrast, behavior, or unusual quality that makes the film recognizable. Mention pace only when pace itself is genuinely central to the watching experience."
+      },
+      {
+        "change": "Add a weak pattern: abstract intensifier tail",
+        "text": "Pattern: mood-first opening followed by interchangeable filler (slow/fast/energetic pacing, quiet moments, dark tension, bleak atmosphere, neighborhood vibes). When weak: the after-clause restates intensity without a film-owned cue. When ok: pace/silence/etc. is truly distinctive for this film AND paired with something recognizable."
+      },
+      {
+        "change": "Add a soft after-clause check to specificity_test",
+        "text": "Could this after-clause be moved to another film with the same opening mood and still fit? If yes, replace it with a concrete film-owned cue."
+      },
+      {
+        "change": "Replace pace-heavy good examples / syntax example",
+        "text": "Swap the syntax library example away from 'with a slow pace…'. Use preferred-direction style examples (Padak mackerel/aquarium; Boys Go to Jupiter pastel Florida + daydreams; Revengeance bounty-hunter pulp) as good examples. Keep them short and non-literary."
+      },
+      {
+        "change": "Clarify mood_dimensions Useful specifics",
+        "text": "Useful specifics = concrete film-owned cues first (setting, image, sound, technique, behavior, distinctive contrast). Pace is optional and only when it is part of what makes this film feel distinctive."
+      }
+    ],
+    "explicitly_do_not_add": [
+      "Ban list for pacing/atmosphere/moments/tension",
+      "Quotas on repeated openings",
+      "Syntax variety requirements",
+      "Pressure to invent metaphors or unique structures",
+      "Long new style chapters"
+    ]
+  },
+  "change_from_v1_1": [
+    "Added shared-medium technique filler weak pattern",
+    "Core principle: do not default after-clause to batch-common 2D animation",
+    "Updated examples/anti-examples for 2D filler",
+    "Specificity test includes swap-across-batch check for medium labels"
+  ],
+  "activated_at": "2026-08-08T10:16:31.940Z"
+}

@@ -1,0 +1,85 @@
+name: Weekly film discovery
+
+# Thursday 22:00 UTC ≈ Friday 00:00 Europe/Amsterdam (CEST).
+# Gated: does nothing unless repository variable WEEKLY_FILM_DISCOVERY_ENABLED=1.
+# Live persist/email also requires WEEKLY_FILM_DISCOVERY_LIVE=1 (otherwise --dry-run).
+
+on:
+  schedule:
+    - cron: "0 22 * * 4"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without persisting candidates or sending email"
+        type: boolean
+        required: false
+        default: true
+      skip_email:
+        description: "Skip Resend email"
+        type: boolean
+        required: false
+        default: false
+
+concurrency:
+  group: weekly-film-discovery
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  discover-films:
+    name: Weekly film discovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Guard — discovery disabled until confirmed
+        if: ${{ vars.WEEKLY_FILM_DISCOVERY_ENABLED != '1' }}
+        run: |
+          echo "WEEKLY_FILM_DISCOVERY_ENABLED is not 1 — skipping discovery run."
+          echo "Enable the repo variable after reviewing migration + dry-run reports."
+
+      - name: Run weekly film discovery
+        if: ${{ vars.WEEKLY_FILM_DISCOVERY_ENABLED == '1' }}
+        env:
+          APP_ENV: hosted
+          WEEKLY_FILM_DISCOVERY_ENABLED: "1"
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          WEEKLY_FILM_DISCOVERY_REPORT_EMAIL: ${{ secrets.WEEKLY_FILM_DISCOVERY_REPORT_EMAIL }}
+          WEEKLY_FILM_IMPORT_REPORT_EMAIL: ${{ secrets.WEEKLY_FILM_IMPORT_REPORT_EMAIL }}
+          WEEKLY_FILM_DISCOVERY_EMAIL_FROM: ${{ secrets.WEEKLY_FILM_DISCOVERY_EMAIL_FROM }}
+          WEEKLY_FILM_IMPORT_EMAIL_FROM: ${{ secrets.WEEKLY_FILM_IMPORT_EMAIL_FROM }}
+        run: |
+          set -euo pipefail
+          ARGS=()
+
+          # workflow_dispatch dry_run input, or schedule without LIVE flag → dry-run
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.dry_run }}" != "false" ]; then
+              ARGS+=(--dry-run)
+            fi
+          elif [ "${{ vars.WEEKLY_FILM_DISCOVERY_LIVE }}" != "1" ]; then
+            ARGS+=(--dry-run)
+          fi
+
+          if [ "${{ github.event.inputs.skip_email }}" = "true" ]; then
+            ARGS+=(--skip-email)
+          fi
+
+          echo "Running: node scripts/run-weekly-film-discovery.mjs ${ARGS[*]-}"
+          node scripts/run-weekly-film-discovery.mjs "${ARGS[@]}"

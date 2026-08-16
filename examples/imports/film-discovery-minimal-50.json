@@ -1,0 +1,636 @@
+{
+  "batch_name": "resonale-50-films-basic-fields",
+  "films": [
+    {
+      "title": "Art College 1994",
+      "original_title": "艺术学院1994",
+      "year": 2023,
+      "directors": [
+        "Liu Jian"
+      ],
+      "countries": [
+        "China"
+      ],
+      "runtime_minutes": 118
+    },
+    {
+      "title": "Aya of Yop City",
+      "original_title": "Aya de Yopougon",
+      "year": 2013,
+      "directors": [
+        "Marguerite Abouet",
+        "Clément Oubrerie"
+      ],
+      "countries": [
+        "France",
+        "Côte d'Ivoire"
+      ],
+      "runtime_minutes": 84
+    },
+    {
+      "title": "Black Butterflies",
+      "original_title": "Mariposas negras",
+      "year": 2024,
+      "directors": [
+        "David Baute"
+      ],
+      "countries": [
+        "Spain",
+        "Panama"
+      ],
+      "runtime_minutes": 83
+    },
+    {
+      "title": "Blood Tea and Red String",
+      "original_title": "Blood Tea and Red String",
+      "year": 2006,
+      "directors": [
+        "Christiane Cegavske"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 71
+    },
+    {
+      "title": "Bob Spit: We Do Not Like People",
+      "original_title": "Bob Cuspe: Nós Não Gostamos de Gente",
+      "year": 2021,
+      "directors": [
+        "Cesar Cabral"
+      ],
+      "countries": [
+        "Brazil"
+      ],
+      "runtime_minutes": 90
+    },
+    {
+      "title": "Boogie",
+      "original_title": "Boogie, el aceitoso",
+      "year": 2009,
+      "directors": [
+        "Gustavo Cova"
+      ],
+      "countries": [
+        "Argentina",
+        "Mexico"
+      ],
+      "runtime_minutes": 82
+    },
+    {
+      "title": "Boys Go to Jupiter",
+      "original_title": "Boys Go to Jupiter",
+      "year": 2024,
+      "directors": [
+        "Julian Glander"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 90
+    },
+    {
+      "title": "Bubble Bath",
+      "original_title": "Habfürdő",
+      "year": 1980,
+      "directors": [
+        "György Kovásznai"
+      ],
+      "countries": [
+        "Hungary"
+      ],
+      "runtime_minutes": 79
+    },
+    {
+      "title": "Cat City",
+      "original_title": "Macskafogó",
+      "year": 1986,
+      "directors": [
+        "Béla Ternovszky"
+      ],
+      "countries": [
+        "Hungary",
+        "Canada",
+        "West Germany"
+      ],
+      "runtime_minutes": 96
+    },
+    {
+      "title": "Cheatin'",
+      "original_title": "Cheatin'",
+      "year": 2013,
+      "directors": [
+        "Bill Plympton"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 76
+    },
+    {
+      "title": "Cinderella the Cat",
+      "original_title": "Gatta Cenerentola",
+      "year": 2017,
+      "directors": [
+        "Alessandro Rak",
+        "Ivan Cappiello",
+        "Marino Guarnieri",
+        "Dario Sansone"
+      ],
+      "countries": [
+        "Italy"
+      ],
+      "runtime_minutes": 86
+    },
+    {
+      "title": "Down and Dirty Duck",
+      "original_title": "Down and Dirty Duck",
+      "year": 1974,
+      "directors": [
+        "Charles Swenson"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 75
+    },
+    {
+      "title": "Fire and Ice",
+      "original_title": "Fire and Ice",
+      "year": 1983,
+      "directors": [
+        "Ralph Bakshi"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 81
+    },
+    {
+      "title": "Free Jimmy",
+      "original_title": "Slipp Jimmy fri",
+      "year": 2006,
+      "directors": [
+        "Christopher Nielsen"
+      ],
+      "countries": [
+        "Norway",
+        "United Kingdom"
+      ],
+      "runtime_minutes": 86
+    },
+    {
+      "title": "Fritz the Cat",
+      "original_title": "Fritz the Cat",
+      "year": 1972,
+      "directors": [
+        "Ralph Bakshi"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Funan",
+      "original_title": "Funan",
+      "year": 2018,
+      "directors": [
+        "Denis Do"
+      ],
+      "countries": [
+        "France",
+        "Belgium",
+        "Luxembourg",
+        "Cambodia"
+      ],
+      "runtime_minutes": 84
+    },
+    {
+      "title": "George the Hedgehog",
+      "original_title": "Jeż Jerzy",
+      "year": 2011,
+      "directors": [
+        "Wojtek Wawszczyk",
+        "Jakub Tarkowski",
+        "Tomasz Leśniak"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 80
+    },
+    {
+      "title": "Hair High",
+      "original_title": "Hair High",
+      "year": 2004,
+      "directors": [
+        "Bill Plympton"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Heavy Metal",
+      "original_title": "Heavy Metal",
+      "year": 1981,
+      "directors": [
+        "Gerald Potterton"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 90
+    },
+    {
+      "title": "I Married a Strange Person!",
+      "original_title": "I Married a Strange Person!",
+      "year": 1997,
+      "directors": [
+        "Bill Plympton"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 73
+    },
+    {
+      "title": "Idiots and Angels",
+      "original_title": "Idiots and Angels",
+      "year": 2008,
+      "directors": [
+        "Bill Plympton"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Journey of Shadows",
+      "original_title": "Reise der Schatten",
+      "year": 2024,
+      "directors": [
+        "Yves Netzhammer"
+      ],
+      "countries": [
+        "Switzerland"
+      ],
+      "runtime_minutes": 87
+    },
+    {
+      "title": "Kill It and Leave This Town",
+      "original_title": "Zabij to i wyjedź z tego miasta",
+      "year": 2020,
+      "directors": [
+        "Mariusz Wilczyński"
+      ],
+      "countries": [
+        "Poland"
+      ],
+      "runtime_minutes": 88
+    },
+    {
+      "title": "Metropia",
+      "original_title": "Metropia",
+      "year": 2009,
+      "directors": [
+        "Tarik Saleh"
+      ],
+      "countries": [
+        "Sweden",
+        "Denmark",
+        "Norway",
+        "Finland"
+      ],
+      "runtime_minutes": 86
+    },
+    {
+      "title": "Mutant Aliens",
+      "original_title": "Mutant Aliens",
+      "year": 2001,
+      "directors": [
+        "Bill Plympton"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 81
+    },
+    {
+      "title": "My Sunny Maad",
+      "original_title": "Moje slunce Mad",
+      "year": 2021,
+      "directors": [
+        "Michaela Pavlátová"
+      ],
+      "countries": [
+        "Czech Republic",
+        "France",
+        "Slovakia"
+      ],
+      "runtime_minutes": 81
+    },
+    {
+      "title": "Mécanix",
+      "original_title": "Mécanix",
+      "year": 2003,
+      "directors": [
+        "Rémy M. Larochelle"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 70
+    },
+    {
+      "title": "Nerdland",
+      "original_title": "Nerdland",
+      "year": 2016,
+      "directors": [
+        "Chris Prynoski"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 85
+    },
+    {
+      "title": "On Happiness Road",
+      "original_title": "幸福路上",
+      "year": 2017,
+      "directors": [
+        "Sung Hsin-yin"
+      ],
+      "countries": [
+        "Taiwan"
+      ],
+      "runtime_minutes": 111
+    },
+    {
+      "title": "Padak",
+      "original_title": "파닥파닥",
+      "year": 2012,
+      "directors": [
+        "Lee Dae-hee"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 78
+    },
+    {
+      "title": "Renaissance",
+      "original_title": "Renaissance",
+      "year": 2006,
+      "directors": [
+        "Christian Volckman"
+      ],
+      "countries": [
+        "France",
+        "United Kingdom",
+        "Luxembourg"
+      ],
+      "runtime_minutes": 105
+    },
+    {
+      "title": "Revengeance",
+      "original_title": "Revengeance",
+      "year": 2016,
+      "directors": [
+        "Bill Plympton",
+        "Jim Lujan"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 76
+    },
+    {
+      "title": "Rio 2096: A Story of Love and Fury",
+      "original_title": "Uma História de Amor e Fúria",
+      "year": 2013,
+      "directors": [
+        "Luiz Bolognesi"
+      ],
+      "countries": [
+        "Brazil"
+      ],
+      "runtime_minutes": 74
+    },
+    {
+      "title": "Rock & Rule",
+      "original_title": "Rock & Rule",
+      "year": 1983,
+      "directors": [
+        "Clive A. Smith"
+      ],
+      "countries": [
+        "Canada"
+      ],
+      "runtime_minutes": 77
+    },
+    {
+      "title": "Seoul Station",
+      "original_title": "서울역",
+      "year": 2016,
+      "directors": [
+        "Yeon Sang-ho"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 92
+    },
+    {
+      "title": "Tehran Taboo",
+      "original_title": "Tehran Taboo",
+      "year": 2017,
+      "directors": [
+        "Ali Soozandeh"
+      ],
+      "countries": [
+        "Austria",
+        "Germany"
+      ],
+      "runtime_minutes": 96
+    },
+    {
+      "title": "The Apostle",
+      "original_title": "O Apóstolo",
+      "year": 2012,
+      "directors": [
+        "Fernando Cortizo"
+      ],
+      "countries": [
+        "Spain"
+      ],
+      "runtime_minutes": 84
+    },
+    {
+      "title": "The Art of Happiness",
+      "original_title": "L'arte della felicità",
+      "year": 2013,
+      "directors": [
+        "Alessandro Rak"
+      ],
+      "countries": [
+        "Italy"
+      ],
+      "runtime_minutes": 82
+    },
+    {
+      "title": "The District!",
+      "original_title": "Nyócker!",
+      "year": 2004,
+      "directors": [
+        "Áron Gauder"
+      ],
+      "countries": [
+        "Hungary"
+      ],
+      "runtime_minutes": 87
+    },
+    {
+      "title": "The Fake",
+      "original_title": "사이비",
+      "year": 2013,
+      "directors": [
+        "Yeon Sang-ho"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 101
+    },
+    {
+      "title": "The Haunted World of El Superbeasto",
+      "original_title": "The Haunted World of El Superbeasto",
+      "year": 2009,
+      "directors": [
+        "Rob Zombie"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 77
+    },
+    {
+      "title": "The King of Pigs",
+      "original_title": "돼지의 왕",
+      "year": 2011,
+      "directors": [
+        "Yeon Sang-ho"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 97
+    },
+    {
+      "title": "The Missing",
+      "original_title": "Iti mapukpukaw",
+      "year": 2023,
+      "directors": [
+        "Carl Joseph E. Papa"
+      ],
+      "countries": [
+        "Philippines"
+      ],
+      "runtime_minutes": 90
+    },
+    {
+      "title": "The Old Man Movie",
+      "original_title": "Vanamehe film",
+      "year": 2019,
+      "directors": [
+        "Oskar Lehemaa",
+        "Mikk Mägi"
+      ],
+      "countries": [
+        "Estonia"
+      ],
+      "runtime_minutes": 88
+    },
+    {
+      "title": "The Peasants",
+      "original_title": "Chłopi",
+      "year": 2023,
+      "directors": [
+        "DK Welchman",
+        "Hugh Welchman"
+      ],
+      "countries": [
+        "Poland",
+        "Serbia",
+        "Lithuania"
+      ],
+      "runtime_minutes": 114
+    },
+    {
+      "title": "The Senior Class",
+      "original_title": "졸업반",
+      "year": 2016,
+      "directors": [
+        "Hong Deok-pyo"
+      ],
+      "countries": [
+        "South Korea"
+      ],
+      "runtime_minutes": 82
+    },
+    {
+      "title": "The Suicide Shop",
+      "original_title": "Le Magasin des suicides",
+      "year": 2012,
+      "directors": [
+        "Patrice Leconte"
+      ],
+      "countries": [
+        "France",
+        "Canada",
+        "Belgium"
+      ],
+      "runtime_minutes": 79
+    },
+    {
+      "title": "The Weird Kidz",
+      "original_title": "The Weird Kidz",
+      "year": 2022,
+      "directors": [
+        "Zach Passero"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 80
+    },
+    {
+      "title": "Tux and Fanny",
+      "original_title": "Tux and Fanny",
+      "year": 2019,
+      "directors": [
+        "Albert Birney"
+      ],
+      "countries": [
+        "United States"
+      ],
+      "runtime_minutes": 84
+    },
+    {
+      "title": "Until Sbornia Do Us Part",
+      "original_title": "Até que a Sbórnia nos Separe",
+      "year": 2013,
+      "directors": [
+        "Otto Guerra",
+        "Ennio Torresan Jr."
+      ],
+      "countries": [
+        "Brazil"
+      ],
+      "runtime_minutes": 93
+    }
+  ]
+}

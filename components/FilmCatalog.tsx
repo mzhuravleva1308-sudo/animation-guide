@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
@@ -8,11 +8,12 @@ import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
+  getQuickFiltersForMedia,
   QUICK_FILTER_DESCRIPTIONS,
-  QUICK_FILTERS,
 } from "@/lib/quick-film-filters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
+import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
 
 type FilmCatalogInteractionProps = {
   profileId?: string;
@@ -36,6 +37,8 @@ type FilmCatalogProps = {
   pageSize: number;
   loadError?: string | null;
   interaction?: FilmCatalogInteractionProps;
+  /** Controls which quick-filter chips are shown (Stop motion vs Landscapes). */
+  mediaType?: MediaType;
 };
 
 export default function FilmCatalog({
@@ -44,9 +47,14 @@ export default function FilmCatalog({
   pageSize,
   loadError,
   interaction,
+  mediaType = MEDIA_TYPE.animation,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>(null);
+  const availableQuickFilters = useMemo(
+    () => getQuickFiltersForMedia(mediaType),
+    [mediaType]
+  );
   const [searchState, setSearchState] = useState({
     query: "",
     films: [] as Film[],
@@ -61,6 +69,16 @@ export default function FilmCatalog({
       ratingsReady: interaction?.ratingsReady ?? true,
     }
   );
+
+  useEffect(() => {
+    setActiveQuickFilter((current) => {
+      if (current && !availableQuickFilters.includes(current)) {
+        return null;
+      }
+      return current;
+    });
+    setPage(1);
+  }, [availableQuickFilters]);
 
   const awardWinningFilmIdSet = useMemo(
     () => new Set(awardWinningFilmIds),
@@ -144,7 +162,7 @@ export default function FilmCatalog({
             <QuickFilters
               activeFilter={activeQuickFilter}
               onFilterChange={handleQuickFilterChange}
-              availableFilters={QUICK_FILTERS}
+              availableFilters={availableQuickFilters}
             />
           </div>
           {!isShowingSearchResults && totalCount > 0 ? (

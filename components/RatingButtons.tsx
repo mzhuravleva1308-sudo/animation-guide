@@ -24,8 +24,11 @@ type RatingButtonsProps = {
     options?: RatingChangeOptions
   ) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
-  ratingOnboardingHint?: RatingOnboardingHint;
-  onDismissRatingOnboarding?: () => void;
+};
+
+type RatingOnboardingHintChipProps = {
+  hint?: RatingOnboardingHint;
+  onDismiss?: () => void;
 };
 
 function normalizeRating(value: number | null | undefined): number | null {
@@ -36,14 +39,48 @@ function normalizeRating(value: number | null | undefined): number | null {
   return value;
 }
 
+export function RatingOnboardingHintChip({
+  hint = null,
+  onDismiss,
+}: RatingOnboardingHintChipProps) {
+  if (hint !== "extended" && hint !== "short") {
+    return null;
+  }
+
+  return (
+    <div
+      data-testid="rating-onboarding-hint"
+      data-hint-variant={hint}
+      className={
+        hint === "extended"
+          ? "flex w-fit max-w-full items-center gap-1 rounded-[10px] border border-hint-panel-border bg-hint-panel py-1 pl-2.5 pr-0.5"
+          : "flex w-fit max-w-full items-center gap-0.5 rounded-[9px] border border-hint-panel-border-subtle bg-hint-panel-subtle py-0.5 pl-2 pr-0.5"
+      }
+      onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <p className="min-w-0 text-[11px] leading-snug tracking-tight text-pretty text-hint-panel-fg sm:whitespace-nowrap">
+        {RATING_ONBOARDING_HINT_COPY[hint]}
+      </p>
+      <button
+        type="button"
+        aria-label="Dismiss rating tip"
+        data-testid="rating-onboarding-hint-dismiss"
+        onClick={onDismiss}
+        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] leading-none text-hint-panel-fg-muted transition hover:bg-hint-panel-hover/50 hover:text-hint-panel-fg"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 export default function RatingButtons({
   filmId,
   profileId,
   initialRating = null,
   onRatingChange,
   onAuthRequired,
-  ratingOnboardingHint = null,
-  onDismissRatingOnboarding,
 }: RatingButtonsProps) {
   const normalizedInitialRating = normalizeRating(initialRating);
   const [rating, setRating] = useState<number | null>(normalizedInitialRating);
@@ -51,8 +88,6 @@ export default function RatingButtons({
   const saveRequestIdRef = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
   const { showToast } = useToast();
-  const showOnboardingHint =
-    ratingOnboardingHint === "extended" || ratingOnboardingHint === "short";
 
   useEffect(() => {
     const nextRating = normalizeRating(initialRating);
@@ -140,62 +175,38 @@ export default function RatingButtons({
 
   return (
     <div
-      className="relative z-10"
+      className="relative z-10 min-w-0 flex-1"
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      {showOnboardingHint ? (
-        <div
-          data-testid="rating-onboarding-hint"
-          data-hint-variant={ratingOnboardingHint}
-          className={
-            ratingOnboardingHint === "extended"
-              ? "mb-2 inline-flex w-fit max-w-full items-center gap-1 rounded-[10px] border border-hint-panel-border bg-hint-panel py-1 pl-2.5 pr-0.5"
-              : "mb-2 inline-flex w-fit max-w-full items-center gap-0.5 rounded-[9px] border border-hint-panel-border-subtle bg-hint-panel-subtle py-0.5 pl-2 pr-0.5"
-          }
-        >
-          <p
-            className={
-              ratingOnboardingHint === "extended"
-                ? "min-w-0 whitespace-nowrap text-[11px] leading-none tracking-tight text-hint-panel-fg"
-                : "whitespace-nowrap text-[11px] leading-none tracking-tight text-hint-panel-fg"
-            }
-          >
-            {RATING_ONBOARDING_HINT_COPY[ratingOnboardingHint]}
-          </p>
-          <button
-            type="button"
-            aria-label="Dismiss rating tip"
-            data-testid="rating-onboarding-hint-dismiss"
-            onClick={onDismissRatingOnboarding}
-            className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] leading-none text-hint-panel-fg-muted transition hover:bg-hint-panel-hover/50 hover:text-hint-panel-fg"
-          >
-            ×
-          </button>
-        </div>
-      ) : null}
-
       {rating != null && (
         <p className="mb-3 text-sm text-gray-500">My rating: {rating}/10</p>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
-        {Array.from({ length: 10 }, (_, index) => index + 1).map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-label={`Rate ${value} out of 10`}
-            aria-pressed={rating === value}
-            disabled={isSaving}
-            onClick={() => saveRating(value)}
-            className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
-              rating === value
-                ? "border-black bg-black text-white"
-                : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-            }`}
-          >
-            {value}
-          </button>
+      <div className="flex min-w-0 flex-wrap gap-1.5">
+        {[
+          [1, 2, 3, 4, 5],
+          [6, 7, 8, 9, 10],
+        ].map((group) => (
+          <div key={group[0]} className="flex gap-1.5">
+            {group.map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-label={`Rate ${value} out of 10`}
+                aria-pressed={rating === value}
+                disabled={isSaving}
+                onClick={() => saveRating(value)}
+                className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
+                  rating === value
+                    ? "border-black bg-black text-white"
+                    : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                {value}
+              </button>
+            ))}
+          </div>
         ))}
       </div>
     </div>

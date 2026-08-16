@@ -1,0 +1,229 @@
+{
+  "version": "resonale-mood-writing-guide-minimal-v1.1-candidate",
+  "generated_at": "2026-08-08T10:08:28.076Z",
+  "parent": "resonale-mood-writing-guide-minimal-v1-candidate",
+  "reset_from": "resonale-mood-writing-guide-v2",
+  "activation_status": "candidate_not_activated",
+  "corpus_evidence": {
+    "catalog_films_sampled": 216,
+    "opening_kinds": {
+      "adj_pair": 149,
+      "visual_lead": 2,
+      "mood_lead": 28,
+      "other": 37
+    },
+    "note": "Adj+Adj / mood-first openings dominate the live catalog (~69% adj_pair). Visual-lead openings are rare. Repeated simple shapes are the working house style, not a defect."
+  },
+  "discarded_from_v2": [
+    "syntax variety for its own sake",
+    "Adj+Adj openings as weak/default-to-avoid pattern",
+    "avoidance of repeated openings as primary concern",
+    "Dynamic Movement / oscillation as preferred pattern",
+    "Sensory Cascade syntax type",
+    "metaphorical verbs as distinctiveness strategy",
+    "editorial richness / emotionally layered experience as goals",
+    "pressure to make every line structurally unique",
+    "long critic-elegant good examples (weave, mid-contradiction, ache, unsettles)",
+    "anti-example stack centered on Adj+Adj openings"
+  ],
+  "final_guide": {
+    "version": "resonale-mood-writing-guide-minimal-v1.1-candidate",
+    "sections": {
+      "purpose": "Help a user understand the film’s emotional feel at a glance. Write like a thoughtful friend — clear and immediate — not like a film critic crafting a beautiful sentence.",
+      "core_principles": [
+        "First-words test: can someone understand the basic mood from the first few words?",
+        "Name the mood clearly first, then add 1–2 specifics that make it more useful for this film.",
+        "Default shape: [Mood], with [1–2 specifics]. This is a default, not a hard template.",
+        "After naming the mood, add the most useful concrete cue for THIS film (image, setting, sound, technique, behavior, or distinctive contrast). Mention pace only when pace itself is central to the experience — not as a default intensifier.",
+        "Simple repeated sentence shapes are normal. Adj openings are normal. Structural uniformity is not a problem.",
+        "Variation is not a goal.",
+        "Specificity comes from the film — not from complex syntax or literary wording.",
+        "Prefer natural, simple English that is easy on first read.",
+        "Imagery or metaphor only when it is the clearest natural phrasing — never as a stylistic default.",
+        "Do not retell the synopsis or explain the film’s themes."
+      ],
+      "mood_dimensions": [
+        {
+          "name": "Core mood",
+          "detail": "The main emotional feel, named early (tense, dreamy, bleak, playful, etc.)."
+        },
+        {
+          "name": "Useful specifics",
+          "detail": "Concrete film-owned cues first: setting, image, sound, technique, behavior, or a distinctive contrast. Pace only when pace itself is central to the watching experience — not as a default intensifier."
+        }
+      ],
+      "strong_patterns": [
+        {
+          "principle": "Mood named up front",
+          "why": "Matches the glance test and the live catalog’s dominant house style."
+        },
+        {
+          "principle": "Concrete after-clause",
+          "why": "After the mood, point to something recognizable about THIS film — not interchangeable filler."
+        },
+        {
+          "principle": "Plain spoken English",
+          "why": "Easy to read aloud; no critic performance."
+        }
+      ],
+      "weak_patterns": [
+        {
+          "pattern": "Abstract intensifier tail after a good mood opening",
+          "when_weak": "When the line continues with interchangeable filler such as slow/fast/energetic pacing, quiet moments, dark tension, bleak atmosphere, or vibes — language that could fit many films with the same opening mood.",
+          "when_ok": "When pace, silence, or tension is genuinely distinctive for this film and is paired with a recognizable film-owned cue."
+        },
+        {
+          "pattern": "Visual/technique lead that delays the mood",
+          "when_weak": "When the first words describe colors, lines, or animation before the emotional feel is clear.",
+          "when_ok": "Rarely; only if that visual cue is itself the fastest way to name the feel."
+        },
+        {
+          "pattern": "Film-criticism / poetic density",
+          "when_weak": "When the sentence sounds written to impress — stacked metaphors, elegant verbs, review-copy cadence.",
+          "when_ok": "Almost never as a goal."
+        },
+        {
+          "pattern": "Synopsis or theme paraphrase",
+          "when_weak": "When the line retells plot or explains what the film is saying.",
+          "when_ok": "Never for the_mood."
+        },
+        {
+          "pattern": "Empty generic mood with no film cue",
+          "when_weak": "When the line could fit many unrelated films (quiet and emotional, tense atmosphere, etc.).",
+          "when_ok": "Never — always keep at least one useful film-specific cue when available."
+        },
+        {
+          "pattern": "Synopsis or theme paraphrase",
+          "when_weak": "When the line retells plot or explains what the film is saying.",
+          "when_ok": "Never for the_mood."
+        }
+      ],
+      "syntax_library": [
+        {
+          "type": "Default mood-first line",
+          "principle": "Start with the mood, then with 1–2 concrete specifics. Example: 'Dreamy and nostalgic, with soft pastel Florida suburbia and sudden surreal daydreams.' Repeated use of this shape across films is fine."
+        }
+      ],
+      "specificity_test": "Do the first few words name the mood? Is the rest easy on first read? Is there at least one concrete cue that belongs to this film? Could the words after the mood opening be swapped onto another film and still fit? If yes, replace them with a concrete cue from this film.",
+      "relationship_with_synopsis": "Complement the synopsis. Describe watching-feel; do not retell plot.",
+      "relationship_with_moods_tags": "Do not list tags. Turn the main feelings into plain mood-first language.",
+      "good_examples": [
+        {
+          "title": "Boys Go to Jupiter",
+          "the_mood": "Dreamy and nostalgic, with soft pastel Florida suburbia and sudden surreal daydreams.",
+          "why": "Mood first; concrete Florida/daydream cues instead of pace filler."
+        },
+        {
+          "title": "Padak",
+          "the_mood": "Tense and claustrophobic, with cold blues and tight framing around a mackerel trapped in an aquarium.",
+          "why": "Mood first; aquarium/mackerel/framing are film-owned."
+        },
+        {
+          "title": "Revengeance",
+          "the_mood": "Loud and gritty, with rough 2D animation and cheap bounty-hunter pulp.",
+          "why": "Mood first; pulp/2D cue instead of chaotic pacing."
+        },
+        {
+          "title": "The Art of Happiness",
+          "the_mood": "Melancholic and intimate, with rainy Naples, city sounds, and quiet encounters from a taxi.",
+          "why": "Shows Naples/taxi encounters rather than explaining grief via pace."
+        },
+        {
+          "title": "Seoul Station",
+          "the_mood": "Relentless and claustrophobic, with gritty street scenes and urgent survival dread in a crowded station.",
+          "why": "Mood first with place/situation cue."
+        },
+        {
+          "title": "Fritz the Cat",
+          "the_mood": "Restless and unhinged, with gritty 2D chaos and loud irreverent humor in late-60s New York nights.",
+          "why": "Mood first; period/place kept."
+        },
+        {
+          "title": "A Silent Voice",
+          "the_mood": "Quiet and heavy, with stark silence, isolation, and brief moments of warmth.",
+          "why": "Catalog house style without turning pace into filler."
+        },
+        {
+          "title": "Tux and Fanny",
+          "the_mood": "Gentle and unhurried, with soft forest light and the calm of everyday friendship.",
+          "why": "Simple concrete cues; no slow-pace filler."
+        }
+      ],
+      "anti_examples": [
+        {
+          "the_mood": "Tense and claustrophobic, with slow pacing that heightens the trapped feeling and moments of stark silence.",
+          "why": "Strong mood opening, but the after-clause is abstract filler; no film-owned cue."
+        },
+        {
+          "title": "Pace filler stack",
+          "the_mood": "Intense and gritty, with fast pacing and dark urban tension.",
+          "why": "Mood opening is fine; after-clause is interchangeable filler."
+        },
+        {
+          "title": "Critic stacking",
+          "the_mood": "Rain-soaked Naples hums with muted colors and layered city sounds as quiet grief unfolds in slow intimate rhythms.",
+          "why": "Literary density; hard to glance."
+        },
+        {
+          "title": "Empty generic",
+          "the_mood": "Quiet and emotional, with an intimate and reflective atmosphere.",
+          "why": "No film-owned cue."
+        }
+      ]
+    },
+    "analyst_notes": "v1.1 tighten: keep mood-first; require concrete after-clause; pace only when central; no word bans; no variety goals."
+  },
+  "size_vs_v2": {
+    "v2_chars": 10348,
+    "minimal_chars": 5549,
+    "reduction_ratio": 0.46,
+    "v2_core_principles": 8,
+    "minimal_core_principles": 9,
+    "v2_good_examples": 12,
+    "minimal_good_examples": 8,
+    "v2_weak_patterns": 6,
+    "minimal_weak_patterns": 4,
+    "v2_syntax_types": 5,
+    "minimal_syntax_types": 1
+  },
+  "change_from_v1": {
+    "approach": "Small tighten of the existing minimal candidate — not a return to v2, not a long style manual.",
+    "keep_unchanged": [
+      "Mood-first / first-words test",
+      "Default shape [Mood], with [1–2 specifics]",
+      "Adj openings and structural repetition allowed",
+      "No syntax-variety goal",
+      "No literary/critic voice",
+      "No word bans (including pacing)"
+    ],
+    "add_or_reframe": [
+      {
+        "change": "Reframe the AFTER clause rule",
+        "text": "After naming the mood, say the most natural useful thing about THIS film. Prefer a concrete image, setting, sound, contrast, behavior, or unusual quality that makes the film recognizable. Mention pace only when pace itself is genuinely central to the watching experience."
+      },
+      {
+        "change": "Add a weak pattern: abstract intensifier tail",
+        "text": "Pattern: mood-first opening followed by interchangeable filler (slow/fast/energetic pacing, quiet moments, dark tension, bleak atmosphere, neighborhood vibes). When weak: the after-clause restates intensity without a film-owned cue. When ok: pace/silence/etc. is truly distinctive for this film AND paired with something recognizable."
+      },
+      {
+        "change": "Add a soft after-clause check to specificity_test",
+        "text": "Could this after-clause be moved to another film with the same opening mood and still fit? If yes, replace it with a concrete film-owned cue."
+      },
+      {
+        "change": "Replace pace-heavy good examples / syntax example",
+        "text": "Swap the syntax library example away from 'with a slow pace…'. Use preferred-direction style examples (Padak mackerel/aquarium; Boys Go to Jupiter pastel Florida + daydreams; Revengeance bounty-hunter pulp) as good examples. Keep them short and non-literary."
+      },
+      {
+        "change": "Clarify mood_dimensions Useful specifics",
+        "text": "Useful specifics = concrete film-owned cues first (setting, image, sound, technique, behavior, distinctive contrast). Pace is optional and only when it is part of what makes this film feel distinctive."
+      }
+    ],
+    "explicitly_do_not_add": [
+      "Ban list for pacing/atmosphere/moments/tension",
+      "Quotas on repeated openings",
+      "Syntax variety requirements",
+      "Pressure to invent metaphors or unique structures",
+      "Long new style chapters"
+    ]
+  }
+}

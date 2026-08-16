@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { rebuildAestheticTasteCoresForProfile } from "@/scripts/build-aesthetic-cores.mjs";
+import { rebuildEmotionalTasteCoresForProfile } from "@/scripts/build-taste-cores.mjs";
 import {
-  calculateProfileScores,
+  calculateAllProfileScoreArtifacts,
   getAllFilms,
 } from "@/scripts/rebuild-profile-film-scores.mjs";
 import { getAdminSupabase } from "@/lib/supabase/admin";
@@ -50,8 +52,17 @@ export async function GET(request: Request) {
         throw profileError;
       }
 
+      // Rebuild taste cores before scores so native ranking uses fresh profile tags.
+      // Same trigger path as animation: film_ratings → score job → worker.
+      if (profile) {
+        await rebuildEmotionalTasteCoresForProfile(profile);
+        await rebuildAestheticTasteCoresForProfile(profile);
+      }
+
       const scoreRows = profile
-        ? await calculateProfileScores(profile, allFilms)
+        ? await calculateAllProfileScoreArtifacts(profile, allFilms, {
+            quiet: true,
+          })
         : [];
       const { data: applied, error: applyError } = await supabase.rpc(
         "replace_profile_film_scores_if_current",

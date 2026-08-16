@@ -1,0 +1,14 @@
+---
+description: Run production build before push or release
+alwaysApply: true
+---
+
+# Build before release
+
+Before any **push**, **PR**, or **release** of app/code changes:
+
+1. Run `ALLOW_LOCAL_STACK_ENV=1 npm run build` (local lacks hosted production env; this still runs compile + TypeScript like Vercel).
+2. Fix failures before committing/pushing.
+3. Do not push knowing the last build failed.
+
+If only docs/scripts/tmp change with no app compile path, typecheck alone (`npx tsc --noEmit`) is enough — prefer full build when `app/`, `components/`, `lib/`, or `types/` changed.

@@ -1,9 +1,17 @@
 import { applyAppEnv } from "./load-app-env.mjs";
 import { createClient } from "@supabase/supabase-js";
 import {
+  MEDIA_TYPE,
+  MEDIA_TYPES,
+  SCORE_MODE,
+  normalizeMediaType,
+  oppositeMediaType,
+} from "../lib/media-type.mjs";
+import {
   buildBalancedScores,
   sortFilmsByScore,
 } from "../lib/profile-film-scoring.mjs";
+import { selectCandidateFilmsForScoring } from "../lib/profile-film-score-candidates.mjs";
 
 applyAppEnv();
 
@@ -347,6 +355,53 @@ function getProfileFit(film, emotionalProfileTagWeights, aestheticProfileTagWeig
   return (emotionalProfileFit + materialProfileFit) / 2;
 }
 
+/** Cross-media uses emotional tags only — never aesthetic/technique from the source profile. */
+function getEmotionalOnlyProfileFit(film, emotionalProfileTagWeights) {
+  return getProfileTagMatchScore(film, emotionalProfileTagWeights);
+}
+
+function getGatedEmotionalOnlyScores(
+  film,
+  filmMoodEmbeddingByFilmId,
+  ratedFilms,
+  emotionalProfileTagWeights
+) {
+  const profileFit = getEmotionalOnlyProfileFit(
+    film,
+    emotionalProfileTagWeights
+  );
+  const profileGate = getProfileGate(profileFit);
+  const emotionalAnchor = getNearestRatedAnchor(
+    filmMoodEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmMoodEmbeddingByFilmId
+  );
+
+  return {
+    emotional_score: emotionalAnchor.score * profileGate,
+    material_score: 0,
+    profileFit,
+    profileGate,
+    emotionalAnchor,
+    materialAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+  };
+}
+
+function filterFilmsByMediaType(films, mediaType) {
+  const normalized = normalizeMediaType(mediaType);
+  return (films ?? []).filter(
+    (film) =>
+      normalizeMediaType(film.media_type, MEDIA_TYPE.animation) === normalized
+  );
+}
+
 function getOldBlendedEmotionalScore(
   film,
   filmMoodEmbeddingByFilmId,
@@ -436,11 +491,13 @@ export async function getProfiles(profileSlug) {
   return data ?? [];
 }
 
-async function getTasteCores(profileId) {
+async function getTasteCores(profileId, mediaType = MEDIA_TYPE.animation) {
+  const normalizedMedia = normalizeMediaType(mediaType);
   const { data, error } = await supabase
     .from("profile_taste_cores")
     .select("*")
     .eq("profile_id", profileId)
+    .eq("media_type", normalizedMedia)
     .order("core_index");
 
   if (error) {
@@ -458,14 +515,17 @@ async function getTasteCores(profileId) {
 export async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
-    .select("id, title, moods, aesthetic_tags, technique, year")
+    .select("id, title, moods, aesthetic_tags, technique, year, media_type")
     .order("id");
 
   if (error) {
     throw error;
   }
 
-  return data ?? [];
+  return (data ?? []).map((film) => ({
+    ...film,
+    media_type: normalizeMediaType(film.media_type, MEDIA_TYPE.animation),
+  }));
 }
 
 async function getRatings(profileId) {
@@ -525,17 +585,103 @@ async function upsertScores(profileId, scoreRows) {
   }
 }
 
-export async function calculateProfileScores(profile, allFilms) {
-  console.log(`\nRebuilding scores for ${profile.slug} (${profile.name})`);
+/**
+ * Upsert score rows without deleting other films for the profile.
+ * Used when scoring newly added films only.
+ *
+ * Hosted may still use PRIMARY KEY (profile_id, film_id) — in that case only one
+ * artifact per film fits. Prefer callers to pass a single mode per film until the
+ * multi-mode PK migration is applied.
+ */
+export async function upsertScoreRows(profileId, scoreRows) {
+  if (!scoreRows?.length) return;
 
-  const tasteCores = await getTasteCores(profile.id);
-  const aestheticCores = tasteCores.filter(
-    (core) => core.core_type === "aesthetic"
+  for (let index = 0; index < scoreRows.length; index += UPSERT_BATCH_SIZE) {
+    const batch = scoreRows.slice(index, index + UPSERT_BATCH_SIZE).map((row) => ({
+      profile_id: profileId,
+      film_id: row.film_id,
+      emotional_score: row.emotional_score,
+      material_score: row.material_score,
+      score_mode: row.score_mode ?? SCORE_MODE.native,
+      source_media: row.source_media ?? MEDIA_TYPE.animation,
+      computed_at: row.computed_at,
+    }));
+
+    // Prefer multi-mode unique; fall back to legacy PK (profile_id, film_id).
+    let { error } = await supabase.from("profile_film_scores").upsert(batch, {
+      onConflict: "profile_id,film_id,score_mode,source_media",
+    });
+
+    if (error && /no unique|ON CONFLICT|42P10|score_mode/i.test(error.message)) {
+      ({ error } = await supabase.from("profile_film_scores").upsert(batch, {
+        onConflict: "profile_id,film_id",
+      }));
+    }
+
+    if (error) {
+      throw error;
+    }
+  }
+}
+
+export { selectCandidateFilmsForScoring } from "../lib/profile-film-score-candidates.mjs";
+
+/**
+ * Score unrated candidates for one media / score-mode combination.
+ *
+ * Native: anchors + cores + candidates all share the same media_type; material included.
+ * Cross-media: anchors/cores from sourceMedia (emotional only); candidates from targetMedia;
+ * material_score forced to 0. Never writes/merges taste cores.
+ *
+ * @param {object} profile
+ * @param {object[]} allFilms
+ * @param {{
+ *   mediaType?: string,
+ *   scoreMode?: string,
+ *   sourceMedia?: string,
+ *   filmIds?: string[] | null,
+ *   quiet?: boolean,
+ * }} [options]
+ */
+export async function calculateProfileScores(profile, allFilms, options = {}) {
+  const scoreMode = normalizeScoreModeOption(options.scoreMode);
+  const sourceMedia = normalizeMediaType(
+    options.sourceMedia ??
+      (scoreMode === SCORE_MODE.crossMedia
+        ? MEDIA_TYPE.animation
+        : options.mediaType),
+    MEDIA_TYPE.animation
   );
+  const targetMedia =
+    scoreMode === SCORE_MODE.crossMedia
+      ? normalizeMediaType(
+          options.mediaType ?? oppositeMediaType(sourceMedia),
+          oppositeMediaType(sourceMedia)
+        )
+      : normalizeMediaType(options.mediaType ?? sourceMedia, sourceMedia);
 
+  const filmIdsRestrict = Array.isArray(options.filmIds)
+    ? options.filmIds.filter(Boolean)
+    : null;
+  const quiet = Boolean(options.quiet);
+  const incremental = Boolean(filmIdsRestrict?.length);
+  const isCrossMedia = scoreMode === SCORE_MODE.crossMedia;
+
+  if (!quiet) {
+    console.log(
+      `\nRebuilding ${scoreMode} scores for ${profile.slug} (${profile.name})` +
+        ` source=${sourceMedia} target=${targetMedia}` +
+        `${incremental ? ` [incremental ${filmIdsRestrict.length} film(s)]` : ""}`
+    );
+  }
+
+  const tasteCores = await getTasteCores(profile.id, sourceMedia);
   const emotionalCores = tasteCores.filter(
     (core) => core.core_type === "emotional"
   );
+  const aestheticCores = isCrossMedia
+    ? []
+    : tasteCores.filter((core) => core.core_type === "aesthetic");
 
   const emotionalProfileTags = emotionalCores
     .flatMap((core) => core.emotional_profile_tags ?? [])
@@ -562,15 +708,16 @@ export async function calculateProfileScores(profile, allFilms) {
   );
 
   const ratings = await getRatings(profile.id);
-  const ratedFilmIds = new Set(ratings.map((item) => item.film_id));
-
   const ratingByFilmId = new Map(
     ratings
       .filter((item) => item.rating !== null)
       .map((item) => [item.film_id, item.rating])
   );
 
-  const ratedFilms = allFilms
+  const sourceFilms = filterFilmsByMediaType(allFilms, sourceMedia);
+  const targetFilms = filterFilmsByMediaType(allFilms, targetMedia);
+
+  const ratedFilms = sourceFilms
     .map((film) => ({
       ...film,
       rating: ratingByFilmId.get(film.id) ?? null,
@@ -578,38 +725,58 @@ export async function calculateProfileScores(profile, allFilms) {
     .filter((film) => Number(film.rating ?? 0) >= 7)
     .sort(compareFilmsById);
 
-  const candidateFilms = allFilms
-    .filter((film) => !ratedFilmIds.has(film.id))
-    .sort(compareFilmsById);
+  const candidateFilms = selectCandidateFilmsForScoring(
+    targetFilms,
+    ratings,
+    filmIdsRestrict,
+    compareFilmsById
+  );
 
   if (!candidateFilms.length) {
-    console.log("  No unrated films to score.");
+    if (!quiet) {
+      console.log(
+        incremental
+          ? "  No matching unrated films to score in this set."
+          : "  No unrated films to score."
+      );
+    }
     return [];
   }
 
-  const filmIds = allFilms.map((film) => film.id);
+  const embedFilmIds = [
+    ...new Set([
+      ...ratedFilms.map((film) => film.id),
+      ...candidateFilms.map((film) => film.id),
+    ]),
+  ];
 
   const filmMoodEmbeddingByFilmId = await getFilmEmbeddings(
     "film_mood_embeddings",
-    filmIds
+    embedFilmIds
   );
-  const filmAestheticEmbeddingByFilmId = await getFilmEmbeddings(
-    "film_aesthetic_embeddings",
-    filmIds
-  );
+  const filmAestheticEmbeddingByFilmId = isCrossMedia
+    ? new Map()
+    : await getFilmEmbeddings("film_aesthetic_embeddings", embedFilmIds);
 
   const computedAt = new Date().toISOString();
   const gatedScoresByFilmId = new Map();
 
   const scoreRows = candidateFilms.map((film) => {
-    const gatedScores = getGatedDimensionScores(
-      film,
-      filmMoodEmbeddingByFilmId,
-      filmAestheticEmbeddingByFilmId,
-      ratedFilms,
-      emotionalProfileTagWeights,
-      aestheticProfileTagWeights
-    );
+    const gatedScores = isCrossMedia
+      ? getGatedEmotionalOnlyScores(
+          film,
+          filmMoodEmbeddingByFilmId,
+          ratedFilms,
+          emotionalProfileTagWeights
+        )
+      : getGatedDimensionScores(
+          film,
+          filmMoodEmbeddingByFilmId,
+          filmAestheticEmbeddingByFilmId,
+          ratedFilms,
+          emotionalProfileTagWeights,
+          aestheticProfileTagWeights
+        );
 
     gatedScoresByFilmId.set(film.id, gatedScores);
 
@@ -618,9 +785,15 @@ export async function calculateProfileScores(profile, allFilms) {
       film_id: film.id,
       emotional_score: gatedScores.emotional_score,
       material_score: gatedScores.material_score,
+      score_mode: scoreMode,
+      source_media: sourceMedia,
       computed_at: computedAt,
     };
   });
+
+  if (quiet) {
+    return scoreRows;
+  }
 
   const rawScoresByFilmId = new Map(
     scoreRows.map((row) => [
@@ -634,98 +807,276 @@ export async function calculateProfileScores(profile, allFilms) {
 
   const balancedScores = buildBalancedScores(candidateFilms, rawScoresByFilmId);
 
-  const oldRawScoresByFilmId = new Map(
-    candidateFilms.map((film) => [
-      film.id,
-      {
-        emotional: getOldBlendedEmotionalScore(
-          film,
-          filmMoodEmbeddingByFilmId,
-          ratedFilms,
-          emotionalProfileTagWeights
-        ),
-        material: getOldBlendedMaterialScore(
-          film,
-          filmAestheticEmbeddingByFilmId,
-          ratedFilms,
-          aestheticProfileTagWeights
-        ),
-      },
-    ])
-  );
-  const oldBalancedScores = buildBalancedScores(
-    candidateFilms,
-    oldRawScoresByFilmId
-  );
-
-  for (const film of candidateFilms) {
-    const emotionalMatchedCount = getMatchedSignalCount(
-      filmMoodEmbeddingByFilmId.get(film.id),
-      ratedFilms,
-      filmMoodEmbeddingByFilmId
+  if (!isCrossMedia) {
+    const oldRawScoresByFilmId = new Map(
+      candidateFilms.map((film) => [
+        film.id,
+        {
+          emotional: getOldBlendedEmotionalScore(
+            film,
+            filmMoodEmbeddingByFilmId,
+            ratedFilms,
+            emotionalProfileTagWeights
+          ),
+          material: getOldBlendedMaterialScore(
+            film,
+            filmAestheticEmbeddingByFilmId,
+            ratedFilms,
+            aestheticProfileTagWeights
+          ),
+        },
+      ])
     );
-    const materialMatchedCount = getMatchedSignalCount(
-      filmAestheticEmbeddingByFilmId.get(film.id),
-      ratedFilms,
-      filmAestheticEmbeddingByFilmId
+    const oldBalancedScores = buildBalancedScores(
+      candidateFilms,
+      oldRawScoresByFilmId
     );
-    const existingScore = balancedScores.get(film.id);
 
-    if (existingScore) {
-      existingScore.matchedSignalCount =
-        emotionalMatchedCount + materialMatchedCount;
+    for (const film of candidateFilms) {
+      const emotionalMatchedCount = getMatchedSignalCount(
+        filmMoodEmbeddingByFilmId.get(film.id),
+        ratedFilms,
+        filmMoodEmbeddingByFilmId
+      );
+      const materialMatchedCount = getMatchedSignalCount(
+        filmAestheticEmbeddingByFilmId.get(film.id),
+        ratedFilms,
+        filmAestheticEmbeddingByFilmId
+      );
+      const existingScore = balancedScores.get(film.id);
+
+      if (existingScore) {
+        existingScore.matchedSignalCount =
+          emotionalMatchedCount + materialMatchedCount;
+      }
     }
+
+    const oldTopFilms = sortFilmsByScore(candidateFilms, oldBalancedScores).slice(
+      0,
+      10
+    );
+    console.log("  Old 50/50 blend top 10:");
+    oldTopFilms.forEach((film, index) => {
+      const score = oldBalancedScores.get(film.id)?.balanced ?? 0;
+      console.log(`    ${index + 1}. ${film.title} — balanced: ${score.toFixed(4)}`);
+    });
   }
 
-  const oldTopFilms = sortFilmsByScore(candidateFilms, oldBalancedScores).slice(
-    0,
-    10
-  );
   const newTopFilms = sortFilmsByScore(candidateFilms, balancedScores).slice(
     0,
     10
   );
 
-  console.log("  Old 50/50 blend top 10:");
-
-  oldTopFilms.forEach((film, index) => {
-    const score = oldBalancedScores.get(film.id)?.balanced ?? 0;
-    console.log(`    ${index + 1}. ${film.title} — balanced: ${score.toFixed(4)}`);
-  });
-
-  console.log("  New anchor × lenient profileGate top 10:");
+  console.log(
+    isCrossMedia
+      ? "  Cross-media emotional-only top 10:"
+      : "  New anchor × lenient profileGate top 10:"
+  );
 
   newTopFilms.forEach((film, index) => {
     const finalScore = balancedScores.get(film.id)?.balanced ?? 0;
     const gatedScores = gatedScoresByFilmId.get(film.id);
     const emotionalAnchor = gatedScores?.emotionalAnchor;
-    const materialAnchor = gatedScores?.materialAnchor;
-    const dominantAnchor =
-      (emotionalAnchor?.score ?? 0) >= (materialAnchor?.score ?? 0)
-        ? emotionalAnchor
-        : materialAnchor;
-    const oldBlendedScore = oldBalancedScores.get(film.id)?.balanced ?? 0;
 
     console.log(
       `    ${index + 1}. ${film.title} — finalScore: ${finalScore.toFixed(4)}`
     );
     console.log(
-      `       anchor: "${dominantAnchor?.anchorTitle ?? "—"}" ` +
-        `rating=${dominantAnchor?.anchorRating ?? "—"} ` +
-        `anchorScore=${dominantAnchor?.score.toFixed(4) ?? "0.0000"} ` +
+      `       anchor: "${emotionalAnchor?.anchorTitle ?? "—"}" ` +
+        `rating=${emotionalAnchor?.anchorRating ?? "—"} ` +
+        `anchorScore=${emotionalAnchor?.score.toFixed(4) ?? "0.0000"} ` +
         `profileFit=${(gatedScores?.profileFit ?? 0).toFixed(4)} ` +
-        `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)} ` +
-        `oldBlended=${oldBlendedScore.toFixed(4)}`
+        `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)}`
     );
   });
 
   return scoreRows;
 }
 
+function normalizeScoreModeOption(value) {
+  if (value === SCORE_MODE.crossMedia) return SCORE_MODE.crossMedia;
+  return SCORE_MODE.native;
+}
+
+/**
+ * Emotional-only transfer: source media taste → target media candidates.
+ * Does not mutate taste cores of either media.
+ */
+export async function calculateCrossMediaScores(
+  profile,
+  allFilms,
+  options = {}
+) {
+  const sourceMedia = normalizeMediaType(
+    options.sourceMedia,
+    MEDIA_TYPE.animation
+  );
+  const targetMedia = normalizeMediaType(
+    options.targetMedia ?? oppositeMediaType(sourceMedia),
+    oppositeMediaType(sourceMedia)
+  );
+
+  return calculateProfileScores(profile, allFilms, {
+    ...options,
+    scoreMode: SCORE_MODE.crossMedia,
+    sourceMedia,
+    mediaType: targetMedia,
+  });
+}
+
+/**
+ * Full artifact set for a profile: native per media + cross both directions.
+ * Isolation: each call only reads ratings/cores for its source media.
+ */
+export async function calculateAllProfileScoreArtifacts(
+  profile,
+  allFilms,
+  options = {}
+) {
+  const quiet = options.quiet !== false;
+  const filmIds = options.filmIds ?? null;
+  const rows = [];
+
+  for (const mediaType of MEDIA_TYPES) {
+    const nativeRows = await calculateProfileScores(profile, allFilms, {
+      mediaType,
+      scoreMode: SCORE_MODE.native,
+      sourceMedia: mediaType,
+      filmIds,
+      quiet,
+    });
+    rows.push(...nativeRows);
+  }
+
+  for (const sourceMedia of MEDIA_TYPES) {
+    const crossRows = await calculateCrossMediaScores(profile, allFilms, {
+      sourceMedia,
+      targetMedia: oppositeMediaType(sourceMedia),
+      filmIds,
+      quiet,
+    });
+    rows.push(...crossRows);
+  }
+
+  return rows;
+}
+
+/**
+ * Score only newly added films for every profile (no full-catalog rebuild).
+ * Rating-triggered jobs keep using full rebuildProfileScores + replace-all.
+ *
+ * @param {string[]} filmIds
+ * @param {{ profiles?: object[], allFilms?: object[] }} [options]
+ */
+export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
+  const ids = [...new Set((filmIds ?? []).filter(Boolean))];
+  if (!ids.length) {
+    return { profileCount: 0, rowCount: 0, emptyProfiles: 0 };
+  }
+
+  const profiles = options.profiles ?? (await getProfiles());
+  const allFilms = options.allFilms ?? (await getAllFilms());
+  const newFilms = allFilms.filter((film) => ids.includes(film.id));
+  const mediaTypesPresent = [
+    ...new Set(
+      newFilms.map((film) =>
+        normalizeMediaType(film.media_type, MEDIA_TYPE.animation)
+      )
+    ),
+  ];
+
+  let rowCount = 0;
+  let emptyProfiles = 0;
+
+  console.log(
+    `\n▶ Incremental profile scores for ${ids.length} film(s) × ${profiles.length} profile(s)\n`
+  );
+
+  for (const profile of profiles) {
+    const scoreRows = [];
+
+    for (const mediaType of mediaTypesPresent) {
+      const mediaFilmIds = newFilms
+        .filter(
+          (film) =>
+            normalizeMediaType(film.media_type, MEDIA_TYPE.animation) ===
+            mediaType
+        )
+        .map((film) => film.id);
+
+      if (!mediaFilmIds.length) continue;
+
+      if (mediaType === MEDIA_TYPE.liveAction) {
+        // Legacy hosted PK allows one score row per film. Prefer cross-from-animation
+        // for early-access LA (animation likes unlock ranking; native LA likes rare).
+        scoreRows.push(
+          ...(await calculateCrossMediaScores(profile, allFilms, {
+            sourceMedia: MEDIA_TYPE.animation,
+            targetMedia: MEDIA_TYPE.liveAction,
+            filmIds: mediaFilmIds,
+            quiet: true,
+          }))
+        );
+        continue;
+      }
+
+      // Animation (and future multi-mode): native for this media.
+      scoreRows.push(
+        ...(await calculateProfileScores(profile, allFilms, {
+          mediaType,
+          scoreMode: SCORE_MODE.native,
+          sourceMedia: mediaType,
+          filmIds: mediaFilmIds,
+          quiet: true,
+        }))
+      );
+    }
+
+    // Deduplicate to one row per film for legacy PK safety.
+    const onePerFilm = new Map();
+    for (const row of scoreRows) {
+      onePerFilm.set(row.film_id, row);
+    }
+    const deduped = [...onePerFilm.values()];
+
+    if (!deduped.length) {
+      emptyProfiles += 1;
+      continue;
+    }
+    await upsertScoreRows(profile.id, deduped);
+    rowCount += deduped.length;
+    console.log(
+      `  ${profile.slug ?? profile.id}: upserted ${deduped.length} score row(s)`
+    );
+  }
+
+  console.log(
+    `\nDone incremental scores: profiles=${profiles.length}, rows=${rowCount}, empty=${emptyProfiles}\n`
+  );
+
+  return {
+    profileCount: profiles.length,
+    rowCount,
+    emptyProfiles,
+  };
+}
+
 export async function rebuildProfileScores(profile, allFilms) {
-  const scoreRows = await calculateProfileScores(profile, allFilms);
+  const { rebuildEmotionalTasteCoresForProfile } = await import(
+    "./build-taste-cores.mjs"
+  );
+  const { rebuildAestheticTasteCoresForProfile } = await import(
+    "./build-aesthetic-cores.mjs"
+  );
+
+  await rebuildEmotionalTasteCoresForProfile(profile);
+  await rebuildAestheticTasteCoresForProfile(profile);
+
+  const scoreRows = await calculateAllProfileScoreArtifacts(profile, allFilms, {
+    quiet: false,
+  });
   await upsertScores(profile.id, scoreRows);
-  console.log(`  Stored ${scoreRows.length} film scores.`);
+  console.log(`  Stored ${scoreRows.length} film scores (all media/modes).`);
 }
 
 async function main() {
