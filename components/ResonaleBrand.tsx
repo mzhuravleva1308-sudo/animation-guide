@@ -8,20 +8,25 @@ const NAVY = RESONALE_NAVY;
 const LAVENDER = RESONALE_LAVENDER;
 const GUIDE_LABEL = "GUIDE";
 
+/** GUIDE left edge at the middle of “n” in “nale”. */
+const ESONALE_START_X = 122;
+const GUIDE_X = 184;
+
 /**
- * Wave → continuous R mark only. Wordmark text sits beside it in HTML
- * so GUIDE can right-align to “esonale” via CSS (font metrics vary).
+ * Resonale lockup: wave → continuous R + “esonale” + “GUIDE”.
+ * R + wordmark stay in one SVG so the mark doesn’t drift vs “esonale”.
  */
-function ResonaleRMark({ className }: { className?: string }) {
+function ResonaleLogoMark({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 120 62"
+      viewBox="0 0 350 78"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
       focusable="false"
     >
+      {/* Soft lavender resonance line */}
       <path
         d="M8 44
            C 18 44 22 34 32 34
@@ -32,6 +37,11 @@ function ResonaleRMark({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
+      {/*
+        Continuous navy stroke:
+        left sine wave → rises into R stem → bowl → diagonal leg
+      */}
       <path
         d="M6 36
            C 16 36 21 26 31 26
@@ -48,39 +58,42 @@ function ResonaleRMark({ className }: { className?: string }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
-  );
-}
 
-function ResonaleWordmark() {
-  return (
-    <span className="flex flex-col items-end leading-none">
-      <span
-        className="pr-[0.02em] text-[12.9px] font-medium tracking-[-0.02em] sm:text-[16.8px]"
-        style={{ color: NAVY }}
+      <text
+        x={ESONALE_START_X}
+        y="35"
+        fill={NAVY}
+        fontFamily="var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif"
+        fontSize="33.6"
+        fontWeight="500"
+        letterSpacing="-0.02em"
       >
         esonale
-      </span>
+      </text>
+
       {/*
-        items-end keeps GUIDE’s right edge flush with “esonale”.
-        mt leaves a clear gap under the wordmark.
-        Letters stagger in on first paint (see .resonale-guide-letter).
+        Starts at the middle of “n” in “nale”. Letters stagger in on first paint.
       */}
-      <span
-        className="mt-[0.25rem] flex justify-end gap-[0.22em] text-[6.15px] font-semibold sm:mt-[0.3rem] sm:text-[8px]"
-        style={{ color: LAVENDER }}
+      <text
+        x={GUIDE_X}
+        y="58"
+        fill={LAVENDER}
+        fontFamily="var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif"
+        fontSize="16"
+        fontWeight="600"
+        letterSpacing="0.22em"
       >
         {GUIDE_LABEL.split("").map((char, index) => (
-          <span
+          <tspan
             key={`${char}-${index}`}
-            className="resonale-guide-letter inline-block"
+            className="resonale-guide-letter"
             style={{ animationDelay: `${200 + index * 55}ms` }}
           >
             {char === " " ? "\u00A0" : char}
-          </span>
+          </tspan>
         ))}
-      </span>
-    </span>
+      </text>
+    </svg>
   );
 }
 
@@ -117,10 +130,7 @@ export default function ResonaleBrand({ href = "/", onClick }: ResonaleBrandProp
         centers against “esonale”, while GUIDE hangs below.
       */}
       <span className="relative block h-[21px] w-[8.5rem] overflow-visible sm:h-6 sm:w-[10.6875rem]">
-        <span className="pointer-events-none absolute top-[-0.3rem] left-0 inline-flex items-start gap-[0.1rem] overflow-visible sm:top-[-0.4125rem] sm:gap-[0.15rem]">
-          <ResonaleRMark className="h-[30px] w-auto shrink-0 sm:h-[39px]" />
-          <ResonaleWordmark />
-        </span>
+        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.3rem] left-0 h-[30px] w-auto max-w-none overflow-visible sm:top-[-0.4125rem] sm:h-[39px]" />
       </span>
     </Link>
   );
