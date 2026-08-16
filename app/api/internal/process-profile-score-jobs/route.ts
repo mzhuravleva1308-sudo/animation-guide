@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { rebuildAestheticTasteCoresForProfile } from "@/scripts/build-aesthetic-cores.mjs";
+import { rebuildEmotionalTasteCoresForProfile } from "@/scripts/build-taste-cores.mjs";
 import {
   calculateAllProfileScoreArtifacts,
   getAllFilms,
@@ -48,6 +50,13 @@ export async function GET(request: Request) {
 
       if (profileError) {
         throw profileError;
+      }
+
+      // Rebuild taste cores before scores so native ranking uses fresh profile tags.
+      // Same trigger path as animation: film_ratings → score job → worker.
+      if (profile) {
+        await rebuildEmotionalTasteCoresForProfile(profile);
+        await rebuildAestheticTasteCoresForProfile(profile);
       }
 
       const scoreRows = profile

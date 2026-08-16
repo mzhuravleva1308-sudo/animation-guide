@@ -15,11 +15,18 @@ import { runDiscoveryContentBatch } from "../lib/film-discovery-content.mjs";
 import { DISCOVERY_CONTENT_STATUS } from "../lib/film-discovery.mjs";
 
 function parseArgs(argv) {
-  const options = { idsFile: null, dryRun: false, force: true };
+  const options = {
+    idsFile: null,
+    dryRun: false,
+    force: true,
+    outFile: "tmp/la-content-dry-run-50.json",
+  };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--ids-file") options.idsFile = argv[++index];
     else if (arg.startsWith("--ids-file=")) options.idsFile = arg.slice("--ids-file=".length);
+    else if (arg === "--out-file") options.outFile = argv[++index];
+    else if (arg.startsWith("--out-file=")) options.outFile = arg.slice("--out-file=".length);
     else if (arg === "--dry-run") options.dryRun = true;
     else if (arg === "--force") options.force = true;
     else throw new Error(`Unknown argument: ${arg}`);
@@ -97,7 +104,7 @@ async function main() {
 
   const out = {
     ok: true,
-    experiment: "la_tag_eval_50",
+    experiment: "la_tag_eval",
     dryRun: report.dryRun,
     databaseMutated: report.databaseMutated,
     writes_to_films_table: report.writes_to_films_table ?? false,
@@ -105,8 +112,8 @@ async function main() {
     ...report,
   };
 
-  await fs.writeFile("tmp/la-content-dry-run-50.json", JSON.stringify(out, null, 2));
-  console.error(`Wrote tmp/la-content-dry-run-50.json (${report.results?.length ?? 0} results)`);
+  await fs.writeFile(options.outFile, JSON.stringify(out, null, 2));
+  console.error(`Wrote ${options.outFile} (${report.results?.length ?? 0} results)`);
   console.log(
     JSON.stringify(
       {
@@ -116,7 +123,7 @@ async function main() {
         writes_to_films_table: false,
         candidate_count: candidates.length,
         result_count: report.results?.length ?? 0,
-        output: "tmp/la-content-dry-run-50.json",
+        output: options.outFile,
       },
       null,
       2

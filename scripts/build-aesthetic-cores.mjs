@@ -17,7 +17,8 @@ if (!supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const MIN_RATING = 8;
+/** Matches scoring anchors (`>= 7`) and product “like” threshold (>6). */
+const MIN_RATING = 7;
 const MIN_FILMS_IN_CORE = 3;
 const FILM_SIMILARITY_THRESHOLD = 0.86;
 const NEAREST_MOODS_LIMIT = 12;
@@ -208,11 +209,11 @@ async function getRatedFilms(profileId, mediaType) {
         .filter((film) => film.id && film.moods?.length);
 }
 
-async function rebuildProfileCoresForMedia(
+export async function rebuildAestheticTasteCoresForMedia(
     profile,
     mediaType,
     moodEmbeddings,
-    filmMoodEmbeddings
+    filmAestheticEmbeddings
 ) {
     console.log(`\nProfile: ${profile.name} [${mediaType}]`);
 
@@ -221,7 +222,7 @@ async function rebuildProfileCoresForMedia(
     const filmsWithEmbeddings = ratedFilms
         .map((film) => ({
             ...film,
-            embedding: filmMoodEmbeddings.get(film.id),
+            embedding: filmAestheticEmbeddings.get(film.id),
         }))
         .filter((film) => film.embedding);
 
@@ -295,13 +296,21 @@ async function rebuildProfileCoresForMedia(
     }
 }
 
-async function rebuildProfileCores(profile, moodEmbeddings, filmMoodEmbeddings) {
-    for (const mediaType of MEDIA_TYPES) {
-        await rebuildProfileCoresForMedia(
+export async function rebuildAestheticTasteCoresForProfile(
+    profile,
+    options = {}
+) {
+    const mediaTypes = options.mediaTypes ?? MEDIA_TYPES;
+    const moodEmbeddings = options.moodEmbeddings ?? (await getMoodEmbeddings());
+    const filmAestheticEmbeddings =
+        options.filmAestheticEmbeddings ?? (await getFilmAestheticEmbeddings());
+
+    for (const mediaType of mediaTypes) {
+        await rebuildAestheticTasteCoresForMedia(
             profile,
             mediaType,
             moodEmbeddings,
-            filmMoodEmbeddings
+            filmAestheticEmbeddings
         );
     }
 }
@@ -316,13 +325,18 @@ async function main() {
     console.log(`Profiles: ${profiles.length}`);
 
     for (const profile of profiles) {
-        await rebuildProfileCores(profile, moodEmbeddings, filmAestheticEmbeddings);
+        await rebuildAestheticTasteCoresForProfile(profile, {
+            moodEmbeddings,
+            filmAestheticEmbeddings,
+        });
     }
 
     console.log("\nDone");
 }
 
-main().catch((error) => {
-    console.error(error);
-    process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+    main().catch((error) => {
+        console.error(error);
+        process.exit(1);
+    });
+}

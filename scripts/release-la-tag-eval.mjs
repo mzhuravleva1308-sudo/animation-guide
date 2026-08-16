@@ -9,7 +9,12 @@
  *   APP_ENV=hosted node scripts/release-la-tag-eval.mjs --approve-prep
  *   APP_ENV=hosted node scripts/release-la-tag-eval.mjs --set-media-type
  *   APP_ENV=hosted node scripts/release-la-tag-eval.mjs --go-live
- *   APP_ENV=hosted node scripts/release-la-tag-eval.mjs --all   # content+scrub only then stop; use flags for rest
+ *   APP_ENV=hosted node scripts/release-la-tag-eval.mjs --all
+ *
+ * Optional paths (defaults keep the original 50-film eval files):
+ *   --ids-file tmp/la-release-4-ids.json
+ *   --content-file tmp/la-content-dry-run-4.json
+ *   --report-file tmp/la-release-4-report.json
  */
 
 import fs from "node:fs/promises";
@@ -26,8 +31,9 @@ import {
   buildMediaCandidatePatch,
 } from "../lib/film-discovery-media.mjs";
 
-const IDS_FILE = "tmp/la-tag-eval-50-ids.json";
-const CONTENT_FILE = "tmp/la-content-dry-run-50.json";
+const DEFAULT_IDS_FILE = "tmp/la-tag-eval-50-ids.json";
+const DEFAULT_CONTENT_FILE = "tmp/la-content-dry-run-50.json";
+const DEFAULT_REPORT_FILE = "tmp/la-tag-eval-release-report.json";
 const FALLBACK_AESTHETIC = Object.freeze([
   "muted color palette",
   "naturalistic lighting",
@@ -45,15 +51,27 @@ function parseArgs(argv) {
     setMediaType: false,
     goLive: false,
     all: false,
+    idsFile: DEFAULT_IDS_FILE,
+    contentFile: DEFAULT_CONTENT_FILE,
+    reportFile: DEFAULT_REPORT_FILE,
   };
-  for (const arg of argv) {
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
     if (arg === "--apply-content") options.applyContent = true;
     else if (arg === "--media") options.media = true;
     else if (arg === "--approve-prep") options.approvePrep = true;
     else if (arg === "--set-media-type") options.setMediaType = true;
     else if (arg === "--go-live") options.goLive = true;
     else if (arg === "--all") options.all = true;
-    else throw new Error(`Unknown argument: ${arg}`);
+    else if (arg === "--ids-file") options.idsFile = argv[++index];
+    else if (arg.startsWith("--ids-file=")) options.idsFile = arg.slice("--ids-file=".length);
+    else if (arg === "--content-file") options.contentFile = argv[++index];
+    else if (arg.startsWith("--content-file=")) {
+      options.contentFile = arg.slice("--content-file=".length);
+    } else if (arg === "--report-file") options.reportFile = argv[++index];
+    else if (arg.startsWith("--report-file=")) {
+      options.reportFile = arg.slice("--report-file=".length);
+    } else throw new Error(`Unknown argument: ${arg}`);
   }
   if (options.all) {
     options.applyContent = true;
@@ -96,13 +114,13 @@ function createSupabase() {
   });
 }
 
-async function loadIds() {
-  const payload = JSON.parse(await fs.readFile(IDS_FILE, "utf8"));
+async function loadIds(idsFile) {
+  const payload = JSON.parse(await fs.readFile(idsFile, "utf8"));
   return payload.ids;
 }
 
-async function applyContent(supabase, ids) {
-  const report = JSON.parse(await fs.readFile(CONTENT_FILE, "utf8"));
+async function applyContent(supabase, ids, contentFile) {
+  const report = JSON.parse(await fs.readFile(contentFile, "utf8"));
   const byId = new Map((report.results ?? []).map((row) => [row.id, row]));
   const now = new Date().toISOString();
   let updated = 0;
@@ -321,12 +339,20 @@ async function main() {
   applyAppEnv();
   const options = parseArgs(process.argv.slice(2));
   const supabase = createSupabase();
-  const ids = await loadIds();
-  const report = { ids: ids.length };
+  const ids = await loadIds(options.idsFile);
+  const report = {
+    ids: ids.length,
+    idsFile: options.idsFile,
+    contentFile: options.contentFile,
+  };
 
   if (options.applyContent) {
     console.error(`Applying content+scrub to ${ids.length} candidates…`);
-    report.applyContent = await applyContent(supabase, ids);
+    report.applyContent = await applyContent(
+      supabase,
+      ids,
+      options.contentFile
+    );
     console.error(JSON.stringify(report.applyContent));
   }
 
@@ -378,15 +404,12 @@ async function main() {
     );
   }
 
-  await fs.writeFile(
-    "tmp/la-tag-eval-release-report.json",
-    JSON.stringify(report, null, 2)
-  );
+  await fs.writeFile(options.reportFile, JSON.stringify(report, null, 2));
   console.log(
     JSON.stringify(
       {
         ok: true,
-        reportPath: "tmp/la-tag-eval-release-report.json",
+        reportPath: options.reportFile,
         summary: {
           applyContent: report.applyContent ?? null,
           media: report.media?.tallies ?? null,

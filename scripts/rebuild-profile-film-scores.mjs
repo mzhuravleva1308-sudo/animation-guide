@@ -1062,6 +1062,16 @@ export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
 }
 
 export async function rebuildProfileScores(profile, allFilms) {
+  const { rebuildEmotionalTasteCoresForProfile } = await import(
+    "./build-taste-cores.mjs"
+  );
+  const { rebuildAestheticTasteCoresForProfile } = await import(
+    "./build-aesthetic-cores.mjs"
+  );
+
+  await rebuildEmotionalTasteCoresForProfile(profile);
+  await rebuildAestheticTasteCoresForProfile(profile);
+
   const scoreRows = await calculateAllProfileScoreArtifacts(profile, allFilms, {
     quiet: false,
   });
