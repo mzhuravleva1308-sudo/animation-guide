@@ -56,6 +56,7 @@ export const PUBLIC_CATALOG_FILM_FIELDS = [
   "what_it_is",
   "the_mood",
   "technique",
+  "material_fact",
   "cold_start_score",
   "quick_filters",
   "media_type",
@@ -65,6 +66,7 @@ type ProfileRatingRow = {
   film_id: string;
   rating: number;
   media_type: MediaType;
+  updated_at?: string | null;
 };
 
 type ProfileFilmScoreRow = {
@@ -78,6 +80,8 @@ type ProfileFilmScoreRow = {
 type PersonalizedCatalogData = {
   ratings: ProfileRatingRow[];
   savedFilmIds: string[];
+  /** profile_film_lists.created_at epoch ms by film_id */
+  savedAtMs: Record<string, number>;
   scoreRows: ProfileFilmScoreRow[] | null;
   scoresUnavailable: boolean;
   /** Newest profile_film_scores.computed_at for this profile (any mode). */
@@ -99,6 +103,7 @@ type PublicCatalogBase = {
 const emptyPersonalized = (): PersonalizedCatalogData => ({
   ratings: [],
   savedFilmIds: [],
+  savedAtMs: {},
   scoreRows: null,
   scoresUnavailable: false,
   scoresLastComputedAt: null,
@@ -106,6 +111,12 @@ const emptyPersonalized = (): PersonalizedCatalogData => ({
   savedMs: 0,
   scoresMs: null,
 });
+
+function epochMsFromIso(value: string | null | undefined): number | null {
+  if (!value) return null;
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
+}
 
 function scoresLastComputedAtFromRows(
   rows: { computed_at?: string | null }[] | null | undefined
@@ -125,13 +136,13 @@ async function loadPersonalizedCatalogRankingData(
       timeAsyncStage(() =>
         adminSupabase
           .from("film_ratings")
-          .select("film_id, rating, films(media_type)")
+          .select("film_id, rating, updated_at, films(media_type)")
           .eq("profile_id", profileId)
       ),
       timeAsyncStage(() =>
         adminSupabase
           .from("profile_film_lists")
-          .select("film_id")
+          .select("film_id, created_at")
           .eq("profile_id", profileId)
           .eq("list_type", "to_watch")
       ),
@@ -163,15 +174,25 @@ async function loadPersonalizedCatalogRankingData(
     const scoresLastComputedAt =
       scoresLastComputedAtFromRows(lastComputedRows);
 
-    const savedFilmIds = ((savedRows as { film_id: string }[] | null) ?? [])
-      .map((row) => row.film_id)
-      .filter(Boolean);
+    const savedAtMs: Record<string, number> = {};
+    const savedFilmIds: string[] = [];
+    for (const row of (savedRows as
+      | { film_id: string; created_at?: string | null }[]
+      | null) ?? []) {
+      if (!row.film_id) continue;
+      savedFilmIds.push(row.film_id);
+      const ms = epochMsFromIso(row.created_at);
+      if (ms != null) {
+        savedAtMs[row.film_id] = ms;
+      }
+    }
 
     if (ratingsError) {
       console.error("[catalog] ratings load error", ratingsError);
       return {
         ratings: [],
         savedFilmIds,
+        savedAtMs,
         scoreRows: null,
         scoresUnavailable: true,
         scoresLastComputedAt,
@@ -186,12 +207,14 @@ async function loadPersonalizedCatalogRankingData(
         | {
             film_id: string;
             rating: number;
+            updated_at?: string | null;
             films?: { media_type?: string | null } | null;
           }[]
         | null) ?? []
     ).map((row) => ({
       film_id: row.film_id,
       rating: row.rating,
+      updated_at: row.updated_at ?? null,
       media_type: normalizeMediaType(
         row.films?.media_type,
         MEDIA_TYPE.animation
@@ -208,6 +231,7 @@ async function loadPersonalizedCatalogRankingData(
       return {
         ratings,
         savedFilmIds,
+        savedAtMs,
         scoreRows: null,
         scoresUnavailable: false,
         scoresLastComputedAt,
@@ -236,6 +260,7 @@ async function loadPersonalizedCatalogRankingData(
       return {
         ratings,
         savedFilmIds,
+        savedAtMs,
         scoreRows: null,
         scoresUnavailable: true,
         scoresLastComputedAt,
@@ -248,6 +273,7 @@ async function loadPersonalizedCatalogRankingData(
     return {
       ratings,
       savedFilmIds,
+      savedAtMs,
       scoreRows: (scoreRows as ProfileFilmScoreRow[] | null) ?? [],
       scoresUnavailable: false,
       scoresLastComputedAt,
@@ -260,6 +286,7 @@ async function loadPersonalizedCatalogRankingData(
     return {
       ratings: [],
       savedFilmIds: [],
+      savedAtMs: {},
       scoreRows: null,
       scoresUnavailable: true,
       scoresLastComputedAt: null,
@@ -360,6 +387,20 @@ function ratingsRecordFromRows(
   for (const row of ratings) {
     if (row.film_id && typeof row.rating === "number") {
       record[row.film_id] = row.rating;
+    }
+  }
+  return record;
+}
+
+function ratingUpdatedAtMsFromRows(
+  ratings: ProfileRatingRow[]
+): Record<string, number> {
+  const record: Record<string, number> = {};
+  for (const row of ratings) {
+    if (!row.film_id || typeof row.rating !== "number") continue;
+    const ms = epochMsFromIso(row.updated_at);
+    if (ms != null) {
+      record[row.film_id] = ms;
     }
   }
   return record;
@@ -481,6 +522,8 @@ export async function loadPublicFilmCatalog(options?: {
     pageSize: PUBLIC_CATALOG_PAGE_SIZE,
     initialFilmRatings: ratingsRecordFromRows(personalized.ratings),
     initialSavedFilmIds: personalized.savedFilmIds,
+    initialRatingUpdatedAtMs: ratingUpdatedAtMsFromRows(personalized.ratings),
+    initialSavedAtMs: personalized.savedAtMs,
     scoresLastComputedAt: personalized.scoresLastComputedAt,
     mediaType: ranking.mediaType,
     scoreMode: normalizeScoreMode(ranking.scoreMode),

@@ -119,6 +119,10 @@ type FilmsPageClientProps = {
   initialFilmRatings?: Record<string, number>;
   /** SSR-hydrated saved ids so Saved is ready on first paint. */
   initialSavedFilmIds?: string[];
+  /** SSR film_ratings.updated_at epoch ms — newest Watched first. */
+  initialRatingUpdatedAtMs?: Record<string, number>;
+  /** SSR profile_film_lists.created_at epoch ms — newest Saved first. */
+  initialSavedAtMs?: Record<string, number>;
   /** Newest successful profile↔film score write time (ISO). */
   scoresLastComputedAt?: string | null;
   /** Active catalog media (animation default). */
@@ -135,16 +139,31 @@ type FilmsPageClientProps = {
 type InteractionSnapshot = {
   savedFilmIds: Set<string>;
   filmRatings: Record<string, number | null>;
+  ratingUpdatedAtMs: Record<string, number>;
+  savedAtMs: Record<string, number>;
 };
 
 function cloneInteractionSnapshot(
   savedFilmIds: Set<string>,
-  filmRatings: Record<string, number | null>
+  filmRatings: Record<string, number | null>,
+  ratingUpdatedAtMs: Record<string, number>,
+  savedAtMs: Record<string, number>
 ): InteractionSnapshot {
   return {
     savedFilmIds: new Set(savedFilmIds),
     filmRatings: { ...filmRatings },
+    ratingUpdatedAtMs: { ...ratingUpdatedAtMs },
+    savedAtMs: { ...savedAtMs },
   };
+}
+
+function sortFilmsByRecency(
+  films: Film[],
+  atMsByFilmId: Record<string, number>
+): Film[] {
+  return [...films].sort(
+    (a, b) => (atMsByFilmId[b.id] ?? 0) - (atMsByFilmId[a.id] ?? 0)
+  );
 }
 
 export default function FilmsPageClient({
@@ -157,6 +176,8 @@ export default function FilmsPageClient({
   showSubtitle = false,
   initialFilmRatings = {},
   initialSavedFilmIds = [],
+  initialRatingUpdatedAtMs = {},
+  initialSavedAtMs = {},
   scoresLastComputedAt = null,
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
@@ -206,6 +227,12 @@ export default function FilmsPageClient({
   );
   const [filmRatings, setFilmRatings] = useState<Record<string, number | null>>(
     () => ({ ...initialFilmRatings })
+  );
+  const [ratingUpdatedAtMs, setRatingUpdatedAtMs] = useState<
+    Record<string, number>
+  >(() => ({ ...initialRatingUpdatedAtMs }));
+  const [savedAtMs, setSavedAtMs] = useState<Record<string, number>>(
+    () => ({ ...initialSavedAtMs })
   );
   // SSR always hydrates list state (possibly empty). Avoid a loading flash on `/`
   // after auth redirect; only gate UI when auth appears client-side without SSR lists.
@@ -297,6 +324,22 @@ export default function FilmsPageClient({
     []
   );
 
+  const applyServerListTimestamps = useCallback(
+    (
+      serverRatingUpdatedAtMs: Record<string, number>,
+      serverSavedAtMs?: Record<string, number>
+    ) => {
+      setRatingUpdatedAtMs((current) => ({
+        ...serverRatingUpdatedAtMs,
+        ...current,
+      }));
+      if (serverSavedAtMs) {
+        setSavedAtMs((current) => ({ ...serverSavedAtMs, ...current }));
+      }
+    },
+    []
+  );
+
   const syncAuthenticatedInteractionState = useCallback(async () => {
     const profile = await resolveAuthenticatedProfile();
     if (!profile) {
@@ -306,6 +349,8 @@ export default function FilmsPageClient({
       setTasteProfileUpdatedAt(null);
       setSavedFilmIds(new Set());
       setFilmRatings({});
+      setRatingUpdatedAtMs({});
+      setSavedAtMs({});
       return null;
     }
 
@@ -317,10 +362,13 @@ export default function FilmsPageClient({
     setTasteProfileUpdatedAt(profile.tasteProfileUpdatedAt);
     if (generationAtStart === interactionGenerationRef.current) {
       setSavedFilmIds(state.savedFilmIds);
+      applyServerListTimestamps(state.ratingUpdatedAtMs, state.savedAtMs);
+    } else {
+      applyServerListTimestamps(state.ratingUpdatedAtMs);
     }
     applyServerFilmRatings(state.filmRatings);
     return profile.profileId;
-  }, [applyServerFilmRatings]);
+  }, [applyServerFilmRatings, applyServerListTimestamps]);
 
   const applyPendingActionForProfile = useCallback(
     async (_resolvedProfileId: string) => {
@@ -345,10 +393,28 @@ export default function FilmsPageClient({
               }
               return next;
             });
+            setSavedAtMs((current) => {
+              const next = { ...current };
+              if (appliedAction.saved) {
+                next[appliedAction.filmId] = Date.now();
+              } else {
+                delete next[appliedAction.filmId];
+              }
+              return next;
+            });
           } else {
             setFilmRatings((current) => {
               const next = { ...current };
               next[appliedAction.filmId] = appliedAction.rating;
+              return next;
+            });
+            setRatingUpdatedAtMs((current) => {
+              const next = { ...current };
+              if (typeof appliedAction.rating === "number") {
+                next[appliedAction.filmId] = Date.now();
+              } else {
+                delete next[appliedAction.filmId];
+              }
               return next;
             });
           }
@@ -372,6 +438,8 @@ export default function FilmsPageClient({
     setProfileSlug(initialAuth?.profile?.slug);
     setFilmRatings({ ...initialFilmRatings });
     setSavedFilmIds(new Set(initialSavedFilmIds));
+    setRatingUpdatedAtMs({ ...initialRatingUpdatedAtMs });
+    setSavedAtMs({ ...initialSavedAtMs });
     setRatingsReady(true);
     listsHydratedFromSsrRef.current = initialAuth !== null;
     const key = catalogSliceKey(initialMediaType);
@@ -387,6 +455,8 @@ export default function FilmsPageClient({
     initialAuth,
     initialFilmRatings,
     initialSavedFilmIds,
+    initialRatingUpdatedAtMs,
+    initialSavedAtMs,
     initialMediaType,
     films,
     awardWinningFilmIds,
@@ -499,6 +569,9 @@ export default function FilmsPageClient({
         const state = await loadAuthenticatedProfileFilmState(profile.profileId);
         if (generationAtStart === interactionGenerationRef.current) {
           setSavedFilmIds(state.savedFilmIds);
+          applyServerListTimestamps(state.ratingUpdatedAtMs, state.savedAtMs);
+        } else {
+          applyServerListTimestamps(state.ratingUpdatedAtMs);
         }
         applyServerFilmRatings(state.filmRatings);
         setRatingsReady(true);
@@ -527,7 +600,7 @@ export default function FilmsPageClient({
     return () => {
       subscription.unsubscribe();
     };
-  }, [applyPendingActionForProfile]);
+  }, [applyPendingActionForProfile, applyServerFilmRatings, applyServerListTimestamps]);
 
   const handleSavedChange = useCallback(
     (film: Film, saved: boolean) => {
@@ -538,6 +611,15 @@ export default function FilmsPageClient({
           next.add(film.id);
         } else {
           next.delete(film.id);
+        }
+        return next;
+      });
+      setSavedAtMs((current) => {
+        const next = { ...current };
+        if (saved) {
+          next[film.id] = Date.now();
+        } else {
+          delete next[film.id];
         }
         return next;
       });
@@ -553,6 +635,15 @@ export default function FilmsPageClient({
         // Keep explicit null so a stale server fetch cannot revive an unrate.
         [filmId]: rating,
       }));
+      setRatingUpdatedAtMs((current) => {
+        const next = { ...current };
+        if (typeof rating === "number") {
+          next[filmId] = Date.now();
+        } else {
+          delete next[filmId];
+        }
+        return next;
+      });
     },
     [bumpInteractionGeneration]
   );
@@ -571,14 +662,16 @@ export default function FilmsPageClient({
       if (!preAuthSnapshotRef.current) {
         preAuthSnapshotRef.current = cloneInteractionSnapshot(
           savedFilmIds,
-          filmRatings
+          filmRatings,
+          ratingUpdatedAtMs,
+          savedAtMs
         );
       }
 
       storePendingFilmActionForSession(action);
       setModalOpen(true);
     },
-    [filmRatings, savedFilmIds]
+    [filmRatings, ratingUpdatedAtMs, savedAtMs, savedFilmIds]
   );
 
   const revertPreAuthSnapshot = useCallback(() => {
@@ -590,6 +683,8 @@ export default function FilmsPageClient({
     bumpInteractionGeneration();
     setSavedFilmIds(snapshot.savedFilmIds);
     setFilmRatings(snapshot.filmRatings);
+    setRatingUpdatedAtMs(snapshot.ratingUpdatedAtMs);
+    setSavedAtMs(snapshot.savedAtMs);
     preAuthSnapshotRef.current = null;
   }, [bumpInteractionGeneration]);
 
@@ -681,22 +776,24 @@ export default function FilmsPageClient({
 
   const savedFilms = useMemo(() => {
     const saved = libraryFilms.filter((film) => savedFilmIds.has(film.id));
-    if (listMediaFilter === "all") {
-      return saved;
-    }
-    return saved.filter((film) => filmMediaType(film) === listMediaFilter);
-  }, [libraryFilms, listMediaFilter, savedFilmIds]);
+    const filtered =
+      listMediaFilter === "all"
+        ? saved
+        : saved.filter((film) => filmMediaType(film) === listMediaFilter);
+    return sortFilmsByRecency(filtered, savedAtMs);
+  }, [libraryFilms, listMediaFilter, savedAtMs, savedFilmIds]);
 
   const watchedFilms = useMemo(() => {
     const watched = libraryFilms.filter((film) => {
       const rating = filmRatings[film.id];
       return typeof rating === "number";
     });
-    if (listMediaFilter === "all") {
-      return watched;
-    }
-    return watched.filter((film) => filmMediaType(film) === listMediaFilter);
-  }, [filmRatings, libraryFilms, listMediaFilter]);
+    const filtered =
+      listMediaFilter === "all"
+        ? watched
+        : watched.filter((film) => filmMediaType(film) === listMediaFilter);
+    return sortFilmsByRecency(filtered, ratingUpdatedAtMs);
+  }, [filmRatings, libraryFilms, listMediaFilter, ratingUpdatedAtMs]);
 
   // All/Films queues: rated films leave immediately via optimistic
   // filmRatings updates (no reload), and return when the rating is cleared.

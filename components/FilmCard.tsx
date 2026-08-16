@@ -2,6 +2,8 @@ import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
 import { normalizeFilmTagList } from "@/lib/film-tags";
 import { getFilmTechniquePills } from "@/lib/film-technique";
+import { getMaterialFactPills } from "@/lib/film-material-fact";
+import { MEDIA_TYPE, normalizeMediaType } from "@/lib/media-type";
 import RatingButtons, {
   RatingOnboardingHintChip,
 } from "@/components/RatingButtons";
@@ -79,7 +81,12 @@ export default function FilmCard(props: FilmCardProps) {
   const posterUrl = getFilmPosterUrl(film);
   const synopsis = getFilmCardSynopsis(film);
   const mood = getFilmCardMood(film);
-  const techniquePills = getFilmTechniquePills(film.technique);
+  const isLiveAction =
+    normalizeMediaType(film.media_type, MEDIA_TYPE.animation) ===
+    MEDIA_TYPE.liveAction;
+  const headerPills = isLiveAction
+    ? getMaterialFactPills(film.material_fact)
+    : getFilmTechniquePills(film.technique);
   const metadataLine = [
     film.director,
     film.year,
@@ -141,18 +148,22 @@ export default function FilmCard(props: FilmCardProps) {
       <div className="flex min-h-0 flex-col p-4 sm:px-5 sm:py-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
       <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
-      {techniquePills.length > 0 ? (
+      {headerPills.length > 0 ? (
         <div
           className="mb-1 flex flex-wrap items-center gap-2"
-          data-testid="film-technique-pills"
+          data-testid={
+            isLiveAction ? "film-material-fact-pills" : "film-technique-pills"
+          }
         >
-          {techniquePills.map((technique) => (
+          {headerPills.map((pill) => (
             <span
-              key={technique}
-              data-testid="film-technique-pill"
+              key={pill}
+              data-testid={
+                isLiveAction ? "film-material-fact-pill" : "film-technique-pill"
+              }
               className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#8a5b2d]"
             >
-              {technique}
+              {pill}
             </span>
           ))}
         </div>
@@ -268,6 +279,14 @@ export default function FilmCard(props: FilmCardProps) {
         <div>
           <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
             {film.technique}
+          </span>
+        </div>
+      )}
+
+      {film.material_fact && (
+        <div>
+          <span className="inline-flex rounded-full bg-stone-50 px-3 py-1 text-sm text-stone-600">
+            {film.material_fact}
           </span>
         </div>
       )}

@@ -25,6 +25,8 @@ const SEARCH_FILM_SELECT_FIELDS = [
   "what_it_is",
   "the_mood",
   "technique",
+  "material_fact",
+  "media_type",
   "moods",
   "aesthetic_tags",
   "narrative_tags",

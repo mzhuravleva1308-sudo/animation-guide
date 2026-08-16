@@ -43,11 +43,12 @@ const EMBEDDING_DIMENSIONS =
     ? configuredEmbeddingDimensions
     : null;
 const FILM_SELECT =
-  "id,title,year,synopsis,the_mood,technique,moods,aesthetic_tags,visual_world_tags,storytelling_tags,media_type,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
+  "id,title,year,synopsis,the_mood,technique,material_fact,moods,aesthetic_tags,visual_world_tags,storytelling_tags,media_type,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
 const IMMUTABLE_FIELDS = [
   "synopsis",
   "the_mood",
   "technique",
+  "material_fact",
   "moods",
   "aesthetic_tags",
   "visual_world_tags",
@@ -186,13 +187,15 @@ function hasStoragePoster(film, options = {}) {
 function readiness(film, moodEmbedding, aestheticEmbedding, options = {}) {
   const mediaType = film?.media_type === "live_action" ? "live_action" : "animation";
   const isLiveAction = mediaType === "live_action";
-  const metadata = ["title", "year", "synopsis", "the_mood", "technique"].every(
-    (field) => nonEmpty(film[field])
-  );
+  const metadataFields = isLiveAction
+    ? ["title", "year", "synopsis", "the_mood", "material_fact"]
+    : ["title", "year", "synopsis", "the_mood", "technique"];
+  const metadata = metadataFields.every((field) => nonEmpty(film[field]));
   const moods = hasTags(film.moods);
   const aestheticTags = hasTags(film.aesthetic_tags);
   const visualWorldTags = hasTags(film.visual_world_tags);
   const storytellingTags = hasTags(film.storytelling_tags);
+  const materialFact = nonEmpty(film.material_fact);
   const visualWorldEmbedding = Boolean(options.visualWorldEmbedding);
   const storytellingEmbedding = Boolean(options.storytellingEmbedding);
   // Catalog requires a Storage-backed poster_url; external image_url is not enough.
@@ -211,6 +214,7 @@ function readiness(film, moodEmbedding, aestheticEmbedding, options = {}) {
     aestheticTags,
     visualWorldTags,
     storytellingTags,
+    materialFact,
     moodEmbedding,
     aestheticEmbedding,
     visualWorldEmbedding,
@@ -501,6 +505,7 @@ function buildFilmInsertPayload(film) {
   // Never set poster_url here — cache-posters must write the Storage URL.
   if (hasTags(film.moods)) payload.moods = film.moods;
   if (hasTags(film.aesthetic_tags)) payload.aesthetic_tags = film.aesthetic_tags;
+  if (nonEmpty(film.material_fact)) payload.material_fact = film.material_fact;
   if (nonEmpty(film.image_url)) payload.image_url = film.image_url;
   if (nonEmpty(film.external_image_url)) {
     payload.external_image_url = film.external_image_url;
@@ -1020,12 +1025,16 @@ export async function processFilmBatch({
   const missingStorytellingTags = liveActionFilms.filter(
     (film) => !hasTags(film.storytelling_tags)
   );
+  const missingMaterialFact = liveActionFilms.filter(
+    (film) => !nonEmpty(film.material_fact)
+  );
   console.log(
     `Execution plan: enrichment calls=${
       missingMoodTags.length +
       missingAestheticTags.length +
       missingVisualWorldTags.length +
-      missingStorytellingTags.length
+      missingStorytellingTags.length +
+      missingMaterialFact.length
     }, embedding calls planned for mood/aesthetic/VW/ST as needed, profiles=${profiles.length}`
   );
   if (options.dryRun) {
@@ -1038,6 +1047,10 @@ export async function processFilmBatch({
           isLa
             ? `${hasTags(film.visual_world_tags) ? "skip VW" : "would fill VW"}; ${
                 hasTags(film.storytelling_tags) ? "skip ST" : "would fill ST"
+              }; ${
+                nonEmpty(film.material_fact)
+                  ? "skip material_fact"
+                  : "would fill material_fact"
               }`
             : `${
                 hasTags(film.aesthetic_tags)
@@ -1093,7 +1106,8 @@ export async function processFilmBatch({
       missingMoodTags.length ||
       missingAestheticTags.length ||
       missingVisualWorldTags.length ||
-      missingStorytellingTags.length
+      missingStorytellingTags.length ||
+      missingMaterialFact.length
     ) {
       if (missingMoodTags.length) {
         await runScript(
@@ -1123,6 +1137,13 @@ export async function processFilmBatch({
           false
         );
       }
+      if (missingMaterialFact.length) {
+        await runScript(
+          "fill-material-fact.mjs",
+          missingMaterialFact.map((film) => film.id),
+          false
+        );
+      }
     }
     let current = await loadState(supabase, filmIds);
     for (const film of current.films) {
@@ -1130,7 +1151,8 @@ export async function processFilmBatch({
       const tagsOk = isLa
         ? hasTags(film.moods) &&
           hasTags(film.visual_world_tags) &&
-          hasTags(film.storytelling_tags)
+          hasTags(film.storytelling_tags) &&
+          nonEmpty(film.material_fact)
         : hasTags(film.moods) && hasTags(film.aesthetic_tags);
       logFilm("enrichment", film, tagsOk ? "complete" : "incomplete");
     }
@@ -1140,7 +1162,8 @@ export async function processFilmBatch({
           return (
             !hasTags(film.moods) ||
             !hasTags(film.visual_world_tags) ||
-            !hasTags(film.storytelling_tags)
+            !hasTags(film.storytelling_tags) ||
+            !nonEmpty(film.material_fact)
           );
         }
         return !hasTags(film.moods) || !hasTags(film.aesthetic_tags);

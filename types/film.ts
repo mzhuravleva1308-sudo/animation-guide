@@ -21,6 +21,8 @@ export type Film = {
     availability?: string | null;
     synopsis?: string | null;
     technique?: string | null;
+    /** Live-action card header: "Object. Place" material fact. */
+    material_fact?: string | null;
     moods?: string[] | null;
     aesthetic_tags: string[] | null;
     visual_world_tags?: string[] | null;

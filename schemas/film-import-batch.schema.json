@@ -101,6 +101,9 @@
             "$ref": "#/$defs/nonEmptyString"
           }
         },
+        "material_fact": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
         "festival_recognitions": {
           "type": "array",
           "items": {

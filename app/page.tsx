@@ -32,6 +32,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       loadError={catalog.loadError}
       initialFilmRatings={catalog.initialFilmRatings}
       initialSavedFilmIds={catalog.initialSavedFilmIds}
+      initialRatingUpdatedAtMs={catalog.initialRatingUpdatedAtMs}
+      initialSavedAtMs={catalog.initialSavedAtMs}
       scoresLastComputedAt={catalog.scoresLastComputedAt}
       mediaType={catalog.mediaType}
       sortParam={catalog.sortParam}

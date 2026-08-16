@@ -24,6 +24,7 @@
     "aesthetic-cores": "node scripts/build-aesthetic-cores.mjs",
     "aesthetic-tag-embeddings": "node scripts/fill-aesthetic-tag-embeddings.mjs",
     "emotional-tags": "node scripts/fill-emotional-tags.mjs",
+    "material-fact": "node scripts/fill-material-fact.mjs",
     "narrative-tags": "node scripts/fill-narrative-tags.mjs",
     "film-editorial-copy": "node scripts/fill-film-editorial-copy.mjs",
     "films:validate-batch": "node scripts/validate-film-import-batch.mjs",
