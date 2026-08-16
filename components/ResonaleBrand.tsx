@@ -6,10 +6,10 @@ export const RESONALE_LAVENDER = "#B1A9D9";
 
 const NAVY = RESONALE_NAVY;
 const LAVENDER = RESONALE_LAVENDER;
-const GUIDE_LABEL = "ANIMATION&FILM GUIDE";
+const GUIDE_LABEL = "GUIDE";
 
 /**
- * Resonale lockup: wave → continuous R + “esonale” + “ANIMATION&FILM GUIDE”.
+ * Resonale lockup: wave → continuous R + “esonale” + “GUIDE”.
  * Colors match the brand board: navy + muted lavender.
  */
 function ResonaleLogoMark({ className }: { className?: string }) {
@@ -17,7 +17,6 @@ function ResonaleLogoMark({ className }: { className?: string }) {
     <svg
       viewBox="0 0 350 78"
       fill="none"
-      overflow="visible"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
@@ -126,10 +125,10 @@ export default function ResonaleBrand({ href = "/", onClick }: ResonaleBrandProp
     >
       {/*
         Layout box matches the Resonale wordmark band so sibling nav
-        centers against “esonale”, while ANIMATION&FILM GUIDE hangs below.
+        centers against “esonale”, while GUIDE hangs below.
       */}
-      <span className="relative block h-[21px] w-[8.8125rem] sm:h-6 sm:w-[10.6875rem]">
-        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.3rem] left-0 h-[30px] w-auto max-w-none sm:top-[-0.4125rem] sm:h-[39px]" />
+      <span className="relative block h-[21px] w-[8.8125rem] overflow-visible sm:h-6 sm:w-[10.6875rem]">
+        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.3rem] left-0 h-[30px] w-auto max-w-none overflow-visible sm:top-[-0.4125rem] sm:h-[39px]" />
       </span>
     </Link>
   );

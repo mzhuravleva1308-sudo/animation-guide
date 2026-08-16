@@ -15,7 +15,7 @@ import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import FilmSearch from "@/components/FilmSearch";
 import FilmCard from "@/components/FilmCard";
 import ResonaleBrand from "@/components/ResonaleBrand";
-import { HeaderIconButton, HEADER_NAV_ICON } from "@/components/HeaderIconControl";
+import { HeaderIconButton, HEADER_NAV_ICON, headerNavLabelCollapse } from "@/components/HeaderIconControl";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
@@ -325,6 +325,10 @@ export default function ProfileTabs({
     setActiveTab(tab);
   }
 
+  const allNav = headerNavLabelCollapse(activeTab === "all", "sm");
+  const savedNav = headerNavLabelCollapse(activeTab === "saved", "lg");
+  const watchedNav = headerNavLabelCollapse(activeTab === "rated", "md");
+
   return (
     <>
       <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
@@ -338,6 +342,8 @@ export default function ProfileTabs({
             <HeaderIconButton
               label="All"
               active={activeTab === "all"}
+              labelClassName={allNav.labelClassName}
+              iconActiveClassName={allNav.iconActiveClassName}
               onClick={() => handleTabChange("all")}
             >
               <FilmIcon
@@ -351,8 +357,8 @@ export default function ProfileTabs({
             <HeaderIconButton
               label="Saved"
               active={activeTab === "saved"}
-              labelClassName="hidden lg:inline-block"
-              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] lg:after:hidden"
+              labelClassName={savedNav.labelClassName}
+              iconActiveClassName={savedNav.iconActiveClassName}
               onClick={() => handleTabChange("saved")}
             >
               <Bookmark
@@ -366,8 +372,8 @@ export default function ProfileTabs({
             <HeaderIconButton
               label="Watched"
               active={activeTab === "rated"}
-              labelClassName="hidden md:inline-block"
-              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] md:after:hidden"
+              labelClassName={watchedNav.labelClassName}
+              iconActiveClassName={watchedNav.iconActiveClassName}
               onClick={() => handleTabChange("rated")}
             >
               <CircleCheck

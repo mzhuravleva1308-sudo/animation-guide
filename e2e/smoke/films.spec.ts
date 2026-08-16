@@ -26,26 +26,23 @@ test.describe("Public films catalog", () => {
     await expect(
       page.getByRole("button", { name: "Add to watchlist" }).first()
     ).toBeVisible();
-    await expect(page.getByTestId("nav-saved")).toBeVisible();
-    await expect(page.getByTestId("nav-watched")).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: "Animation", exact: true })
-    ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("nav-saved")).toHaveCount(0);
+    await expect(page.getByTestId("nav-watched")).toHaveCount(0);
+    await expect(page.getByTestId("nav-animation")).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
     await expect(page.getByTestId("nav-films")).toBeVisible();
 
     expect(consoleErrors).toEqual([]);
   });
 
-  test("opens auth when a guest opens Saved or Watched", async ({ page }) => {
+  test("guests do not see Saved or Watched nav", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByTestId("nav-saved").click();
-    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
-
-    await page.getByTestId("nav-watched").click();
-    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await expect(page.getByTestId("nav-saved")).toHaveCount(0);
+    await expect(page.getByTestId("nav-watched")).toHaveCount(0);
+    await expect(page.getByTestId("auth-status")).toBeVisible();
   });
 
   test("guest can open Films and is prompted to log in on rate or save", async ({

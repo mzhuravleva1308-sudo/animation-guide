@@ -16,6 +16,7 @@ import {
   HeaderIconButton,
   HEADER_LOGIN_ICON,
   HEADER_NAV_ICON,
+  headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
@@ -714,6 +715,10 @@ export default function FilmsPageClient({
     listLength: listFilms.length,
   });
   const showCatalogSubtitle = showSubtitle && isCatalogTab;
+  const animationNav = headerNavLabelCollapse(activeTab === "all", "sm");
+  const filmsNav = headerNavLabelCollapse(activeTab === "films", "sm");
+  const savedNav = headerNavLabelCollapse(activeTab === "saved", "lg");
+  const watchedNav = headerNavLabelCollapse(activeTab === "watched", "md");
 
   return (
     <main
@@ -732,6 +737,8 @@ export default function FilmsPageClient({
             <HeaderIconButton
               label="Animation"
               active={activeTab === "all"}
+              labelClassName={animationNav.labelClassName}
+              iconActiveClassName={animationNav.iconActiveClassName}
               onClick={() => handleTabChange("all")}
               data-testid="nav-animation"
             >
@@ -747,8 +754,8 @@ export default function FilmsPageClient({
               <HeaderIconButton
                 label="Films"
                 active={activeTab === "films"}
-                labelClassName="hidden sm:inline-block"
-                iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] sm:after:hidden"
+                labelClassName={filmsNav.labelClassName}
+                iconActiveClassName={filmsNav.iconActiveClassName}
                 onClick={() => handleTabChange("films")}
                 data-testid="nav-films"
               >
@@ -761,38 +768,42 @@ export default function FilmsPageClient({
                 />
               </HeaderIconButton>
             ) : null}
-            <HeaderIconButton
-              label="Saved"
-              active={activeTab === "saved"}
-              labelClassName="hidden lg:inline-block"
-              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] lg:after:hidden"
-              onClick={() => handleTabChange("saved")}
-              data-testid="nav-saved"
-            >
-              <Bookmark
-                size={HEADER_NAV_ICON.size}
-                strokeWidth={HEADER_NAV_ICON.strokeWidth}
-                fill="none"
-                className="shrink-0"
-                aria-hidden="true"
-              />
-            </HeaderIconButton>
-            <HeaderIconButton
-              label="Watched"
-              active={activeTab === "watched"}
-              labelClassName="hidden md:inline-block"
-              iconActiveClassName="after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] md:after:hidden"
-              onClick={() => handleTabChange("watched")}
-              data-testid="nav-watched"
-            >
-              <CircleCheck
-                size={HEADER_NAV_ICON.size}
-                strokeWidth={HEADER_NAV_ICON.strokeWidth}
-                fill="none"
-                className="shrink-0"
-                aria-hidden="true"
-              />
-            </HeaderIconButton>
+            {auth ? (
+              <>
+                <HeaderIconButton
+                  label="Saved"
+                  active={activeTab === "saved"}
+                  labelClassName={savedNav.labelClassName}
+                  iconActiveClassName={savedNav.iconActiveClassName}
+                  onClick={() => handleTabChange("saved")}
+                  data-testid="nav-saved"
+                >
+                  <Bookmark
+                    size={HEADER_NAV_ICON.size}
+                    strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                    fill="none"
+                    className="shrink-0"
+                    aria-hidden="true"
+                  />
+                </HeaderIconButton>
+                <HeaderIconButton
+                  label="Watched"
+                  active={activeTab === "watched"}
+                  labelClassName={watchedNav.labelClassName}
+                  iconActiveClassName={watchedNav.iconActiveClassName}
+                  onClick={() => handleTabChange("watched")}
+                  data-testid="nav-watched"
+                >
+                  <CircleCheck
+                    size={HEADER_NAV_ICON.size}
+                    strokeWidth={HEADER_NAV_ICON.strokeWidth}
+                    fill="none"
+                    className="shrink-0"
+                    aria-hidden="true"
+                  />
+                </HeaderIconButton>
+              </>
+            ) : null}
             {auth ? (
               <AccountMenu
                 email={auth.email}
