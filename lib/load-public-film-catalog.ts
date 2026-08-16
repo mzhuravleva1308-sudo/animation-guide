@@ -79,6 +79,8 @@ type PersonalizedCatalogData = {
   savedFilmIds: string[];
   scoreRows: ProfileFilmScoreRow[] | null;
   scoresUnavailable: boolean;
+  /** Newest profile_film_scores.computed_at for this profile (any mode). */
+  scoresLastComputedAt: string | null;
   ratingsMs: number;
   savedMs: number;
   scoresMs: number | null;
@@ -98,10 +100,18 @@ const emptyPersonalized = (): PersonalizedCatalogData => ({
   savedFilmIds: [],
   scoreRows: null,
   scoresUnavailable: false,
+  scoresLastComputedAt: null,
   ratingsMs: 0,
   savedMs: 0,
   scoresMs: null,
 });
+
+function scoresLastComputedAtFromRows(
+  rows: { computed_at?: string | null }[] | null | undefined
+): string | null {
+  const value = rows?.[0]?.computed_at;
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
 
 async function loadPersonalizedCatalogRankingData(
   profileId: string,
@@ -110,7 +120,7 @@ async function loadPersonalizedCatalogRankingData(
   try {
     const adminSupabase = getAdminSupabase();
 
-    const [ratingsTimed, savedTimed] = await Promise.all([
+    const [ratingsTimed, savedTimed, lastComputedTimed] = await Promise.all([
       timeAsyncStage(() =>
         adminSupabase
           .from("film_ratings")
@@ -124,14 +134,33 @@ async function loadPersonalizedCatalogRankingData(
           .eq("profile_id", profileId)
           .eq("list_type", "to_watch")
       ),
+      timeAsyncStage(() =>
+        adminSupabase
+          .from("profile_film_scores")
+          .select("computed_at")
+          .eq("profile_id", profileId)
+          .order("computed_at", { ascending: false })
+          .limit(1)
+      ),
     ]);
 
     const { data: ratingRows, error: ratingsError } = ratingsTimed.value;
     const { data: savedRows, error: savedError } = savedTimed.value;
+    const { data: lastComputedRows, error: lastComputedError } =
+      lastComputedTimed.value;
 
     if (savedError) {
       console.error("[catalog] saved list load error", savedError);
     }
+    if (lastComputedError) {
+      console.error(
+        "[catalog] scores last computed_at load error",
+        lastComputedError
+      );
+    }
+
+    const scoresLastComputedAt =
+      scoresLastComputedAtFromRows(lastComputedRows);
 
     const savedFilmIds = ((savedRows as { film_id: string }[] | null) ?? [])
       .map((row) => row.film_id)
@@ -144,6 +173,7 @@ async function loadPersonalizedCatalogRankingData(
         savedFilmIds,
         scoreRows: null,
         scoresUnavailable: true,
+        scoresLastComputedAt,
         ratingsMs: ratingsTimed.ms,
         savedMs: savedTimed.ms,
         scoresMs: null,
@@ -179,6 +209,7 @@ async function loadPersonalizedCatalogRankingData(
         savedFilmIds,
         scoreRows: null,
         scoresUnavailable: false,
+        scoresLastComputedAt,
         ratingsMs: ratingsTimed.ms,
         savedMs: savedTimed.ms,
         scoresMs: null,
@@ -204,6 +235,7 @@ async function loadPersonalizedCatalogRankingData(
         savedFilmIds,
         scoreRows: null,
         scoresUnavailable: true,
+        scoresLastComputedAt,
         ratingsMs: ratingsTimed.ms,
         savedMs: savedTimed.ms,
         scoresMs,
@@ -215,6 +247,7 @@ async function loadPersonalizedCatalogRankingData(
       savedFilmIds,
       scoreRows: (scoreRows as ProfileFilmScoreRow[] | null) ?? [],
       scoresUnavailable: false,
+      scoresLastComputedAt,
       ratingsMs: ratingsTimed.ms,
       savedMs: savedTimed.ms,
       scoresMs,
@@ -226,6 +259,7 @@ async function loadPersonalizedCatalogRankingData(
       savedFilmIds: [],
       scoreRows: null,
       scoresUnavailable: true,
+      scoresLastComputedAt: null,
       ratingsMs: 0,
       savedMs: 0,
       scoresMs: null,
@@ -457,6 +491,7 @@ export async function loadPublicFilmCatalog(options?: {
     pageSize: PUBLIC_CATALOG_PAGE_SIZE,
     initialFilmRatings: ratingsRecordFromRows(personalized.ratings),
     initialSavedFilmIds: personalized.savedFilmIds,
+    scoresLastComputedAt: personalized.scoresLastComputedAt,
     mediaType: ranking.mediaType,
     scoreMode: normalizeScoreMode(ranking.scoreMode),
     sourceMedia: ranking.sourceMedia,

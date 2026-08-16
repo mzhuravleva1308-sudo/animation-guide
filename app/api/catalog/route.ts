@@ -30,6 +30,7 @@ export async function GET(request: Request) {
       pageSize: catalog.pageSize,
       mediaType: catalog.mediaType,
       sortParam: catalog.sortParam,
+      scoresLastComputedAt: catalog.scoresLastComputedAt,
     });
   } catch (error) {
     const message =
