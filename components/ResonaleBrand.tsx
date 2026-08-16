@@ -68,13 +68,13 @@ function ResonaleLogoMark({ className }: { className?: string }) {
       </text>
 
       {/*
-        ~10.5–11px on desktop at h-[3.25rem]; scales to ~8–9px on mobile h-9.
-        Gap from wordmark baseline ≈ 5–6px displayed.
+        Right-aligned to the end of “esonale”; lower y leaves a clear gap.
         Letters stagger in on first paint (see .resonale-guide-letter).
       */}
       <text
-        x="124"
-        y="58"
+        x="274.5"
+        y="66"
+        textAnchor="end"
         fill={LAVENDER}
         fontFamily="var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif"
         fontSize="16"
