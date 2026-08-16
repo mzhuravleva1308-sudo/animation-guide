@@ -58,7 +58,11 @@ Requires `.env.hosted.local` (copy from `.env.hosted.example`).
 
 ### Production deployment (Vercel / hosting)
 
-**Required in Production *and* Preview** (hosting dashboard — not repo files):
+**Git deploy flow:** Production Branch is `main`. Automatic Git deployments run **only** for `main` → **Production** (`vercel.json` + project Preview disabled). Pushes to other branches do **not** create Preview deployments. Local `npm run dev` is unchanged.
+
+**Usual release path:** land ready work on `main` (direct push or merge), then `git push origin main` → Production on `resonale.com`. No separate Preview step.
+
+**Required in Production** (hosting dashboard — not repo files). Preview env vars may still exist in the dashboard but are unused while Preview deploys are off:
 
 | Variable | Example shape | Notes |
 |----------|---------------|--------|
