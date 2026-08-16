@@ -28,9 +28,7 @@ import type { AuthUserSummary } from "@/lib/auth/session";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
 import {
   MEDIA_TYPE,
-  crossMediaSortLabel,
   normalizeMediaType,
-  oppositeMediaType,
   type MediaType,
 } from "@/lib/media-type";
 import { createClient } from "@/lib/supabase/client";
@@ -42,11 +40,6 @@ import {
 import { resolveProfileListTabView } from "@/lib/profile-list-tab-view.mjs";
 import { Film } from "@/types/film";
 
-type CatalogSortParam =
-  | "native"
-  | "cross_from_animation"
-  | "cross_from_live_action";
-
 type CatalogSlice = {
   films: Film[];
   awardWinningFilmIds: string[];
@@ -55,27 +48,17 @@ type CatalogSlice = {
 
 type ListMediaFilter = "all" | MediaType;
 
-function catalogSliceKey(media: MediaType, sort: CatalogSortParam): string {
-  return `${media}|${sort}`;
+function catalogSliceKey(media: MediaType): string {
+  return `${media}|native`;
 }
 
-function defaultSortForMedia(media: MediaType): CatalogSortParam {
-  // Match loadPublicFilmCatalog early-access default for Films.
-  return media === MEDIA_TYPE.liveAction
-    ? "cross_from_animation"
-    : "native";
-}
-
-function syncCatalogUrl(media: MediaType, sort: CatalogSortParam) {
+function syncCatalogUrl(media: MediaType) {
   if (typeof window === "undefined") {
     return;
   }
   const params = new URLSearchParams();
   if (media !== MEDIA_TYPE.animation) {
     params.set("media", media);
-  }
-  if (sort !== "native") {
-    params.set("sort", sort);
   }
   const query = params.toString();
   const next = query ? `/?${query}` : "/";
@@ -130,8 +113,11 @@ type FilmsPageClientProps = {
   initialSavedFilmIds?: string[];
   /** Active catalog media (animation default). */
   mediaType?: "animation" | "live_action";
-  /** Ranking mode query value. */
-  sortParam?: CatalogSortParam;
+  /** Legacy query value; catalog always ranks native for the active media. */
+  sortParam?:
+    | "native"
+    | "cross_from_animation"
+    | "cross_from_live_action";
   /** Early-access Films tab (allowlisted emails only). */
   showLiveActionTab?: boolean;
 };
@@ -162,7 +148,7 @@ export default function FilmsPageClient({
   initialFilmRatings = {},
   initialSavedFilmIds = [],
   mediaType: initialMediaType = MEDIA_TYPE.animation,
-  sortParam: initialSortParam = "native",
+  sortParam: _unusedSortParam = "native",
   showLiveActionTab = false,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
@@ -170,14 +156,12 @@ export default function FilmsPageClient({
     initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
   );
   const [activeMedia, setActiveMedia] = useState<MediaType>(initialMediaType);
-  const [activeSort, setActiveSort] =
-    useState<CatalogSortParam>(initialSortParam);
   const [listMediaFilter, setListMediaFilter] =
     useState<ListMediaFilter>("all");
   const [catalogSlices, setCatalogSlices] = useState<
     Record<string, CatalogSlice>
   >(() => ({
-    [catalogSliceKey(initialMediaType, initialSortParam)]: {
+    [catalogSliceKey(initialMediaType)]: {
       films,
       awardWinningFilmIds,
       loadError,
@@ -189,16 +173,6 @@ export default function FilmsPageClient({
   );
   const catalogSlicesRef = useRef(catalogSlices);
   catalogSlicesRef.current = catalogSlices;
-  const sortByMediaRef = useRef<Record<MediaType, CatalogSortParam>>({
-    [MEDIA_TYPE.animation]:
-      initialMediaType === MEDIA_TYPE.animation
-        ? initialSortParam
-        : "native",
-    [MEDIA_TYPE.liveAction]:
-      initialMediaType === MEDIA_TYPE.liveAction
-        ? initialSortParam
-        : defaultSortForMedia(MEDIA_TYPE.liveAction),
-  });
   const [modalOpen, setModalOpen] = useState(false);
   const [modalLockScrollY, setModalLockScrollY] = useState(0);
   const [modalRestoreFocusElement, setModalRestoreFocusElement] =
@@ -233,78 +207,69 @@ export default function FilmsPageClient({
     interactionGenerationRef.current += 1;
   }, []);
 
-  const ensureCatalog = useCallback(
-    async (media: MediaType, sort: CatalogSortParam) => {
-      const key = catalogSliceKey(media, sort);
-      const cached = catalogSlicesRef.current[key];
-      if (cached) {
-        return cached;
-      }
+  const ensureCatalog = useCallback(async (media: MediaType) => {
+    const key = catalogSliceKey(media);
+    const cached = catalogSlicesRef.current[key];
+    if (cached) {
+      return cached;
+    }
 
-      const inflight = catalogInflightRef.current.get(key);
-      if (inflight) {
-        return inflight;
-      }
+    const inflight = catalogInflightRef.current.get(key);
+    if (inflight) {
+      return inflight;
+    }
 
-      const request = (async (): Promise<CatalogSlice | null> => {
-        try {
-          const params = new URLSearchParams();
-          if (media !== MEDIA_TYPE.animation) {
-            params.set("media", media);
-          }
-          if (sort !== "native") {
-            params.set("sort", sort);
-          }
-          const query = params.toString();
-          const response = await fetch(
-            query ? `/api/catalog?${query}` : "/api/catalog"
-          );
-          if (!response.ok) {
-            console.error("[catalog] client fetch failed", response.status);
-            return null;
-          }
-          const payload = (await response.json()) as {
-            films?: Film[];
-            awardWinningFilmIds?: string[];
-            loadError?: string | null;
-          };
-          const slice: CatalogSlice = {
-            films: payload.films ?? [],
-            awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
-            loadError: payload.loadError ?? null,
-          };
-          setCatalogSlices((current) =>
-            current[key] ? current : { ...current, [key]: slice }
-          );
-          return slice;
-        } catch (error) {
-          console.error("[catalog] client fetch error", error);
-          return null;
-        } finally {
-          catalogInflightRef.current.delete(key);
+    const request = (async (): Promise<CatalogSlice | null> => {
+      try {
+        const params = new URLSearchParams();
+        if (media !== MEDIA_TYPE.animation) {
+          params.set("media", media);
         }
-      })();
+        const query = params.toString();
+        const response = await fetch(
+          query ? `/api/catalog?${query}` : "/api/catalog"
+        );
+        if (!response.ok) {
+          console.error("[catalog] client fetch failed", response.status);
+          return null;
+        }
+        const payload = (await response.json()) as {
+          films?: Film[];
+          awardWinningFilmIds?: string[];
+          loadError?: string | null;
+        };
+        const slice: CatalogSlice = {
+          films: payload.films ?? [],
+          awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
+          loadError: payload.loadError ?? null,
+        };
+        setCatalogSlices((current) =>
+          current[key] ? current : { ...current, [key]: slice }
+        );
+        return slice;
+      } catch (error) {
+        console.error("[catalog] client fetch error", error);
+        return null;
+      } finally {
+        catalogInflightRef.current.delete(key);
+      }
+    })();
 
-      catalogInflightRef.current.set(key, request);
-      return request;
-    },
-    []
-  );
+    catalogInflightRef.current.set(key, request);
+    return request;
+  }, []);
 
   const selectCatalog = useCallback(
-    async (media: MediaType, sort?: CatalogSortParam) => {
-      const nextSort = sort ?? sortByMediaRef.current[media];
-      sortByMediaRef.current[media] = nextSort;
-      const key = catalogSliceKey(media, nextSort);
+    async (media: MediaType) => {
+      const key = catalogSliceKey(media);
       if (!catalogSlicesRef.current[key]) {
         setCatalogLoading(true);
-        await ensureCatalog(media, nextSort);
+        await ensureCatalog(media);
         setCatalogLoading(false);
       }
       setActiveMedia(media);
-      setActiveSort(nextSort);
       setActiveTab(media === MEDIA_TYPE.liveAction ? "films" : "all");
-      syncCatalogUrl(media, nextSort);
+      syncCatalogUrl(media);
     },
     [ensureCatalog]
   );
@@ -395,7 +360,7 @@ export default function FilmsPageClient({
     setSavedFilmIds(new Set(initialSavedFilmIds));
     setRatingsReady(true);
     listsHydratedFromSsrRef.current = initialAuth !== null;
-    const key = catalogSliceKey(initialMediaType, initialSortParam);
+    const key = catalogSliceKey(initialMediaType);
     setCatalogSlices((current) => ({
       ...current,
       [key]: {
@@ -409,7 +374,6 @@ export default function FilmsPageClient({
     initialFilmRatings,
     initialSavedFilmIds,
     initialMediaType,
-    initialSortParam,
     films,
     awardWinningFilmIds,
     loadError,
@@ -430,7 +394,7 @@ export default function FilmsPageClient({
       activeMedia === MEDIA_TYPE.liveAction
         ? MEDIA_TYPE.animation
         : MEDIA_TYPE.liveAction;
-    void ensureCatalog(otherMedia, defaultSortForMedia(otherMedia));
+    void ensureCatalog(otherMedia);
   }, [showLiveActionTab, activeMedia, ensureCatalog]);
 
   useEffect(() => {
@@ -643,19 +607,6 @@ export default function FilmsPageClient({
     [auth, openAuthModal, selectCatalog]
   );
 
-  const handleRankingSort = useCallback(
-    (sort: CatalogSortParam) => {
-      void selectCatalog(activeMedia, sort);
-    },
-    [activeMedia, selectCatalog]
-  );
-
-  const crossSourceMedia = oppositeMediaType(activeMedia);
-  const crossSortParam: CatalogSortParam =
-    crossSourceMedia === MEDIA_TYPE.animation
-      ? "cross_from_animation"
-      : "cross_from_live_action";
-  const isCrossSort = activeSort !== "native";
   const isCatalogTab = activeTab === "all" || activeTab === "films";
   const catalogSubtitle =
     activeMedia === MEDIA_TYPE.liveAction
@@ -663,7 +614,7 @@ export default function FilmsPageClient({
           primary:
             "Find quiet, strange and emotionally resonant films to watch next.",
           secondary:
-            "Early access live-action catalog — scored separately from animation.",
+            "Early access live-action catalog — ranked from your film taste.",
         }
       : {
           primary:
@@ -672,8 +623,7 @@ export default function FilmsPageClient({
             "Independent, artist-led and festival animation from around the world.",
         };
 
-  const currentSlice =
-    catalogSlices[catalogSliceKey(activeMedia, activeSort)] ?? null;
+  const currentSlice = catalogSlices[catalogSliceKey(activeMedia)] ?? null;
   const catalogFilms = currentSlice?.films ?? [];
   const catalogAwardIds = currentSlice?.awardWinningFilmIds ?? [];
   const catalogLoadError = currentSlice?.loadError ?? loadError;
@@ -839,39 +789,6 @@ export default function FilmsPageClient({
             <p className="mt-1 font-sans text-[14px] font-normal leading-[1.3] tracking-tight text-[#7a7b90] antialiased [font-synthesis:none] sm:whitespace-nowrap">
               {catalogSubtitle.secondary}
             </p>
-            {showLiveActionTab ? (
-              <div
-                className="mt-4 inline-flex flex-wrap gap-2"
-                aria-label="Ranking mode"
-              >
-                <button
-                  type="button"
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    !isCrossSort
-                      ? "border-[#cfc8e8] bg-white text-[#2f3040]"
-                      : "border-transparent text-[#7a7b90]"
-                  }`}
-                  onClick={() => handleRankingSort("native")}
-                  data-testid="catalog-sort-native"
-                >
-                  Your{" "}
-                  {activeMedia === MEDIA_TYPE.liveAction ? "film" : "animation"}{" "}
-                  taste
-                </button>
-                <button
-                  type="button"
-                  className={`rounded-full border px-3 py-1.5 text-sm transition ${
-                    isCrossSort
-                      ? "border-[#cfc8e8] bg-white text-[#2f3040]"
-                      : "border-transparent text-[#7a7b90]"
-                  }`}
-                  onClick={() => handleRankingSort(crossSortParam)}
-                  data-testid="catalog-sort-cross"
-                >
-                  {crossMediaSortLabel(crossSourceMedia)}
-                </button>
-              </div>
-            ) : null}
           </div>
         ) : (
           <h1 className="sr-only">Resonale</h1>

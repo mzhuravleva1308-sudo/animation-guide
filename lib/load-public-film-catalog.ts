@@ -345,23 +345,16 @@ function resolveCatalogRankingForViewer(
     };
   }
 
-  // Early-access Films tab: default to cross-from-animation when sort omitted
-  // (native LA likes/scores are usually empty; animation taste is the unlock).
-  if (
-    parsed.mediaType === MEDIA_TYPE.liveAction &&
-    parsed.sortParam === "native" &&
-    !(rawParams?.sort)
-  ) {
-    return {
-      mediaType: MEDIA_TYPE.liveAction,
-      scoreMode: SCORE_MODE.crossMedia,
-      sourceMedia: MEDIA_TYPE.animation,
-      sortParam: "cross_from_animation",
-      showLiveActionTab: true,
-    };
-  }
-
-  return { ...parsed, showLiveActionTab: true };
+  // Catalog always ranks by that media's own taste cores/scores (native).
+  // Cross-media scores may still exist in the DB for later use, but are not
+  // exposed as a user-facing sort mode.
+  return {
+    mediaType: parsed.mediaType,
+    scoreMode: SCORE_MODE.native,
+    sourceMedia: parsed.mediaType,
+    sortParam: "native",
+    showLiveActionTab: true,
+  };
 }
 
 export async function loadPublicFilmCatalog(options?: {
