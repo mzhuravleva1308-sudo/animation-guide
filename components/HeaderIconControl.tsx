@@ -30,8 +30,8 @@ export const HEADER_LOGIN_ICON = {
 export function headerIconControlClass() {
   return [
     "inline-flex shrink-0 cursor-pointer items-center gap-[6px] whitespace-nowrap",
-    // Taller tap targets on mobile; width follows icon/label so the row still fits
-    "min-h-11 justify-center px-2.5 sm:min-h-0 sm:justify-start sm:px-0",
+    // Tall tap targets on mobile; keep horizontal padding tight so the header fits
+    "min-h-11 justify-center px-1 sm:min-h-0 sm:justify-start sm:px-0",
     "bg-transparent",
     "font-sans text-[14px] font-normal leading-[1.18] tracking-tight",
     "antialiased [font-synthesis:none]",

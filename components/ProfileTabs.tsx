@@ -332,12 +332,12 @@ export default function ProfileTabs({
   return (
     <>
       <header className={activeTab === "all" ? "mb-0" : "mb-[18px]"}>
-        <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+        <div className="flex flex-nowrap items-center justify-between gap-1 sm:gap-3">
           <ResonaleBrand onClick={() => handleTabChange("all")} />
 
           <nav
             aria-label="Account and lists"
-            className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-3"
+            className="flex shrink-0 items-center gap-0 sm:gap-2 md:gap-3"
           >
             <HeaderIconButton
               label="All"

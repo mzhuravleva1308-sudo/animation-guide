@@ -24,7 +24,7 @@ function FilmCardSkeleton() {
 
 export default function FilmsLoading() {
   return (
-    <main className="mx-auto w-full min-w-0 max-w-5xl p-8" aria-busy="true" aria-label="Loading catalog">
+    <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8" aria-busy="true" aria-label="Loading catalog">
       <header className="mb-8">
         <SkeletonBlock className="mb-3 h-9 w-72 max-w-full" />
         <SkeletonBlock className="h-5 w-full max-w-lg" />

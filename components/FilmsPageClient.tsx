@@ -722,17 +722,17 @@ export default function FilmsPageClient({
 
   return (
     <main
-      className="mx-auto w-full min-w-0 max-w-5xl p-8"
+      className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8"
       data-testid="films-page"
       data-ratings-ready={ratingsReady ? "true" : "false"}
     >
       <header className={isCatalogTab ? "mb-0" : "mb-[18px]"}>
-        <div className="flex flex-nowrap items-center justify-between gap-2 sm:gap-3">
+        <div className="flex flex-nowrap items-center justify-between gap-1 sm:gap-3">
           <ResonaleBrand onClick={() => handleTabChange("all")} />
 
           <nav
             aria-label="Catalog and lists"
-            className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-3"
+            className="flex shrink-0 items-center gap-0 sm:gap-2 md:gap-3"
           >
             <HeaderIconButton
               label="Animation"
