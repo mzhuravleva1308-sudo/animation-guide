@@ -33,10 +33,12 @@ export async function gotoProfilePage(
 
 export async function openProfileTab(
   page: Page,
-  tabName: "All films" | "Films" | "All" | "Saved" | "Watched"
+  tabName: "All films" | "Animation" | "All" | "Films" | "Saved" | "Watched"
 ) {
   const resolvedName =
-    tabName === "All films" || tabName === "Films" ? "All" : tabName;
+    tabName === "All films" || tabName === "All" || tabName === "Animation"
+      ? "Animation"
+      : tabName;
 
   const tabButton = page.getByRole("button", {
     name: resolvedName,
@@ -45,7 +47,7 @@ export async function openProfileTab(
   await tabButton.click();
   await expect(tabButton).toHaveAttribute("aria-pressed", "true");
 
-  if (resolvedName === "All") {
+  if (resolvedName === "Animation") {
     await expect(page.getByTestId("film-search")).toBeVisible();
   }
 }

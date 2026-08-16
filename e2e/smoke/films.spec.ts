@@ -29,8 +29,9 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("nav-saved")).toBeVisible();
     await expect(page.getByTestId("nav-watched")).toBeVisible();
     await expect(
-      page.getByRole("button", { name: "All", exact: true })
+      page.getByRole("button", { name: "Animation", exact: true })
     ).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByTestId("nav-films")).toBeVisible();
 
     expect(consoleErrors).toEqual([]);
   });

@@ -43,13 +43,15 @@ const EMBEDDING_DIMENSIONS =
     ? configuredEmbeddingDimensions
     : null;
 const FILM_SELECT =
-  "id,title,year,synopsis,the_mood,technique,moods,aesthetic_tags,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
+  "id,title,year,synopsis,the_mood,technique,moods,aesthetic_tags,visual_world_tags,storytelling_tags,media_type,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
 const IMMUTABLE_FIELDS = [
   "synopsis",
   "the_mood",
   "technique",
   "moods",
   "aesthetic_tags",
+  "visual_world_tags",
+  "storytelling_tags",
   "image_url",
   "external_image_url",
   "poster_url",
@@ -182,24 +184,42 @@ function hasStoragePoster(film, options = {}) {
 }
 
 function readiness(film, moodEmbedding, aestheticEmbedding, options = {}) {
+  const mediaType = film?.media_type === "live_action" ? "live_action" : "animation";
+  const isLiveAction = mediaType === "live_action";
   const metadata = ["title", "year", "synopsis", "the_mood", "technique"].every(
     (field) => nonEmpty(film[field])
   );
   const moods = hasTags(film.moods);
   const aestheticTags = hasTags(film.aesthetic_tags);
+  const visualWorldTags = hasTags(film.visual_world_tags);
+  const storytellingTags = hasTags(film.storytelling_tags);
+  const visualWorldEmbedding = Boolean(options.visualWorldEmbedding);
+  const storytellingEmbedding = Boolean(options.storytellingEmbedding);
   // Catalog requires a Storage-backed poster_url; external image_url is not enough.
   const image = hasStoragePoster(film, options);
-  const rankingReady = moods && aestheticTags && moodEmbedding && aestheticEmbedding;
+  const rankingReady = isLiveAction
+    ? moods &&
+      visualWorldTags &&
+      storytellingTags &&
+      moodEmbedding &&
+      visualWorldEmbedding &&
+      storytellingEmbedding
+    : moods && aestheticTags && moodEmbedding && aestheticEmbedding;
   return {
     metadata,
     moods,
     aestheticTags,
+    visualWorldTags,
+    storytellingTags,
     moodEmbedding,
     aestheticEmbedding,
+    visualWorldEmbedding,
+    storytellingEmbedding,
     image,
     video: nonEmpty(film.trailer_url),
     rankingReady,
     catalogReady: rankingReady && metadata && image,
+    mediaType,
   };
 }
 
@@ -260,29 +280,50 @@ async function loadState(supabase, filmIds) {
       `Unknown film UUID(s): ${filmIds.filter((id) => !found.has(id)).join(", ")}`
     );
   }
-  const [moodRows, aestheticRows, recognitions] = await Promise.all([
-    query(supabase, "film_mood_embeddings", "film_id,embedding,mood_text", (q) =>
-      q.in("film_id", filmIds)
-    ),
-    query(
-      supabase,
-      "film_aesthetic_embeddings",
-      "film_id,embedding,aesthetic_text",
-      (q) => q.in("film_id", filmIds)
-    ),
-    query(
-      supabase,
-      "film_festival_recognitions",
-      "film_id,id,festival_name,festival_year,section,recognition_type,award_name,award_level,source_url,dedupe_key,updated_at",
-      (q) => q.in("film_id", filmIds).order("id")
-    ),
-  ]);
+  const [moodRows, aestheticRows, visualWorldRows, storytellingRows, recognitions] =
+    await Promise.all([
+      query(supabase, "film_mood_embeddings", "film_id,embedding,mood_text", (q) =>
+        q.in("film_id", filmIds)
+      ),
+      query(
+        supabase,
+        "film_aesthetic_embeddings",
+        "film_id,embedding,aesthetic_text",
+        (q) => q.in("film_id", filmIds)
+      ),
+      query(
+        supabase,
+        "film_visual_world_embeddings",
+        "film_id,embedding,visual_world_text",
+        (q) => q.in("film_id", filmIds)
+      ),
+      query(
+        supabase,
+        "film_storytelling_embeddings",
+        "film_id,embedding,storytelling_text",
+        (q) => q.in("film_id", filmIds)
+      ),
+      query(
+        supabase,
+        "film_festival_recognitions",
+        "film_id,id,festival_name,festival_year,section,recognition_type,award_name,award_level,source_url,dedupe_key,updated_at",
+        (q) => q.in("film_id", filmIds).order("id")
+      ),
+    ]);
   const moodById = new Map(moodRows.map((row) => [row.film_id, row]));
   const aestheticById = new Map(aestheticRows.map((row) => [row.film_id, row]));
+  const visualWorldById = new Map(
+    visualWorldRows.map((row) => [row.film_id, row])
+  );
+  const storytellingById = new Map(
+    storytellingRows.map((row) => [row.film_id, row])
+  );
   return {
     films: filmIds.map((id) => films.find((film) => film.id === id)),
     moodById,
     aestheticById,
+    visualWorldById,
+    storytellingById,
     recognitions,
   };
 }
@@ -379,23 +420,41 @@ async function verifyCoverage(supabase, profiles, filmIds) {
 
 function printTable(films, states) {
   console.log(
-    "\n| Film | metadata | moods | aesthetic tags | mood embedding | aesthetic embedding | image | video | ranking-ready | catalog-ready |"
+    "\n| Film | media | metadata | moods | aesthetic | VW | ST | mood emb | aesthetic emb | VW emb | ST emb | ranking-ready |"
   );
-  console.log("|---|---|---|---|---|---|---|---|---|---|");
+  console.log("|---|---|---|---|---|---|---|---|---|---|---|---|");
   for (const film of films) {
     const state = states.get(film.id);
     console.log(
-      `| ${film.title} | ${state.metadata ? "yes" : "no"} | ${
-        state.moods ? "yes" : "no"
-      } | ${state.aestheticTags ? "yes" : "no"} | ${
-        state.moodEmbedding ? "yes" : "no"
-      } | ${state.aestheticEmbedding ? "yes" : "no"} | ${
-        state.image ? "yes" : "no"
-      } | ${state.video ? "yes" : "no"} | ${
-        state.rankingReady ? "yes" : "no"
-      } | ${state.catalogReady ? "yes" : "no"} |`
+      `| ${film.title} | ${state.mediaType ?? "animation"} | ${
+        state.metadata ? "yes" : "no"
+      } | ${state.moods ? "yes" : "no"} | ${
+        state.aestheticTags ? "yes" : "no"
+      } | ${state.visualWorldTags ? "yes" : "no"} | ${
+        state.storytellingTags ? "yes" : "no"
+      } | ${state.moodEmbedding ? "yes" : "no"} | ${
+        state.aestheticEmbedding ? "yes" : "no"
+      } | ${state.visualWorldEmbedding ? "yes" : "no"} | ${
+        state.storytellingEmbedding ? "yes" : "no"
+      } | ${state.rankingReady ? "yes" : "no"} |`
     );
   }
+}
+
+function readinessFromLoaded(film, loaded) {
+  return readiness(
+    film,
+    validEmbedding(loaded.moodById.get(film.id)?.embedding),
+    validEmbedding(loaded.aestheticById.get(film.id)?.embedding),
+    {
+      visualWorldEmbedding: validEmbedding(
+        loaded.visualWorldById.get(film.id)?.embedding
+      ),
+      storytellingEmbedding: validEmbedding(
+        loaded.storytellingById.get(film.id)?.embedding
+      ),
+    }
+  );
 }
 
 function parseTmdbId(value) {
@@ -918,14 +977,7 @@ export async function processFilmBatch({
   const snapshots = new Map(initial.films.map((film) => [film.id, snapshotFilm(film)]));
   const profiles = await readProfiles(supabase);
   const initialStates = new Map(
-    initial.films.map((film) => [
-      film.id,
-      readiness(
-        film,
-        validEmbedding(initial.moodById.get(film.id)?.embedding),
-        validEmbedding(initial.aestheticById.get(film.id)?.embedding)
-      ),
-    ])
+    initial.films.map((film) => [film.id, readinessFromLoaded(film, initial)])
   );
 
   for (const film of initial.films) {
@@ -956,27 +1008,93 @@ export async function processFilmBatch({
 
   const missingMoodTags = initial.films.filter((film) => !hasTags(film.moods));
   const missingAestheticTags = initial.films.filter(
-    (film) => !hasTags(film.aesthetic_tags)
+    (film) =>
+      film.media_type !== "live_action" && !hasTags(film.aesthetic_tags)
+  );
+  const liveActionFilms = initial.films.filter(
+    (film) => film.media_type === "live_action"
+  );
+  const missingVisualWorldTags = liveActionFilms.filter(
+    (film) => !hasTags(film.visual_world_tags)
+  );
+  const missingStorytellingTags = liveActionFilms.filter(
+    (film) => !hasTags(film.storytelling_tags)
   );
   console.log(
-    `Execution plan: enrichment calls=${missingMoodTags.length + missingAestheticTags.length}, embedding calls=${
-      initial.films.filter((film) => !initialStates.get(film.id).moodEmbedding).length +
-      initial.films.filter((film) => !initialStates.get(film.id).aestheticEmbedding).length
-    }, profiles=${profiles.length}`
+    `Execution plan: enrichment calls=${
+      missingMoodTags.length +
+      missingAestheticTags.length +
+      missingVisualWorldTags.length +
+      missingStorytellingTags.length
+    }, embedding calls planned for mood/aesthetic/VW/ST as needed, profiles=${profiles.length}`
   );
   if (options.dryRun) {
     for (const film of initial.films) {
-      logFilm("enrichment", film, `${hasTags(film.moods) ? "skip moods" : "would fill moods"}; ${hasTags(film.aesthetic_tags) ? "skip aesthetic tags" : "would fill aesthetic tags"}`);
-      logFilm("embeddings", film, `${initialStates.get(film.id).moodEmbedding ? "skip mood" : "would create mood"}; ${initialStates.get(film.id).aestheticEmbedding ? "skip aesthetic" : "would create aesthetic"}`);
-      logFilm("media", film, options.skipMedia ? "skipped (--skip-media)" : "would fill images, cache posters, fill trailers");
+      const isLa = film.media_type === "live_action";
+      logFilm(
+        "enrichment",
+        film,
+        `${hasTags(film.moods) ? "skip moods" : "would fill moods"}; ${
+          isLa
+            ? `${hasTags(film.visual_world_tags) ? "skip VW" : "would fill VW"}; ${
+                hasTags(film.storytelling_tags) ? "skip ST" : "would fill ST"
+              }`
+            : `${
+                hasTags(film.aesthetic_tags)
+                  ? "skip aesthetic tags"
+                  : "would fill aesthetic tags"
+              }`
+        }`
+      );
+      logFilm(
+        "embeddings",
+        film,
+        `${
+          initialStates.get(film.id).moodEmbedding
+            ? "skip mood"
+            : "would create mood"
+        }; ${
+          isLa
+            ? `${
+                initialStates.get(film.id).visualWorldEmbedding
+                  ? "skip VW"
+                  : "would create VW"
+              }; ${
+                initialStates.get(film.id).storytellingEmbedding
+                  ? "skip ST"
+                  : "would create ST"
+              }`
+            : `${
+                initialStates.get(film.id).aestheticEmbedding
+                  ? "skip aesthetic"
+                  : "would create aesthetic"
+              }`
+        }`
+      );
+      logFilm(
+        "media",
+        film,
+        options.skipMedia
+          ? "skipped (--skip-media)"
+          : "would fill images, cache posters, fill trailers"
+      );
     }
-    console.log(`Profiles that would be enqueued: ${profiles.map((profile) => profile.slug ?? profile.id).join(", ")}`);
+    console.log(
+      `Profiles that would be enqueued: ${profiles
+        .map((profile) => profile.slug ?? profile.id)
+        .join(", ")}`
+    );
     printTable(initial.films, initialStates);
     return { dryRun: true, profiles, states: initialStates, films: initial.films };
   }
 
   try {
-    if (missingMoodTags.length || missingAestheticTags.length) {
+    if (
+      missingMoodTags.length ||
+      missingAestheticTags.length ||
+      missingVisualWorldTags.length ||
+      missingStorytellingTags.length
+    ) {
       if (missingMoodTags.length) {
         await runScript(
           "fill-emotional-tags.mjs",
@@ -991,17 +1109,62 @@ export async function processFilmBatch({
           false
         );
       }
+      if (missingVisualWorldTags.length) {
+        await runScript(
+          "fill-visual-world-tags.mjs",
+          missingVisualWorldTags.map((film) => film.id),
+          false
+        );
+      }
+      if (missingStorytellingTags.length) {
+        await runScript(
+          "fill-storytelling-tags.mjs",
+          missingStorytellingTags.map((film) => film.id),
+          false
+        );
+      }
     }
     let current = await loadState(supabase, filmIds);
-    for (const film of current.films) logFilm("enrichment", film, hasTags(film.moods) && hasTags(film.aesthetic_tags) ? "complete" : "incomplete");
-    if (current.films.some((film) => !hasTags(film.moods) || !hasTags(film.aesthetic_tags))) {
+    for (const film of current.films) {
+      const isLa = film.media_type === "live_action";
+      const tagsOk = isLa
+        ? hasTags(film.moods) &&
+          hasTags(film.visual_world_tags) &&
+          hasTags(film.storytelling_tags)
+        : hasTags(film.moods) && hasTags(film.aesthetic_tags);
+      logFilm("enrichment", film, tagsOk ? "complete" : "incomplete");
+    }
+    if (
+      current.films.some((film) => {
+        if (film.media_type === "live_action") {
+          return (
+            !hasTags(film.moods) ||
+            !hasTags(film.visual_world_tags) ||
+            !hasTags(film.storytelling_tags)
+          );
+        }
+        return !hasTags(film.moods) || !hasTags(film.aesthetic_tags);
+      })
+    ) {
       throw new Error("Enrichment did not make every film ranking-ready for tags");
     }
     const filmsMissingMoodEmbeddings = current.films.filter(
       (film) => !validEmbedding(current.moodById.get(film.id)?.embedding)
     );
     const filmsMissingAestheticEmbeddings = current.films.filter(
-      (film) => !validEmbedding(current.aestheticById.get(film.id)?.embedding)
+      (film) =>
+        film.media_type !== "live_action" &&
+        !validEmbedding(current.aestheticById.get(film.id)?.embedding)
+    );
+    const filmsMissingVisualWorldEmbeddings = current.films.filter(
+      (film) =>
+        film.media_type === "live_action" &&
+        !validEmbedding(current.visualWorldById.get(film.id)?.embedding)
+    );
+    const filmsMissingStorytellingEmbeddings = current.films.filter(
+      (film) =>
+        film.media_type === "live_action" &&
+        !validEmbedding(current.storytellingById.get(film.id)?.embedding)
     );
     if (filmsMissingMoodEmbeddings.length) {
       await runScript(
@@ -1017,18 +1180,34 @@ export async function processFilmBatch({
         false
       );
     }
+    if (filmsMissingVisualWorldEmbeddings.length) {
+      await runScript(
+        "fill-film-visual-world-embeddings.mjs",
+        filmsMissingVisualWorldEmbeddings.map((film) => film.id),
+        false
+      );
+    }
+    if (filmsMissingStorytellingEmbeddings.length) {
+      await runScript(
+        "fill-film-storytelling-embeddings.mjs",
+        filmsMissingStorytellingEmbeddings.map((film) => film.id),
+        false
+      );
+    }
     current = await loadState(supabase, filmIds);
     const states = new Map(
-      current.films.map((film) => [
-        film.id,
-        readiness(
-          film,
-          validEmbedding(current.moodById.get(film.id)?.embedding),
-          validEmbedding(current.aestheticById.get(film.id)?.embedding)
-        ),
-      ])
+      current.films.map((film) => [film.id, readinessFromLoaded(film, current)])
     );
-    for (const film of current.films) logFilm("embeddings", film, states.get(film.id).moodEmbedding && states.get(film.id).aestheticEmbedding ? "valid" : "invalid");
+    for (const film of current.films) {
+      const state = states.get(film.id);
+      const embedsOk =
+        film.media_type === "live_action"
+          ? state.moodEmbedding &&
+            state.visualWorldEmbedding &&
+            state.storytellingEmbedding
+          : state.moodEmbedding && state.aestheticEmbedding;
+      logFilm("embeddings", film, embedsOk ? "valid" : "invalid");
+    }
     if (options.skipMedia) {
       for (const film of current.films) logFilm("media", film, "skipped (--skip-media)");
     } else {
@@ -1073,14 +1252,7 @@ export async function processFilmBatch({
       }
     }
     const finalStates = new Map(
-      current.films.map((film) => [
-        film.id,
-        readiness(
-          film,
-          validEmbedding(current.moodById.get(film.id)?.embedding),
-          validEmbedding(current.aestheticById.get(film.id)?.embedding)
-        ),
-      ])
+      current.films.map((film) => [film.id, readinessFromLoaded(film, current)])
     );
     printTable(current.films, finalStates);
     const notReady = current.films.filter((film) => !finalStates.get(film.id).rankingReady);

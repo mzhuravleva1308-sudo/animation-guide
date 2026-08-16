@@ -72,6 +72,8 @@ type ProfileFilmScoreRow = {
   film_id: string;
   emotional_score: number | null;
   material_score: number | null;
+  visual_world_score?: number | null;
+  storytelling_score?: number | null;
 };
 
 type PersonalizedCatalogData = {
@@ -222,7 +224,9 @@ async function loadPersonalizedCatalogRankingData(
     } = await timeAsyncStage(() =>
       adminSupabase
         .from("profile_film_scores")
-        .select("film_id, emotional_score, material_score")
+        .select(
+          "film_id, emotional_score, material_score, visual_world_score, storytelling_score"
+        )
         .eq("profile_id", profileId)
         .eq("score_mode", ranking.scoreMode)
         .eq("source_media", ranking.sourceMedia)

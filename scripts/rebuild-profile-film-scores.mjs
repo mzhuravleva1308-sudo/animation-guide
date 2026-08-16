@@ -355,6 +355,46 @@ function getProfileFit(film, emotionalProfileTagWeights, aestheticProfileTagWeig
   return (emotionalProfileFit + materialProfileFit) / 2;
 }
 
+function getExactTagFieldMatchScore(film, fieldName, profileTagWeights) {
+  const filmTags = (film[fieldName] ?? [])
+    .map((tag) => String(tag ?? "").trim().toLowerCase())
+    .filter(Boolean);
+
+  if (!filmTags.length || profileTagWeights.size === 0) {
+    return 0;
+  }
+
+  const matchedScore = filmTags.reduce((sum, tag) => {
+    return sum + (profileTagWeights.get(tag) ?? 0);
+  }, 0);
+
+  return Math.min(1, matchedScore / 6);
+}
+
+function getLiveActionProfileFit(
+  film,
+  emotionalProfileTagWeights,
+  visualWorldProfileTagWeights,
+  storytellingProfileTagWeights
+) {
+  const emotionalProfileFit = getProfileTagMatchScore(
+    film,
+    emotionalProfileTagWeights
+  );
+  const visualWorldFit = getExactTagFieldMatchScore(
+    film,
+    "visual_world_tags",
+    visualWorldProfileTagWeights
+  );
+  const storytellingFit = getExactTagFieldMatchScore(
+    film,
+    "storytelling_tags",
+    storytellingProfileTagWeights
+  );
+
+  return (emotionalProfileFit + visualWorldFit + storytellingFit) / 3;
+}
+
 /** Cross-media uses emotional tags only — never aesthetic/technique from the source profile. */
 function getEmotionalOnlyProfileFit(film, emotionalProfileTagWeights) {
   return getProfileTagMatchScore(film, emotionalProfileTagWeights);
@@ -380,10 +420,28 @@ function getGatedEmotionalOnlyScores(
   return {
     emotional_score: emotionalAnchor.score * profileGate,
     material_score: 0,
+    visual_world_score: 0,
+    storytelling_score: 0,
     profileFit,
     profileGate,
     emotionalAnchor,
     materialAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+    visualWorldAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+    storytellingAnchor: {
       score: 0,
       anchorTitle: null,
       anchorRating: null,
@@ -468,10 +526,87 @@ function getGatedDimensionScores(
   return {
     emotional_score: emotionalAnchor.score * profileGate,
     material_score: materialAnchor.score * profileGate,
+    visual_world_score: 0,
+    storytelling_score: 0,
     profileFit,
     profileGate,
     emotionalAnchor,
     materialAnchor,
+    visualWorldAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+    storytellingAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+  };
+}
+
+/**
+ * Live-action native: Mood × Visual World × Storytelling.
+ * Material/aesthetic is intentionally unused (data retained for rollback).
+ */
+function getGatedLiveActionScores(
+  film,
+  filmMoodEmbeddingByFilmId,
+  filmVisualWorldEmbeddingByFilmId,
+  filmStorytellingEmbeddingByFilmId,
+  ratedFilms,
+  emotionalProfileTagWeights,
+  visualWorldProfileTagWeights,
+  storytellingProfileTagWeights
+) {
+  const profileFit = getLiveActionProfileFit(
+    film,
+    emotionalProfileTagWeights,
+    visualWorldProfileTagWeights,
+    storytellingProfileTagWeights
+  );
+  const profileGate = getProfileGate(profileFit);
+
+  const emotionalAnchor = getNearestRatedAnchor(
+    filmMoodEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmMoodEmbeddingByFilmId
+  );
+  const visualWorldAnchor = getNearestRatedAnchor(
+    filmVisualWorldEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmVisualWorldEmbeddingByFilmId
+  );
+  const storytellingAnchor = getNearestRatedAnchor(
+    filmStorytellingEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmStorytellingEmbeddingByFilmId
+  );
+
+  return {
+    emotional_score: emotionalAnchor.score * profileGate,
+    material_score: 0,
+    visual_world_score: visualWorldAnchor.score * profileGate,
+    storytelling_score: storytellingAnchor.score * profileGate,
+    profileFit,
+    profileGate,
+    emotionalAnchor,
+    materialAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+    visualWorldAnchor,
+    storytellingAnchor,
   };
 }
 
@@ -515,7 +650,9 @@ async function getTasteCores(profileId, mediaType = MEDIA_TYPE.animation) {
 export async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
-    .select("id, title, moods, aesthetic_tags, technique, year, media_type")
+    .select(
+      "id, title, moods, aesthetic_tags, visual_world_tags, storytelling_tags, technique, year, media_type"
+    )
     .order("id");
 
   if (error) {
@@ -598,6 +735,8 @@ export async function upsertScoreRows(profileId, scoreRows) {
       film_id: row.film_id,
       emotional_score: row.emotional_score,
       material_score: row.material_score,
+      visual_world_score: row.visual_world_score ?? 0,
+      storytelling_score: row.storytelling_score ?? 0,
       score_mode: row.score_mode ?? SCORE_MODE.native,
       source_media: row.source_media ?? MEDIA_TYPE.animation,
       computed_at: row.computed_at,
@@ -675,9 +814,18 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
   const emotionalCores = tasteCores.filter(
     (core) => core.core_type === "emotional"
   );
-  const aestheticCores = isCrossMedia
+  const isLiveActionNative =
+    !isCrossMedia && targetMedia === MEDIA_TYPE.liveAction;
+
+  const aestheticCores = isCrossMedia || isLiveActionNative
     ? []
     : tasteCores.filter((core) => core.core_type === "aesthetic");
+  const visualWorldCores = isLiveActionNative
+    ? tasteCores.filter((core) => core.core_type === "visual_world")
+    : [];
+  const storytellingCores = isLiveActionNative
+    ? tasteCores.filter((core) => core.core_type === "storytelling")
+    : [];
 
   const emotionalProfileTags = emotionalCores
     .flatMap((core) => core.emotional_profile_tags ?? [])
@@ -698,6 +846,30 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
 
   const aestheticProfileTagWeights = new Map(
     aestheticProfileTags.map((tag, index) => [
+      tag,
+      Math.max(0.55, 1 - index * 0.05),
+    ])
+  );
+
+  const visualWorldProfileTags = visualWorldCores
+    .flatMap((core) => core.visual_world_profile_tags ?? [])
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+
+  const visualWorldProfileTagWeights = new Map(
+    visualWorldProfileTags.map((tag, index) => [
+      tag,
+      Math.max(0.55, 1 - index * 0.05),
+    ])
+  );
+
+  const storytellingProfileTags = storytellingCores
+    .flatMap((core) => core.storytelling_profile_tags ?? [])
+    .map((tag) => tag.trim().toLowerCase())
+    .filter(Boolean);
+
+  const storytellingProfileTagWeights = new Map(
+    storytellingProfileTags.map((tag, index) => [
       tag,
       Math.max(0.55, 1 - index * 0.05),
     ])
@@ -750,9 +922,16 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     "film_mood_embeddings",
     embedFilmIds
   );
-  const filmAestheticEmbeddingByFilmId = isCrossMedia
-    ? new Map()
-    : await getFilmEmbeddings("film_aesthetic_embeddings", embedFilmIds);
+  const filmAestheticEmbeddingByFilmId =
+    isCrossMedia || isLiveActionNative
+      ? new Map()
+      : await getFilmEmbeddings("film_aesthetic_embeddings", embedFilmIds);
+  const filmVisualWorldEmbeddingByFilmId = isLiveActionNative
+    ? await getFilmEmbeddings("film_visual_world_embeddings", embedFilmIds)
+    : new Map();
+  const filmStorytellingEmbeddingByFilmId = isLiveActionNative
+    ? await getFilmEmbeddings("film_storytelling_embeddings", embedFilmIds)
+    : new Map();
 
   const computedAt = new Date().toISOString();
   const gatedScoresByFilmId = new Map();
@@ -765,14 +944,25 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
           ratedFilms,
           emotionalProfileTagWeights
         )
-      : getGatedDimensionScores(
-          film,
-          filmMoodEmbeddingByFilmId,
-          filmAestheticEmbeddingByFilmId,
-          ratedFilms,
-          emotionalProfileTagWeights,
-          aestheticProfileTagWeights
-        );
+      : isLiveActionNative
+        ? getGatedLiveActionScores(
+            film,
+            filmMoodEmbeddingByFilmId,
+            filmVisualWorldEmbeddingByFilmId,
+            filmStorytellingEmbeddingByFilmId,
+            ratedFilms,
+            emotionalProfileTagWeights,
+            visualWorldProfileTagWeights,
+            storytellingProfileTagWeights
+          )
+        : getGatedDimensionScores(
+            film,
+            filmMoodEmbeddingByFilmId,
+            filmAestheticEmbeddingByFilmId,
+            ratedFilms,
+            emotionalProfileTagWeights,
+            aestheticProfileTagWeights
+          );
 
     gatedScoresByFilmId.set(film.id, gatedScores);
 
@@ -781,6 +971,8 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
       film_id: film.id,
       emotional_score: gatedScores.emotional_score,
       material_score: gatedScores.material_score,
+      visual_world_score: gatedScores.visual_world_score ?? 0,
+      storytelling_score: gatedScores.storytelling_score ?? 0,
       score_mode: scoreMode,
       source_media: sourceMedia,
       computed_at: computedAt,
@@ -797,13 +989,18 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
       {
         emotional: row.emotional_score,
         material: row.material_score,
+        visual_world: row.visual_world_score,
+        storytelling: row.storytelling_score,
       },
     ])
   );
 
-  const balancedScores = buildBalancedScores(candidateFilms, rawScoresByFilmId);
+  const balancedScores = buildBalancedScores(candidateFilms, rawScoresByFilmId, {
+    mediaType: targetMedia,
+    scoreMode,
+  });
 
-  if (!isCrossMedia) {
+  if (!isCrossMedia && !isLiveActionNative) {
     const oldRawScoresByFilmId = new Map(
       candidateFilms.map((film) => [
         film.id,
@@ -825,7 +1022,8 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     );
     const oldBalancedScores = buildBalancedScores(
       candidateFilms,
-      oldRawScoresByFilmId
+      oldRawScoresByFilmId,
+      { mediaType: MEDIA_TYPE.animation, scoreMode: SCORE_MODE.native }
     );
 
     for (const film of candidateFilms) {
@@ -858,6 +1056,33 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     });
   }
 
+  if (isLiveActionNative) {
+    for (const film of candidateFilms) {
+      const emotionalMatchedCount = getMatchedSignalCount(
+        filmMoodEmbeddingByFilmId.get(film.id),
+        ratedFilms,
+        filmMoodEmbeddingByFilmId
+      );
+      const visualWorldMatchedCount = getMatchedSignalCount(
+        filmVisualWorldEmbeddingByFilmId.get(film.id),
+        ratedFilms,
+        filmVisualWorldEmbeddingByFilmId
+      );
+      const storytellingMatchedCount = getMatchedSignalCount(
+        filmStorytellingEmbeddingByFilmId.get(film.id),
+        ratedFilms,
+        filmStorytellingEmbeddingByFilmId
+      );
+      const existingScore = balancedScores.get(film.id);
+      if (existingScore) {
+        existingScore.matchedSignalCount =
+          emotionalMatchedCount +
+          visualWorldMatchedCount +
+          storytellingMatchedCount;
+      }
+    }
+  }
+
   const newTopFilms = sortFilmsByScore(candidateFilms, balancedScores).slice(
     0,
     10
@@ -866,7 +1091,9 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
   console.log(
     isCrossMedia
       ? "  Cross-media emotional-only top 10:"
-      : "  New anchor × lenient profileGate top 10:"
+      : isLiveActionNative
+        ? "  Live-action Mood × Visual World × Storytelling top 10:"
+        : "  New anchor × lenient profileGate top 10:"
   );
 
   newTopFilms.forEach((film, index) => {
@@ -875,15 +1102,24 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     const emotionalAnchor = gatedScores?.emotionalAnchor;
 
     console.log(
-      `    ${index + 1}. ${film.title} — finalScore: ${finalScore.toFixed(4)}`
+      `    ${index + 1}. ${film.title} — total_score: ${finalScore.toFixed(4)}`
     );
-    console.log(
-      `       anchor: "${emotionalAnchor?.anchorTitle ?? "—"}" ` +
-        `rating=${emotionalAnchor?.anchorRating ?? "—"} ` +
-        `anchorScore=${emotionalAnchor?.score.toFixed(4) ?? "0.0000"} ` +
-        `profileFit=${(gatedScores?.profileFit ?? 0).toFixed(4)} ` +
-        `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)}`
-    );
+    if (isLiveActionNative) {
+      console.log(
+        `       mood=${(gatedScores?.emotional_score ?? 0).toFixed(4)} ` +
+          `visual_world=${(gatedScores?.visual_world_score ?? 0).toFixed(4)} ` +
+          `storytelling=${(gatedScores?.storytelling_score ?? 0).toFixed(4)} ` +
+          `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)}`
+      );
+    } else {
+      console.log(
+        `       anchor: "${emotionalAnchor?.anchorTitle ?? "—"}" ` +
+          `rating=${emotionalAnchor?.anchorRating ?? "—"} ` +
+          `anchorScore=${emotionalAnchor?.score.toFixed(4) ?? "0.0000"} ` +
+          `profileFit=${(gatedScores?.profileFit ?? 0).toFixed(4)} ` +
+          `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)}`
+      );
+    }
   });
 
   return scoreRows;
@@ -1036,9 +1272,13 @@ export async function rebuildProfileScores(profile, allFilms) {
   const { rebuildAestheticTasteCoresForProfile } = await import(
     "./build-aesthetic-cores.mjs"
   );
+  const { rebuildLiveActionAxisTasteCoresForProfile } = await import(
+    "./build-live-action-axis-cores.mjs"
+  );
 
   await rebuildEmotionalTasteCoresForProfile(profile);
   await rebuildAestheticTasteCoresForProfile(profile);
+  await rebuildLiveActionAxisTasteCoresForProfile(profile);
 
   const scoreRows = await calculateAllProfileScoreArtifacts(profile, allFilms, {
     quiet: false,

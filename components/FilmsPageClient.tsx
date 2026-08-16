@@ -127,7 +127,7 @@ type FilmsPageClientProps = {
     | "native"
     | "cross_from_animation"
     | "cross_from_live_action";
-  /** Early-access Films tab (allowlisted emails only). */
+  /** Early-access retired: Films tab is always shown. */
   showLiveActionTab?: boolean;
 };
 
@@ -398,7 +398,7 @@ export default function FilmsPageClient({
     }
   }, [auth, activeTab]);
 
-  // Prefetch the other catalog so Films ↔ All feels like a local tab switch.
+  // Prefetch the other catalog so Films ↔ Animation feels like a local tab switch.
   useEffect(() => {
     if (!showLiveActionTab) {
       return;
@@ -730,9 +730,10 @@ export default function FilmsPageClient({
             className="flex shrink-0 items-center gap-0.5 sm:gap-2 md:gap-3"
           >
             <HeaderIconButton
-              label="All"
+              label="Animation"
               active={activeTab === "all"}
               onClick={() => handleTabChange("all")}
+              data-testid="nav-animation"
             >
               <FilmIcon
                 size={HEADER_NAV_ICON.size}

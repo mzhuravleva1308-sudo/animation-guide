@@ -15,7 +15,7 @@ async function expectStableSearchInputWidth(
   await expect(page.getByTestId("film-search")).toBeVisible();
 
   if (options?.openAllFilmsTab) {
-    await page.getByRole("button", { name: "All", exact: true }).click();
+    await page.getByRole("button", { name: "Animation", exact: true }).click();
     await expect(page.getByTestId("film-search")).toBeVisible();
   }
 

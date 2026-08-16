@@ -391,6 +391,25 @@ async function main() {
     console.error(`Setting media_type=live_action on ${filmIdsForLive.length} films…`);
     report.setMediaType = await setLiveActionMediaType(supabase, ids);
     console.error(JSON.stringify(report.setMediaType));
+
+    // Mandatory live-action axes: Visual World + Storytelling (AI fill + embeddings).
+    const laFilmIds = report.setMediaType.filmIds ?? filmIdsForLive;
+    if (laFilmIds.length) {
+      console.error(
+        `Enriching Visual World + Storytelling for ${laFilmIds.length} live-action films…`
+      );
+      const { processFilmBatch } = await import("./process-film-batch.mjs");
+      report.laAxisEnrichment = await processFilmBatch({
+        supabase,
+        options: {
+          filmIds: laFilmIds,
+          dryRun: false,
+          execute: true,
+          skipMedia: true,
+          rebuildAllProfiles: false,
+        },
+      });
+    }
   }
 
   if (options.goLive) {

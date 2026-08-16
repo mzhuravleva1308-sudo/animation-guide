@@ -1,16 +1,23 @@
 export type RawFilmScore = {
   emotional: number;
   material: number;
+  visual_world?: number;
+  storytelling?: number;
 };
 
 export type FilmScore = RawFilmScore & {
   balanced: number;
+  mood_score?: number;
+  visual_world_score?: number;
+  storytelling_score?: number;
   matchedSignalCount?: number;
 };
 
 export {
   normalizeMatchScore,
   getScoreRange,
+  RANKING_AXES,
+  resolveRankingAxes,
   buildBalancedScores,
   compareFilmsByScore,
   sortFilmsByScore,

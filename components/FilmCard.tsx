@@ -166,9 +166,24 @@ export default function FilmCard(props: FilmCardProps) {
 
       {showDebugScores && score && (
         <div className="mt-2 space-y-0.5 text-xs text-gray-400">
-          <p>Raw emotional: {score.emotional.toFixed(4)}</p>
-          <p>Raw material: {score.material.toFixed(4)}</p>
-          <p>Balanced total: {score.balanced.toFixed(4)}</p>
+          <p>total_score: {score.balanced.toFixed(4)}</p>
+          <p>
+            mood_score:{" "}
+            {(score.mood_score ?? score.emotional).toFixed(4)}
+          </p>
+          {score.visual_world_score != null || score.visual_world != null ? (
+            <p>
+              visual_world_score:{" "}
+              {(score.visual_world_score ?? score.visual_world ?? 0).toFixed(4)}
+            </p>
+          ) : null}
+          {score.storytelling_score != null || score.storytelling != null ? (
+            <p>
+              storytelling_score:{" "}
+              {(score.storytelling_score ?? score.storytelling ?? 0).toFixed(4)}
+            </p>
+          ) : null}
+          <p>Raw material (legacy): {score.material.toFixed(4)}</p>
         </div>
       )}
     </div>

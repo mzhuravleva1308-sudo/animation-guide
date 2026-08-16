@@ -23,6 +23,8 @@ export type Film = {
     technique?: string | null;
     moods?: string[] | null;
     aesthetic_tags: string[] | null;
+    visual_world_tags?: string[] | null;
+    storytelling_tags?: string[] | null;
     narrative_tags: string[] | null;
     themes?: string[] | null;
     dialogue?: string | null;

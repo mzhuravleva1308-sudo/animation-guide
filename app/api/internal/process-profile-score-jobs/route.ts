@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rebuildAestheticTasteCoresForProfile } from "@/scripts/build-aesthetic-cores.mjs";
+import { rebuildLiveActionAxisTasteCoresForProfile } from "@/scripts/build-live-action-axis-cores.mjs";
 import { rebuildEmotionalTasteCoresForProfile } from "@/scripts/build-taste-cores.mjs";
 import {
   calculateAllProfileScoreArtifacts,
@@ -57,6 +58,7 @@ export async function GET(request: Request) {
       if (profile) {
         await rebuildEmotionalTasteCoresForProfile(profile);
         await rebuildAestheticTasteCoresForProfile(profile);
+        await rebuildLiveActionAxisTasteCoresForProfile(profile);
       }
 
       const scoreRows = profile
