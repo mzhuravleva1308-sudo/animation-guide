@@ -72,6 +72,13 @@ function filmMediaType(film: Film): MediaType {
   return normalizeMediaType(film.media_type, MEDIA_TYPE.animation);
 }
 
+function formatScoresLastComputedAt(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 function ListTabSkeleton() {
   return (
     <div
@@ -111,6 +118,8 @@ type FilmsPageClientProps = {
   initialFilmRatings?: Record<string, number>;
   /** SSR-hydrated saved ids so Saved is ready on first paint. */
   initialSavedFilmIds?: string[];
+  /** Newest successful profile↔film score write time (ISO). */
+  scoresLastComputedAt?: string | null;
   /** Active catalog media (animation default). */
   mediaType?: "animation" | "live_action";
   /** Legacy query value; catalog always ranks native for the active media. */
@@ -147,11 +156,15 @@ export default function FilmsPageClient({
   showSubtitle = false,
   initialFilmRatings = {},
   initialSavedFilmIds = [],
+  scoresLastComputedAt = null,
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
   showLiveActionTab = false,
 }: FilmsPageClientProps) {
   const [auth, setAuth] = useState(initialAuth);
+  const [scoresLastComputedAtState, setScoresLastComputedAtState] = useState<
+    string | null
+  >(scoresLastComputedAt);
   const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
     initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
   );
@@ -585,6 +598,30 @@ export default function FilmsPageClient({
     setModalOpen(false);
   }, [revertPreAuthSnapshot]);
 
+  const refreshScoresLastComputedAt = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (activeMedia !== MEDIA_TYPE.animation) {
+        params.set("media", activeMedia);
+      }
+      const query = params.toString();
+      const response = await fetch(
+        query ? `/api/catalog?${query}` : "/api/catalog"
+      );
+      if (!response.ok) return;
+      const payload = (await response.json()) as {
+        scoresLastComputedAt?: string | null;
+      };
+      if (typeof payload.scoresLastComputedAt === "string") {
+        setScoresLastComputedAtState(payload.scoresLastComputedAt);
+      } else if (payload.scoresLastComputedAt === null) {
+        setScoresLastComputedAtState(null);
+      }
+    } catch (error) {
+      console.error("[catalog] scores timestamp refresh failed", error);
+    }
+  }, [activeMedia]);
+
   const handleTabChange = useCallback(
     (tab: CatalogTab) => {
       if ((tab === "saved" || tab === "watched") && !auth) {
@@ -603,8 +640,11 @@ export default function FilmsPageClient({
       }
 
       setActiveTab(tab);
+      if (tab === "watched") {
+        void refreshScoresLastComputedAt();
+      }
     },
-    [auth, openAuthModal, selectCatalog]
+    [auth, openAuthModal, refreshScoresLastComputedAt, selectCatalog]
   );
 
   const isCatalogTab = activeTab === "all" || activeTab === "films";
@@ -891,10 +931,21 @@ export default function FilmsPageClient({
           ) : null}
 
           {activeTab === "watched" && listTabView === "list" ? (
-            <p className="mb-3 text-sm text-slate-500">
-              Showing {listFilms.length} watched{" "}
-              {listFilms.length === 1 ? "film" : "films"}
-            </p>
+            <div className="mb-3 space-y-1">
+              {scoresLastComputedAtState ? (
+                <p
+                  className="text-xs text-slate-400"
+                  data-testid="scores-last-computed-at"
+                >
+                  Last successful score recalculation:{" "}
+                  {formatScoresLastComputedAt(scoresLastComputedAtState)}
+                </p>
+              ) : null}
+              <p className="text-sm text-slate-500">
+                Showing {listFilms.length} watched{" "}
+                {listFilms.length === 1 ? "film" : "films"}
+              </p>
+            </div>
           ) : null}
 
           {listTabView === "error" ? (

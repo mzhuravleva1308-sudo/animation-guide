@@ -588,10 +588,6 @@ async function upsertScores(profileId, scoreRows) {
 /**
  * Upsert score rows without deleting other films for the profile.
  * Used when scoring newly added films only.
- *
- * Hosted may still use PRIMARY KEY (profile_id, film_id) — in that case only one
- * artifact per film fits. Prefer callers to pass a single mode per film until the
- * multi-mode PK migration is applied.
  */
 export async function upsertScoreRows(profileId, scoreRows) {
   if (!scoreRows?.length) return;
@@ -925,7 +921,7 @@ export async function calculateCrossMediaScores(
 }
 
 /**
- * Full artifact set for a profile: native per media + cross both directions.
+ * Full artifact set for a profile: native scores per media only.
  * Isolation: each call only reads ratings/cores for its source media.
  */
 export async function calculateAllProfileScoreArtifacts(
@@ -937,6 +933,8 @@ export async function calculateAllProfileScoreArtifacts(
   const filmIds = options.filmIds ?? null;
   const rows = [];
 
+  // Catalog ranking is native-only per media (Films ← live-action likes,
+  // Animation ← animation likes). Cross-media scores are not written here.
   for (const mediaType of MEDIA_TYPES) {
     const nativeRows = await calculateProfileScores(profile, allFilms, {
       mediaType,
@@ -948,22 +946,14 @@ export async function calculateAllProfileScoreArtifacts(
     rows.push(...nativeRows);
   }
 
-  for (const sourceMedia of MEDIA_TYPES) {
-    const crossRows = await calculateCrossMediaScores(profile, allFilms, {
-      sourceMedia,
-      targetMedia: oppositeMediaType(sourceMedia),
-      filmIds,
-      quiet,
-    });
-    rows.push(...crossRows);
-  }
-
   return rows;
 }
 
 /**
  * Score only newly added films for every profile (no full-catalog rebuild).
- * Rating-triggered jobs keep using full rebuildProfileScores + replace-all.
+ * Always writes native scores for each film's own media_type (Films from
+ * live-action taste, Animation from animation taste). Rating-triggered jobs
+ * keep using full rebuildProfileScores + replace-all.
  *
  * @param {string[]} filmIds
  * @param {{ profiles?: object[], allFilms?: object[] }} [options]
@@ -989,7 +979,7 @@ export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
   let emptyProfiles = 0;
 
   console.log(
-    `\n▶ Incremental profile scores for ${ids.length} film(s) × ${profiles.length} profile(s)\n`
+    `\n▶ Incremental native profile scores for ${ids.length} film(s) × ${profiles.length} profile(s)\n`
   );
 
   for (const profile of profiles) {
@@ -1006,21 +996,6 @@ export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
 
       if (!mediaFilmIds.length) continue;
 
-      if (mediaType === MEDIA_TYPE.liveAction) {
-        // Legacy hosted PK allows one score row per film. Prefer cross-from-animation
-        // for early-access LA (animation likes unlock ranking; native LA likes rare).
-        scoreRows.push(
-          ...(await calculateCrossMediaScores(profile, allFilms, {
-            sourceMedia: MEDIA_TYPE.animation,
-            targetMedia: MEDIA_TYPE.liveAction,
-            filmIds: mediaFilmIds,
-            quiet: true,
-          }))
-        );
-        continue;
-      }
-
-      // Animation (and future multi-mode): native for this media.
       scoreRows.push(
         ...(await calculateProfileScores(profile, allFilms, {
           mediaType,
@@ -1032,21 +1007,14 @@ export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
       );
     }
 
-    // Deduplicate to one row per film for legacy PK safety.
-    const onePerFilm = new Map();
-    for (const row of scoreRows) {
-      onePerFilm.set(row.film_id, row);
-    }
-    const deduped = [...onePerFilm.values()];
-
-    if (!deduped.length) {
+    if (!scoreRows.length) {
       emptyProfiles += 1;
       continue;
     }
-    await upsertScoreRows(profile.id, deduped);
-    rowCount += deduped.length;
+    await upsertScoreRows(profile.id, scoreRows);
+    rowCount += scoreRows.length;
     console.log(
-      `  ${profile.slug ?? profile.id}: upserted ${deduped.length} score row(s)`
+      `  ${profile.slug ?? profile.id}: upserted ${scoreRows.length} score row(s)`
     );
   }
 
@@ -1076,7 +1044,7 @@ export async function rebuildProfileScores(profile, allFilms) {
     quiet: false,
   });
   await upsertScores(profile.id, scoreRows);
-  console.log(`  Stored ${scoreRows.length} film scores (all media/modes).`);
+  console.log(`  Stored ${scoreRows.length} native film scores (all media).`);
 }
 
 async function main() {
