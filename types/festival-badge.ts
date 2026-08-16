@@ -4,6 +4,14 @@ export type FestivalBadgeId =
   | "tiff"
   | "berlinale"
   | "sundance"
+  | "venice"
+  | "locarno"
+  | "busan"
+  | "bfi_london"
+  | "san_sebastian"
+  | "melbourne"
+  | "sydney"
+  | "mar_del_plata"
   | "tokyo_anime";
 
 export type FestivalBadge = {

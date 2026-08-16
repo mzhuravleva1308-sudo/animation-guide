@@ -9,6 +9,8 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     color: string;
     backgroundColor: string;
     patterns: RegExp[];
+    /** Alternate canonical ids stored on claims (Resonale / official sources). */
+    aliases?: string[];
   }
 > = {
   annecy: {
@@ -37,6 +39,7 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     color: "#6B3FA0",
     backgroundColor: "#F2ECF8",
     patterns: [/toronto international film festival/i, /\btiff\b/i, /toronto.*film festival/i],
+    aliases: ["toronto"],
   },
   berlinale: {
     label: "Berlinale",
@@ -56,6 +59,81 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     backgroundColor: "#FCEEE5",
     patterns: [/sundance/i],
   },
+  venice: {
+    label: "Venice",
+    fullName: "Venice International Film Festival",
+    description:
+      "One of the world's oldest film festivals, held on the Lido and known for the Golden Lion.",
+    color: "#2F6F6A",
+    backgroundColor: "#E8F3F1",
+    patterns: [/venice international film festival/i, /\bvenice\b/i, /biennale/i],
+  },
+  locarno: {
+    label: "Locarno",
+    fullName: "Locarno Film Festival",
+    description:
+      "Major Swiss festival on Lake Maggiore, known for the Golden Leopard.",
+    color: "#3B5BDB",
+    backgroundColor: "#EEF1FB",
+    patterns: [/locarno/i],
+  },
+  busan: {
+    label: "Busan",
+    fullName: "Busan International Film Festival",
+    description:
+      "Leading Asian film festival held each autumn in Busan, South Korea.",
+    color: "#0F766E",
+    backgroundColor: "#E6F4F2",
+    patterns: [/busan international film festival/i, /\bbusan\b/i, /\bbiff\b/i],
+  },
+  bfi_london: {
+    label: "BFI",
+    fullName: "BFI London Film Festival",
+    description:
+      "The UK's largest public film festival, presented by the British Film Institute.",
+    color: "#1D4ED8",
+    backgroundColor: "#EAF0FB",
+    patterns: [/bfi london/i, /london film festival/i],
+    aliases: ["bfi-london"],
+  },
+  san_sebastian: {
+    label: "San Sebastián",
+    fullName: "San Sebastián International Film Festival",
+    description:
+      "Major Spanish A-list festival known for the Golden Shell.",
+    color: "#9A3412",
+    backgroundColor: "#F8EDE6",
+    patterns: [/san sebasti[aá]n/i, /donostia/i],
+    aliases: ["san-sebastian"],
+  },
+  melbourne: {
+    label: "MIFF",
+    fullName: "Melbourne International Film Festival",
+    description:
+      "Australia's largest film festival, held each winter in Melbourne.",
+    color: "#047857",
+    backgroundColor: "#E8F5EF",
+    patterns: [/melbourne international film festival/i, /\bmiff\b/i],
+  },
+  sydney: {
+    label: "Sydney",
+    fullName: "Sydney Film Festival",
+    description:
+      "Long-running Australian festival presenting international cinema in Sydney.",
+    color: "#0369A1",
+    backgroundColor: "#E8F3FA",
+    patterns: [/sydney film festival/i],
+  },
+  mar_del_plata: {
+    label: "Mar del Plata",
+    fullName: "Mar del Plata International Film Festival",
+    description:
+      "Latin America's only FIAPF A-list competitive festival, held in Argentina.",
+    color: "#A16207",
+    backgroundColor: "#F7F1E4",
+    patterns: [/mar del plata/i],
+    aliases: ["mar-del-plata"],
+  },
   tokyo_anime: {
     label: "TAAF",
     fullName: "Tokyo Anime Award Festival",
@@ -70,11 +148,27 @@ export const FESTIVAL_BADGE_CONFIG: Record<
 const BADGE_ORDER: FestivalBadgeId[] = [
   "annecy",
   "cannes",
-  "tiff",
+  "venice",
   "berlinale",
+  "tiff",
   "sundance",
+  "locarno",
+  "busan",
+  "bfi_london",
+  "san_sebastian",
+  "melbourne",
+  "sydney",
+  "mar_del_plata",
   "tokyo_anime",
 ];
+
+const ALIAS_TO_BADGE_ID = new Map<string, FestivalBadgeId>();
+for (const id of BADGE_ORDER) {
+  ALIAS_TO_BADGE_ID.set(id, id);
+  for (const alias of FESTIVAL_BADGE_CONFIG[id].aliases ?? []) {
+    ALIAS_TO_BADGE_ID.set(alias, id);
+  }
+}
 
 /**
  * Map canonical festival id or free-text festival name to a badge id.
@@ -87,8 +181,14 @@ export function resolveFestivalBadgeId(
     return null;
   }
 
-  if (normalized in FESTIVAL_BADGE_CONFIG) {
-    return normalized as FestivalBadgeId;
+  const byAlias = ALIAS_TO_BADGE_ID.get(normalized);
+  if (byAlias) {
+    return byAlias;
+  }
+
+  const byAliasLower = ALIAS_TO_BADGE_ID.get(normalized.toLowerCase());
+  if (byAliasLower) {
+    return byAliasLower;
   }
 
   for (const id of BADGE_ORDER) {
