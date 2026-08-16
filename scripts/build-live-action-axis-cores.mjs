@@ -76,10 +76,15 @@ function averageEmbeddings(embeddings) {
 }
 
 function buildClusters(films) {
+  // Stable seed order: greedy clustering is order-dependent, so without a
+  // fixed order the same likes can produce different cores on each rebuild.
+  const ordered = [...films].sort((a, b) =>
+    String(a.id).localeCompare(String(b.id))
+  );
   const clusters = [];
   const usedFilmIds = new Set();
 
-  for (const film of films) {
+  for (const film of ordered) {
     if (usedFilmIds.has(film.id)) continue;
     const cluster = [film];
     usedFilmIds.add(film.id);
@@ -90,7 +95,7 @@ function buildClusters(films) {
       const centerEmbedding = averageEmbeddings(
         cluster.map((clusterFilm) => clusterFilm.embedding)
       );
-      for (const candidate of films) {
+      for (const candidate of ordered) {
         if (usedFilmIds.has(candidate.id)) continue;
         const similarityToCenter = cosineSimilarity(
           candidate.embedding,
@@ -108,7 +113,11 @@ function buildClusters(films) {
 
   return clusters
     .filter((cluster) => cluster.length >= MIN_FILMS_IN_CORE)
-    .sort((a, b) => b.length - a.length);
+    .sort(
+      (a, b) =>
+        b.length - a.length ||
+        String(a[0]?.id ?? "").localeCompare(String(b[0]?.id ?? ""))
+    );
 }
 
 function frequencyTags(films, tagField) {
