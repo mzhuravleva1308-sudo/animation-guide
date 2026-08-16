@@ -19,6 +19,7 @@ const DEFAULT_MIGRATION_FILES = [
   "supabase/migrations/20260808_film_discovery_candidates_festival_recognitions.sql",
   "supabase/migrations/20260808_film_discovery_candidates_has_festival.sql",
   "supabase/migrations/20260816_live_action_visual_world_storytelling.sql",
+  "supabase/migrations/20260816_live_action_cold_start_top20.sql",
 ];
 
 function parseArgs(argv) {
