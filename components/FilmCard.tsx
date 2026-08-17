@@ -1,5 +1,6 @@
 import { FilmScore } from "@/lib/profile-film-scoring";
 import { Film } from "@/types/film";
+import Link from "next/link";
 import { normalizeFilmTagList } from "@/lib/film-tags";
 import { getFilmTechniquePills } from "@/lib/film-technique";
 import { getMaterialFactPills } from "@/lib/film-material-fact";
@@ -17,6 +18,7 @@ import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
+import { getCatalogGuideLink } from "@/lib/guides/catalog-guide-links.mjs";
 
 type FilmCardBaseProps = {
   film: Film;
@@ -97,6 +99,8 @@ export default function FilmCard(props: FilmCardProps) {
     .join(" · ");
   const showInteractionControls =
     props.mode === "profile" || props.mode === "catalog";
+  const catalogGuideLink =
+    props.mode === "catalog" ? getCatalogGuideLink(film.title) : null;
 
   return (
     <article
@@ -173,6 +177,16 @@ export default function FilmCard(props: FilmCardProps) {
 
       {metadataLine ? (
         <p className="mt-1 text-sm text-gray-500">{metadataLine}</p>
+      ) : null}
+
+      {catalogGuideLink ? (
+        <Link
+          href={catalogGuideLink.href}
+          data-testid="film-card-guide-link"
+          className="mt-1.5 inline-block text-sm text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-[#1A1B2E] hover:decoration-gray-500"
+        >
+          {catalogGuideLink.label}
+        </Link>
       ) : null}
 
       {showDebugScores && score && (

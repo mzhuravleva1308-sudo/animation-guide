@@ -1,0 +1,30 @@
+[
+  {
+    "film_id": "7994bba5-743e-42de-b97c-584732c14e08",
+    "import_source": "manual_backfill",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2023,
+        "section": "Feature Films Official Competition",
+        "recognition_type": "official_selection",
+        "source_url": "https://www.annecyfestival.com/en/sirocco-and-the-kingdom-air-streams",
+        "source_label": "Annecy 2023 — Sirocco and the Kingdom of the Air Streams",
+        "source_type": "official_source",
+        "original_text": "Festivals: Annecy International Animation Film Festival (2023)"
+      },
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2023,
+        "section": "Feature Films Official Competition",
+        "recognition_type": "award",
+        "award_name": "Audience Award",
+        "award_result": "winner",
+        "source_url": "https://www.annecyfestival.com/en/palmares-2023",
+        "source_label": "Annecy 2023 Palmarès",
+        "source_type": "official_source",
+        "original_text": "Major award: Audience Award — Annecy International Animation Film Festival (2023)."
+      }
+    ]
+  }
+]

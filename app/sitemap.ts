@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const PUBLIC_SITE_ORIGIN = "https://resonale.com";
+import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 /**
  * Only stable public canonical URLs. The live-action catalog is the same
@@ -11,6 +10,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: `${PUBLIC_SITE_ORIGIN}/`,
+    },
+    {
+      url: `${PUBLIC_SITE_ORIGIN}/guides/films-like-flow`,
     },
   ];
 }

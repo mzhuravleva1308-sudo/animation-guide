@@ -36,12 +36,15 @@ test.describe("Public SEO basics", () => {
     expect(body).not.toMatch(/Disallow:\s*\/_next/i);
   });
 
-  test("sitemap.xml lists the public homepage", async ({ request }) => {
+  test("sitemap.xml lists the public homepage and the Flow guide", async ({
+    request,
+  }) => {
     const response = await request.get("/sitemap.xml");
 
     expect(response.status()).toBe(200);
     const body = await response.text();
     expect(body).toContain("https://resonale.com/");
+    expect(body).toContain("https://resonale.com/guides/films-like-flow");
     expect(body).toContain("<urlset");
     expect(body).not.toContain("?media=");
   });

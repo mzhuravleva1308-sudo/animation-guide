@@ -279,6 +279,9 @@ type HeaderIconLinkProps = {
   label: string;
   href: string;
   showLabel?: boolean;
+  active?: boolean;
+  labelClassName?: string;
+  iconActiveClassName?: string;
   children: ReactNode;
   "data-testid"?: string;
 };
@@ -287,6 +290,9 @@ export function HeaderIconLink({
   label,
   href,
   showLabel = true,
+  active = false,
+  labelClassName,
+  iconActiveClassName,
   children,
   "data-testid": testId,
 }: HeaderIconLinkProps) {
@@ -298,6 +304,7 @@ export function HeaderIconLink({
       <Link
         href={href}
         aria-label={label}
+        aria-current={active ? "page" : undefined}
         aria-describedby={tipOpen ? tooltipId : undefined}
         onClick={hideTip}
         onPointerDown={hideTip}
@@ -308,13 +315,26 @@ export function HeaderIconLink({
         className={
           isLoginIcon
             ? headerLoginControlClass()
-            : `${headerIconControlClass()} opacity-[0.58] hover:opacity-100`
+            : `${headerIconControlClass()} ${
+                active ? "opacity-100" : "opacity-[0.58] hover:opacity-100"
+              }`
         }
         data-testid={testId}
       >
-        {children}
+        {isLoginIcon ? (
+          children
+        ) : (
+          <span
+            className={headerNavIconWrapClass(active, iconActiveClassName)}
+          >
+            {children}
+          </span>
+        )}
         {showLabel ? (
-          <span aria-hidden="true" className={headerNavLabelClass(false)}>
+          <span
+            aria-hidden="true"
+            className={headerNavLabelClass(active, labelClassName)}
+          >
             {label}
           </span>
         ) : null}

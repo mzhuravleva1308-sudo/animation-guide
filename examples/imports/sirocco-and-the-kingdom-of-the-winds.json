@@ -1,0 +1,52 @@
+{
+  "batch_name": "sirocco-and-the-kingdom-of-the-winds",
+  "films": [
+    {
+      "title": "Sirocco and the Kingdom of the Winds",
+      "original_title": "Sirocco et le Royaume des courants d'air",
+      "year": 2023,
+      "runtime_minutes": 80,
+      "countries": ["France", "Belgium"],
+      "directors": ["Benoît Chieux"],
+      "synopsis": "Two sisters, Juliette and Carmen, find a passage into the world of their favorite picture book. Turned into cats and separated, they must reach Sirocco, who controls the wind, before they can go home.",
+      "the_mood": "Bright, talkative and slightly strange, with a handmade fantasy world that keeps opening into new rooms and skies.",
+      "technique": ["2D computer animation"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2023,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/sirocco-and-the-kingdom-air-streams"
+        },
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2023,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "award",
+          "award_name": "Audience Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/palmares-2023"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/3n8tWaBBGS6Df1MtX44aTFws7WJ.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=5HogNbcytbA",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "5HogNbcytbA",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": "https://gkids.com/films/sirocco-and-the-kingdom-of-winds",
+        "festival": "https://www.annecyfestival.com/en/sirocco-and-the-kingdom-air-streams",
+        "tmdb": "https://www.themoviedb.org/movie/676696",
+        "imdb": "https://www.imdb.com/title/tt12015692/"
+      },
+      "notes": "Not present in film_discovery_candidates or film_import_queue. Added via weekly import queue so the films-like-Flow guide can resolve a live catalog card.",
+      "quick_filters": ["connection"],
+      "catalog_visible": true
+    }
+  ]
+}

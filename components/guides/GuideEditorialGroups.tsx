@@ -1,0 +1,99 @@
+"use client";
+
+import FilmCard from "@/components/FilmCard";
+import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
+import { MEDIA_TYPE } from "@/lib/media-type";
+import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import { Film } from "@/types/film";
+
+export type GuideEditorialItem = {
+  film: Film;
+};
+
+export type GuideEditorialGroup = {
+  heading: string;
+  description: string;
+  items: GuideEditorialItem[];
+};
+
+type GuideEditorialGroupsProps = {
+  groups: GuideEditorialGroup[];
+  profileId?: string;
+  profileSlug?: string;
+  savedFilmIds: Set<string>;
+  filmRatings: Record<string, number | null>;
+  ratingsReady: boolean;
+  onSavedChange: (film: Film, saved: boolean) => void;
+  onRatingChange: (
+    filmId: string,
+    rating: number | null,
+    options?: { skipOrderUpdate?: boolean }
+  ) => void;
+  onAuthRequired?: (action: PendingFilmActionInput) => void;
+};
+
+export default function GuideEditorialGroups({
+  groups,
+  profileId,
+  profileSlug,
+  savedFilmIds,
+  filmRatings,
+  ratingsReady,
+  onSavedChange,
+  onRatingChange,
+  onAuthRequired,
+}: GuideEditorialGroupsProps) {
+  const films = groups.flatMap((group) => group.items.map((item) => item.film));
+  const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
+    filmRatings,
+    {
+      enabled: true,
+      ratingsReady,
+      mediaType: MEDIA_TYPE.animation,
+      scopeFilmIds: films.map((film) => film.id),
+    }
+  );
+
+  let cardIndex = 0;
+
+  return (
+    <div data-testid="film-list" className="grid gap-16">
+      {groups.map((group, groupIndex) => (
+        <section key={group.heading} className="grid gap-6">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold tracking-[0.22em] text-[#B1A9D9]">
+              {String(groupIndex + 1).padStart(2, "0")}
+            </p>
+            <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
+              {group.heading}
+            </h2>
+            <p className="mt-3 max-w-[42rem] text-[15px] leading-7 text-[#4a4b5c]">
+              {group.description}
+            </p>
+          </div>
+          {group.items.map((item) => {
+            const index = cardIndex;
+            cardIndex += 1;
+            return (
+              <FilmCard
+                key={item.film.id}
+                mode="catalog"
+                film={item.film}
+                lazyLoadPoster={index >= 1}
+                profileId={profileId}
+                profileSlug={profileSlug}
+                initialRating={filmRatings[item.film.id] ?? null}
+                savedFilmIds={savedFilmIds}
+                onSavedChange={onSavedChange}
+                onRatingChange={onRatingChange}
+                onAuthRequired={onAuthRequired}
+                ratingOnboardingHint={getHintForIndex(index)}
+                onDismissRatingOnboarding={onDismissRatingOnboarding}
+              />
+            );
+          })}
+        </section>
+      ))}
+    </div>
+  );
+}

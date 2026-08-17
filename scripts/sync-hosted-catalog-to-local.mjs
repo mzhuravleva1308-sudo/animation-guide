@@ -43,6 +43,9 @@ const LOCAL_SYNC_FILM_COLUMNS = [
   "tmdb_id",
   "imdb_id",
   "created_at",
+  "media_type",
+  "material_fact",
+  "quick_filters",
 ];
 
 const LOCAL_SYNC_PROFILE_COLUMNS = [
@@ -54,6 +57,33 @@ const LOCAL_SYNC_PROFILE_COLUMNS = [
   "taste_profile",
   "taste_profile_updated_at",
   "created_at",
+];
+
+const LOCAL_SYNC_FESTIVAL_RECOGNITION_COLUMNS = [
+  "id",
+  "film_id",
+  "festival_name",
+  "normalized_festival_name",
+  "festival_year",
+  "section",
+  "recognition_type",
+  "award_name",
+  "normalized_award_name",
+  "award_level",
+  "award_result",
+  "source_url",
+  "source_label",
+  "source_type",
+  "original_text",
+  "import_source",
+  "import_key",
+  "dedupe_key",
+  "canonical_festival_id",
+  "canonical_festival_name",
+  "source_display_name",
+  "confidence_status",
+  "created_at",
+  "updated_at",
 ];
 
 const LOCAL_SYNC_FESTIVAL_CLAIM_COLUMNS = [
@@ -219,6 +249,31 @@ function parseArgs(argv) {
   };
 }
 
+async function syncFestivalRecognitions(hosted, local, localRecognitionColumns) {
+  console.log("Fetching hosted festival recognitions...");
+  const recognitions = pickColumns(
+    await fetchAllRows(hosted, "film_festival_recognitions", {
+      pageSize: 1000,
+    }),
+    localRecognitionColumns
+  );
+  console.log(`Fetched ${recognitions.length} festival recognitions`);
+
+  await local
+    .from("film_festival_recognitions")
+    .delete()
+    .neq("id", "00000000-0000-0000-0000-000000000000");
+
+  console.log("Upserting festival recognitions into local...");
+  const recognitionCount = await upsertInBatches(
+    local,
+    "film_festival_recognitions",
+    recognitions
+  );
+  console.log(`Upserted ${recognitionCount} festival recognitions`);
+  return recognitionCount;
+}
+
 async function syncFestivalClaims(hosted, local, localClaimColumns) {
   console.log("Fetching hosted festival claims...");
   const claims = pickColumns(
@@ -287,6 +342,7 @@ async function main() {
   );
 
   let localClaimColumns = LOCAL_SYNC_FESTIVAL_CLAIM_COLUMNS;
+  let localRecognitionColumns = LOCAL_SYNC_FESTIVAL_RECOGNITION_COLUMNS;
   if (!args.skipClaims) {
     try {
       localClaimColumns = resolveSyncColumns(
@@ -295,6 +351,14 @@ async function main() {
       );
     } catch {
       localClaimColumns = LOCAL_SYNC_FESTIVAL_CLAIM_COLUMNS;
+    }
+    try {
+      localRecognitionColumns = resolveSyncColumns(
+        await getTableColumnNames(local, "film_festival_recognitions"),
+        LOCAL_SYNC_FESTIVAL_RECOGNITION_COLUMNS
+      );
+    } catch {
+      localRecognitionColumns = LOCAL_SYNC_FESTIVAL_RECOGNITION_COLUMNS;
     }
   }
 
@@ -339,10 +403,15 @@ async function main() {
 
   if (!args.skipClaims) {
     try {
+      await syncFestivalRecognitions(
+        hosted,
+        local,
+        localRecognitionColumns
+      );
       await syncFestivalClaims(hosted, local, localClaimColumns);
     } catch (error) {
       console.warn(
-        "Skipped festival claims:",
+        "Skipped festival claims/recognitions:",
         error instanceof Error ? error.message : error
       );
     }
