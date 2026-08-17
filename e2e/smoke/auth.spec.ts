@@ -20,6 +20,10 @@ test.describe("Login page", () => {
       "href",
       "/privacy"
     );
+    await expect(page.getByTestId("login-contact-link")).toHaveAttribute(
+      "href",
+      "/contact"
+    );
   });
 });
 

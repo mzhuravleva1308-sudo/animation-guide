@@ -17,5 +17,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${PUBLIC_SITE_ORIGIN}/privacy`,
     },
+    {
+      url: `${PUBLIC_SITE_ORIGIN}/contact`,
+    },
   ];
 }

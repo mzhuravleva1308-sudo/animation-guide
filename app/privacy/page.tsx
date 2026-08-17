@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import SiteFooter from "@/components/SiteFooter";
+import { CONTACT_PATH } from "@/lib/legal/contact";
 import {
   PRIVACY_CONTACT_EMAIL,
   PRIVACY_LAST_UPDATED,
@@ -181,18 +183,20 @@ export default function PrivacyPage() {
           >
             {PRIVACY_CONTACT_EMAIL}
           </a>
+          . Other questions: see{" "}
+          <Link
+            href={CONTACT_PATH}
+            className="underline decoration-[#c5c2d6] underline-offset-2 hover:text-[#1A1B2E]"
+          >
+            Contact
+          </Link>
           . The operator of Resonale is the controller of this data.
         </p>
-
-        <p className={`${bodyClassName} mt-10`}>
-          <Link
-            href="/"
-            className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
-          >
-            Back to Resonale
-          </Link>
-        </p>
       </article>
+
+      <div className="max-w-[42rem]">
+        <SiteFooter />
+      </div>
     </main>
   );
 }
