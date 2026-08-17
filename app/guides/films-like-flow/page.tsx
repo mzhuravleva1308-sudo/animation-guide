@@ -7,7 +7,7 @@ import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const TITLE = "9 Animated Films Like Flow | Resonale";
+const TITLE = "9 Movies Like Flow: Beautiful Animated Films to Watch Next | Resonale";
 const DESCRIPTION =
   "If you loved Flow, these nine animated films share its wordless storytelling, emotional animal characters, and strange, beautiful worlds.";
 const PATH = "/guides/films-like-flow";

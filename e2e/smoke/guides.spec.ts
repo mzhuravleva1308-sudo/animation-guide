@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const PATH = "/guides/films-like-flow";
-const TITLE = "9 Animated Films Like Flow | Resonale";
+const TITLE = "9 Movies Like Flow: Beautiful Animated Films to Watch Next | Resonale";
 const DESCRIPTION =
   "If you loved Flow, these nine animated films share its wordless storytelling, emotional animal characters, and strange, beautiful worlds.";
 
@@ -41,7 +41,7 @@ test.describe("Films like Flow guide", () => {
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "9 Animated Films Like Flow",
+        name: "9 Movies Like Flow: Beautiful Animated Films to Watch Next",
       })
     ).toBeVisible();
     await expect(
