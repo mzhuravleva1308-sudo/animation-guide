@@ -1,7 +1,7 @@
 {
-    "name": "Animation Guide",
-    "short_name": "Animation",
-    "description": "A curated guide to strange, beautiful and emotionally resonant animated films.",
+    "name": "Resonale — Animation & Film Guide",
+    "short_name": "Resonale",
+    "description": "Find distinctive, beautiful and emotionally resonant animation and films to watch next.",
     "start_url": "/",
     "scope": "/",
     "display": "standalone",

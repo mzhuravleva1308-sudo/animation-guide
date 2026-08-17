@@ -113,7 +113,7 @@ Subject: **Your sign-in link** (or similar neutral copy)
 The app passes `emailRedirectTo` as `{origin}/auth/callback?next=…`. That value must be on the Supabase redirect allowlist (use `http://127.0.0.1:3000/**` locally so query strings are accepted). When allowlisted, `{{ .RedirectTo }}` in the template is the full callback URL and the link appends `token_hash` with `&`. If Supabase falls back to `{{ .SiteURL }}` only, the template below still routes through `/auth/callback?token_hash=…`; the app stores the intended `next` path in a short-lived cookie before sending the link.
 
 ```html
-<h2>Sign in to Animation Guide</h2>
+<h2>Sign in to Resonale</h2>
 <p>Click the button below to continue. This link expires shortly and can only be used once.</p>
 {{ if eq .RedirectTo .SiteURL }}
 <p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email">Sign in</a></p>

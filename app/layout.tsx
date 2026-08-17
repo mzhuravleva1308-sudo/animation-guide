@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Animation Guide",
+  title: "Resonale — Animation & Film Guide",
   description:
-    "A curated guide to strange, beautiful and emotionally resonant animated films.",
+    "Find distinctive, beautiful and emotionally resonant animation and films to watch next.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    title: "Animation Guide",
+    title: "Resonale",
     statusBarStyle: "default",
   },
   icons: {
