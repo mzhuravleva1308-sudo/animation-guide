@@ -1,5 +1,7 @@
+import Link from "next/link";
 import LoginScreen from "@/components/LoginScreen";
 import { resolveOAuthProviders } from "@/lib/auth/oauth-providers";
+import { PRIVACY_PATH } from "@/lib/legal/privacy";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -27,6 +29,16 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       ) : null}
 
       <LoginScreen oauthProviders={oauthProviders} />
+
+      <p className="mt-8 text-sm text-gray-500">
+        <Link
+          href={PRIVACY_PATH}
+          className="underline decoration-gray-300 underline-offset-2 hover:text-gray-800"
+          data-testid="login-privacy-link"
+        >
+          Privacy Policy
+        </Link>
+      </p>
     </main>
   );
 }

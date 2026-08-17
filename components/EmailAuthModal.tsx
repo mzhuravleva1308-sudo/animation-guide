@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef } from "react";
+import Link from "next/link";
 import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
+import { PRIVACY_PATH } from "@/lib/legal/privacy";
 import { lockBodyScroll } from "@/lib/modal-body-scroll-lock";
 
 type EmailAuthModalProps = {
@@ -134,6 +136,16 @@ export default function EmailAuthModal({
           postAuthPath={postAuthPath}
           testIdPrefix="email-auth"
         />
+
+        <p className="mt-4 text-center text-xs text-gray-500">
+          <Link
+            href={PRIVACY_PATH}
+            className="underline decoration-gray-300 underline-offset-2 hover:text-gray-800"
+            data-testid="email-auth-privacy-link"
+          >
+            Privacy Policy
+          </Link>
+        </p>
       </div>
     </div>
   );

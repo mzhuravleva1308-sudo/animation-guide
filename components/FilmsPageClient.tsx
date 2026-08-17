@@ -19,6 +19,7 @@ import {
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import SiteFooter from "@/components/SiteFooter";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import {
@@ -718,6 +719,8 @@ export default function FilmsPageClient({
           ) : null}
         </>
       )}
+
+      <SiteFooter />
 
       <EmailAuthModal
         open={modalOpen}

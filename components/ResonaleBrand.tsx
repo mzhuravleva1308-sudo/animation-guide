@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 
 /** Brand board colors — logo stroke / wordmark use a deep cool indigo (not UI chrome). */

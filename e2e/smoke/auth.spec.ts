@@ -16,6 +16,10 @@ test.describe("Login page", () => {
     await expect(page.getByTestId("login-create-account")).toHaveCount(0);
     await expect(page.getByTestId("login-use-password")).toHaveCount(0);
     await expect(page.getByTestId("auth-status")).toHaveCount(0);
+    await expect(page.getByTestId("login-privacy-link")).toHaveAttribute(
+      "href",
+      "/privacy"
+    );
   });
 });
 

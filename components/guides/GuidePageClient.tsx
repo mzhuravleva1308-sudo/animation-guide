@@ -20,6 +20,7 @@ import {
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import SiteFooter from "@/components/SiteFooter";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import type { AuthUserSummary } from "@/lib/auth/session";
@@ -268,6 +269,8 @@ export default function GuidePageClient({
           {content.cta.label}
         </Link>
       </div>
+
+      <SiteFooter />
 
       <EmailAuthModal
         open={modalOpen}

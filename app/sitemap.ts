@@ -14,5 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     {
       url: `${PUBLIC_SITE_ORIGIN}/guides/films-like-flow`,
     },
+    {
+      url: `${PUBLIC_SITE_ORIGIN}/privacy`,
+    },
   ];
 }
