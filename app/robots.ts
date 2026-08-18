@@ -4,7 +4,7 @@ import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 /**
  * Inspected App Router surface (do not Disallow more without checking):
  * Public catalog: `/`
- * Search-intent guides: `/guides/*`
+ * Search-intent guides: `/guides`, `/guides/*`
  * Legal: `/privacy`, `/contact`
  * Auth UI: `/login`
  * Auth handlers: `/auth/callback`, `/auth/logout`, `/auth/provision`

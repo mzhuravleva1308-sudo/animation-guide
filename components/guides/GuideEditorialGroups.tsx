@@ -1,6 +1,7 @@
 "use client";
 
 import FilmCard from "@/components/FilmCard";
+import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 import { MEDIA_TYPE } from "@/lib/media-type";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
@@ -30,6 +31,7 @@ type GuideEditorialGroupsProps = {
     options?: { skipOrderUpdate?: boolean }
   ) => void;
   onAuthRequired?: (action: PendingFilmActionInput) => void;
+  currentGuidePath?: string;
 };
 
 export default function GuideEditorialGroups({
@@ -42,6 +44,7 @@ export default function GuideEditorialGroups({
   onSavedChange,
   onRatingChange,
   onAuthRequired,
+  currentGuidePath,
 }: GuideEditorialGroupsProps) {
   const films = groups.flatMap((group) => group.items.map((item) => item.film));
   const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
@@ -67,7 +70,7 @@ export default function GuideEditorialGroups({
             <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
               {group.heading}
             </h2>
-            <p className="mt-3 max-w-[42rem] text-[15px] leading-7 text-[#4a4b5c]">
+            <p className={`mt-3 text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}>
               {group.description}
             </p>
           </div>
@@ -87,6 +90,7 @@ export default function GuideEditorialGroups({
                 onSavedChange={onSavedChange}
                 onRatingChange={onRatingChange}
                 onAuthRequired={onAuthRequired}
+                currentGuidePath={currentGuidePath}
                 ratingOnboardingHint={getHintForIndex(index)}
                 onDismissRatingOnboarding={onDismissRatingOnboarding}
               />

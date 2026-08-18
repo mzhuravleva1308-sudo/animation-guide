@@ -1,27 +1,15 @@
 "use client";
 
-import {
-  Bookmark,
-  CircleCheck,
-  Film as FilmIcon,
-  UserRound,
-} from "lucide-react";
 import Link from "next/link";
-import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import GuideEditorialGroups, {
   type GuideEditorialGroup,
 } from "@/components/guides/GuideEditorialGroups";
-import {
-  HeaderIconButton,
-  HeaderIconLink,
-  HEADER_LOGIN_ICON,
-  HEADER_NAV_ICON,
-  headerNavLabelCollapse,
-} from "@/components/HeaderIconControl";
-import ResonaleBrand from "@/components/ResonaleBrand";
+import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { getFilmPosterUrl } from "@/lib/film-poster";
+import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
+import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import type { Film } from "@/types/film";
@@ -31,6 +19,7 @@ type GuidePageContent = {
   intro: string[];
   personalNote: string;
   cta: { href: string; label: string };
+  relatedGuides?: { href: string; label: string }[];
 };
 
 type GuidePageClientProps = {
@@ -46,6 +35,11 @@ type GuidePageClientProps = {
   initialRatingUpdatedAtMs?: Record<string, number>;
   initialSavedAtMs?: Record<string, number>;
 };
+
+const introClassName =
+  "font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]";
+const relatedLinkClassName =
+  "text-sm text-[#7a7b90] underline decoration-[#c5c2d6] underline-offset-2 hover:text-[#1A1B2E] hover:decoration-[#1A1B2E]";
 
 export default function GuidePageClient({
   auth: initialAuth,
@@ -85,13 +79,8 @@ export default function GuidePageClient({
     postAuthPath,
   });
 
-  const animationNav = headerNavLabelCollapse(false, "sm");
-  const savedNav = headerNavLabelCollapse(false, "lg");
-  const watchedNav = headerNavLabelCollapse(false, "md");
   const showGroups = groups.length > 0 && missingTitles.length === 0;
   const anchorPosterUrl = anchorFilm ? getFilmPosterUrl(anchorFilm) : null;
-  const introClassName =
-    "font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]";
   const [firstIntro, ...restIntro] = content.intro;
 
   return (
@@ -100,93 +89,21 @@ export default function GuidePageClient({
       data-testid="guide-page"
       data-ratings-ready={ratingsReady ? "true" : "false"}
     >
-      <header className="mb-0">
-        <div className="flex flex-nowrap items-center justify-between gap-1 sm:gap-3">
-          <ResonaleBrand />
-
-          <nav
-            aria-label="Catalog and lists"
-            className="flex shrink-0 items-center gap-0 sm:gap-2 md:gap-3"
-          >
-            <HeaderIconLink
-              label="Animation"
-              href="/"
-              labelClassName={animationNav.labelClassName}
-              data-testid="nav-animation"
-            >
-              <FilmIcon
-                size={HEADER_NAV_ICON.size}
-                strokeWidth={HEADER_NAV_ICON.strokeWidth}
-                fill="none"
-                className="shrink-0"
-                aria-hidden="true"
-              />
-            </HeaderIconLink>
-            {auth ? (
-              <>
-                <HeaderIconLink
-                  label="Saved"
-                  href="/"
-                  labelClassName={savedNav.labelClassName}
-                  iconActiveClassName={savedNav.iconActiveClassName}
-                  data-testid="nav-saved"
-                >
-                  <Bookmark
-                    size={HEADER_NAV_ICON.size}
-                    strokeWidth={HEADER_NAV_ICON.strokeWidth}
-                    fill="none"
-                    className="shrink-0"
-                    aria-hidden="true"
-                  />
-                </HeaderIconLink>
-                <HeaderIconLink
-                  label="Watched"
-                  href="/"
-                  labelClassName={watchedNav.labelClassName}
-                  iconActiveClassName={watchedNav.iconActiveClassName}
-                  data-testid="nav-watched"
-                >
-                  <CircleCheck
-                    size={HEADER_NAV_ICON.size}
-                    strokeWidth={HEADER_NAV_ICON.strokeWidth}
-                    fill="none"
-                    className="shrink-0"
-                    aria-hidden="true"
-                  />
-                </HeaderIconLink>
-              </>
-            ) : null}
-            {auth ? (
-              <AccountMenu
-                email={auth.email}
-                profileName={auth.profile?.name ?? null}
-              />
-            ) : (
-              <HeaderIconButton
-                label="Log in"
-                showLabel={false}
-                buttonRef={authTriggerRef}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                }}
-                onClick={() => openAuthModal(authTriggerRef.current)}
-                data-testid="auth-status"
-              >
-                <UserRound
-                  size={HEADER_LOGIN_ICON.size}
-                  strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
-                  fill="none"
-                  className="shrink-0"
-                  aria-hidden="true"
-                />
-              </HeaderIconButton>
-            )}
-          </nav>
-        </div>
-      </header>
+      <GuideSectionHeader
+        auth={auth}
+        authTriggerRef={authTriggerRef}
+        openAuthModal={openAuthModal}
+      />
 
       <div className="mt-10 mb-8 sm:mt-12 sm:mb-10">
-        <h1 className="font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+        <Link
+          href={GUIDES_INDEX_PATH}
+          data-testid="guide-section-link"
+          className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
+        >
+          Guides
+        </Link>
+        <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
           {content.h1}
         </h1>
         {anchorPosterUrl ? (
@@ -201,7 +118,7 @@ export default function GuidePageClient({
               fetchPriority="high"
               className="aspect-[2/3] w-[104px] shrink-0 rounded-xl object-cover"
             />
-            <div className="min-w-0 max-w-[36rem] flex-1 space-y-3 max-[424px]:contents">
+            <div className="min-w-0 flex-1 space-y-3 max-[424px]:contents">
               {firstIntro ? (
                 <p className={`max-[424px]:min-w-0 max-[424px]:flex-1 ${introClassName}`}>
                   {firstIntro}
@@ -218,7 +135,7 @@ export default function GuidePageClient({
             </div>
           </div>
         ) : (
-          <div className="mt-4 max-w-[36rem] space-y-3">
+          <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
             {content.intro.map((paragraph) => (
               <p key={paragraph.slice(0, 24)} className={introClassName}>
                 {paragraph}
@@ -245,6 +162,7 @@ export default function GuidePageClient({
           onSavedChange={handleSavedChange}
           onRatingChange={handleRatingChange}
           onAuthRequired={auth ? undefined : handleAuthRequired}
+          currentGuidePath={postAuthPath}
         />
       ) : null}
 
@@ -254,7 +172,7 @@ export default function GuidePageClient({
         </p>
       ) : null}
 
-      <div className="mt-16 max-w-[42rem]">
+      <div className={`mt-16 ${GUIDE_PROSE_CLASS}`}>
         <p
           data-testid="guide-personal-note"
           className="font-sans text-[15px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
@@ -268,6 +186,30 @@ export default function GuidePageClient({
         >
           {content.cta.label}
         </Link>
+        <div className="mt-8" data-testid="guide-related">
+          <p className="font-sans text-[15px] font-medium leading-[1.65] text-[#1A1B2E] antialiased [font-synthesis:none]">
+            More guides
+          </p>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+            <Link
+              href={GUIDES_INDEX_PATH}
+              data-testid="guide-related-index"
+              className={relatedLinkClassName}
+            >
+              Guides to Animated Films
+            </Link>
+            {content.relatedGuides?.map((guide) => (
+              <Link
+                key={guide.href}
+                href={guide.href}
+                data-testid="guide-related-link"
+                className={relatedLinkClassName}
+              >
+                {guide.label}
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       <SiteFooter />

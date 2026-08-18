@@ -12,7 +12,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${PUBLIC_SITE_ORIGIN}/`,
     },
     {
+      url: `${PUBLIC_SITE_ORIGIN}/guides`,
+    },
+    {
       url: `${PUBLIC_SITE_ORIGIN}/guides/films-like-flow`,
+    },
+    {
+      url: `${PUBLIC_SITE_ORIGIN}/guides/beautiful-animated-films`,
     },
     {
       url: `${PUBLIC_SITE_ORIGIN}/privacy`,

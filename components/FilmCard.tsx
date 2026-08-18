@@ -62,6 +62,7 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
   onAuthRequired?: (action: PendingFilmActionInput) => void;
   ratingOnboardingHint?: RatingOnboardingHint;
   onDismissRatingOnboarding?: () => void;
+  currentGuidePath?: string;
 };
 
 export type FilmCardProps =
@@ -101,6 +102,11 @@ export default function FilmCard(props: FilmCardProps) {
     props.mode === "profile" || props.mode === "catalog";
   const catalogGuideLink =
     props.mode === "catalog" ? getCatalogGuideLink(film.title) : null;
+  const showCatalogGuideLink = Boolean(
+    catalogGuideLink &&
+      (props.mode !== "catalog" ||
+        catalogGuideLink.href !== props.currentGuidePath)
+  );
 
   return (
     <article
@@ -179,7 +185,7 @@ export default function FilmCard(props: FilmCardProps) {
         <p className="mt-1 text-sm text-gray-500">{metadataLine}</p>
       ) : null}
 
-      {catalogGuideLink ? (
+      {showCatalogGuideLink && catalogGuideLink ? (
         <Link
           href={catalogGuideLink.href}
           data-testid="film-card-guide-link"

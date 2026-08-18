@@ -10,9 +10,11 @@ import type { Film } from "@/types/film";
 type GuidePageContent = {
   slug: string;
   h1: string;
+  metaDescription?: string;
   intro: string[];
   personalNote: string;
   cta: { href: string; label: string };
+  relatedGuides?: { href: string; label: string }[];
   anchorTitle?: string;
   groups: {
     heading: string;
