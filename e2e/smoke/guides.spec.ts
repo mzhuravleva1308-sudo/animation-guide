@@ -49,7 +49,7 @@ test.describe("Films like Flow guide", () => {
       })
     ).toBeVisible();
     await expect(
-      page.getByText("If you loved Flow, these nine films like it", {
+      page.getByText("What struck me most about Flow", {
         exact: false,
       })
     ).toBeVisible();
