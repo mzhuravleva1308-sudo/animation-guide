@@ -70,10 +70,16 @@ test.describe("Films like Flow guide", () => {
       "href",
       "/guides"
     );
-    await expect(page.getByTestId("guide-related-link")).toHaveAttribute(
-      "href",
-      "/guides/beautiful-animated-films"
-    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Beautiful animated films",
+      })
+    ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Weird animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/weird-animated-movies");
     await expect(page.getByTestId("nav-films")).toHaveCount(0);
     await expect(page.getByTestId("nav-saved")).toHaveCount(0);
     await expect(page.getByTestId("auth-status")).toBeVisible();
@@ -177,10 +183,16 @@ test.describe("Beautiful animated films guide", () => {
       "href",
       "/guides"
     );
-    await expect(page.getByTestId("guide-related-link")).toHaveAttribute(
-      "href",
-      "/guides/films-like-flow"
-    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Flow",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Weird animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/weird-animated-movies");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -210,8 +222,120 @@ test.describe("Beautiful animated films guide", () => {
   });
 });
 
+const WEIRD_PATH = "/guides/weird-animated-movies";
+const WEIRD_TITLE =
+  "Weird Animated Movies: Strange Films You Probably Haven’t Seen | Resonale";
+const WEIRD_DESCRIPTION =
+  "Weird animated movies worth discovering: strange independent and festival films where the world, the story, or familiar things refuse to behave.";
+
+test.describe("Weird animated movies guide", () => {
+  test("has dedicated metadata, canonical URL, and JSON-LD when complete", async ({
+    request,
+  }) => {
+    const response = await request.get(WEIRD_PATH);
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    const title = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "").replaceAll(
+      "&amp;",
+      "&"
+    );
+    expect(title).toBe(WEIRD_TITLE);
+    expect(html).toContain(WEIRD_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${WEIRD_PATH}`);
+    expect(html).toContain(`property="og:title" content="${WEIRD_TITLE}"`);
+    expect(html).toContain('property="og:locale" content="en_US"');
+
+    const unavailable = html.includes("This guide is temporarily unavailable.");
+    if (unavailable) {
+      expect(html).toMatch(/noindex/i);
+    } else {
+      expect(html).not.toMatch(/noindex/i);
+      expect(html).toMatch(/CollectionPage/);
+      expect(html).toMatch(/ItemList/);
+      expect(html).toContain("Junk Head");
+      expect(html).toContain("A Town Called Panic");
+    }
+  });
+
+  test("renders grouped weird animated movies as a catalog page", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+    await page.goto(WEIRD_PATH);
+
+    await expect(page.getByTestId("guide-page")).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Weird Animated Movies: Strange Films You Probably Haven’t Seen",
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByText("Weird animated movies are easy to mix up", {
+        exact: false,
+      })
+    ).toBeVisible();
+    await expect(page.getByTestId("guide-anchor-poster")).toHaveCount(0);
+    await expect(page.getByTestId("guide-personal-note")).toBeVisible();
+    await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
+    await expect(page.getByTestId("guide-section-link")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(page.getByTestId("guide-related-index")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Beautiful animated films",
+      })
+    ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Flow",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-flow");
+
+    const cards = page.getByTestId("film-card");
+    const cardCount = await cards.count();
+    if (cardCount > 0) {
+      await expect(cards).toHaveCount(9);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(9);
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "When the world makes no normal sense",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "When the story runs on dream logic",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "When everything feels slightly wrong",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByText("homemade bodies that have invented their own biology", {
+          exact: false,
+        })
+      ).toBeVisible();
+    }
+
+    expect(consoleErrors).toEqual([]);
+  });
+});
+
 test.describe("Guides index", () => {
-  test("has dedicated metadata and lists both guides", async ({
+  test("has dedicated metadata and lists editorial guides", async ({
     request,
     page,
   }) => {
@@ -240,6 +364,21 @@ test.describe("Guides index", () => {
     await expect(
       page.getByTestId("guides-index-beautiful-animated-films")
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guides-index-weird-animated-movies")
+    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+  });
+
+  test("article titles open the guide pages", async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+
+    await page.goto("/guides");
+    await page.getByTestId("guides-index-films-like-flow").click();
+
+    await expect(page).toHaveURL("/guides/films-like-flow");
+    await expect(page.getByTestId("guide-page")).toBeVisible();
+    expect(pageErrors.join("\n")).not.toMatch(/Maximum update depth exceeded/i);
   });
 });
 
@@ -257,6 +396,9 @@ test.describe("Guide links in the public footer", () => {
     await expect(page.getByTestId("footer-guide-films-like-flow")).toHaveCount(0);
     await expect(
       page.getByTestId("footer-guide-beautiful-animated-films")
+    ).toHaveCount(0);
+    await expect(
+      page.getByTestId("footer-guide-weird-animated-movies")
     ).toHaveCount(0);
   });
 });

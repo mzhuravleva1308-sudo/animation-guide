@@ -21,6 +21,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${PUBLIC_SITE_ORIGIN}/guides/beautiful-animated-films`,
     },
     {
+      url: `${PUBLIC_SITE_ORIGIN}/guides/weird-animated-movies`,
+    },
+    {
       url: `${PUBLIC_SITE_ORIGIN}/privacy`,
     },
     {

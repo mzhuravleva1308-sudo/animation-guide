@@ -9,6 +9,7 @@ import { Film } from "@/types/film";
 
 export type GuideEditorialItem = {
   film: Film;
+  note?: string | null;
 };
 
 export type GuideEditorialGroup = {
@@ -77,9 +78,8 @@ export default function GuideEditorialGroups({
           {group.items.map((item) => {
             const index = cardIndex;
             cardIndex += 1;
-            return (
+            const card = (
               <FilmCard
-                key={item.film.id}
                 mode="catalog"
                 film={item.film}
                 lazyLoadPoster={index >= 1}
@@ -94,6 +94,22 @@ export default function GuideEditorialGroups({
                 ratingOnboardingHint={getHintForIndex(index)}
                 onDismissRatingOnboarding={onDismissRatingOnboarding}
               />
+            );
+
+            if (!item.note) {
+              return <div key={item.film.id}>{card}</div>;
+            }
+
+            return (
+              <div key={item.film.id} className="grid gap-3">
+                <p
+                  data-testid="guide-film-note"
+                  className={`text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+                >
+                  {item.note}
+                </p>
+                {card}
+              </div>
             );
           })}
         </section>

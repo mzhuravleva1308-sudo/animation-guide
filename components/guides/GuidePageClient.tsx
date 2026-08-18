@@ -49,10 +49,10 @@ export default function GuidePageClient({
   content,
   postAuthPath,
   anchorFilm = null,
-  initialFilmRatings = {},
-  initialSavedFilmIds = [],
-  initialRatingUpdatedAtMs = {},
-  initialSavedAtMs = {},
+  initialFilmRatings,
+  initialSavedFilmIds,
+  initialRatingUpdatedAtMs,
+  initialSavedAtMs,
 }: GuidePageClientProps) {
   const {
     auth,

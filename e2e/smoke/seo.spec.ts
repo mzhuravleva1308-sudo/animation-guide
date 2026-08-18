@@ -51,6 +51,9 @@ test.describe("Public SEO basics", () => {
     expect(body).toContain(
       "https://resonale.com/guides/beautiful-animated-films"
     );
+    expect(body).toContain(
+      "https://resonale.com/guides/weird-animated-movies"
+    );
     expect(body).toContain("https://resonale.com/privacy");
     expect(body).toContain("https://resonale.com/contact");
     expect(body).toContain("<urlset");

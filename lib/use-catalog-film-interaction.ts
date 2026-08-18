@@ -46,12 +46,17 @@ type UseCatalogFilmInteractionArgs = {
   postAuthPath?: string;
 };
 
+// Module-level so omitted args stay referentially stable across renders.
+const EMPTY_FILM_RATINGS: Record<string, number> = {};
+const EMPTY_SAVED_FILM_IDS: string[] = [];
+const EMPTY_TIMESTAMP_MAP: Record<string, number> = {};
+
 export function useCatalogFilmInteraction({
   initialAuth,
-  initialFilmRatings = {},
-  initialSavedFilmIds = [],
-  initialRatingUpdatedAtMs = {},
-  initialSavedAtMs = {},
+  initialFilmRatings = EMPTY_FILM_RATINGS,
+  initialSavedFilmIds = EMPTY_SAVED_FILM_IDS,
+  initialRatingUpdatedAtMs = EMPTY_TIMESTAMP_MAP,
+  initialSavedAtMs = EMPTY_TIMESTAMP_MAP,
   postAuthPath = "/",
 }: UseCatalogFilmInteractionArgs) {
   const [auth, setAuth] = useState(initialAuth);
