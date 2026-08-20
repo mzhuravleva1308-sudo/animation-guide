@@ -1,0 +1,42 @@
+{
+  "batch_name": "padak",
+  "films": [
+    {
+      "title": "Padak",
+      "original_title": "파닥파닥",
+      "year": 2012,
+      "runtime_minutes": 78,
+      "countries": ["South Korea"],
+      "directors": ["Lee Dae-hee"],
+      "synopsis": "A mackerel trapped in a restaurant aquarium tries to break free before becoming a meal.",
+      "the_mood": "Tense and claustrophobic, with cold blues and tight aquarium close-ups trapping a struggling mackerel.",
+      "technique": ["3D computer animation"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Jeonju International Film Festival",
+          "festival_year": 2012,
+          "section": "Special Award",
+          "recognition_type": "award",
+          "award_name": "CGV Movie Collage Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://eng-archive.jeonjufest.kr/db/festivalList.asp?EP_NUM=13"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/rRn2prpFPA7Ktkmc22c6WfB1W2Y.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=KIFy35o1Vwg",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "KIFy35o1Vwg",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": "https://eigomanga.com/padak/",
+        "festival": "https://eng-archive.jeonjufest.kr/db/festivalList.asp?EP_NUM=13",
+        "tmdb": "https://www.themoviedb.org/movie/133248",
+        "imdb": "https://www.imdb.com/title/tt2164058/"
+      },
+      "notes": "Not present in the hosted catalog. Added so the films-like-Flow guide can resolve a live catalog card.",
+      "quick_filters": ["distance"],
+      "catalog_visible": true
+    }
+  ]
+}

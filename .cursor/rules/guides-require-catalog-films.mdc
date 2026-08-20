@@ -1,0 +1,18 @@
+---
+description: Never publish a guide if any listed film is missing from the hosted catalog
+alwaysApply: true
+---
+
+# Guides require live catalog films
+
+Never **push**, **PR**, or **release** a guide/article (`lib/guides/*.mjs`) until every listed title exists in the **hosted** public catalog.
+
+Guides resolve by **exact** `films.title`. One missing title takes the whole page down (`This guide is temporarily unavailable`). Local catalog is not enough.
+
+Before publishing guide film-list changes:
+
+1. Query hosted (`APP_ENV=hosted`) for each title: row exists, `catalog_visible=true`, `media_type` matches, title spelling is exact.
+2. If a film is missing: **import it first** (`process-film-batch` / after-films) until it is catalog-ready and visible. Only then ship the guide change.
+3. Do not ship a title swap or new article “and import later”.
+
+Example: adding Padak to Movies Like Flow without a hosted `Padak` row made production show the unavailable state.

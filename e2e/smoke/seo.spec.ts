@@ -49,11 +49,12 @@ test.describe("Public SEO basics", () => {
       "<loc>https://resonale.com/guides/films-like-flow</loc>"
     );
     expect(body).toContain(
-      "https://resonale.com/guides/beautiful-animated-films"
+      "<loc>https://resonale.com/guides/beautiful-animated-films</loc>"
     );
     expect(body).toContain(
-      "https://resonale.com/guides/weird-animated-movies"
+      "<loc>https://resonale.com/guides/weird-animated-movies</loc>"
     );
+    expect(body).toContain("<lastmod>");
     expect(body).toContain("https://resonale.com/privacy");
     expect(body).toContain("https://resonale.com/contact");
     expect(body).toContain("<urlset");
