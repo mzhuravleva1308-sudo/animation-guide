@@ -5,22 +5,29 @@ import EmailAuthModal from "@/components/EmailAuthModal";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
-import {
-  GUIDES_INDEX_PATH,
-  PUBLIC_GUIDE_LINKS,
-} from "@/lib/guides/public-guide-links.mjs";
+import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import type { AuthUserSummary } from "@/lib/auth/session";
 
 const INTRO =
   "Curated lists of independent and festival animation, for when you want a distinctive film to watch next.";
 
+export type GuidesIndexItem = {
+  slug: string;
+  href: string;
+  title: string;
+  description: string;
+  coverPosterUrl: string | null;
+};
+
 type GuidesIndexClientProps = {
   auth: AuthUserSummary | null;
+  guides: GuidesIndexItem[];
 };
 
 export default function GuidesIndexClient({
   auth: initialAuth,
+  guides,
 }: GuidesIndexClientProps) {
   const {
     auth,
@@ -58,22 +65,52 @@ export default function GuidesIndexClient({
       </div>
 
       <ul className="grid gap-8">
-        {PUBLIC_GUIDE_LINKS.map((guide) => (
-          <li key={guide.href} className={GUIDE_PROSE_CLASS}>
-            <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
+        {guides.map((guide, index) => {
+          const headingId = `guides-index-heading-${guide.slug}`;
+
+          return (
+            <li key={guide.href}>
               <Link
                 href={guide.href}
                 data-testid={`guides-index-${guide.slug}`}
-                className="underline decoration-[#c5c2d6] underline-offset-4 hover:text-[#1A1B2E] hover:decoration-[#1A1B2E]"
+                aria-labelledby={headingId}
+                className="group flex items-start gap-4 sm:gap-6"
               >
-                {guide.title}
+                <div
+                  data-testid={`guides-index-cover-${guide.slug}`}
+                  aria-hidden="true"
+                  className="aspect-[2/3] w-[104px] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4]"
+                >
+                  {guide.coverPosterUrl ? (
+                    <img
+                      src={guide.coverPosterUrl}
+                      alt=""
+                      width={104}
+                      height={156}
+                      decoding="async"
+                      loading={index === 0 ? "eager" : "lazy"}
+                      fetchPriority={index === 0 ? "high" : "auto"}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : null}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h2
+                    id={headingId}
+                    className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]"
+                  >
+                    <span className="underline decoration-[#c5c2d6] underline-offset-4 group-hover:text-[#1A1B2E] group-hover:decoration-[#1A1B2E]">
+                      {guide.title}
+                    </span>
+                  </h2>
+                  <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
+                    {guide.description}
+                  </p>
+                </div>
               </Link>
-            </h2>
-            <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
-              {guide.description}
-            </p>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
 
       <SiteFooter />

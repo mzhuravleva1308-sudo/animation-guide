@@ -486,6 +486,18 @@ test.describe("Guides index", () => {
     await expect(
       page.getByTestId("guides-index-animation-styles")
     ).toHaveAttribute("href", "/guides/animation-styles");
+    await expect(
+      page.getByTestId("guides-index-cover-films-like-flow")
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-cover-beautiful-animated-films")
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-cover-weird-animated-movies")
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-cover-animation-styles")
+    ).toBeVisible();
   });
 
   test("article titles open the guide pages", async ({ page }) => {

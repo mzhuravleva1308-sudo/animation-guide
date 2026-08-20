@@ -2,9 +2,14 @@ import { cache } from "react";
 import { loadPublicFilmCatalog } from "@/lib/load-public-film-catalog";
 import { MEDIA_TYPE } from "@/lib/media-type";
 import {
+  applyPublicCatalogMediaTypeFilter,
+  applyPublicCatalogVisibilityFilter,
+} from "@/lib/public-catalog-films.mjs";
+import {
   resolveGuideAnchorFilm,
   resolveGuideFilms,
 } from "@/lib/guides/resolve-guide-films.mjs";
+import { supabase } from "@/lib/supabase";
 import type { Film } from "@/types/film";
 
 type GuidePageContent = {
@@ -48,5 +53,36 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
       items: { film: Film; note: string | null }[];
     }[],
     missingTitles: resolved.missingTitles as string[],
+  };
+});
+
+type GuideCoverFilm = Pick<Film, "id" | "title" | "poster_url" | "image_url">;
+
+export const loadGuideCoverFilms = cache(async (titles: string[]) => {
+  const uniqueTitles = [
+    ...new Set(
+      titles.map((title) => String(title ?? "").trim()).filter(Boolean)
+    ),
+  ];
+
+  if (uniqueTitles.length === 0) {
+    return { films: [] as GuideCoverFilm[], loadError: null };
+  }
+
+  const { data, error } = await applyPublicCatalogMediaTypeFilter(
+    applyPublicCatalogVisibilityFilter(
+      supabase
+        .from("films")
+        .select("id, title, poster_url, image_url")
+        .in("title", uniqueTitles)
+    ),
+    MEDIA_TYPE.animation
+  );
+
+  return {
+    films: ((data ?? []) as GuideCoverFilm[]).filter((film) =>
+      uniqueTitles.includes(film.title)
+    ),
+    loadError: error?.message ?? null,
   };
 });

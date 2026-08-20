@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import GuidesIndexClient from "@/components/guides/GuidesIndexClient";
 import { getAuthUserSummary } from "@/lib/auth/session";
+import { getFilmPosterUrl } from "@/lib/film-poster";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import {
   GUIDES_INDEX_PATH,
   PUBLIC_GUIDE_LINKS,
 } from "@/lib/guides/public-guide-links.mjs";
+import { findGuideFilmByTitle } from "@/lib/guides/resolve-guide-films.mjs";
+import { loadGuideCoverFilms } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 const TITLE = "Guides to Animated Films | Resonale";
@@ -82,7 +85,22 @@ const jsonLd = {
 };
 
 export default async function GuidesIndexPage() {
-  const auth = await getAuthUserSummary();
+  const [auth, covers] = await Promise.all([
+    getAuthUserSummary(),
+    loadGuideCoverFilms(PUBLIC_GUIDE_LINKS.map((guide) => guide.coverTitle)),
+  ]);
+
+  const guides = PUBLIC_GUIDE_LINKS.map((guide) => {
+    const film = findGuideFilmByTitle(covers.films, guide.coverTitle);
+
+    return {
+      slug: guide.slug,
+      href: guide.href,
+      title: guide.title,
+      description: guide.description,
+      coverPosterUrl: film ? getFilmPosterUrl(film) : null,
+    };
+  });
 
   return (
     <>
@@ -92,7 +110,7 @@ export default async function GuidesIndexPage() {
           __html: serializeJsonLd(jsonLd),
         }}
       />
-      <GuidesIndexClient auth={auth} />
+      <GuidesIndexClient auth={auth} guides={guides} />
     </>
   );
 }
