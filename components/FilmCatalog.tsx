@@ -9,6 +9,7 @@ import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
   getQuickFiltersForMedia,
+  isAllowedQuickFilter,
   QUICK_FILTER_DESCRIPTIONS,
 } from "@/lib/quick-film-filters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
@@ -86,7 +87,7 @@ export default function FilmCatalog({
 
   useEffect(() => {
     setActiveQuickFilter((current) => {
-      if (current && !availableQuickFilters.includes(current)) {
+      if (!isAllowedQuickFilter(current, availableQuickFilters)) {
         return null;
       }
       return current;
@@ -253,7 +254,9 @@ export default function FilmCatalog({
           >
             {isShowingSearchResults
               ? `No films matched “${searchState.query}”. Try a partial title, director name, year, country, or mood tag.`
-              : "No films in the catalog yet."}
+              : activeQuickFilter
+                ? "No films match this filter."
+                : "No films in the catalog yet."}
           </div>
         )}
 

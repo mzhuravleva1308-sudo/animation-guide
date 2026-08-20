@@ -37,6 +37,43 @@ test.describe("Public films catalog", () => {
     expect(consoleErrors).toEqual([]);
   });
 
+  test("can pick an animation technique from the Stop motion filter", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await expect(page.getByRole("button", { name: "Stop motion" })).toBeVisible();
+    await page.getByTestId("technique-filter-menu-trigger").click();
+
+    const menu = page.getByTestId("technique-filter-menu");
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Hand-drawn" })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Rotoscope" })).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Watercolor" })).toBeVisible();
+
+    const viewport = page.viewportSize();
+    const menuBox = await menu.boundingBox();
+    expect(viewport).toBeTruthy();
+    expect(menuBox).toBeTruthy();
+    if (viewport && menuBox) {
+      expect(menuBox.x).toBeGreaterThanOrEqual(-1);
+      expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(viewport.width + 1);
+      expect(menuBox.y).toBeGreaterThanOrEqual(0);
+      expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(viewport.height + 1);
+    }
+
+    await page.getByTestId("technique-filter-option-rotoscope").click();
+
+    await expect(menu).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Rotoscope" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page.getByTestId("quick-filter-description")).toHaveText(
+      "Animation drawn over filmed movement."
+    );
+  });
+
   test("guests do not see Saved or Watched nav", async ({ page }) => {
     await page.goto("/");
 

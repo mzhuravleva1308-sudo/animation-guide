@@ -1,5 +1,11 @@
 import { Film } from "@/types/film";
 import type { QuickFilter, QuickFilterOption } from "@/components/QuickFilters";
+import {
+  ANIMATION_TECHNIQUE_FILTERS,
+  filmMatchesTechniqueFilter,
+  isAnimationTechniqueFilter,
+  isStopMotionTechnique as techniqueIsStopMotion,
+} from "@/lib/animation-technique-filters.mjs";
 import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
 
 export const QUICK_FILTERS: QuickFilterOption[] = [
@@ -31,11 +37,13 @@ export function getQuickFiltersForMedia(
     : QUICK_FILTERS;
 }
 
+const TECHNIQUE_DESCRIPTIONS = Object.fromEntries(
+  ANIMATION_TECHNIQUE_FILTERS.map((row) => [row.id, row.description])
+) as Record<(typeof ANIMATION_TECHNIQUE_FILTERS)[number]["id"], string>;
+
 export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
   recent: "Films released in the last three years.",
   "award-winners": "Films that won top prizes at major festivals.",
-  "stop-motion":
-    "Animation made with puppets, models and other physical materials.",
   landscapes:
     "Films shaped by place, outdoors and the feel of landscape.",
   "sci-fi": "Stories shaped by technology, space and imagined futures.",
@@ -45,26 +53,28 @@ export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
     "Films with more warmth, connection and emotional closeness.",
   distance:
     "Films with more distance, isolation and emotional darkness.",
+  ...TECHNIQUE_DESCRIPTIONS,
 };
 
-function isStopMotionTechnique(technique: string | null | undefined) {
-  const value = (technique ?? "").toLowerCase();
+export const isStopMotionTechnique = techniqueIsStopMotion;
 
-  return [
-    "stop motion",
-    "stop-motion",
-    "stopmotion",
-    "clay",
-    "claymation",
-    "plasticine",
-    "puppet",
-    "puppetry",
-    "object animation",
-    "object-animation",
-  ].some((term) => value.includes(term));
+export function isAllowedQuickFilter(
+  filter: QuickFilter,
+  availableFilters: QuickFilterOption[]
+) {
+  if (!filter) {
+    return true;
+  }
+
+  if (availableFilters.includes(filter)) {
+    return true;
+  }
+
+  return (
+    isAnimationTechniqueFilter(filter) &&
+    availableFilters.includes("stop-motion")
+  );
 }
-
-export { isStopMotionTechnique };
 
 export function filterFilmsByQuickFilter(
   films: Film[],
@@ -87,8 +97,10 @@ export function filterFilmsByQuickFilter(
     return films.filter((film) => awardWinningFilmIdSet.has(film.id));
   }
 
-  if (activeQuickFilter === "stop-motion") {
-    return films.filter((film) => isStopMotionTechnique(film.technique));
+  if (isAnimationTechniqueFilter(activeQuickFilter)) {
+    return films.filter((film) =>
+      filmMatchesTechniqueFilter(film, activeQuickFilter)
+    );
   }
 
   if (activeQuickFilter === "landscapes") {
