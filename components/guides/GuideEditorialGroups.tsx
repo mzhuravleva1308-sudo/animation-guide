@@ -71,9 +71,16 @@ export default function GuideEditorialGroups({
             <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
               {group.heading}
             </h2>
-            <p className={`mt-3 text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}>
-              {group.description}
-            </p>
+            <div className={`mt-3 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+              {group.description.split(/\n\n+/).map((paragraph) => (
+                <p
+                  key={paragraph.slice(0, 24)}
+                  className="text-[15px] leading-7 text-[#4a4b5c]"
+                >
+                  {paragraph}
+                </p>
+              ))}
+            </div>
           </div>
           {group.items.map((item) => {
             const index = cardIndex;

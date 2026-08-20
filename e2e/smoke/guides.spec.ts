@@ -95,7 +95,7 @@ test.describe("Films like Flow guide", () => {
         })
       ).toBeVisible();
       await expect(
-        page.getByText("These films trust images, movement, and silence", {
+        page.getByText("These films also let images and movement do most of the talking", {
           exact: false,
         })
       ).toBeVisible();
@@ -193,6 +193,11 @@ test.describe("Beautiful animated films guide", () => {
         name: "Weird animated movies",
       })
     ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Animation styles",
+      })
+    ).toHaveAttribute("href", "/guides/animation-styles");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -274,7 +279,7 @@ test.describe("Weird animated movies guide", () => {
       })
     ).toBeVisible();
     await expect(
-      page.getByText("Weird animated movies are easy to mix up", {
+      page.getByText("Sometimes we want something stranger", {
         exact: false,
       })
     ).toBeVisible();
@@ -304,7 +309,7 @@ test.describe("Weird animated movies guide", () => {
     const cardCount = await cards.count();
     if (cardCount > 0) {
       await expect(cards).toHaveCount(9);
-      await expect(page.getByTestId("guide-film-note")).toHaveCount(9);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(0);
       await expect(
         page.getByRole("heading", {
           level: 2,
@@ -324,9 +329,120 @@ test.describe("Weird animated movies guide", () => {
         })
       ).toBeVisible();
       await expect(
-        page.getByText("homemade bodies that have invented their own biology", {
+        page.getByText("worlds that are fundamentally unlike ours", {
           exact: false,
         })
+      ).toBeVisible();
+    }
+
+    expect(consoleErrors).toEqual([]);
+  });
+});
+
+const STYLES_PATH = "/guides/animation-styles";
+const STYLES_TITLE = "Animation Styles: A Visual Guide to Different Types | Resonale";
+const STYLES_DESCRIPTION =
+  "Explore different animation styles, from hand-drawn 2D and stop motion to rotoscoping, experimental animation, painterly and watercolor styles, with film examples.";
+
+test.describe("Animation styles guide", () => {
+  test("has dedicated metadata, canonical URL, and JSON-LD when complete", async ({
+    request,
+  }) => {
+    const response = await request.get(STYLES_PATH);
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    const title = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "").replaceAll(
+      "&amp;",
+      "&"
+    );
+    expect(title).toBe(STYLES_TITLE);
+    expect(html).toContain(STYLES_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${STYLES_PATH}`);
+    expect(html).toContain(`property="og:title" content="${STYLES_TITLE}"`);
+    expect(html).toContain('property="og:locale" content="en_US"');
+
+    const unavailable = html.includes("This guide is temporarily unavailable.");
+    if (unavailable) {
+      expect(html).toMatch(/noindex/i);
+    } else {
+      expect(html).not.toMatch(/noindex/i);
+      expect(html).toMatch(/CollectionPage/);
+      expect(html).toMatch(/ItemList/);
+      expect(html).toContain("Josep");
+      expect(html).toContain("The Illusionist");
+    }
+  });
+
+  test("renders grouped animation styles as a catalog page", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+    await page.goto(STYLES_PATH);
+
+    await expect(page.getByTestId("guide-page")).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Animation Styles: A Visual Guide to Different Types of Animation",
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByText("Animation styles are often easier to feel than to name", {
+        exact: false,
+      })
+    ).toBeVisible();
+    await expect(page.getByTestId("guide-anchor-poster")).toHaveCount(0);
+    await expect(page.getByTestId("guide-personal-note")).toBeVisible();
+    await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
+    await expect(page.getByTestId("guide-section-link")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(page.getByTestId("guide-related-index")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Beautiful animated films",
+      })
+    ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Flow",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Weird animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+
+    const cards = page.getByTestId("film-card");
+    const cardCount = await cards.count();
+    if (cardCount > 0) {
+      await expect(cards).toHaveCount(19);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(0);
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "Hand-drawn and traditional 2D animation",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "3D animation",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByText("2D animation movies", { exact: false })
+      ).toBeVisible();
+      await expect(
+        page.getByText("artistic animation", { exact: false })
       ).toBeVisible();
     }
 
@@ -367,6 +483,9 @@ test.describe("Guides index", () => {
     await expect(
       page.getByTestId("guides-index-weird-animated-movies")
     ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    await expect(
+      page.getByTestId("guides-index-animation-styles")
+    ).toHaveAttribute("href", "/guides/animation-styles");
   });
 
   test("article titles open the guide pages", async ({ page }) => {
