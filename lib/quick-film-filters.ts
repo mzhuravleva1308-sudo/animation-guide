@@ -1,79 +1,40 @@
-import { Film } from "@/types/film";
 import type { QuickFilter, QuickFilterOption } from "@/components/QuickFilters";
-import {
-  ANIMATION_TECHNIQUE_FILTERS,
-  filmMatchesTechniqueFilter,
-  isAnimationTechniqueFilter,
-  isStopMotionTechnique as techniqueIsStopMotion,
-} from "@/lib/animation-technique-filters.mjs";
+import { Film } from "@/types/film";
 import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
+import {
+  LIVE_ACTION_QUICK_FILTERS as LIVE_ACTION_QUICK_FILTERS_RAW,
+  QUICK_FILTER_DESCRIPTIONS as QUICK_FILTER_DESCRIPTIONS_RAW,
+  QUICK_FILTERS as QUICK_FILTERS_RAW,
+  filterFilmsByQuickFilter as filterFilmsByQuickFilterRaw,
+  getQuickFiltersForMedia as getQuickFiltersForMediaRaw,
+  isAllowedQuickFilter as isAllowedQuickFilterRaw,
+  isStopMotionTechnique as isStopMotionTechniqueRaw,
+} from "./quick-film-filters.mjs";
 
-export const QUICK_FILTERS: QuickFilterOption[] = [
-  "recent",
-  "award-winners",
-  "stop-motion",
-  "sci-fi",
-  "sarcasm",
-  "connection",
-  "distance",
-];
+export const QUICK_FILTERS = QUICK_FILTERS_RAW as QuickFilterOption[];
 
 /** Live-action catalog: Landscapes replaces Stop motion in the same slot. */
-export const LIVE_ACTION_QUICK_FILTERS: QuickFilterOption[] = [
-  "recent",
-  "award-winners",
-  "landscapes",
-  "sci-fi",
-  "sarcasm",
-  "connection",
-  "distance",
-];
+export const LIVE_ACTION_QUICK_FILTERS =
+  LIVE_ACTION_QUICK_FILTERS_RAW as QuickFilterOption[];
 
 export function getQuickFiltersForMedia(
   mediaType: MediaType = MEDIA_TYPE.animation
 ): QuickFilterOption[] {
-  return mediaType === MEDIA_TYPE.liveAction
-    ? LIVE_ACTION_QUICK_FILTERS
-    : QUICK_FILTERS;
+  return getQuickFiltersForMediaRaw(mediaType) as QuickFilterOption[];
 }
 
-const TECHNIQUE_DESCRIPTIONS = Object.fromEntries(
-  ANIMATION_TECHNIQUE_FILTERS.map((row) => [row.id, row.description])
-) as Record<(typeof ANIMATION_TECHNIQUE_FILTERS)[number]["id"], string>;
+export const QUICK_FILTER_DESCRIPTIONS =
+  QUICK_FILTER_DESCRIPTIONS_RAW as Record<QuickFilterOption, string>;
 
-export const QUICK_FILTER_DESCRIPTIONS: Record<QuickFilterOption, string> = {
-  recent: "Films released in the last three years.",
-  "award-winners": "Films that won top prizes at major festivals.",
-  landscapes:
-    "Films shaped by place, outdoors and the feel of landscape.",
-  "sci-fi": "Stories shaped by technology, space and imagined futures.",
-  sarcasm:
-    "Darkly funny films with dry irony, cynicism and bite.",
-  connection:
-    "Films with more warmth, connection and emotional closeness.",
-  distance:
-    "Films with more distance, isolation and emotional darkness.",
-  ...TECHNIQUE_DESCRIPTIONS,
-};
-
-export const isStopMotionTechnique = techniqueIsStopMotion;
+export const isStopMotionTechnique = isStopMotionTechniqueRaw as (
+  technique: string | null | undefined
+) => boolean;
 
 export function isAllowedQuickFilter(
   filter: QuickFilter,
   availableFilters: QuickFilterOption[]
 ) {
-  if (!filter) {
-    return true;
-  }
-
-  if (availableFilters.includes(filter)) {
-    return true;
-  }
-
-  return (
-    isAnimationTechniqueFilter(filter) &&
-    availableFilters.includes("stop-motion")
-  );
+  return isAllowedQuickFilterRaw(filter, availableFilters);
 }
 
 export function filterFilmsByQuickFilter(
@@ -81,52 +42,9 @@ export function filterFilmsByQuickFilter(
   activeQuickFilter: QuickFilter,
   awardWinningFilmIdSet: Set<string>
 ) {
-  if (activeQuickFilter === "recent") {
-    const currentYear = new Date().getFullYear();
-    const recentYearFrom = currentYear - 2;
-
-    return films.filter(
-      (film) =>
-        typeof film.year === "number" &&
-        film.year >= recentYearFrom &&
-        film.year <= currentYear
-    );
-  }
-
-  if (activeQuickFilter === "award-winners") {
-    return films.filter((film) => awardWinningFilmIdSet.has(film.id));
-  }
-
-  if (isAnimationTechniqueFilter(activeQuickFilter)) {
-    return films.filter((film) =>
-      filmMatchesTechniqueFilter(film, activeQuickFilter)
-    );
-  }
-
-  if (activeQuickFilter === "landscapes") {
-    // Tagging not applied yet — chip is live; matches arrive once films are marked.
-    return films.filter((film) => film.quick_filters?.includes("landscapes"));
-  }
-
-  if (activeQuickFilter === "sci-fi") {
-    return films.filter((film) => film.quick_filters?.includes("sci-fi"));
-  }
-
-  if (activeQuickFilter === "sarcasm") {
-    return films.filter((film) => film.quick_filters?.includes("sarcasm"));
-  }
-
-  if (activeQuickFilter === "connection") {
-    return films.filter((film) =>
-      film.quick_filters?.includes("connection")
-    );
-  }
-
-  if (activeQuickFilter === "distance") {
-    return films.filter((film) =>
-      film.quick_filters?.includes("distance")
-    );
-  }
-
-  return films;
+  return filterFilmsByQuickFilterRaw(
+    films,
+    activeQuickFilter,
+    awardWinningFilmIdSet
+  ) as Film[];
 }

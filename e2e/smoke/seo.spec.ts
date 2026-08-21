@@ -18,6 +18,18 @@ test.describe("Public SEO basics", () => {
     expect(html).toContain(`content="${EXPECTED_DESCRIPTION}"`);
   });
 
+  test("filter query URLs canonicalize to the homepage", async ({
+    request,
+  }) => {
+    const response = await request.get("/?filter=sci-fi");
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    expect(html).toMatch(/rel="canonical"/);
+    expect(html).toContain("https://resonale.com");
+    expect(html).not.toMatch(/rel="canonical"[^>]*filter=/);
+  });
+
   test("robots.txt allows the catalog and points at the production sitemap", async ({
     request,
   }) => {

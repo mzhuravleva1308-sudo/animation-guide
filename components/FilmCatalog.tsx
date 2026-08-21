@@ -9,7 +9,6 @@ import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
 import {
   filterFilmsByQuickFilter,
   getQuickFiltersForMedia,
-  isAllowedQuickFilter,
   QUICK_FILTER_DESCRIPTIONS,
 } from "@/lib/quick-film-filters";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
@@ -45,6 +44,8 @@ type FilmCatalogProps = {
   interaction?: FilmCatalogInteractionProps;
   /** Controls which quick-filter chips are shown (Stop motion vs Landscapes). */
   mediaType?: MediaType;
+  activeQuickFilter: QuickFilter;
+  onQuickFilterChange: (filter: QuickFilter) => void;
 };
 
 export default function FilmCatalog({
@@ -54,9 +55,10 @@ export default function FilmCatalog({
   loadError,
   interaction,
   mediaType = MEDIA_TYPE.animation,
+  activeQuickFilter,
+  onQuickFilterChange,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
-  const [activeQuickFilter, setActiveQuickFilter] = useState<QuickFilter>(null);
   const availableQuickFilters = useMemo(
     () => getQuickFiltersForMedia(mediaType),
     [mediaType]
@@ -86,14 +88,8 @@ export default function FilmCatalog({
   );
 
   useEffect(() => {
-    setActiveQuickFilter((current) => {
-      if (!isAllowedQuickFilter(current, availableQuickFilters)) {
-        return null;
-      }
-      return current;
-    });
     setPage(1);
-  }, [availableQuickFilters]);
+  }, [availableQuickFilters, activeQuickFilter]);
 
   const awardWinningFilmIdSet = useMemo(
     () => new Set(awardWinningFilmIds),
@@ -111,7 +107,7 @@ export default function FilmCatalog({
   );
   
   function handleQuickFilterChange(filter: QuickFilter) {
-    setActiveQuickFilter(filter);
+    onQuickFilterChange(filter);
     setPage(1);
   }
 
