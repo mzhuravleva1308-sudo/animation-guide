@@ -269,7 +269,7 @@ test.describe("Weird animated movies guide", () => {
       expect(html).toMatch(/CollectionPage/);
       expect(html).toMatch(/ItemList/);
       expect(html).toContain("Nobody");
-      expect(html).toContain("Decorado");
+      expect(html).toContain("Have a Nice Day");
     }
   });
 
