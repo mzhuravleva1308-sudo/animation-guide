@@ -6,7 +6,9 @@ const DESCRIPTION =
   "How Resonale collects, uses, and stores the data needed to sign you in and remember your film taste.";
 
 test.describe("Privacy Policy", () => {
-  test("has public metadata and canonical URL", async ({ request }) => {
+  test("has public metadata, canonical URL, and noindex", async ({
+    request,
+  }) => {
     const response = await request.get(PATH);
 
     expect(response.status()).toBe(200);
@@ -15,7 +17,7 @@ test.describe("Privacy Policy", () => {
     expect(title).toBe(TITLE);
     expect(html).toContain(DESCRIPTION);
     expect(html).toContain(`https://resonale.com${PATH}`);
-    expect(html).not.toMatch(/noindex/i);
+    expect(html).toMatch(/noindex/i);
   });
 
   test("renders the policy and a contact email", async ({ page }) => {

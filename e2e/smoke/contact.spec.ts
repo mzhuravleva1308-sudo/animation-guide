@@ -6,7 +6,9 @@ const DESCRIPTION =
   "Email Resonale about the guide, your account, or a privacy request.";
 
 test.describe("Contact", () => {
-  test("has public metadata and canonical URL", async ({ request }) => {
+  test("has public metadata, canonical URL, and noindex", async ({
+    request,
+  }) => {
     const response = await request.get(PATH);
 
     expect(response.status()).toBe(200);
@@ -15,7 +17,7 @@ test.describe("Contact", () => {
     expect(title).toBe(TITLE);
     expect(html).toContain(DESCRIPTION);
     expect(html).toContain(`https://resonale.com${PATH}`);
-    expect(html).not.toMatch(/noindex/i);
+    expect(html).toMatch(/noindex/i);
   });
 
   test("renders emails for general and privacy questions", async ({ page }) => {

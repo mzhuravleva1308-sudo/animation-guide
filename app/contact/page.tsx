@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: CONTACT_PATH,
   },
+  robots: {
+    index: false,
+    follow: true,
+  },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,

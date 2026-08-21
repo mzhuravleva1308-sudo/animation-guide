@@ -48,7 +48,7 @@ test.describe("Public SEO basics", () => {
     expect(body).not.toMatch(/Disallow:\s*\/_next/i);
   });
 
-  test("sitemap.xml lists the public homepage, editorial guides, and legal pages", async ({
+  test("sitemap.xml lists the public homepage and editorial guides, not legal pages", async ({
     request,
   }) => {
     const response = await request.get("/sitemap.xml");
@@ -70,8 +70,8 @@ test.describe("Public SEO basics", () => {
       "<loc>https://resonale.com/guides/animation-styles</loc>"
     );
     expect(body).toContain("<lastmod>");
-    expect(body).toContain("https://resonale.com/privacy");
-    expect(body).toContain("https://resonale.com/contact");
+    expect(body).not.toContain("https://resonale.com/privacy");
+    expect(body).not.toContain("https://resonale.com/contact");
     expect(body).toContain("<urlset");
     expect(body).not.toContain("?media=");
   });
