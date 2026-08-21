@@ -186,13 +186,16 @@ export default function FilmCard(props: FilmCardProps) {
       ) : null}
 
       {showCatalogGuideLink && catalogGuideLink ? (
-        <Link
-          href={catalogGuideLink.href}
-          data-testid="film-card-guide-link"
-          className="mt-1.5 inline-block text-sm text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-[#1A1B2E] hover:decoration-gray-500"
-        >
-          {catalogGuideLink.label}
-        </Link>
+        <p className="mt-1 text-xs text-gray-500">
+          in{" "}
+          <Link
+            href={catalogGuideLink.href}
+            data-testid="film-card-guide-link"
+            className="underline-offset-2 transition-colors hover:text-[#8a5b2d] hover:underline focus-visible:text-[#8a5b2d] focus-visible:underline"
+          >
+            {catalogGuideLink.label}
+          </Link>
+        </p>
       ) : null}
 
       {showDebugScores && score && (
