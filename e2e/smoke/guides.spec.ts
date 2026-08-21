@@ -268,8 +268,8 @@ test.describe("Weird animated movies guide", () => {
       expect(html).not.toMatch(/noindex/i);
       expect(html).toMatch(/CollectionPage/);
       expect(html).toMatch(/ItemList/);
-      expect(html).toContain("Junk Head");
-      expect(html).toContain("A Town Called Panic");
+      expect(html).toContain("Nobody");
+      expect(html).toContain("Decorado");
     }
   });
 
