@@ -12,6 +12,7 @@ import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCard from "@/components/FilmCard";
 import FilmCatalog from "@/components/FilmCatalog";
+import type { QuickFilter } from "@/components/QuickFilters";
 import {
   HeaderIconButton,
   HEADER_LOGIN_ICON,
@@ -22,6 +23,11 @@ import ResonaleBrand from "@/components/ResonaleBrand";
 import SiteFooter from "@/components/SiteFooter";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import type { AuthUserSummary } from "@/lib/auth/session";
+import {
+  buildCatalogPath,
+  parseCatalogQuickFilter,
+  syncCatalogUrl,
+} from "@/lib/catalog-url";
 import {
   MEDIA_TYPE,
   normalizeMediaType,
@@ -41,22 +47,6 @@ type ListMediaFilter = "all" | MediaType;
 
 function catalogSliceKey(media: MediaType): string {
   return `${media}|native`;
-}
-
-function syncCatalogUrl(media: MediaType) {
-  if (typeof window === "undefined") {
-    return;
-  }
-  const params = new URLSearchParams();
-  if (media !== MEDIA_TYPE.animation) {
-    params.set("media", media);
-  }
-  const query = params.toString();
-  const next = query ? `/?${query}` : "/";
-  const current = `${window.location.pathname}${window.location.search}`;
-  if (current !== next) {
-    window.history.replaceState(window.history.state, "", next);
-  }
 }
 
 function filmMediaType(film: Film): MediaType {
@@ -103,8 +93,9 @@ type FilmsPageClientProps = {
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError: string | null;
-  postAuthPath?: string;
   showSubtitle?: boolean;
+  /** SSR-hydrated quick filter from `?filter=`. */
+  initialQuickFilter?: QuickFilter;
   /** SSR-hydrated ratings so Watched is ready on first paint. */
   initialFilmRatings?: Record<string, number>;
   /** SSR-hydrated saved ids so Saved is ready on first paint. */
@@ -141,8 +132,8 @@ export default function FilmsPageClient({
   awardWinningFilmIds,
   pageSize,
   loadError,
-  postAuthPath = "/",
   showSubtitle = false,
+  initialQuickFilter = null,
   initialFilmRatings,
   initialSavedFilmIds,
   initialRatingUpdatedAtMs,
@@ -152,6 +143,16 @@ export default function FilmsPageClient({
   sortParam: _unusedSortParam = "native",
   showLiveActionTab = true,
 }: FilmsPageClientProps) {
+  const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
+    initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
+  );
+  const [activeMedia, setActiveMedia] = useState<MediaType>(initialMediaType);
+  const [activeQuickFilter, setActiveQuickFilter] =
+    useState<QuickFilter>(initialQuickFilter);
+  const catalogPostAuthPath = buildCatalogPath({
+    media: activeMedia,
+    filter: activeQuickFilter,
+  });
   const {
     auth,
     profileId,
@@ -180,15 +181,11 @@ export default function FilmsPageClient({
     initialSavedFilmIds,
     initialRatingUpdatedAtMs,
     initialSavedAtMs,
-    postAuthPath,
+    postAuthPath: catalogPostAuthPath,
   });
   const [scoresLastComputedAtState, setScoresLastComputedAtState] = useState<
     string | null
   >(scoresLastComputedAt);
-  const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
-    initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
-  );
-  const [activeMedia, setActiveMedia] = useState<MediaType>(initialMediaType);
   const [listMediaFilter, setListMediaFilter] =
     useState<ListMediaFilter>("all");
   const [catalogSlices, setCatalogSlices] = useState<
@@ -267,12 +264,26 @@ export default function FilmsPageClient({
         await ensureCatalog(media);
         setCatalogLoading(false);
       }
+      const nextFilter = parseCatalogQuickFilter(activeQuickFilter, media);
       setActiveMedia(media);
       setActiveTab(media === MEDIA_TYPE.liveAction ? "films" : "all");
-      syncCatalogUrl(media);
+      setActiveQuickFilter(nextFilter);
+      syncCatalogUrl({ media, filter: nextFilter });
     },
-    [ensureCatalog]
+    [activeQuickFilter, ensureCatalog]
   );
+
+  const handleQuickFilterChange = useCallback(
+    (filter: QuickFilter) => {
+      setActiveQuickFilter(filter);
+      syncCatalogUrl({ media: activeMedia, filter });
+    },
+    [activeMedia]
+  );
+
+  useEffect(() => {
+    syncCatalogUrl({ media: initialMediaType, filter: initialQuickFilter });
+  }, [initialMediaType, initialQuickFilter]);
 
   useEffect(() => {
     const key = catalogSliceKey(initialMediaType);
@@ -602,6 +613,8 @@ export default function FilmsPageClient({
               pageSize={pageSize}
               loadError={catalogLoadError}
               mediaType={activeMedia}
+              activeQuickFilter={activeQuickFilter}
+              onQuickFilterChange={handleQuickFilterChange}
               interaction={{
                 profileId,
                 profileSlug,
@@ -725,7 +738,7 @@ export default function FilmsPageClient({
       <EmailAuthModal
         open={modalOpen}
         onClose={handleModalClose}
-        postAuthPath={postAuthPath}
+        postAuthPath={catalogPostAuthPath}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />

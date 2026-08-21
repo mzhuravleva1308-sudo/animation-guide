@@ -72,6 +72,65 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("quick-filter-description")).toHaveText(
       "Animation drawn over filmed movement."
     );
+    await expect(page).toHaveURL(/[?&]filter=rotoscope(?:&|$)/);
+  });
+
+  test("keeps a quick filter in the URL across reload", async ({ page }) => {
+    await page.goto("/");
+
+    await page.getByRole("button", { name: "Sci-Fi" }).click();
+    await expect(page.getByRole("button", { name: "Sci-Fi" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page).toHaveURL(/[?&]filter=sci-fi(?:&|$)/);
+
+    await page.reload();
+    await expect(page.getByRole("button", { name: "Sci-Fi" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page).toHaveURL(/[?&]filter=sci-fi(?:&|$)/);
+
+    await page.getByRole("button", { name: "Sci-Fi" }).click();
+    await expect(page).not.toHaveURL(/filter=/);
+  });
+
+  test("opens a shared animation filter link", async ({ page }) => {
+    await page.goto("/?filter=sci-fi");
+
+    await expect(page.getByRole("button", { name: "Sci-Fi" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page.getByTestId("quick-filter-description")).toBeVisible();
+  });
+
+  test("opens a shared Films filter link", async ({ page }) => {
+    await page.goto("/?media=live_action&filter=sci-fi");
+
+    await expect(page.getByTestId("nav-films")).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page.getByRole("button", { name: "Sci-Fi" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page).toHaveURL(/[?&]media=live_action(?:&|$)/);
+    await expect(page).toHaveURL(/[?&]filter=sci-fi(?:&|$)/);
+  });
+
+  test("drops a filter that does not apply to Films", async ({ page }) => {
+    await page.goto("/?media=live_action&filter=rotoscope");
+
+    await expect(page.getByTestId("nav-films")).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page.getByRole("button", { name: "Rotoscope" })).toHaveCount(0);
+    await expect(page).toHaveURL(/[?&]media=live_action(?:&|$)/);
+    await expect(page).not.toHaveURL(/filter=/);
   });
 
   test("guests do not see Saved or Watched nav", async ({ page }) => {
