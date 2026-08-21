@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 const PATH = "/guides/films-like-flow";
 const TITLE = "9 Movies Like Flow | Resonale";
 const DESCRIPTION =
-  "Nine films like Flow to watch next — wordless storytelling, emotional animal characters, and strange, beautiful worlds.";
+  "Nine films like Flow to watch next — quiet storytelling, emotional animal characters, and strange, beautiful worlds.";
 
 test.describe("Films like Flow guide", () => {
   test("has dedicated metadata and noindex when the guide is incomplete", async ({ request }) => {
@@ -80,6 +80,11 @@ test.describe("Films like Flow guide", () => {
         name: "Weird animated movies",
       })
     ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Non-Disney animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
     await expect(page.getByTestId("nav-films")).toHaveCount(0);
     await expect(page.getByTestId("nav-saved")).toHaveCount(0);
     await expect(page.getByTestId("auth-status")).toBeVisible();
@@ -91,11 +96,11 @@ test.describe("Films like Flow guide", () => {
       await expect(
         page.getByRole("heading", {
           level: 2,
-          name: "If you loved the wordless storytelling",
+          name: "If you loved how quiet it felt",
         })
       ).toBeVisible();
       await expect(
-        page.getByText("These films also let images and movement do most of the talking", {
+        page.getByText("These films are very quiet", {
           exact: false,
         })
       ).toBeVisible();
@@ -145,7 +150,7 @@ test.describe("Beautiful animated films guide", () => {
       expect(html).not.toMatch(/noindex/i);
       expect(html).toMatch(/CollectionPage/);
       expect(html).toMatch(/ItemList/);
-      expect(html).toContain("The Tale of the Princess Kaguya");
+      expect(html).toContain("Tito and the Birds");
     }
   });
 
@@ -198,6 +203,11 @@ test.describe("Beautiful animated films guide", () => {
         name: "Animation styles",
       })
     ).toHaveAttribute("href", "/guides/animation-styles");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Non-Disney animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -304,6 +314,11 @@ test.describe("Weird animated movies guide", () => {
         name: "9 Movies Like Flow",
       })
     ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Non-Disney animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -420,6 +435,11 @@ test.describe("Animation styles guide", () => {
         name: "Weird animated movies",
       })
     ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Non-Disney animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -443,6 +463,126 @@ test.describe("Animation styles guide", () => {
       ).toBeVisible();
       await expect(
         page.getByText("artistic animation", { exact: false })
+      ).toBeVisible();
+    }
+
+    expect(consoleErrors).toEqual([]);
+  });
+});
+
+const NON_DISNEY_PATH = "/guides/non-disney-animated-movies";
+const NON_DISNEY_TITLE =
+  "Non-Disney Animated Movies Beyond the Big Studios | Resonale";
+const NON_DISNEY_DESCRIPTION =
+  "Non-Disney animated movies beyond the big studios: nine independent and festival films with real wonder, handmade worlds, and stories Disney would not tell.";
+
+test.describe("Non-Disney animated movies guide", () => {
+  test("has dedicated metadata, canonical URL, and JSON-LD when complete", async ({
+    request,
+  }) => {
+    const response = await request.get(NON_DISNEY_PATH);
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    const title = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "").replaceAll(
+      "&amp;",
+      "&"
+    );
+    expect(title).toBe(NON_DISNEY_TITLE);
+    expect(html).toContain(NON_DISNEY_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${NON_DISNEY_PATH}`);
+    expect(html).toContain(`property="og:title" content="${NON_DISNEY_TITLE}"`);
+    expect(html).toContain('property="og:locale" content="en_US"');
+
+    const unavailable = html.includes("This guide is temporarily unavailable.");
+    if (unavailable) {
+      expect(html).toMatch(/noindex/i);
+    } else {
+      expect(html).not.toMatch(/noindex/i);
+      expect(html).toMatch(/CollectionPage/);
+      expect(html).toMatch(/ItemList/);
+      expect(html).toContain("The Painting");
+      expect(html).toContain("Sultana's Dream");
+    }
+  });
+
+  test("renders grouped non-Disney animated movies as a catalog page", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+    await page.goto(NON_DISNEY_PATH);
+
+    await expect(page.getByTestId("guide-page")).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Non-Disney Animated Movies: A World Beyond the Big Studios",
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByText("When I say I love cartoons", {
+        exact: false,
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByText("non-Disney animated movies", { exact: false })
+    ).toBeVisible();
+    await expect(page.getByTestId("guide-anchor-poster")).toHaveCount(0);
+    await expect(page.getByTestId("guide-personal-note")).toBeVisible();
+    await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
+    await expect(page.getByTestId("guide-section-link")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(page.getByTestId("guide-related-index")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Flow",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Beautiful animated films",
+      })
+    ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Weird animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Animation styles",
+      })
+    ).toHaveAttribute("href", "/guides/animation-styles");
+
+    const cards = page.getByTestId("film-card");
+    const cardCount = await cards.count();
+    if (cardCount > 0) {
+      await expect(cards).toHaveCount(9);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(0);
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "If you wanted a sense of wonder",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "When the film is built by hand",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "Stories the big studios would not tell",
+        })
       ).toBeVisible();
     }
 
@@ -497,6 +637,12 @@ test.describe("Guides index", () => {
     ).toBeVisible();
     await expect(
       page.getByTestId("guides-index-cover-animation-styles")
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-non-disney-animated-movies")
+    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+    await expect(
+      page.getByTestId("guides-index-cover-non-disney-animated-movies")
     ).toBeVisible();
   });
 

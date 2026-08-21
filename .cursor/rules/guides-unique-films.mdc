@@ -1,0 +1,28 @@
+---
+description: Guide film lists must be unique vs our other guides and vs competing internet roundups
+alwaysApply: true
+---
+
+# Guide films must be unique
+
+When **creating** a guide or **changing its film list**, run both checks **before** writing or shipping titles. Do not pick first and verify later.
+
+## 1. Not in our guides
+
+Exact `films.title` (and Flow `anchorTitle`) must not appear in any other `lib/guides/*.mjs` article.
+
+Same studio or director in another guide is allowed. The same title is not.
+
+## 2. Not a regular guest of competing internet articles
+
+Search competing **roundups for this article’s target queries** (8–30 film listicles: “non Disney animated movies”, “movies like Flow”, “weird animated movies”, etc.).
+
+A title **fails** if it is a listed pick in **2+** such roundups.
+
+Ignore: Wikipedia, a review of that one film, 100-film encyclopedias, generic “best animation of all time” unless that is the query.
+
+## 3. Report, then replace
+
+Before keeping a list, report both checks title by title. Replace every fail. Only then edit the guide.
+
+Example: Spirited Away and Persepolis sit on most “non Disney” listicles — they fail check 2 even if they pass check 1.
