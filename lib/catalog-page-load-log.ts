@@ -5,6 +5,8 @@ export type CatalogPageLoadStageMs = {
   festivalBadgesMs: number;
   ratingsMs: number | null;
   scoresMs: number | null;
+  /** Live-action per-like embedding fetch; null when skipped. */
+  perLikeEmbeddingsMs?: number | null;
   normalizeSortMs: number;
   totalMs: number;
 };

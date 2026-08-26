@@ -651,7 +651,7 @@ export async function getAllFilms() {
   const { data, error } = await supabase
     .from("films")
     .select(
-      "id, title, moods, aesthetic_tags, visual_world_tags, storytelling_tags, technique, year, media_type"
+      "id, title, moods, aesthetic_tags, visual_world_tags, storytelling_tags, technique, year, media_type, catalog_visible"
     )
     .order("id");
 
@@ -776,7 +776,14 @@ export { selectCandidateFilmsForScoring } from "../lib/profile-film-score-candid
  *   sourceMedia?: string,
  *   filmIds?: string[] | null,
  *   quiet?: boolean,
+ *   diagnostics?: boolean,
  * }} [options]
+ * @returns {Promise<object[] | {
+ *   scoreRows: object[],
+ *   candidateFilms: object[],
+ *   ratedFilms: object[],
+ *   gatedScoresByFilmId: Map<string, object>,
+ * }>}
  */
 export async function calculateProfileScores(profile, allFilms, options = {}) {
   const scoreMode = normalizeScoreModeOption(options.scoreMode);
@@ -978,6 +985,15 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
       computed_at: computedAt,
     };
   });
+
+  if (options.diagnostics) {
+    return {
+      scoreRows,
+      candidateFilms,
+      ratedFilms,
+      gatedScoresByFilmId,
+    };
+  }
 
   if (quiet) {
     return scoreRows;

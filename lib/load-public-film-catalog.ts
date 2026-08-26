@@ -18,9 +18,11 @@ import {
 import { normalizeFilms } from "@/lib/normalize-film";
 import {
   countLikedHighRatingsForRanking,
+  LIKED_HIGH_RATING_THRESHOLD,
   sortFilmsByColdStart,
   sortFilmsForDualModeCatalog,
 } from "@/lib/profile-film-scoring";
+import { buildLiveActionPerLikeRerank } from "@/lib/live-action-per-like-rerank.mjs";
 import {
   assertCacheablePublicCatalogBase,
   isPublicCatalogBaseLoadError,
@@ -452,20 +454,60 @@ export async function loadPublicFilmCatalog(options?: {
 
   const publicBase = publicBaseTimed.value;
 
+  const ratedFilmIds = new Set(
+    personalized.ratings.map((row) => row.film_id).filter(Boolean)
+  );
+  const unratedFilms = publicBase.films.filter(
+    (film) => !ratedFilmIds.has(film.id)
+  );
+  const ratedFilms = publicBase.films.filter((film) =>
+    ratedFilmIds.has(film.id)
+  );
+
+  let perLikeRerank: Awaited<
+    ReturnType<typeof buildLiveActionPerLikeRerank>
+  > = null;
+  let perLikeEmbeddingsMs: number | null = null;
+
+  const canPerLikeRerank =
+    Boolean(profileId) &&
+    ranking.mediaType === MEDIA_TYPE.liveAction &&
+    ranking.scoreMode === SCORE_MODE.native &&
+    !personalized.scoresUnavailable &&
+    Array.isArray(personalized.scoreRows) &&
+    personalized.scoreRows.length > 0;
+
+  if (canPerLikeRerank) {
+    const titleById = new Map(
+      publicBase.films.map((film) => [film.id, film.title ?? ""])
+    );
+    const likes = personalized.ratings
+      .filter(
+        (row) =>
+          row.media_type === MEDIA_TYPE.liveAction &&
+          Number(row.rating) >= LIKED_HIGH_RATING_THRESHOLD
+      )
+      .map((row) => ({
+        id: row.film_id,
+        rating: row.rating,
+        title: titleById.get(row.film_id) ?? "",
+      }));
+
+    const perLikeTimed = await timeAsyncStage(() =>
+      buildLiveActionPerLikeRerank({
+        supabase: getAdminSupabase(),
+        candidateFilms: unratedFilms,
+        likes,
+      })
+    );
+    perLikeRerank = perLikeTimed.value;
+    perLikeEmbeddingsMs = perLikeTimed.ms;
+  }
+
   const {
     value: { films, rankingMode, scoresFallbackCause },
     ms: normalizeSortMs,
   } = timeSyncStage(() => {
-    const ratedFilmIds = new Set(
-      personalized.ratings.map((row) => row.film_id).filter(Boolean)
-    );
-    const unratedFilms = publicBase.films.filter(
-      (film) => !ratedFilmIds.has(film.id)
-    );
-    const ratedFilms = publicBase.films.filter((film) =>
-      ratedFilmIds.has(film.id)
-    );
-
     const sorted = sortFilmsForDualModeCatalog({
       films: unratedFilms,
       viewer: profileId ? "authenticated" : "guest",
@@ -475,6 +517,7 @@ export async function loadPublicFilmCatalog(options?: {
       scoreMode: ranking.scoreMode,
       sourceMedia: ranking.sourceMedia,
       mediaType: ranking.mediaType,
+      perLikeRerank,
     });
 
     if (sorted.reason === "smart-scores-unavailable") {
@@ -511,6 +554,7 @@ export async function loadPublicFilmCatalog(options?: {
     festivalBadgesMs: publicBase.festivalBadgesMs,
     ratingsMs: profileId ? personalized.ratingsMs : null,
     scoresMs: personalized.scoresMs,
+    perLikeEmbeddingsMs,
     normalizeSortMs,
   });
 
