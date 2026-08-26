@@ -9,10 +9,11 @@ const scope = parseFilmScopeArgs(process.argv.slice(2));
 const scopeTokens = filmScopeArgvTokens(scope);
 const scriptArgs = [...scopeTokens, ...scope.passthrough];
 
-function run(scriptPath) {
-  console.log(`\n▶ node ${scriptPath}${scriptArgs.length ? ` ${scriptArgs.join(" ")}` : ""}\n`);
+function run(scriptPath, extraArgs = []) {
+  const args = [...scriptArgs, ...extraArgs];
+  console.log(`\n▶ node ${scriptPath}${args.length ? ` ${args.join(" ")}` : ""}\n`);
 
-  const result = spawnSync("node", [scriptPath, ...scriptArgs], {
+  const result = spawnSync("node", [scriptPath, ...args], {
     stdio: "inherit",
   });
 
@@ -26,7 +27,12 @@ try {
 
   run("scripts/fill-images.mjs");
   run("scripts/cache-posters.mjs");
-  run("scripts/fill-trailers.mjs");
+  run(
+    "scripts/fill-trailers.mjs",
+    scope.passthrough.includes("--replace-unavailable")
+      ? []
+      : ["--replace-unavailable"]
+  );
   run("scripts/fill-film-mood-embeddings.mjs");
   run("scripts/fill-mood-distances.mjs");
 

@@ -244,8 +244,8 @@ function logFilm(stage, film, message) {
   console.log(`[${stage}] ${film.title} — ${message}`);
 }
 
-async function runScopedScript(script, filmIds, dryRun) {
-  const args = ["--film-ids", filmIds.join(",")];
+async function runScopedScript(script, filmIds, dryRun, extraArgs = []) {
+  const args = ["--film-ids", filmIds.join(","), ...extraArgs];
   if (dryRun) args.push("--dry-run");
   try {
     const result = await execFileAsync(process.execPath, [path.join(SCRIPT_DIR, script), ...args], {
@@ -1237,9 +1237,6 @@ export async function processFilmBatch({
       const filmsMissingImages = current.films.filter(
         (film) => !nonEmpty(film.poster_url) && !nonEmpty(film.image_url)
       );
-      const filmsMissingTrailers = current.films.filter(
-        (film) => !nonEmpty(film.trailer_url)
-      );
       if (filmsMissingImages.length) {
         await runScript(
           "fill-images.mjs",
@@ -1257,13 +1254,9 @@ export async function processFilmBatch({
         console.error(`cache-posters reported failures: ${message}`);
       }
 
-      if (filmsMissingTrailers.length) {
-        await runScript(
-          "fill-trailers.mjs",
-          filmsMissingTrailers.map((film) => film.id),
-          false
-        );
-      }
+      await runScript("fill-trailers.mjs", filmIds, false, [
+        "--replace-unavailable",
+      ]);
       current = await loadState(supabase, filmIds);
       assertStoragePosters(current.films);
       for (const film of current.films) {

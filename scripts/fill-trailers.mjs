@@ -12,9 +12,15 @@ import {
 } from "../lib/tmdb-film-matching.mjs";
 import { selectBestTrailerVideo } from "../lib/tmdb-trailer-selection.mjs";
 import {
+  TRAILER_SOURCE_MANUAL,
   buildAutoTrailerWritePayload,
   shouldAttemptTrailerLookup,
 } from "../lib/trailer-fill-policy.mjs";
+import {
+  checkYoutubeVideosAvailability,
+  createYoutubeAvailabilityChecker,
+  parseYoutubeVideoId,
+} from "../lib/youtube-trailer-availability.mjs";
 import {
   buildTrailerSourceRecord,
   buildYoutubeWatchUrl,
@@ -26,19 +32,26 @@ applyAppEnv();
 const scope = parseFilmScopeArgs(process.argv.slice(2));
 const force =
   scope.passthrough.includes("--force") || process.argv.includes("--force");
+const replaceUnavailable =
+  scope.passthrough.includes("--replace-unavailable") ||
+  process.argv.includes("--replace-unavailable");
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const tmdbApiKey = process.env.TMDB_API_KEY;
 const youtubeApiKey = process.env.YOUTUBE_API_KEY;
 
 if (!supabaseUrl || !supabaseKey || !tmdbApiKey) {
   throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY or TMDB_API_KEY"
+    "Missing NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY/NEXT_PUBLIC_SUPABASE_ANON_KEY or TMDB_API_KEY"
   );
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+const isVideoAvailable = createYoutubeAvailabilityChecker({
+  apiKey: youtubeApiKey,
+});
 
 async function searchTmdbMovie(film) {
   const queries = [film.title, film.original_title].filter(Boolean);
@@ -167,6 +180,7 @@ async function resolveYoutubeChannel(video) {
 async function getTmdbTrailerSource(movie) {
   const selected = await selectBestTrailerVideo(movie, {
     resolveChannel: resolveYoutubeChannel,
+    isVideoAvailable,
   });
 
   if (!selected?.video?.key) {
@@ -194,6 +208,7 @@ async function getYoutubeFallbackTrailerSource(film) {
   const selected = await searchYoutubeTrailers({
     apiKey: youtubeApiKey,
     film,
+    isVideoAvailable,
   });
 
   if (!selected?.video_id || !selected?.url) {
@@ -239,13 +254,15 @@ async function resolveTrailerSource(film) {
 async function loadFilmsForTrailerFill() {
   const baseSelect =
     "id,title,original_title,director,country,synopsis,year,trailer_url,trailer_provider,trailer_video_id";
+  const applyFilters =
+    force || replaceUnavailable
+      ? undefined
+      : (query) => query.is("trailer_url", null);
 
   try {
     return await loadScopedFilms(supabase, scope, {
       select: `${baseSelect},trailer_source`,
-      applyFilters: force
-        ? undefined
-        : (query) => query.is("trailer_url", null),
+      applyFilters,
     });
   } catch (error) {
     const message =
@@ -260,11 +277,21 @@ async function loadFilmsForTrailerFill() {
     );
     return loadScopedFilms(supabase, scope, {
       select: baseSelect,
-      applyFilters: force
-        ? undefined
-        : (query) => query.is("trailer_url", null),
+      applyFilters,
     });
   }
+}
+
+async function existingYoutubeTrailerStillWorks(film, availabilityById) {
+  const videoId =
+    film.trailer_video_id || parseYoutubeVideoId(film.trailer_url);
+  if (!videoId) {
+    return true;
+  }
+  if (availabilityById?.has(videoId)) {
+    return availabilityById.get(videoId).available;
+  }
+  return isVideoAvailable({ key: videoId, site: "YouTube" });
 }
 
 async function updateTrailerFields(filmId, payload) {
@@ -288,18 +315,55 @@ async function updateTrailerFields(filmId, payload) {
 async function main() {
   const films = await loadFilmsForTrailerFill();
 
-  const eligible = films.filter((film) =>
-    shouldAttemptTrailerLookup(film, { force })
-  );
-  const skippedProtected = films.length - eligible.length;
-
   console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(
-    `Films to fill: ${eligible.length} (force=${force}; protected/skipped=${skippedProtected})`
+    `Films to fill: ${films.length} (force=${force}; replaceUnavailable=${replaceUnavailable})`
   );
 
+  let availabilityById = new Map();
+  if (replaceUnavailable && youtubeApiKey) {
+    const videoIds = [
+      ...new Set(
+        films
+          .map(
+            (film) =>
+              film.trailer_video_id || parseYoutubeVideoId(film.trailer_url)
+          )
+          .filter(Boolean)
+      ),
+    ];
+    if (videoIds.length) {
+      availabilityById = await checkYoutubeVideosAvailability(videoIds, {
+        apiKey: youtubeApiKey,
+      });
+    }
+  }
+
   for (const film of films) {
-    if (!shouldAttemptTrailerLookup(film, { force })) {
+    const overwriteDead =
+      Boolean(film.trailer_url) &&
+      (force || replaceUnavailable) &&
+      (shouldAttemptTrailerLookup(film, { force: true }) ||
+        (replaceUnavailable && film.trailer_source !== TRAILER_SOURCE_MANUAL));
+
+    if (film.trailer_url && replaceUnavailable && !force) {
+      const stillWorks = await existingYoutubeTrailerStillWorks(
+        film,
+        availabilityById
+      );
+      if (stillWorks) {
+        continue;
+      }
+      console.log(
+        `Unavailable trailer: ${film.title} (${film.trailer_url})`
+      );
+      if (!overwriteDead) {
+        console.log(
+          `Skipped protected dead trailer: ${film.title} (source=${film.trailer_source ?? "unmarked"})`
+        );
+        continue;
+      }
+    } else if (!shouldAttemptTrailerLookup(film, { force })) {
       if (film.trailer_url) {
         console.log(
           `Skipped protected trailer: ${film.title} (source=${film.trailer_source ?? "unmarked"})`
@@ -312,6 +376,19 @@ async function main() {
       const trailer = await resolveTrailerSource(film);
 
       if (!trailer?.url) {
+        if (film.trailer_url && overwriteDead) {
+          const clearError = await updateTrailerFields(film.id, {
+            trailer_url: null,
+            trailer_provider: null,
+            trailer_video_id: null,
+            trailer_source: null,
+          });
+          if (clearError) {
+            console.log(`Update error: ${film.title}: ${clearError.message}`);
+          } else {
+            console.log(`Cleared unavailable trailer: ${film.title}`);
+          }
+        }
         continue;
       }
 
