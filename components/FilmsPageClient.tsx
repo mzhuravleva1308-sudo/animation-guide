@@ -43,7 +43,19 @@ type CatalogSlice = {
   loadError: string | null;
 };
 
+type CatalogApiPayload = {
+  films?: Film[];
+  awardWinningFilmIds?: string[];
+  loadError?: string | null;
+  scoresLastComputedAt?: string | null;
+};
+
 type ListMediaFilter = "all" | MediaType;
+
+/** Score jobs debounce 60s, then cron/worker can take another 1–2 min. */
+const SCORE_CATALOG_REFRESH_INITIAL_MS = 70_000;
+const SCORE_CATALOG_REFRESH_POLL_MS = 15_000;
+const SCORE_CATALOG_REFRESH_DEADLINE_MS = 4 * 60_000;
 
 function catalogSliceKey(media: MediaType): string {
   return `${media}|native`;
@@ -58,6 +70,62 @@ function formatScoresLastComputedAt(iso: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+function catalogQuery(media: MediaType): string {
+  const params = new URLSearchParams();
+  if (media !== MEDIA_TYPE.animation) {
+    params.set("media", media);
+  }
+  return params.toString();
+}
+
+async function fetchCatalogPayload(
+  media: MediaType
+): Promise<CatalogApiPayload | null> {
+  try {
+    const query = catalogQuery(media);
+    const response = await fetch(
+      query ? `/api/catalog?${query}` : "/api/catalog"
+    );
+    if (!response.ok) {
+      console.error("[catalog] client fetch failed", response.status);
+      return null;
+    }
+    return (await response.json()) as CatalogApiPayload;
+  } catch (error) {
+    console.error("[catalog] client fetch error", error);
+    return null;
+  }
+}
+
+function catalogSliceFromPayload(payload: CatalogApiPayload): CatalogSlice {
+  return {
+    films: payload.films ?? [],
+    awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
+    loadError: payload.loadError ?? null,
+  };
+}
+
+function newerTimestamp(
+  current: string | null,
+  incoming: string | null | undefined
+): string | null {
+  if (typeof incoming !== "string" || incoming.length === 0) {
+    return current;
+  }
+  if (!current) {
+    return incoming;
+  }
+  const currentMs = Date.parse(current);
+  const incomingMs = Date.parse(incoming);
+  if (!Number.isFinite(incomingMs)) {
+    return current;
+  }
+  if (!Number.isFinite(currentMs) || incomingMs >= currentMs) {
+    return incoming;
+  }
+  return current;
 }
 
 function ListTabSkeleton() {
@@ -203,58 +271,62 @@ export default function FilmsPageClient({
   );
   const catalogSlicesRef = useRef(catalogSlices);
   catalogSlicesRef.current = catalogSlices;
+  const scoresLastComputedAtRef = useRef(scoresLastComputedAtState);
+  const scoresPollTimeoutsRef = useRef<number[]>([]);
 
-  const ensureCatalog = useCallback(async (media: MediaType) => {
-    const key = catalogSliceKey(media);
-    const cached = catalogSlicesRef.current[key];
-    if (cached) {
-      return cached;
-    }
-
-    const inflight = catalogInflightRef.current.get(key);
-    if (inflight) {
-      return inflight;
-    }
-
-    const request = (async (): Promise<CatalogSlice | null> => {
-      try {
-        const params = new URLSearchParams();
-        if (media !== MEDIA_TYPE.animation) {
-          params.set("media", media);
+  const applyCatalogPayload = useCallback(
+    (
+      media: MediaType,
+      payload: CatalogApiPayload,
+      { overwrite }: { overwrite: boolean }
+    ) => {
+      const key = catalogSliceKey(media);
+      const slice = catalogSliceFromPayload(payload);
+      setCatalogSlices((current) => {
+        if (!overwrite && current[key]) {
+          return current;
         }
-        const query = params.toString();
-        const response = await fetch(
-          query ? `/api/catalog?${query}` : "/api/catalog"
-        );
-        if (!response.ok) {
-          console.error("[catalog] client fetch failed", response.status);
+        return { ...current, [key]: slice };
+      });
+      const nextComputedAt = newerTimestamp(
+        scoresLastComputedAtRef.current,
+        payload.scoresLastComputedAt
+      );
+      scoresLastComputedAtRef.current = nextComputedAt;
+      setScoresLastComputedAtState(nextComputedAt);
+      return slice;
+    },
+    []
+  );
+
+  const ensureCatalog = useCallback(
+    async (media: MediaType) => {
+      const key = catalogSliceKey(media);
+      const cached = catalogSlicesRef.current[key];
+      if (cached) {
+        return cached;
+      }
+
+      const inflight = catalogInflightRef.current.get(key);
+      if (inflight) {
+        return inflight;
+      }
+
+      const request = (async (): Promise<CatalogSlice | null> => {
+        const payload = await fetchCatalogPayload(media);
+        if (!payload) {
           return null;
         }
-        const payload = (await response.json()) as {
-          films?: Film[];
-          awardWinningFilmIds?: string[];
-          loadError?: string | null;
-        };
-        const slice: CatalogSlice = {
-          films: payload.films ?? [],
-          awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
-          loadError: payload.loadError ?? null,
-        };
-        setCatalogSlices((current) =>
-          current[key] ? current : { ...current, [key]: slice }
-        );
-        return slice;
-      } catch (error) {
-        console.error("[catalog] client fetch error", error);
-        return null;
-      } finally {
+        return applyCatalogPayload(media, payload, { overwrite: false });
+      })().finally(() => {
         catalogInflightRef.current.delete(key);
-      }
-    })();
+      });
 
-    catalogInflightRef.current.set(key, request);
-    return request;
-  }, []);
+      catalogInflightRef.current.set(key, request);
+      return request;
+    },
+    [applyCatalogPayload]
+  );
 
   const selectCatalog = useCallback(
     async (media: MediaType) => {
@@ -315,29 +387,68 @@ export default function FilmsPageClient({
     void ensureCatalog(otherMedia);
   }, [showLiveActionTab, activeMedia, ensureCatalog]);
 
-  const refreshScoresLastComputedAt = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (activeMedia !== MEDIA_TYPE.animation) {
-        params.set("media", activeMedia);
+  const refreshPersonalizedCatalog = useCallback(async () => {
+    const medias: MediaType[] = showLiveActionTab
+      ? [MEDIA_TYPE.animation, MEDIA_TYPE.liveAction]
+      : [activeMedia];
+    const payloads = await Promise.all(
+      medias.map((media) => fetchCatalogPayload(media))
+    );
+    payloads.forEach((payload, index) => {
+      const media = medias[index];
+      if (!payload || !media) {
+        return;
       }
-      const query = params.toString();
-      const response = await fetch(
-        query ? `/api/catalog?${query}` : "/api/catalog"
-      );
-      if (!response.ok) return;
-      const payload = (await response.json()) as {
-        scoresLastComputedAt?: string | null;
-      };
-      if (typeof payload.scoresLastComputedAt === "string") {
-        setScoresLastComputedAtState(payload.scoresLastComputedAt);
-      } else if (payload.scoresLastComputedAt === null) {
-        setScoresLastComputedAtState(null);
-      }
-    } catch (error) {
-      console.error("[catalog] scores timestamp refresh failed", error);
+      applyCatalogPayload(media, payload, { overwrite: true });
+    });
+  }, [activeMedia, applyCatalogPayload, showLiveActionTab]);
+
+  const clearScoresCatalogPoll = useCallback(() => {
+    for (const timeoutId of scoresPollTimeoutsRef.current) {
+      window.clearTimeout(timeoutId);
     }
-  }, [activeMedia]);
+    scoresPollTimeoutsRef.current = [];
+  }, []);
+
+  const scheduleCatalogRefreshAfterRating = useCallback(() => {
+    if (!auth) {
+      return;
+    }
+
+    clearScoresCatalogPoll();
+    const previousComputedAt = scoresLastComputedAtRef.current;
+    const deadline = Date.now() + SCORE_CATALOG_REFRESH_DEADLINE_MS;
+
+    const poll = async () => {
+      await refreshPersonalizedCatalog();
+      const nextComputedAt = scoresLastComputedAtRef.current;
+      if (nextComputedAt && nextComputedAt !== previousComputedAt) {
+        return;
+      }
+      if (Date.now() >= deadline) {
+        return;
+      }
+      const timeoutId = window.setTimeout(() => {
+        void poll();
+      }, SCORE_CATALOG_REFRESH_POLL_MS);
+      scoresPollTimeoutsRef.current.push(timeoutId);
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      void poll();
+    }, SCORE_CATALOG_REFRESH_INITIAL_MS);
+    scoresPollTimeoutsRef.current.push(timeoutId);
+  }, [auth, clearScoresCatalogPoll, refreshPersonalizedCatalog]);
+
+  useEffect(() => () => clearScoresCatalogPoll(), [clearScoresCatalogPoll]);
+
+  const handleRatingChangeAndRefresh = useCallback(
+    (filmId: string, rating: number | null) => {
+      handleRatingChange(filmId, rating);
+      scheduleCatalogRefreshAfterRating();
+    },
+    [handleRatingChange, scheduleCatalogRefreshAfterRating]
+  );
 
   const handleTabChange = useCallback(
     (tab: CatalogTab) => {
@@ -358,10 +469,10 @@ export default function FilmsPageClient({
 
       setActiveTab(tab);
       if (tab === "watched") {
-        void refreshScoresLastComputedAt();
+        void refreshPersonalizedCatalog();
       }
     },
-    [auth, openAuthModal, refreshScoresLastComputedAt, selectCatalog]
+    [auth, openAuthModal, refreshPersonalizedCatalog, selectCatalog]
   );
 
   const isCatalogTab = activeTab === "all" || activeTab === "films";
@@ -623,7 +734,7 @@ export default function FilmsPageClient({
                 ratingsReady,
                 ratingOnboardingFilmIds,
                 onSavedChange: handleSavedChange,
-                onRatingChange: handleRatingChange,
+                onRatingChange: handleRatingChangeAndRefresh,
                 onAuthRequired: auth ? undefined : handleAuthRequired,
               }}
             />
@@ -724,7 +835,7 @@ export default function FilmsPageClient({
                   }
                   savedFilmIds={savedFilmIds}
                   onSavedChange={handleSavedChange}
-                  onRatingChange={handleRatingChange}
+                  onRatingChange={handleRatingChangeAndRefresh}
                   lazyLoadPoster={index >= 1}
                 />
               ))}
