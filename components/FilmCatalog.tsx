@@ -40,6 +40,8 @@ type FilmCatalogProps = {
   films: Film[];
   /** Recent arrivals matched to taste; hidden while search/filter is active. */
   freshTastePicks?: Film[];
+  /** When smart/smart-cross, label the main queue as taste-sorted. */
+  rankingMode?: "smart" | "smart-cross" | "cold-start";
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError?: string | null;
@@ -52,9 +54,36 @@ type FilmCatalogProps = {
   onQuickFilterChange: (filter: QuickFilter) => void;
 };
 
+function CatalogSectionHeading({
+  id,
+  title,
+  description,
+}: {
+  id: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mb-3">
+      <h2
+        id={id}
+        className="font-sans text-[13px] font-medium leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+      >
+        {title}
+      </h2>
+      {description ? (
+        <p className="mt-1.5 max-w-xl font-sans text-[13px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default function FilmCatalog({
   films,
   freshTastePicks = [],
+  rankingMode = "cold-start",
   awardWinningFilmIds,
   pageSize,
   loadError,
@@ -171,6 +200,13 @@ export default function FilmCatalog({
     !activeQuickFilter &&
     !isSearchActive &&
     !loadError;
+  const isTasteSorted =
+    rankingMode === "smart" || rankingMode === "smart-cross";
+  const showTasteSortedHeading =
+    isTasteSorted &&
+    !isSearchActive &&
+    !loadError &&
+    (visibleFilms.length > 0 || showFreshTastePicks);
 
   return (
     <>
@@ -261,15 +297,14 @@ export default function FilmCatalog({
       {showFreshTastePicks ? (
         <section
           data-testid="fresh-taste-picks"
-          className="mb-8"
+          className="mb-10 border-b border-[#e4e2f0] pb-10"
           aria-labelledby="fresh-taste-picks-heading"
         >
-          <h2
+          <CatalogSectionHeading
             id="fresh-taste-picks-heading"
-            className="mb-3 font-sans text-[13px] font-medium leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-          >
-            New for you
-          </h2>
+            title="New for you"
+            description="Recently added titles closest to your taste."
+          />
           <div className="grid gap-4">
             {freshTastePicks.map((film, index) => (
               <FilmCard
@@ -323,40 +358,51 @@ export default function FilmCatalog({
 
       <section
         data-testid={isShowingSearchResults ? "film-search-results" : "film-list"}
-        className="grid gap-4"
+        aria-labelledby={
+          showTasteSortedHeading ? "taste-sorted-catalog-heading" : undefined
+        }
       >
-        {visibleFilms.map((film, index) => {
-          const onboardingIndex = showFreshTastePicks
-            ? index + freshTastePicks.length
-            : index;
-          return (
-            <FilmCard
-              key={film.id}
-              mode={interaction ? "catalog" : "public"}
-              film={film}
-              lazyLoadPoster={onboardingIndex >= 1}
-              profileId={interaction?.profileId}
-              profileSlug={interaction?.profileSlug}
-              initialRating={interaction?.filmRatings[film.id] ?? null}
-              savedFilmIds={interaction?.savedFilmIds ?? new Set()}
-              onSavedChange={
-                interaction?.onSavedChange ??
-                (() => {
-                  /* no-op */
-                })
-              }
-              onRatingChange={
-                interaction?.onRatingChange ??
-                (() => {
-                  /* no-op */
-                })
-              }
-              onAuthRequired={interaction?.onAuthRequired}
-              ratingOnboardingHint={getHintForIndex(onboardingIndex)}
-              onDismissRatingOnboarding={onDismissRatingOnboarding}
-            />
-          );
-        })}
+        {showTasteSortedHeading ? (
+          <CatalogSectionHeading
+            id="taste-sorted-catalog-heading"
+            title="Matched to your taste"
+            description="The rest of the catalog, ranked for you."
+          />
+        ) : null}
+        <div className="grid gap-4">
+          {visibleFilms.map((film, index) => {
+            const onboardingIndex = showFreshTastePicks
+              ? index + freshTastePicks.length
+              : index;
+            return (
+              <FilmCard
+                key={film.id}
+                mode={interaction ? "catalog" : "public"}
+                film={film}
+                lazyLoadPoster={onboardingIndex >= 1}
+                profileId={interaction?.profileId}
+                profileSlug={interaction?.profileSlug}
+                initialRating={interaction?.filmRatings[film.id] ?? null}
+                savedFilmIds={interaction?.savedFilmIds ?? new Set()}
+                onSavedChange={
+                  interaction?.onSavedChange ??
+                  (() => {
+                    /* no-op */
+                  })
+                }
+                onRatingChange={
+                  interaction?.onRatingChange ??
+                  (() => {
+                    /* no-op */
+                  })
+                }
+                onAuthRequired={interaction?.onAuthRequired}
+                ratingOnboardingHint={getHintForIndex(onboardingIndex)}
+                onDismissRatingOnboarding={onDismissRatingOnboarding}
+              />
+            );
+          })}
+        </div>
       </section>
 
       {!isShowingSearchResults && totalCount > 0 && (

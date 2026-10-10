@@ -39,6 +39,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       auth={catalog.auth}
       films={catalog.films}
       freshTastePicks={catalog.freshTastePicks}
+      rankingMode={catalog.rankingMode}
       awardWinningFilmIds={catalog.awardWinningFilmIds}
       pageSize={catalog.pageSize}
       loadError={catalog.loadError}

@@ -607,6 +607,7 @@ export async function loadPublicFilmCatalog(options?: {
     auth,
     films,
     freshTastePicks,
+    rankingMode,
     awardWinningFilmIds: publicBase.awardWinningFilmIds,
     loadError: publicBase.loadError,
     pageSize: PUBLIC_CATALOG_PAGE_SIZE,

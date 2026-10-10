@@ -37,9 +37,12 @@ import { resolveProfileListTabView } from "@/lib/profile-list-tab-view.mjs";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import { Film } from "@/types/film";
 
+type CatalogRankingMode = "smart" | "smart-cross" | "cold-start";
+
 type CatalogSlice = {
   films: Film[];
   freshTastePicks: Film[];
+  rankingMode: CatalogRankingMode;
   awardWinningFilmIds: string[];
   loadError: string | null;
 };
@@ -47,6 +50,7 @@ type CatalogSlice = {
 type CatalogApiPayload = {
   films?: Film[];
   freshTastePicks?: Film[];
+  rankingMode?: CatalogRankingMode;
   awardWinningFilmIds?: string[];
   loadError?: string | null;
   scoresLastComputedAt?: string | null;
@@ -105,6 +109,7 @@ function catalogSliceFromPayload(payload: CatalogApiPayload): CatalogSlice {
   return {
     films: payload.films ?? [],
     freshTastePicks: payload.freshTastePicks ?? [],
+    rankingMode: payload.rankingMode ?? "cold-start",
     awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
     loadError: payload.loadError ?? null,
   };
@@ -163,6 +168,8 @@ type FilmsPageClientProps = {
   films: Film[];
   /** Recent catalog arrivals ranked to the viewer's taste (signed-in smart mode). */
   freshTastePicks?: Film[];
+  /** How the main catalog queue was ranked for this viewer. */
+  rankingMode?: CatalogRankingMode;
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError: string | null;
@@ -207,6 +214,7 @@ export default function FilmsPageClient({
   auth: initialAuth,
   films,
   freshTastePicks: initialFreshTastePicks = [],
+  rankingMode: initialRankingMode = "cold-start",
   awardWinningFilmIds,
   pageSize,
   loadError,
@@ -274,6 +282,7 @@ export default function FilmsPageClient({
     [catalogSliceKey(initialMediaType)]: {
       films,
       freshTastePicks: initialFreshTastePicks,
+      rankingMode: initialRankingMode,
       awardWinningFilmIds,
       loadError,
     },
@@ -377,6 +386,7 @@ export default function FilmsPageClient({
       [key]: {
         films,
         freshTastePicks: initialFreshTastePicks,
+        rankingMode: initialRankingMode,
         awardWinningFilmIds,
         loadError,
       },
@@ -385,6 +395,7 @@ export default function FilmsPageClient({
     initialMediaType,
     films,
     initialFreshTastePicks,
+    initialRankingMode,
     awardWinningFilmIds,
     loadError,
   ]);
@@ -514,6 +525,7 @@ export default function FilmsPageClient({
   const currentSlice = catalogSlices[catalogSliceKey(activeMedia)] ?? null;
   const catalogFilms = currentSlice?.films ?? [];
   const catalogFreshTastePicks = currentSlice?.freshTastePicks ?? [];
+  const catalogRankingMode = currentSlice?.rankingMode ?? initialRankingMode;
   const catalogAwardIds = currentSlice?.awardWinningFilmIds ?? [];
   const catalogLoadError = currentSlice?.loadError ?? loadError;
 
@@ -756,6 +768,7 @@ export default function FilmsPageClient({
             <FilmCatalog
               films={unratedFilms}
               freshTastePicks={unratedFreshTastePicks}
+              rankingMode={catalogRankingMode}
               awardWinningFilmIds={catalogAwardIds}
               pageSize={pageSize}
               loadError={catalogLoadError}

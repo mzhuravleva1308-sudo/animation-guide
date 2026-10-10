@@ -26,6 +26,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       films: catalog.films,
       freshTastePicks: catalog.freshTastePicks,
+      rankingMode: catalog.rankingMode,
       awardWinningFilmIds: catalog.awardWinningFilmIds,
       loadError: catalog.loadError,
       pageSize: catalog.pageSize,
