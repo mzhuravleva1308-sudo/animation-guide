@@ -244,6 +244,27 @@ function logFilm(stage, film, message) {
   console.log(`[${stage}] ${film.title} — ${message}`);
 }
 
+/** First useful line from a child-process failure (stderr preferred). */
+export function formatRunScriptFailure(script, error) {
+  const stderr = String(error?.stderr ?? "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  const stdout = String(error?.stdout ?? "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => line.length > 0);
+  const detail =
+    stderr ||
+    stdout ||
+    (error instanceof Error ? error.message : String(error ?? "unknown error"));
+  // Keep on one line so queue sanitizePublicMessage retains the real cause.
+  const compact = detail.replace(/\s+/g, " ").trim();
+  return `${script} failed: ${compact}`;
+}
+
 async function runScopedScript(script, filmIds, dryRun, extraArgs = []) {
   const args = ["--film-ids", filmIds.join(","), ...extraArgs];
   if (dryRun) args.push("--dry-run");
@@ -262,7 +283,7 @@ async function runScopedScript(script, filmIds, dryRun, extraArgs = []) {
   } catch (error) {
     if (error.stdout) process.stdout.write(error.stdout);
     if (error.stderr) process.stderr.write(error.stderr);
-    throw new Error(`${script} failed: ${error.message}`);
+    throw new Error(formatRunScriptFailure(script, error));
   }
 }
 
@@ -913,7 +934,8 @@ export async function processFilmImportBatch({
       results.push({
         title,
         status: FILM_STATUS.FAILED_ROLLED_BACK,
-        filmId: createdFilmId,
+        // Row was rolled back — do not keep a dangling films.id for callers.
+        filmId: null,
         error: message,
         deferProfileEnqueue: shouldDeferProfileEnqueueForFilm(entry.item.input),
         checklist: { inserted: false, failed: true },

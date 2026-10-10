@@ -71,14 +71,16 @@ function isValidEmbedding(value) {
   );
 }
 
-async function getExistingEmbeddings() {
+async function getExistingEmbeddings(filmIds) {
+  const map = new Map();
+  if (!filmIds?.length) return map;
+
   const { data, error } = await supabase
     .from("film_aesthetic_embeddings")
-    .select("film_id, aesthetic_text, embedding");
+    .select("film_id, aesthetic_text, embedding")
+    .in("film_id", filmIds);
 
   if (error) throw error;
-
-  const map = new Map();
 
   for (const row of data ?? []) {
     map.set(row.film_id, {
@@ -101,7 +103,7 @@ async function createEmbedding(input) {
 
 async function main() {
   const films = await getFilms();
-  const existingById = await getExistingEmbeddings();
+  const existingById = await getExistingEmbeddings(films.map((film) => film.id));
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with aesthetic tags: ${films.length}`);

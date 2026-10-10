@@ -64,13 +64,16 @@ async function getFilms() {
   }).then((films) => films.filter((film) => film.visual_world_tags?.length));
 }
 
-async function getExistingEmbeddings() {
+async function getExistingEmbeddings(filmIds) {
+  const map = new Map();
+  if (!filmIds?.length) return map;
+
   const { data, error } = await supabase
     .from("film_visual_world_embeddings")
-    .select("film_id, visual_world_text, embedding");
+    .select("film_id, visual_world_text, embedding")
+    .in("film_id", filmIds);
   if (error) throw error;
 
-  const map = new Map();
   for (const row of data ?? []) {
     map.set(row.film_id, {
       text: row.visual_world_text,
@@ -90,7 +93,7 @@ async function createEmbedding(input) {
 
 async function main() {
   const films = await getFilms();
-  const existingById = await getExistingEmbeddings();
+  const existingById = await getExistingEmbeddings(films.map((film) => film.id));
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
   console.log(`Films with visual world tags: ${films.length}`);
