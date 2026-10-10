@@ -69,6 +69,7 @@ export default async function NonDisneyAnimatedMoviesGuidePage() {
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
         initialSavedAtMs={page.initialSavedAtMs}
+        catalogUpdatedLabel={page.catalogUpdatedLabel}
       />
     </>
   );

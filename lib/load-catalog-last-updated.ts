@@ -74,7 +74,7 @@ export async function loadCatalogLastUpdatedAt(): Promise<string | null> {
   }
 }
 
-/** Label for UI next to film count, e.g. "Updated March 2026". */
+/** Label for public footer, e.g. "Catalog updated March 2026". */
 export async function loadCatalogUpdatedLabel(): Promise<string | null> {
   return formatCatalogUpdatedLabel(await loadCatalogLastUpdatedAt());
 }

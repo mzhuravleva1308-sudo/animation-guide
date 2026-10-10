@@ -67,6 +67,7 @@ export default async function BeautifulAnimatedFilmsGuidePage() {
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
         initialSavedAtMs={page.initialSavedAtMs}
+        catalogUpdatedLabel={page.catalogUpdatedLabel}
       />
     </>
   );

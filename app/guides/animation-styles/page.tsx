@@ -66,6 +66,7 @@ export default async function AnimationStylesGuidePage() {
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
         initialSavedAtMs={page.initialSavedAtMs}
+        catalogUpdatedLabel={page.catalogUpdatedLabel}
       />
     </>
   );

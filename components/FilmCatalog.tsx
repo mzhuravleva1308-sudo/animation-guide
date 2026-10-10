@@ -41,8 +41,6 @@ type FilmCatalogProps = {
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError?: string | null;
-  /** e.g. "Updated March 2026" — shown next to the film count. */
-  catalogUpdatedLabel?: string | null;
   interaction?: FilmCatalogInteractionProps;
   /** Controls which quick-filter chips are shown (Stop motion vs Landscapes). */
   mediaType?: MediaType;
@@ -55,7 +53,6 @@ export default function FilmCatalog({
   awardWinningFilmIds,
   pageSize,
   loadError,
-  catalogUpdatedLabel = null,
   interaction,
   mediaType = MEDIA_TYPE.animation,
   activeQuickFilter,
@@ -180,17 +177,8 @@ export default function FilmCatalog({
             />
           </div>
           {!isShowingSearchResults && totalCount > 0 ? (
-            <p
-              className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-              data-testid="catalog-film-count"
-            >
+            <p className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]">
               {totalCount} {totalCount === 1 ? "film" : "films"}
-              {catalogUpdatedLabel ? (
-                <span data-testid="catalog-updated-label">
-                  {" "}
-                  · {catalogUpdatedLabel}
-                </span>
-              ) : null}
             </p>
           ) : null}
         </div>

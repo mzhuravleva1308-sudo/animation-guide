@@ -4,6 +4,7 @@ import ResonaleBrand from "@/components/ResonaleBrand";
 import SiteFooter from "@/components/SiteFooter";
 import { CONTACT_EMAIL, CONTACT_PATH } from "@/lib/legal/contact";
 import { PRIVACY_CONTACT_EMAIL, PRIVACY_PATH } from "@/lib/legal/privacy";
+import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 const TITLE = "Contact | Resonale";
@@ -35,7 +36,9 @@ const bodyClassName =
 const emailLinkClassName =
   "underline decoration-[#c5c2d6] underline-offset-2 hover:text-[#1A1B2E]";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const catalogUpdatedLabel = await loadCatalogUpdatedLabel();
+
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8">
       <header>
@@ -81,7 +84,7 @@ export default function ContactPage() {
       </article>
 
       <div className="max-w-[42rem]">
-        <SiteFooter />
+        <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />
       </div>
     </main>
   );

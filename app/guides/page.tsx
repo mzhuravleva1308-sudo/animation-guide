@@ -8,6 +8,7 @@ import {
   PUBLIC_GUIDE_LINKS,
 } from "@/lib/guides/public-guide-links.mjs";
 import { findGuideFilmByTitle } from "@/lib/guides/resolve-guide-films.mjs";
+import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
 import { loadGuideCoverFilms } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
@@ -85,9 +86,10 @@ const jsonLd = {
 };
 
 export default async function GuidesIndexPage() {
-  const [auth, covers] = await Promise.all([
+  const [auth, covers, catalogUpdatedLabel] = await Promise.all([
     getAuthUserSummary(),
     loadGuideCoverFilms(PUBLIC_GUIDE_LINKS.map((guide) => guide.coverTitle)),
+    loadCatalogUpdatedLabel(),
   ]);
 
   const guides = PUBLIC_GUIDE_LINKS.map((guide) => {
@@ -110,7 +112,11 @@ export default async function GuidesIndexPage() {
           __html: serializeJsonLd(jsonLd),
         }}
       />
-      <GuidesIndexClient auth={auth} guides={guides} />
+      <GuidesIndexClient
+        auth={auth}
+        guides={guides}
+        catalogUpdatedLabel={catalogUpdatedLabel}
+      />
     </>
   );
 }

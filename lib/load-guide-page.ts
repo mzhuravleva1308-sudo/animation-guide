@@ -46,6 +46,7 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
     initialSavedFilmIds: catalog.initialSavedFilmIds,
     initialRatingUpdatedAtMs: catalog.initialRatingUpdatedAtMs,
     initialSavedAtMs: catalog.initialSavedAtMs,
+    catalogUpdatedLabel: catalog.catalogUpdatedLabel,
     anchorFilm,
     groups: resolved.groups as {
       heading: string;

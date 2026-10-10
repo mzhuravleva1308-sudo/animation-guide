@@ -8,6 +8,7 @@ import {
   PRIVACY_LAST_UPDATED,
   PRIVACY_PATH,
 } from "@/lib/legal/privacy";
+import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 const TITLE = "Privacy Policy | Resonale";
@@ -40,7 +41,9 @@ const bodyClassName =
   "mt-3 font-sans text-[15px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]";
 const listClassName = `${bodyClassName} list-disc space-y-1 pl-5`;
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const catalogUpdatedLabel = await loadCatalogUpdatedLabel();
+
   return (
     <main className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8">
       <header>
@@ -199,7 +202,7 @@ export default function PrivacyPage() {
       </article>
 
       <div className="max-w-[42rem]">
-        <SiteFooter />
+        <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />
       </div>
     </main>
   );

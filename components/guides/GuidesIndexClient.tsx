@@ -23,11 +23,13 @@ export type GuidesIndexItem = {
 type GuidesIndexClientProps = {
   auth: AuthUserSummary | null;
   guides: GuidesIndexItem[];
+  catalogUpdatedLabel?: string | null;
 };
 
 export default function GuidesIndexClient({
   auth: initialAuth,
   guides,
+  catalogUpdatedLabel = null,
 }: GuidesIndexClientProps) {
   const {
     auth,
@@ -113,7 +115,7 @@ export default function GuidesIndexClient({
         })}
       </ul>
 
-      <SiteFooter />
+      <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />
 
       <EmailAuthModal
         open={modalOpen}

@@ -34,6 +34,7 @@ type GuidePageClientProps = {
   initialSavedFilmIds?: string[];
   initialRatingUpdatedAtMs?: Record<string, number>;
   initialSavedAtMs?: Record<string, number>;
+  catalogUpdatedLabel?: string | null;
 };
 
 const introClassName =
@@ -53,6 +54,7 @@ export default function GuidePageClient({
   initialSavedFilmIds,
   initialRatingUpdatedAtMs,
   initialSavedAtMs,
+  catalogUpdatedLabel = null,
 }: GuidePageClientProps) {
   const {
     auth,
@@ -212,7 +214,7 @@ export default function GuidePageClient({
         </div>
       </div>
 
-      <SiteFooter />
+      <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />
 
       <EmailAuthModal
         open={modalOpen}

@@ -174,7 +174,7 @@ type FilmsPageClientProps = {
   initialSavedAtMs?: Record<string, number>;
   /** Newest successful profile↔film score write time (ISO). */
   scoresLastComputedAt?: string | null;
-  /** Public catalog freshness label, e.g. "Updated March 2026". */
+  /** Public catalog freshness label, e.g. "Catalog updated March 2026". */
   catalogUpdatedLabel?: string | null;
   /** Active catalog media (animation default). */
   mediaType?: "animation" | "live_action";
@@ -726,7 +726,6 @@ export default function FilmsPageClient({
               awardWinningFilmIds={catalogAwardIds}
               pageSize={pageSize}
               loadError={catalogLoadError}
-              catalogUpdatedLabel={catalogUpdatedLabel}
               mediaType={activeMedia}
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}
@@ -848,7 +847,7 @@ export default function FilmsPageClient({
         </>
       )}
 
-      <SiteFooter />
+      <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />
 
       <EmailAuthModal
         open={modalOpen}
