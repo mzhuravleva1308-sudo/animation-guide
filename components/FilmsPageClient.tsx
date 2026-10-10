@@ -197,7 +197,7 @@ type FilmsPageClientProps = {
     | "native"
     | "cross_from_animation"
     | "cross_from_live_action";
-  /** Films catalog tab is always public (guests + signed-in). */
+  /** Films catalog tab is allowlisted (early access). */
   showLiveActionTab?: boolean;
 };
 
@@ -229,7 +229,7 @@ export default function FilmsPageClient({
   catalogUpdatedShortLabel = null,
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
-  showLiveActionTab = true,
+  showLiveActionTab = false,
 }: FilmsPageClientProps) {
   const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
     initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
@@ -494,6 +494,9 @@ export default function FilmsPageClient({
       }
 
       if (tab === "films") {
+        if (!showLiveActionTab) {
+          return;
+        }
         void selectCatalog(MEDIA_TYPE.liveAction);
         return;
       }
@@ -503,7 +506,13 @@ export default function FilmsPageClient({
         void refreshPersonalizedCatalog();
       }
     },
-    [auth, openAuthModal, refreshPersonalizedCatalog, selectCatalog]
+    [
+      auth,
+      openAuthModal,
+      refreshPersonalizedCatalog,
+      selectCatalog,
+      showLiveActionTab,
+    ]
   );
 
   const isCatalogTab = activeTab === "all" || activeTab === "films";

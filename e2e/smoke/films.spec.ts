@@ -32,7 +32,7 @@ test.describe("Public films catalog", () => {
       "aria-pressed",
       "true"
     );
-    await expect(page.getByTestId("nav-films")).toBeVisible();
+    await expect(page.getByTestId("nav-films")).toHaveCount(0);
 
     expect(consoleErrors).toEqual([]);
   });
@@ -106,66 +106,24 @@ test.describe("Public films catalog", () => {
     await expect(page.getByTestId("quick-filter-description")).toBeVisible();
   });
 
-  test("opens a shared Films filter link", async ({ page }) => {
+  test("guests cannot open a shared Films filter link", async ({ page }) => {
     await page.goto("/?media=live_action&filter=sci-fi");
 
-    await expect(page.getByTestId("nav-films")).toHaveAttribute(
+    await expect(page.getByTestId("nav-films")).toHaveCount(0);
+    await expect(page.getByTestId("nav-animation")).toHaveAttribute(
       "aria-pressed",
       "true"
     );
-    await expect(page.getByRole("button", { name: "Sci-Fi" })).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    await expect(page).toHaveURL(/[?&]media=live_action(?:&|$)/);
-    await expect(page).toHaveURL(/[?&]filter=sci-fi(?:&|$)/);
+    await expect(page).not.toHaveURL(/media=live_action/);
   });
 
-  test("drops a filter that does not apply to Films", async ({ page }) => {
-    await page.goto("/?media=live_action&filter=rotoscope");
-
-    await expect(page.getByTestId("nav-films")).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    await expect(page.getByRole("button", { name: "Rotoscope" })).toHaveCount(0);
-    await expect(page).toHaveURL(/[?&]media=live_action(?:&|$)/);
-    await expect(page).not.toHaveURL(/filter=/);
-  });
-
-  test("guests do not see Saved or Watched nav", async ({ page }) => {
+  test("guests do not see Saved, Watched, or Films nav", async ({ page }) => {
     await page.goto("/");
 
     await expect(page.getByTestId("nav-saved")).toHaveCount(0);
     await expect(page.getByTestId("nav-watched")).toHaveCount(0);
+    await expect(page.getByTestId("nav-films")).toHaveCount(0);
     await expect(page.getByTestId("auth-status")).toBeVisible();
-  });
-
-  test("guest can open Films and is prompted to log in on rate or save", async ({
-    page,
-  }) => {
-    await page.goto("/");
-
-    await expect(page.getByTestId("nav-films")).toBeVisible();
-    await page.getByTestId("nav-films").click();
-    await expect(page.getByTestId("nav-films")).toHaveAttribute(
-      "aria-pressed",
-      "true"
-    );
-    await expect(
-      page.getByText(
-        "Find distinctive, beautiful and emotionally resonant films to watch next."
-      )
-    ).toBeVisible();
-    await expect(page.getByTestId("film-card").first()).toBeVisible();
-
-    await page.getByRole("button", { name: "Rate 1 out of 10" }).first().click();
-    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
-
-    await page.getByRole("button", { name: "Add to watchlist" }).first().click();
-    await expect(page.getByTestId("email-auth-modal")).toBeVisible();
   });
   test("supports search without profile context", async ({ page }) => {
     await page.goto("/films");
