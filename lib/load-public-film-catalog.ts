@@ -36,6 +36,11 @@ import {
   loadCatalogUpdatedLabel,
   loadCatalogUpdatedShortLabel,
 } from "@/lib/load-catalog-last-updated";
+import {
+  canAccessFreshTastePicks,
+  selectFreshTastePicks,
+} from "@/lib/fresh-taste-picks.mjs";
+import { loadRecentCatalogFilmIds } from "@/lib/load-recent-catalog-film-ids";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { Film } from "@/types/film";
 
@@ -453,17 +458,25 @@ export async function loadPublicFilmCatalog(options?: {
 
   const catalogUpdatedLabelPromise = loadCatalogUpdatedLabel();
   const catalogUpdatedShortLabelPromise = loadCatalogUpdatedShortLabel();
+  const freshTastePicksEnabled = canAccessFreshTastePicks({
+    email: auth?.email,
+  });
+  const recentCatalogFilmIdsPromise = freshTastePicksEnabled
+    ? loadRecentCatalogFilmIds()
+    : Promise.resolve(new Set<string>());
 
   const [
     publicBaseTimed,
     personalized,
     catalogUpdatedLabel,
     catalogUpdatedShortLabel,
+    recentCatalogFilmIds,
   ] = await Promise.all([
     publicBasePromise,
     personalizedPromise,
     catalogUpdatedLabelPromise,
     catalogUpdatedShortLabelPromise,
+    recentCatalogFilmIdsPromise,
   ]);
 
   const publicBase = publicBaseTimed.value;
@@ -519,7 +532,7 @@ export async function loadPublicFilmCatalog(options?: {
   }
 
   const {
-    value: { films, rankingMode, scoresFallbackCause },
+    value: { films, freshTastePicks, rankingMode, scoresFallbackCause },
     ms: normalizeSortMs,
   } = timeSyncStage(() => {
     const sorted = sortFilmsForDualModeCatalog({
@@ -544,8 +557,26 @@ export async function loadPublicFilmCatalog(options?: {
       });
     }
 
+    const picks = freshTastePicksEnabled
+      ? (selectFreshTastePicks({
+          films: unratedFilms,
+          recentFilmIds: recentCatalogFilmIds,
+          ratings: personalized.ratings,
+          scoreRows: personalized.scoreRows,
+          scoresUnavailable: personalized.scoresUnavailable,
+          scoreMode: ranking.scoreMode,
+          sourceMedia: ranking.sourceMedia,
+          mediaType: ranking.mediaType,
+        }) as Film[])
+      : [];
+    const pickIds = new Set(picks.map((film) => film.id));
+    const sortedWithoutPicks = sorted.films.filter(
+      (film) => !pickIds.has(film.id)
+    );
+
     return {
-      films: [...sorted.films, ...sortFilmsByColdStart(ratedFilms)],
+      films: [...sortedWithoutPicks, ...sortFilmsByColdStart(ratedFilms)],
+      freshTastePicks: picks,
       rankingMode: sorted.mode,
       scoresFallbackCause: sorted.scoresFallbackCause,
     };
@@ -575,6 +606,7 @@ export async function loadPublicFilmCatalog(options?: {
   return {
     auth,
     films,
+    freshTastePicks,
     awardWinningFilmIds: publicBase.awardWinningFilmIds,
     loadError: publicBase.loadError,
     pageSize: PUBLIC_CATALOG_PAGE_SIZE,

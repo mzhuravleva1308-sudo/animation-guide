@@ -38,6 +38,8 @@ type FilmCatalogInteractionProps = {
 
 type FilmCatalogProps = {
   films: Film[];
+  /** Recent arrivals matched to taste; hidden while search/filter is active. */
+  freshTastePicks?: Film[];
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError?: string | null;
@@ -52,6 +54,7 @@ type FilmCatalogProps = {
 
 export default function FilmCatalog({
   films,
+  freshTastePicks = [],
   awardWinningFilmIds,
   pageSize,
   loadError,
@@ -163,6 +166,11 @@ export default function FilmCatalog({
   ]);
 
   const isShowingSearchResults = isSearchActive && isSearchReady;
+  const showFreshTastePicks =
+    freshTastePicks.length > 0 &&
+    !activeQuickFilter &&
+    !isSearchActive &&
+    !loadError;
 
   return (
     <>
@@ -250,9 +258,54 @@ export default function FilmCatalog({
         </div>
       )}
 
+      {showFreshTastePicks ? (
+        <section
+          data-testid="fresh-taste-picks"
+          className="mb-8"
+          aria-labelledby="fresh-taste-picks-heading"
+        >
+          <h2
+            id="fresh-taste-picks-heading"
+            className="mb-3 font-sans text-[13px] font-medium leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+          >
+            New for you
+          </h2>
+          <div className="grid gap-4">
+            {freshTastePicks.map((film, index) => (
+              <FilmCard
+                key={film.id}
+                mode={interaction ? "catalog" : "public"}
+                film={film}
+                lazyLoadPoster={index >= 1}
+                profileId={interaction?.profileId}
+                profileSlug={interaction?.profileSlug}
+                initialRating={interaction?.filmRatings[film.id] ?? null}
+                savedFilmIds={interaction?.savedFilmIds ?? new Set()}
+                onSavedChange={
+                  interaction?.onSavedChange ??
+                  (() => {
+                    /* no-op */
+                  })
+                }
+                onRatingChange={
+                  interaction?.onRatingChange ??
+                  (() => {
+                    /* no-op */
+                  })
+                }
+                onAuthRequired={interaction?.onAuthRequired}
+                ratingOnboardingHint={getHintForIndex(index)}
+                onDismissRatingOnboarding={onDismissRatingOnboarding}
+              />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {!loadError &&
         !searchState.isLoading &&
         !visibleFilms.length &&
+        !showFreshTastePicks &&
         !(isSearchActive && !isSearchReady) && (
           <div
             data-testid={
@@ -272,33 +325,38 @@ export default function FilmCatalog({
         data-testid={isShowingSearchResults ? "film-search-results" : "film-list"}
         className="grid gap-4"
       >
-        {visibleFilms.map((film, index) => (
-          <FilmCard
-            key={film.id}
-            mode={interaction ? "catalog" : "public"}
-            film={film}
-            lazyLoadPoster={index >= 1}
-            profileId={interaction?.profileId}
-            profileSlug={interaction?.profileSlug}
-            initialRating={interaction?.filmRatings[film.id] ?? null}
-            savedFilmIds={interaction?.savedFilmIds ?? new Set()}
-            onSavedChange={
-              interaction?.onSavedChange ??
-              (() => {
-                /* no-op */
-              })
-            }
-            onRatingChange={
-              interaction?.onRatingChange ??
-              (() => {
-                /* no-op */
-              })
-            }
-            onAuthRequired={interaction?.onAuthRequired}
-            ratingOnboardingHint={getHintForIndex(index)}
-            onDismissRatingOnboarding={onDismissRatingOnboarding}
-          />
-        ))}
+        {visibleFilms.map((film, index) => {
+          const onboardingIndex = showFreshTastePicks
+            ? index + freshTastePicks.length
+            : index;
+          return (
+            <FilmCard
+              key={film.id}
+              mode={interaction ? "catalog" : "public"}
+              film={film}
+              lazyLoadPoster={onboardingIndex >= 1}
+              profileId={interaction?.profileId}
+              profileSlug={interaction?.profileSlug}
+              initialRating={interaction?.filmRatings[film.id] ?? null}
+              savedFilmIds={interaction?.savedFilmIds ?? new Set()}
+              onSavedChange={
+                interaction?.onSavedChange ??
+                (() => {
+                  /* no-op */
+                })
+              }
+              onRatingChange={
+                interaction?.onRatingChange ??
+                (() => {
+                  /* no-op */
+                })
+              }
+              onAuthRequired={interaction?.onAuthRequired}
+              ratingOnboardingHint={getHintForIndex(onboardingIndex)}
+              onDismissRatingOnboarding={onDismissRatingOnboarding}
+            />
+          );
+        })}
       </section>
 
       {!isShowingSearchResults && totalCount > 0 && (

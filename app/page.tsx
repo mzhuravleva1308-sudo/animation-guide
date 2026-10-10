@@ -38,6 +38,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     <FilmsPageClient
       auth={catalog.auth}
       films={catalog.films}
+      freshTastePicks={catalog.freshTastePicks}
       awardWinningFilmIds={catalog.awardWinningFilmIds}
       pageSize={catalog.pageSize}
       loadError={catalog.loadError}

@@ -25,6 +25,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       films: catalog.films,
+      freshTastePicks: catalog.freshTastePicks,
       awardWinningFilmIds: catalog.awardWinningFilmIds,
       loadError: catalog.loadError,
       pageSize: catalog.pageSize,

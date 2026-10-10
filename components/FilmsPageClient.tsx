@@ -39,12 +39,14 @@ import { Film } from "@/types/film";
 
 type CatalogSlice = {
   films: Film[];
+  freshTastePicks: Film[];
   awardWinningFilmIds: string[];
   loadError: string | null;
 };
 
 type CatalogApiPayload = {
   films?: Film[];
+  freshTastePicks?: Film[];
   awardWinningFilmIds?: string[];
   loadError?: string | null;
   scoresLastComputedAt?: string | null;
@@ -102,6 +104,7 @@ async function fetchCatalogPayload(
 function catalogSliceFromPayload(payload: CatalogApiPayload): CatalogSlice {
   return {
     films: payload.films ?? [],
+    freshTastePicks: payload.freshTastePicks ?? [],
     awardWinningFilmIds: payload.awardWinningFilmIds ?? [],
     loadError: payload.loadError ?? null,
   };
@@ -158,6 +161,8 @@ type CatalogTab = "all" | "films" | "saved" | "watched";
 type FilmsPageClientProps = {
   auth: AuthUserSummary | null;
   films: Film[];
+  /** Recent catalog arrivals ranked to the viewer's taste (signed-in smart mode). */
+  freshTastePicks?: Film[];
   awardWinningFilmIds: string[];
   pageSize: number;
   loadError: string | null;
@@ -201,6 +206,7 @@ function sortFilmsByRecency(
 export default function FilmsPageClient({
   auth: initialAuth,
   films,
+  freshTastePicks: initialFreshTastePicks = [],
   awardWinningFilmIds,
   pageSize,
   loadError,
@@ -267,6 +273,7 @@ export default function FilmsPageClient({
   >(() => ({
     [catalogSliceKey(initialMediaType)]: {
       films,
+      freshTastePicks: initialFreshTastePicks,
       awardWinningFilmIds,
       loadError,
     },
@@ -369,11 +376,18 @@ export default function FilmsPageClient({
       ...current,
       [key]: {
         films,
+        freshTastePicks: initialFreshTastePicks,
         awardWinningFilmIds,
         loadError,
       },
     }));
-  }, [initialMediaType, films, awardWinningFilmIds, loadError]);
+  }, [
+    initialMediaType,
+    films,
+    initialFreshTastePicks,
+    awardWinningFilmIds,
+    loadError,
+  ]);
 
   useEffect(() => {
     if (!auth && activeTab !== "all" && activeTab !== "films") {
@@ -499,6 +513,7 @@ export default function FilmsPageClient({
 
   const currentSlice = catalogSlices[catalogSliceKey(activeMedia)] ?? null;
   const catalogFilms = currentSlice?.films ?? [];
+  const catalogFreshTastePicks = currentSlice?.freshTastePicks ?? [];
   const catalogAwardIds = currentSlice?.awardWinningFilmIds ?? [];
   const catalogLoadError = currentSlice?.loadError ?? loadError;
 
@@ -506,6 +521,9 @@ export default function FilmsPageClient({
     const byId = new Map<string, Film>();
     for (const slice of Object.values(catalogSlices)) {
       for (const film of slice.films) {
+        byId.set(film.id, film);
+      }
+      for (const film of slice.freshTastePicks) {
         byId.set(film.id, film);
       }
     }
@@ -541,10 +559,21 @@ export default function FilmsPageClient({
     [catalogFilms, filmRatings]
   );
 
-  const ratingOnboardingFilmIds = useMemo(
-    () => catalogFilms.map((film) => film.id),
-    [catalogFilms]
+  const unratedFreshTastePicks = useMemo(
+    () =>
+      catalogFreshTastePicks.filter(
+        (film) => typeof filmRatings[film.id] !== "number"
+      ),
+    [catalogFreshTastePicks, filmRatings]
   );
+
+  const ratingOnboardingFilmIds = useMemo(() => {
+    const ids = new Set(catalogFilms.map((film) => film.id));
+    for (const film of catalogFreshTastePicks) {
+      ids.add(film.id);
+    }
+    return ids;
+  }, [catalogFilms, catalogFreshTastePicks]);
 
   const listFilms = activeTab === "saved" ? savedFilms : watchedFilms;
   // ratingsReady covers both filmRatings and savedFilmIds — they load together
@@ -726,6 +755,7 @@ export default function FilmsPageClient({
           ) : (
             <FilmCatalog
               films={unratedFilms}
+              freshTastePicks={unratedFreshTastePicks}
               awardWinningFilmIds={catalogAwardIds}
               pageSize={pageSize}
               loadError={catalogLoadError}
