@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Fill quick_filters (Sci-Fi / Sarcasm / Light / Shadow tokens) on
+ * Fill quick_filters (Sci-Fi / Sarcasm / Cultures / Light / Shadow tokens) on
  * film_discovery_candidates. Uses the same closed vocabulary as films.quick_filters.
  * Does not touch films, synopsis, moods, aesthetic_tags, or technique.
  *
