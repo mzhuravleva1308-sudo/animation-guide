@@ -23,6 +23,7 @@ function parseArgs(argv) {
     dryRun: false,
     force: false,
     source: null,
+    reviewStatus: null,
     limit: null,
     candidateId: null,
   };
@@ -34,6 +35,9 @@ function parseArgs(argv) {
     else if (arg === "--source") options.source = argv[++index];
     else if (arg.startsWith("--source=")) {
       options.source = arg.slice("--source=".length);
+    } else if (arg === "--review-status") options.reviewStatus = argv[++index];
+    else if (arg.startsWith("--review-status=")) {
+      options.reviewStatus = arg.slice("--review-status=".length);
     } else if (arg === "--limit") options.limit = Number(argv[++index]);
     else if (arg.startsWith("--limit=")) {
       options.limit = Number(arg.slice("--limit=".length));
@@ -95,6 +99,9 @@ async function main() {
   if (options.source) {
     query = query.eq("source", options.source);
   }
+  if (options.reviewStatus) {
+    query = query.eq("review_status", options.reviewStatus);
+  }
 
   let { data, error } = await query;
   if (error && /media_status|poster_url|trailer_url/i.test(error.message)) {
@@ -109,6 +116,9 @@ async function main() {
       .order("created_at", { ascending: true });
     if (options.candidateId) fallback = fallback.eq("id", options.candidateId);
     if (options.source) fallback = fallback.eq("source", options.source);
+    if (options.reviewStatus) {
+      fallback = fallback.eq("review_status", options.reviewStatus);
+    }
     const retry = await fallback;
     if (retry.error) throw retry.error;
     data = (retry.data ?? []).map((row) => ({

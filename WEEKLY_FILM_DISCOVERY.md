@@ -135,8 +135,9 @@ Trailer priority:
 1. TMDB `Trailer` + `official=true` (prefer `iso_639_1=en` among ties)
 2. Other TMDB `Trailer` on identity-confirmed match
 3. Official TMDB `Teaser` only if no Trailer
-4. YouTube Data API **search** fallback (never replaces a TMDB Trailer; skipped after first 429 in a run)
-5. Otherwise `media_partial` / `media_failed` — no random video
+4. If the chosen TMDB trailer is **non-English and has no English-subtitle signal**, YouTube search for **original language + English subtitles** (may replace that TMDB pick). Skipped after first 429 in a run.
+5. Otherwise keep the non-English TMDB trailer, or fall back to general YouTube search when TMDB has no Trailer/Teaser
+6. Otherwise `media_partial` / `media_failed` — no random video
 
 TMDB Clip is **not** accepted for discovery staging (`allowClip: false`). Production `fill-trailers` still allows official/trusted Clips.
 

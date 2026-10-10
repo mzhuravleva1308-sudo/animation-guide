@@ -24,7 +24,10 @@ import {
 import {
   buildTrailerSourceRecord,
   buildYoutubeWatchUrl,
+  fetchYoutubeTrailerLanguageSignals,
+  searchYoutubeOriginalWithEnglishSubsTrailers,
   searchYoutubeTrailers,
+  trailerNeedsEnglishSubtitleUpgrade,
 } from "../lib/youtube-trailer-search.mjs";
 
 applyAppEnv();
@@ -177,7 +180,7 @@ async function resolveYoutubeChannel(video) {
   return data.author_name ?? null;
 }
 
-async function getTmdbTrailerSource(movie) {
+async function getTmdbTrailerSelection(movie) {
   const selected = await selectBestTrailerVideo(movie, {
     resolveChannel: resolveYoutubeChannel,
     isVideoAvailable,
@@ -193,6 +196,10 @@ async function getTmdbTrailerSource(movie) {
     }`
   );
 
+  return selected;
+}
+
+function trailerRecordFromSelection(selected) {
   return buildTrailerSourceRecord({
     provider: "youtube",
     videoId: selected.video.key,
@@ -228,13 +235,83 @@ async function getYoutubeFallbackTrailerSource(film) {
   });
 }
 
+async function maybeUpgradeNonEnglishTrailer({
+  film,
+  movie,
+  selected,
+}) {
+  if (!selected?.video?.key || !youtubeApiKey) {
+    return null;
+  }
+
+  const languageCode = selected.video.iso_639_1 ?? movie?.original_language ?? null;
+  let text = String(selected.video.name ?? "");
+
+  const signals = await fetchYoutubeTrailerLanguageSignals(selected.video.key, {
+    apiKey: youtubeApiKey,
+  });
+  if (signals?.text) {
+    text = `${text} ${signals.text}`.trim();
+  }
+
+  if (
+    !trailerNeedsEnglishSubtitleUpgrade({
+      languageCode,
+      text,
+    })
+  ) {
+    return null;
+  }
+
+  console.log(
+    `  Non-English trailer without English subs (${languageCode ?? "unknown"}); searching YouTube for original + English subtitles`
+  );
+
+  const upgraded = await searchYoutubeOriginalWithEnglishSubsTrailers({
+    apiKey: youtubeApiKey,
+    film: {
+      ...film,
+      original_language: movie?.original_language ?? film.original_language ?? null,
+    },
+    originalLanguage: movie?.original_language ?? languageCode,
+    isVideoAvailable,
+  });
+
+  if (!upgraded?.video_id || !upgraded?.url) {
+    console.log(
+      `  No original-language + English-subs YouTube trailer found; keeping TMDB selection`
+    );
+    return null;
+  }
+
+  console.log(
+    `  YouTube original+EN-subs upgrade ${upgraded.video_id}: score=${upgraded.score}; ${upgraded.reasons.join("; ")}${
+      upgraded.channelTitle ? `; channel: ${upgraded.channelTitle}` : ""
+    }`
+  );
+
+  return buildTrailerSourceRecord({
+    provider: upgraded.provider,
+    videoId: upgraded.video_id,
+    url: upgraded.url,
+  });
+}
+
 async function resolveTrailerSource(film) {
   const movie = await searchTmdbMovie(film);
 
   if (movie?.id) {
-    const tmdbTrailer = await getTmdbTrailerSource(movie);
-    if (tmdbTrailer?.url) {
-      return tmdbTrailer;
+    const selected = await getTmdbTrailerSelection(movie);
+    if (selected?.video?.key) {
+      const upgraded = await maybeUpgradeNonEnglishTrailer({
+        film,
+        movie,
+        selected,
+      });
+      if (upgraded?.url) {
+        return upgraded;
+      }
+      return trailerRecordFromSelection(selected);
     }
     console.log(`No confident TMDB trailer: ${film.title}`);
   } else {
