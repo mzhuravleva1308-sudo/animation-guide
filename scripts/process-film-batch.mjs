@@ -244,22 +244,33 @@ function logFilm(stage, film, message) {
   console.log(`[${stage}] ${film.title} — ${message}`);
 }
 
+/** Pick the most useful one-line cause from child stdout/stderr. */
+export function pickChildProcessDetail(text) {
+  const lines = String(text ?? "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0 && line !== "^");
+  if (!lines.length) return null;
+  const ranked =
+    lines.find((line) => /Cannot find (module|package)\b/i.test(line)) ||
+    lines.find((line) => /^Error\b/i.test(line)) ||
+    lines.find(
+      (line) => /ERR_[A-Z0-9_]+/.test(line) && !/\bthrow\b/.test(line)
+    ) ||
+    lines.find((line) => !/^node:internal\//.test(line));
+  return ranked || lines[0];
+}
+
 /** First useful line from a child-process failure (stderr preferred). */
 export function formatRunScriptFailure(script, error) {
-  const stderr = String(error?.stderr ?? "")
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.length > 0);
-  const stdout = String(error?.stdout ?? "")
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.length > 0);
   const detail =
-    stderr ||
-    stdout ||
-    (error instanceof Error ? error.message : String(error ?? "unknown error"));
+    pickChildProcessDetail(error?.stderr) ||
+    pickChildProcessDetail(error?.stdout) ||
+    pickChildProcessDetail(
+      error instanceof Error ? error.message : String(error ?? "unknown error")
+    ) ||
+    "unknown error";
   // Keep on one line so queue sanitizePublicMessage retains the real cause.
   const compact = detail.replace(/\s+/g, " ").trim();
   return `${script} failed: ${compact}`;
@@ -270,6 +281,7 @@ async function runScopedScript(script, filmIds, dryRun, extraArgs = []) {
   if (dryRun) args.push("--dry-run");
   try {
     const result = await execFileAsync(process.execPath, [path.join(SCRIPT_DIR, script), ...args], {
+      cwd: process.cwd(),
       env: {
         ...process.env,
         NEXT_PUBLIC_SUPABASE_ANON_KEY:
