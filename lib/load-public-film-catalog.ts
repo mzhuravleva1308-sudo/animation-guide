@@ -32,6 +32,7 @@ import {
   applyPublicCatalogVisibilityFilter,
 } from "@/lib/public-catalog-films.mjs";
 import { supabase } from "@/lib/supabase";
+import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { Film } from "@/types/film";
 
@@ -447,10 +448,14 @@ export async function loadPublicFilmCatalog(options?: {
     ? loadPersonalizedCatalogRankingData(profileId, ranking)
     : Promise.resolve(emptyPersonalized());
 
-  const [publicBaseTimed, personalized] = await Promise.all([
-    publicBasePromise,
-    personalizedPromise,
-  ]);
+  const catalogUpdatedLabelPromise = loadCatalogUpdatedLabel();
+
+  const [publicBaseTimed, personalized, catalogUpdatedLabel] =
+    await Promise.all([
+      publicBasePromise,
+      personalizedPromise,
+      catalogUpdatedLabelPromise,
+    ]);
 
   const publicBase = publicBaseTimed.value;
 
@@ -569,6 +574,7 @@ export async function loadPublicFilmCatalog(options?: {
     initialRatingUpdatedAtMs: ratingUpdatedAtMsFromRows(personalized.ratings),
     initialSavedAtMs: personalized.savedAtMs,
     scoresLastComputedAt: personalized.scoresLastComputedAt,
+    catalogUpdatedLabel,
     mediaType: ranking.mediaType,
     scoreMode: normalizeScoreMode(ranking.scoreMode),
     sourceMedia: ranking.sourceMedia,

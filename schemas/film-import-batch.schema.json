@@ -144,7 +144,7 @@
               }
             ]
           },
-          "description": "Manual quick filters written to films.quick_filters. sarcasm = dry irony / cynicism / caustic black humor (not mere absurd or quirky comedy). cultures = lived-from-inside culture / place / values beyond a European default (not tourist décor or production country alone). connection = Light (emotional closeness); distance = Shadow (detachment). Omit both tonal tokens when the film is in the middle. connection and distance are mutually exclusive; sci-fi, sarcasm, and cultures may combine with either tonal token or stand alone."
+          "description": "Manual quick filters written to films.quick_filters. sarcasm = dry irony / cynicism / caustic black humor (not mere absurd or quirky comedy). cultures = clear keeps only: authenticity mandatory plus specificity, immersion, and culture-learning value for how people live/think/relate; omit borderline, war/migration/tragedy-only, décor/elsewhere, and outsider folklore packaging; rare myth/epic path only when inside the tradition. connection = Light (emotional closeness); distance = Shadow (detachment). Omit both tonal tokens when the film is in the middle. connection and distance are mutually exclusive; sci-fi, sarcasm, and cultures may combine with either tonal token or stand alone."
         },
         "catalog_visible": {
           "type": "boolean",
