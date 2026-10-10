@@ -46,6 +46,15 @@ import { Film } from "@/types/film";
 
 export const PUBLIC_CATALOG_PAGE_SIZE = 100;
 
+export type CatalogRankingMode = "smart" | "smart-cross" | "cold-start";
+
+function normalizeCatalogRankingMode(value: unknown): CatalogRankingMode {
+  if (value === "smart" || value === "smart-cross" || value === "cold-start") {
+    return value;
+  }
+  return "cold-start";
+}
+
 /**
  * Fields actually rendered on catalog FilmCards / quick filters / cold-start sort.
  * Excludes tag arrays (debug-only on cards; search uses /api/search-films) and
@@ -577,7 +586,7 @@ export async function loadPublicFilmCatalog(options?: {
     return {
       films: [...sortedWithoutPicks, ...sortFilmsByColdStart(ratedFilms)],
       freshTastePicks: picks,
-      rankingMode: sorted.mode,
+      rankingMode: normalizeCatalogRankingMode(sorted.mode),
       scoresFallbackCause: sorted.scoresFallbackCause,
     };
   });
