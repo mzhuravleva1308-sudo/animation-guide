@@ -176,6 +176,8 @@ type FilmsPageClientProps = {
   scoresLastComputedAt?: string | null;
   /** Public catalog freshness label, e.g. "Catalog updated March 2026". */
   catalogUpdatedLabel?: string | null;
+  /** Short freshness next to film count, e.g. "Updated Mar 2026". */
+  catalogUpdatedShortLabel?: string | null;
   /** Active catalog media (animation default). */
   mediaType?: "animation" | "live_action";
   /** Legacy query value; catalog always ranks native for the active media. */
@@ -210,6 +212,7 @@ export default function FilmsPageClient({
   initialSavedAtMs,
   scoresLastComputedAt = null,
   catalogUpdatedLabel = null,
+  catalogUpdatedShortLabel = null,
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
   showLiveActionTab = true,
@@ -726,6 +729,7 @@ export default function FilmsPageClient({
               awardWinningFilmIds={catalogAwardIds}
               pageSize={pageSize}
               loadError={catalogLoadError}
+              catalogUpdatedShortLabel={catalogUpdatedShortLabel}
               mediaType={activeMedia}
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}

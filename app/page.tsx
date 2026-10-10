@@ -47,6 +47,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       initialSavedAtMs={catalog.initialSavedAtMs}
       scoresLastComputedAt={catalog.scoresLastComputedAt}
       catalogUpdatedLabel={catalog.catalogUpdatedLabel}
+      catalogUpdatedShortLabel={catalog.catalogUpdatedShortLabel}
       mediaType={catalog.mediaType}
       sortParam={catalog.sortParam}
       showLiveActionTab={catalog.showLiveActionTab}

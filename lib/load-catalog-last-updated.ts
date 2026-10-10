@@ -3,6 +3,7 @@ import "server-only";
 import { unstable_cache } from "next/cache";
 import {
   formatCatalogUpdatedLabel,
+  formatCatalogUpdatedShortLabel,
   maxIsoTimestamps,
 } from "@/lib/catalog-last-updated.mjs";
 import { supabase } from "@/lib/supabase";
@@ -77,4 +78,9 @@ export async function loadCatalogLastUpdatedAt(): Promise<string | null> {
 /** Label for public footer, e.g. "Catalog updated March 2026". */
 export async function loadCatalogUpdatedLabel(): Promise<string | null> {
   return formatCatalogUpdatedLabel(await loadCatalogLastUpdatedAt());
+}
+
+/** Short label next to film count, e.g. "Updated Mar 2026". */
+export async function loadCatalogUpdatedShortLabel(): Promise<string | null> {
+  return formatCatalogUpdatedShortLabel(await loadCatalogLastUpdatedAt());
 }
