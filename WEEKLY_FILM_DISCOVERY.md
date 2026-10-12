@@ -133,13 +133,13 @@ Media curator fills staging-only external poster/trailer fields (TMDB `poster_pa
 Trailer priority:
 
 1. TMDB `Trailer` + `official=true` (prefer `iso_639_1=en` among ties)
-2. Other TMDB `Trailer` on identity-confirmed match
-3. Official TMDB `Teaser` only if no Trailer
-4. If the chosen TMDB trailer is **non-English and has no English-subtitle signal**, YouTube search for **original language + English subtitles** (may replace that TMDB pick). Skipped after first 429 in a run.
-5. Otherwise keep the non-English TMDB trailer, or fall back to general YouTube search when TMDB has no Trailer/Teaser
-6. Otherwise `media_partial` / `media_failed` — no random video
-
-TMDB Clip is **not** accepted for discovery staging (`allowClip: false`). Production `fill-trailers` still allows official/trusted Clips.
+2. Official TMDB `Teaser`
+3. Official TMDB `Clip` (beats fan/unofficial Trailers — e.g. Hair High HD preview)
+4. Other TMDB `Trailer` on identity-confirmed match
+5. Trusted-channel Clip
+6. If the chosen TMDB trailer is **non-English and has no English-subtitle signal**, YouTube search for **original language + English subtitles** (may replace that TMDB pick). Skipped after first 429 in a run.
+7. Otherwise keep the non-English TMDB trailer, or fall back to general YouTube search when TMDB has no Trailer/Teaser/Clip
+8. Otherwise `media_partial` / `media_failed` — no random video
 
 Channel resolve for TMDB Clip trust uses YouTube **oEmbed** (not Search API quota).
 
