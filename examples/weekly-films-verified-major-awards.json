@@ -1,0 +1,168 @@
+[
+  {
+    "film_match": { "title": "The King of Pigs", "year": 2011 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Busan International Film Festival",
+        "festival_year": 2011,
+        "section": "Korean Cinema Today - Vision",
+        "recognition_type": "award",
+        "award_name": "NETPAC Award",
+        "award_result": "winner",
+        "source_url": "https://en.wikipedia.org/wiki/The_King_of_Pigs",
+        "source_label": "Wikipedia — The King of Pigs",
+        "source_type": "manual",
+        "original_text": "Won three awards at the 2011 Busan International Film Festival including NETPAC Award",
+        "import_key": "verified-king-of-pigs-busan-2011-netpac"
+      },
+      {
+        "festival_name": "Busan International Film Festival",
+        "festival_year": 2011,
+        "section": "Korean Cinema Today - Vision",
+        "recognition_type": "award",
+        "award_name": "DGK Directors Award",
+        "award_result": "winner",
+        "source_url": "https://en.wikipedia.org/wiki/The_King_of_Pigs",
+        "source_label": "Wikipedia — The King of Pigs",
+        "source_type": "manual",
+        "original_text": "DGK Directors Award at Busan 2011",
+        "import_key": "verified-king-of-pigs-busan-2011-dgk"
+      },
+      {
+        "festival_name": "Busan International Film Festival",
+        "festival_year": 2011,
+        "section": "Korean Cinema Today - Vision",
+        "recognition_type": "award",
+        "award_name": "CGV Movie Collage Award",
+        "award_result": "winner",
+        "source_url": "https://en.wikipedia.org/wiki/The_King_of_Pigs",
+        "source_label": "Wikipedia — The King of Pigs",
+        "source_type": "manual",
+        "original_text": "CGV Movie Collage Award at Busan 2011",
+        "import_key": "verified-king-of-pigs-busan-2011-cgv"
+      }
+    ]
+  },
+  {
+    "film_match": { "title": "Rio 2096: A Story of Love and Fury", "year": 2013 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2013,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Cristal for Best Feature",
+        "award_result": "grand_prize",
+        "source_url": "https://www.awn.com/news/subconscious-password-rio-2096-win-cristal-awards-annecy",
+        "source_label": "AWN — Annecy 2013 Cristal",
+        "source_type": "manual",
+        "original_text": "Cristal for Best Feature — Rio 2096: A Story of Love and Fury",
+        "import_key": "verified-rio-2096-annecy-2013-cristal"
+      }
+    ]
+  },
+  {
+    "film_match": { "title": "Funan", "year": 2018 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2018,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Cristal for a Feature Film",
+        "award_result": "grand_prize",
+        "source_url": "https://cineuropa.org/fr/newsdetail/355890",
+        "source_label": "Cineuropa — Annecy 2018 Cristal",
+        "source_type": "manual",
+        "original_text": "Cristal du long métrage — Funan",
+        "import_key": "verified-funan-annecy-2018-cristal"
+      }
+    ]
+  },
+  {
+    "film_match": { "title": "My Sunny Maad", "year": 2021 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Annecy International Animation Film Festival",
+        "festival_year": 2021,
+        "section": "Feature Films",
+        "recognition_type": "award",
+        "award_name": "Jury Award",
+        "award_result": "jury_prize",
+        "source_url": "https://variety.com/2021/tv/festivals/annecy-winners-2021-flee-sunny-maad-1235000829/",
+        "source_label": "Variety — Annecy 2021 winners",
+        "source_type": "manual",
+        "original_text": "Jury Award — My Sunny Maad",
+        "import_key": "verified-sunny-maad-annecy-2021-jury"
+      },
+      {
+        "festival_name": "César Awards",
+        "festival_year": 2023,
+        "section": "Best Animated Film",
+        "recognition_type": "award",
+        "award_name": "Best Animated Film",
+        "award_result": "grand_prize",
+        "source_url": "https://english.radio.cz/michaela-pavlatovas-my-sunny-maad-wins-cesar-award-best-animated-feature-film-8776059",
+        "source_label": "Radio Prague — César 2023",
+        "source_type": "manual",
+        "original_text": "César Award for Best Animated Feature Film — My Sunny Maad",
+        "import_key": "verified-sunny-maad-cesar-2023-best-animated"
+      }
+    ]
+  },
+  {
+    "film_match": { "title": "On Happiness Road", "year": 2017 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Golden Horse Awards",
+        "festival_year": 2018,
+        "section": "Best Animation Feature",
+        "recognition_type": "award",
+        "award_name": "Best Animation Feature",
+        "award_result": "grand_prize",
+        "source_url": "https://www.tfai.org.tw/program/movieDetail/2c9580847ce093b1017ceb3ff796001b",
+        "source_label": "TFAI — On Happiness Road",
+        "source_type": "manual",
+        "original_text": "Golden Horse Best Animation Feature 2018",
+        "import_key": "verified-happiness-road-golden-horse-2018"
+      },
+      {
+        "festival_name": "Tokyo Anime Award Festival",
+        "festival_year": 2018,
+        "section": null,
+        "recognition_type": "award",
+        "award_name": "Grand Prize",
+        "award_result": "grand_prize",
+        "source_url": "https://www.tfai.org.tw/program/movieDetail/2c9580847ce093b1017ceb3ff796001b",
+        "source_label": "TFAI — On Happiness Road",
+        "source_type": "manual",
+        "original_text": "Tokyo Anime Award Festival Grand Prize 2018",
+        "import_key": "verified-happiness-road-taaf-2018-grand"
+      }
+    ]
+  },
+  {
+    "film_match": { "title": "Black Butterflies", "year": 2024 },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Goya Awards",
+        "festival_year": 2025,
+        "section": "Best Animated Film",
+        "recognition_type": "award",
+        "award_name": "Best Animated Film",
+        "award_result": "grand_prize",
+        "source_url": "https://www.animationmagazine.net/2025/11/flights-for-survival-david-bautes-black-butterflies-animates-three-eye-opening-climate-refugee-stories/",
+        "source_label": "Animation Magazine — Black Butterflies awards",
+        "source_type": "manual",
+        "original_text": "Goya Award for Best Animated Feature Film — Black Butterflies",
+        "import_key": "verified-black-butterflies-goya-2025"
+      }
+    ]
+  }
+]

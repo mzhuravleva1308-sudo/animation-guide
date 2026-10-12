@@ -16,6 +16,7 @@ import { isNonEmptyFilmField } from "../lib/film-field-merge.mjs";
 import {
   shouldDeferProfileEnqueueForFilm,
 } from "../lib/discovery-to-import-payload.mjs";
+import { syncDiscoveryFestivalsByCandidateId } from "../lib/sync-discovery-festivals-to-catalog.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
 /** Lazy so unit tests can import this file without SERVICE_ROLE_KEY. */
@@ -864,6 +865,28 @@ export async function processFilmImportBatch({
   for (const entry of classified) {
     const title = entry.item.input.title;
     if (entry.duplicate) {
+      const discoveryCandidateId =
+        entry.item.input.discovery_candidate_id ?? null;
+      try {
+        const festivalSync = await syncDiscoveryFestivalsByCandidateId(
+          supabase,
+          entry.duplicate.existingFilmId,
+          discoveryCandidateId
+        );
+        if (!festivalSync.skipped) {
+          console.log(
+            `[festival_sync] ${title} — claims=${festivalSync.claims} recognitions=${festivalSync.recognitions}`
+          );
+        }
+      } catch (festivalError) {
+        console.error(
+          `[festival_sync_failed] ${title} — ${
+            festivalError instanceof Error
+              ? festivalError.message
+              : String(festivalError)
+          }`
+        );
+      }
       results.push({
         title,
         status: FILM_STATUS.DUPLICATE_SKIPPED,
@@ -877,7 +900,7 @@ export async function processFilmImportBatch({
           profile_scores: "deferred",
           catalog_visible: false,
         },
-        discoveryCandidateId: entry.item.input.discovery_candidate_id ?? null,
+        discoveryCandidateId,
       });
       console.log(
         `[duplicate_skipped] ${title} — existing UUID ${entry.duplicate.existingFilmId}`
@@ -889,6 +912,26 @@ export async function processFilmImportBatch({
     try {
       createdFilmId = await importOneFilm(supabase, entry.item);
       console.log(`[imported] ${title} — ${createdFilmId}`);
+      try {
+        const festivalSync = await syncDiscoveryFestivalsByCandidateId(
+          supabase,
+          createdFilmId,
+          entry.item.input.discovery_candidate_id ?? null
+        );
+        if (!festivalSync.skipped) {
+          console.log(
+            `[festival_sync] ${title} — claims=${festivalSync.claims} recognitions=${festivalSync.recognitions}`
+          );
+        }
+      } catch (festivalError) {
+        console.error(
+          `[festival_sync_failed] ${title} — ${
+            festivalError instanceof Error
+              ? festivalError.message
+              : String(festivalError)
+          }`
+        );
+      }
 
       const pipelineResult = await pipeline({
         supabase,
