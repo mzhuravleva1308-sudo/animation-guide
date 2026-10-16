@@ -97,36 +97,53 @@ export async function GET() {
       profileId: string;
     };
 
-    let rowsQuery = await admin
-      .from("profile_film_lists")
-      .select("film_id, note, created_at")
-      .eq("profile_id", profileId)
-      .eq("list_type", VIBE_HIDDEN_LIST_TYPE)
-      .order("created_at", { ascending: false });
+    type HiddenRow = {
+      film_id: string;
+      note?: string | null;
+      created_at?: string;
+    };
 
-    // Hosted may not have note column until migration is applied.
-    if (rowsQuery.error && /note/i.test(rowsQuery.error.message)) {
-      rowsQuery = await admin
+    let rows: HiddenRow[] = [];
+    {
+      const withNote = await admin
         .from("profile_film_lists")
-        .select("film_id, created_at")
+        .select("film_id, note, created_at")
         .eq("profile_id", profileId)
         .eq("list_type", VIBE_HIDDEN_LIST_TYPE)
         .order("created_at", { ascending: false });
+
+      if (withNote.error && /note/i.test(withNote.error.message)) {
+        const withoutNote = await admin
+          .from("profile_film_lists")
+          .select("film_id, created_at")
+          .eq("profile_id", profileId)
+          .eq("list_type", VIBE_HIDDEN_LIST_TYPE)
+          .order("created_at", { ascending: false });
+
+        if (withoutNote.error) {
+          return NextResponse.json(
+            { error: withoutNote.error.message },
+            { status: 500 }
+          );
+        }
+        rows = (withoutNote.data ?? []) as HiddenRow[];
+      } else if (withNote.error) {
+        return NextResponse.json(
+          { error: withNote.error.message },
+          { status: 500 }
+        );
+      } else {
+        rows = (withNote.data ?? []) as HiddenRow[];
+      }
     }
 
-    const { data: rows, error } = rowsQuery;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    const filmIds = (rows ?? []).map((row) => row.film_id).filter(Boolean);
+    const filmIds = rows.map((row) => row.film_id).filter(Boolean);
     if (!filmIds.length) {
       return NextResponse.json({ filmIds: [], items: [], count: 0 });
     }
 
     const noteByFilmId = new Map(
-      (rows ?? []).map((row) => [row.film_id, normalizeNote(row.note)])
+      rows.map((row) => [row.film_id, normalizeNote(row.note)])
     );
 
     const { data: films, error: filmsError } = await admin
