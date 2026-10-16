@@ -532,7 +532,7 @@ async function main() {
   );
   const listColumns = resolveSyncColumns(
     await getTableColumnNames(local, "profile_film_lists"),
-    ["id", "profile_id", "film_id", "list_type", "created_at"]
+    ["id", "profile_id", "film_id", "list_type", "note", "created_at"]
   );
   const scoreColumns = resolveSyncColumns(
     await getTableColumnNames(local, "profile_film_scores"),
