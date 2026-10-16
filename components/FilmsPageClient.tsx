@@ -12,6 +12,7 @@ import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCard from "@/components/FilmCard";
 import FilmCatalog from "@/components/FilmCatalog";
+import { canAccessVibeSearch } from "@/lib/vibe-search-access.mjs";
 import type { QuickFilter } from "@/components/QuickFilters";
 import {
   HeaderIconButton,
@@ -785,6 +786,7 @@ export default function FilmsPageClient({
               mediaType={activeMedia}
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}
+              showVibeSearch={canAccessVibeSearch(auth?.email)}
               interaction={{
                 profileId,
                 profileSlug,
