@@ -295,19 +295,40 @@ export default function FilmCatalog({
         ) : null}
       </div>
 
-      {(activeSearch.error && isShowingSearchResults) ||
-      (isShowingSearchResults &&
-        !searchLoading &&
-        !activeSearch.error &&
-        visibleFilms.length > 0) ||
-      (vibeState.isActive &&
-        vibeState.query.length > 0 &&
-        vibeState.query.length < vibeSearchUiConstants.MIN_QUERY_LENGTH) ||
-      (lookupReady === false &&
-        searchState.isActive &&
-        searchState.query.length > 0 &&
-        searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH &&
-        !vibeReady) ? (
+      {vibeState.isLoading ? (
+        <div
+          className="mb-4 grid gap-3"
+          data-testid="vibe-search-results-loading"
+          aria-busy="true"
+          aria-live="polite"
+        >
+          {[0, 1, 2].map((index) => (
+            <div
+              key={index}
+              className="grid gap-5 rounded-2xl border border-gray-100 p-5 md:grid-cols-[160px_1fr]"
+            >
+              <div className="h-56 w-full animate-pulse rounded-xl bg-gray-200 md:h-60" />
+              <div className="space-y-4">
+                <div className="h-7 w-2/3 animate-pulse rounded-xl bg-gray-200" />
+                <div className="h-4 w-1/2 animate-pulse rounded-xl bg-gray-200" />
+                <div className="h-20 w-full animate-pulse rounded-xl bg-gray-200" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : null}
+
+      {!vibeState.isLoading &&
+      ((activeSearch.error && isShowingSearchResults) ||
+        (isShowingSearchResults &&
+          !searchLoading &&
+          !activeSearch.error &&
+          visibleFilms.length > 0) ||
+        (lookupReady === false &&
+          searchState.isActive &&
+          searchState.query.length > 0 &&
+          searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH &&
+          !vibeReady)) ? (
         <div className="mb-2.5 min-h-0" aria-live="polite">
           {activeSearch.error && isShowingSearchResults && (
             <p className="text-sm text-red-600" data-testid="film-search-error">
@@ -330,15 +351,6 @@ export default function FilmCatalog({
               </p>
             )}
 
-          {vibeState.isActive &&
-            vibeState.query.length > 0 &&
-            vibeState.query.length < vibeSearchUiConstants.MIN_QUERY_LENGTH && (
-              <p className="text-sm text-slate-500" data-testid="vibe-search-hint-length">
-                Type at least {vibeSearchUiConstants.MIN_QUERY_LENGTH} characters
-                to search by feeling.
-              </p>
-            )}
-
           {!vibeReady &&
             searchState.isActive &&
             searchState.query.length > 0 &&
@@ -357,7 +369,7 @@ export default function FilmCatalog({
         </div>
       )}
 
-      {showFreshTastePicks ? (
+      {showFreshTastePicks && !vibeState.isLoading ? (
         <section
           data-testid="fresh-taste-picks"
           className="mb-10 border-b border-[#e4e2f0] pb-10"
@@ -421,6 +433,7 @@ export default function FilmCatalog({
           </div>
         )}
 
+      {!vibeState.isLoading ? (
       <section
         data-testid={isShowingSearchResults ? "film-search-results" : "film-list"}
         aria-labelledby={
@@ -469,8 +482,9 @@ export default function FilmCatalog({
           })}
         </div>
       </section>
+      ) : null}
 
-      {!isShowingSearchResults && totalCount > 0 && (
+      {!vibeState.isLoading && !isShowingSearchResults && totalCount > 0 && (
         <nav
           aria-label="Catalog pagination"
           className="mt-8 flex items-center justify-center gap-4"
