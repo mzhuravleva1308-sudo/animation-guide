@@ -14,6 +14,7 @@ import {
   rankVibeByMoodEmbedding,
 } from "@/lib/vibe-search.mjs";
 import { normalizeVibeQueryToEnglish } from "@/lib/normalize-vibe-query.mjs";
+import { VIBE_HIDDEN_LIST_TYPE } from "@/lib/vibe-hidden.mjs";
 import type { Film } from "@/types/film";
 
 export const runtime = "nodejs";
@@ -162,23 +163,33 @@ export async function GET(request: Request) {
     const filmIds = films.map((film) => film.id);
     const openai = new OpenAI({ apiKey: openaiApiKey });
 
-    const [moodEmbeddingByFilmId, ratingsResult, scoresResult, normalized] =
-      await Promise.all([
-        loadMoodEmbeddings(admin, filmIds),
-        admin
-          .from("film_ratings")
-          .select("film_id")
-          .eq("profile_id", profile.id),
-        admin
-          .from("profile_film_scores")
-          .select(
-            "film_id, emotional_score, material_score, visual_world_score, storytelling_score"
-          )
-          .eq("profile_id", profile.id)
-          .eq("score_mode", SCORE_MODE.native)
-          .eq("source_media", MEDIA_TYPE.animation),
-        normalizeVibeQueryToEnglish(openai, query),
-      ]);
+    const [
+      moodEmbeddingByFilmId,
+      ratingsResult,
+      scoresResult,
+      hiddenResult,
+      normalized,
+    ] = await Promise.all([
+      loadMoodEmbeddings(admin, filmIds),
+      admin
+        .from("film_ratings")
+        .select("film_id")
+        .eq("profile_id", profile.id),
+      admin
+        .from("profile_film_scores")
+        .select(
+          "film_id, emotional_score, material_score, visual_world_score, storytelling_score"
+        )
+        .eq("profile_id", profile.id)
+        .eq("score_mode", SCORE_MODE.native)
+        .eq("source_media", MEDIA_TYPE.animation),
+      admin
+        .from("profile_film_lists")
+        .select("film_id")
+        .eq("profile_id", profile.id)
+        .eq("list_type", VIBE_HIDDEN_LIST_TYPE),
+      normalizeVibeQueryToEnglish(openai, query),
+    ]);
 
     if (ratingsResult.error) {
       return NextResponse.json(
@@ -189,6 +200,12 @@ export async function GET(request: Request) {
     if (scoresResult.error) {
       return NextResponse.json(
         { error: scoresResult.error.message },
+        { status: 500 }
+      );
+    }
+    if (hiddenResult.error) {
+      return NextResponse.json(
+        { error: hiddenResult.error.message },
         { status: 500 }
       );
     }
@@ -226,12 +243,17 @@ export async function GET(request: Request) {
       ? Math.min(Math.max(limitParam, 1), MAX_LIMIT)
       : DEFAULT_LIMIT;
 
+    const excludedFilmIds = [
+      ...(ratingsResult.data ?? []).map((row) => row.film_id),
+      ...(hiddenResult.data ?? []).map((row) => row.film_id),
+    ];
+
     const ranked = rankVibeByMoodEmbedding({
       films,
       queryEmbedding,
       moodEmbeddingByFilmId,
       personalByFilmId,
-      ratedFilmIds: (ratingsResult.data ?? []).map((row) => row.film_id),
+      ratedFilmIds: excludedFilmIds,
       limit,
     });
 

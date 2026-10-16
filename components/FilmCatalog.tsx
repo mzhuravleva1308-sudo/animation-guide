@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { ArchiveRestore } from "lucide-react";
 import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
 import VibeSearch, { vibeSearchUiConstants } from "@/components/VibeSearch";
@@ -15,6 +16,7 @@ import {
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
+import { useToast } from "@/components/ToastProvider";
 
 type FilmCatalogInteractionProps = {
   profileId?: string;
@@ -117,6 +119,101 @@ export default function FilmCatalog({
     isActive: false,
     error: null as string | null,
   });
+  type VibeArchivedItem = { film: Film; note: string | null };
+  const [vibeArchivedItems, setVibeArchivedItems] = useState<VibeArchivedItem[]>(
+    []
+  );
+  const [showVibeArchive, setShowVibeArchive] = useState(false);
+  const [vibeArchiveLoading, setVibeArchiveLoading] = useState(false);
+  const { showToast } = useToast();
+  const vibeArchiveEnabled =
+    showVibeSearch && mediaType === MEDIA_TYPE.animation;
+
+  const loadVibeArchive = useCallback(async () => {
+    if (!vibeArchiveEnabled) return;
+    setVibeArchiveLoading(true);
+    try {
+      const response = await fetch("/api/profile-vibe-hidden");
+      const payload = (await response.json()) as {
+        items?: VibeArchivedItem[];
+        films?: Film[];
+        error?: string;
+      };
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Could not load archived films");
+      }
+      if (payload.items) {
+        setVibeArchivedItems(payload.items);
+      } else {
+        setVibeArchivedItems(
+          (payload.films ?? []).map((film) => ({ film, note: null }))
+        );
+      }
+    } catch (error) {
+      showToast(
+        "Couldn’t load archived films.",
+        error instanceof Error ? error.message : "Please try again.",
+        "error"
+      );
+    } finally {
+      setVibeArchiveLoading(false);
+    }
+  }, [vibeArchiveEnabled, showToast]);
+
+  useEffect(() => {
+    if (!vibeArchiveEnabled) return;
+    void loadVibeArchive();
+  }, [vibeArchiveEnabled, loadVibeArchive]);
+
+  const handleVibeHide = useCallback(
+    (filmId: string, note: string | null) => {
+      setVibeState((prev) => ({
+        ...prev,
+        films: prev.films.filter((film) => film.id !== filmId),
+      }));
+      setVibeArchivedItems((prev) => {
+        const existing = prev.find((item) => item.film.id === filmId);
+        if (existing) {
+          return prev.map((item) =>
+            item.film.id === filmId ? { ...item, note } : item
+          );
+        }
+        const hidden = vibeState.films.find((film) => film.id === filmId);
+        return hidden ? [{ film: hidden, note }, ...prev] : prev;
+      });
+    },
+    [vibeState.films]
+  );
+
+  const handleVibeRestore = useCallback(
+    async (filmId: string) => {
+      try {
+        const response = await fetch("/api/profile-vibe-hidden", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filmId, hidden: false }),
+        });
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Could not restore film");
+        }
+        setVibeArchivedItems((prev) =>
+          prev.filter((item) => item.film.id !== filmId)
+        );
+        showToast("Restored to vibe search.", "");
+      } catch (error) {
+        showToast(
+          "Couldn’t restore this film.",
+          error instanceof Error ? error.message : "Please try again.",
+          "error"
+        );
+      }
+    },
+    [showToast]
+  );
+
   const ratingOnboardingFilmIds = useMemo(() => {
     if (interaction?.ratingOnboardingFilmIds) {
       return interaction.ratingOnboardingFilmIds;
@@ -253,10 +350,6 @@ export default function FilmCatalog({
 
   return (
     <>
-      {showVibeSearch && mediaType === MEDIA_TYPE.animation ? (
-        <VibeSearch onResultsChange={handleVibeResultsChange} />
-      ) : null}
-
       <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
@@ -264,11 +357,32 @@ export default function FilmCatalog({
               onResultsChange={handleSearchResultsChange}
               isLoading={lookupReady && searchState.isLoading}
             />
+            {vibeArchiveEnabled ? (
+              <VibeSearch onResultsChange={handleVibeResultsChange} />
+            ) : null}
             <QuickFilters
               activeFilter={activeQuickFilter}
               onFilterChange={handleQuickFilterChange}
               availableFilters={availableQuickFilters}
             />
+            {vibeArchiveEnabled ? (
+              <button
+                type="button"
+                data-testid="vibe-archive-toggle"
+                onClick={() => {
+                  const next = !showVibeArchive;
+                  setShowVibeArchive(next);
+                  if (next) void loadVibeArchive();
+                }}
+                className="inline-flex h-[27px] items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900"
+              >
+                <ArchiveRestore size={13} strokeWidth={2} aria-hidden="true" />
+                Archived
+                {vibeArchivedItems.length > 0
+                  ? ` (${vibeArchivedItems.length})`
+                  : ""}
+              </button>
+            ) : null}
           </div>
           {!isShowingSearchResults && totalCount > 0 ? (
             <p
@@ -285,6 +399,59 @@ export default function FilmCatalog({
             </p>
           ) : null}
         </div>
+        {vibeArchiveEnabled && showVibeArchive ? (
+          <section
+            className="mt-3 rounded-xl border border-slate-200 bg-[#fafafc] p-3"
+            data-testid="vibe-archive-panel"
+          >
+            {vibeArchiveLoading ? (
+              <p className="text-[13px] text-slate-500">Loading archived…</p>
+            ) : vibeArchivedItems.length === 0 ? (
+              <p className="text-[13px] text-slate-500">
+                No archived films yet. Hide titles from vibe results with the
+                archive button on a card.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-200">
+                {vibeArchivedItems.map(({ film, note }) => (
+                  <li
+                    key={film.id}
+                    className="flex items-start justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                    data-testid="vibe-archive-item"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-slate-900">
+                        {film.title}
+                        {film.year ? (
+                          <span className="font-normal text-slate-500">
+                            {" "}
+                            ({film.year})
+                          </span>
+                        ) : null}
+                      </p>
+                      {note ? (
+                        <p
+                          className="mt-0.5 text-[12px] leading-snug text-slate-500"
+                          data-testid="vibe-archive-note"
+                        >
+                          {note}
+                        </p>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      data-testid="vibe-archive-restore"
+                      onClick={() => void handleVibeRestore(film.id)}
+                      className="shrink-0 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      Restore
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        ) : null}
         {activeQuickFilter ? (
           <p
             data-testid="quick-filter-description"
@@ -477,6 +644,11 @@ export default function FilmCatalog({
                 onAuthRequired={interaction?.onAuthRequired}
                 ratingOnboardingHint={getHintForIndex(onboardingIndex)}
                 onDismissRatingOnboarding={onDismissRatingOnboarding}
+                onVibeHide={
+                  activeSearch.mode === "vibe" && vibeArchiveEnabled
+                    ? handleVibeHide
+                    : undefined
+                }
               />
             );
           })}

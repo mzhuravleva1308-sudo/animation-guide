@@ -7,7 +7,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { LoaderCircle, Search } from "lucide-react";
+import { LoaderCircle, Search, Sparkles } from "lucide-react";
 import { Film } from "@/types/film";
 
 const MIN_QUERY_LENGTH = 4;
@@ -41,9 +41,11 @@ type VibeSearchProps = {
 };
 
 export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
+  const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const requestIdRef = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -52,6 +54,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
     trimmedQuery.length >= MIN_QUERY_LENGTH &&
     !isLoading &&
     trimmedQuery !== submittedQuery;
+  const isExpanded = expanded || isLoading || Boolean(submittedQuery);
 
   const resetResults = useCallback(() => {
     abortRef.current?.abort();
@@ -67,6 +70,11 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
       mode: "vibe",
     });
   }, [onResultsChange]);
+
+  const collapseIfIdle = useCallback(() => {
+    if (isLoading || submittedQuery || trimmedQuery.length > 0) return;
+    setExpanded(false);
+  }, [isLoading, submittedQuery, trimmedQuery]);
 
   const runSearch = useCallback(
     async (activeQuery: string) => {
@@ -141,6 +149,14 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isExpanded) return;
+    const frameId = window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isExpanded]);
+
   const handleSubmit = useCallback(
     (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -151,49 +167,92 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
     [trimmedQuery, isLoading, submittedQuery, runSearch]
   );
 
+  if (!isExpanded) {
+    return (
+      <section className="relative mb-0 shrink-0" data-testid="vibe-search">
+        <button
+          type="button"
+          data-testid="vibe-search-expand"
+          aria-label="Search by feeling"
+          title="Search by feeling"
+          onClick={() => setExpanded(true)}
+          className="relative inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg bg-[#eef0f8] text-slate-700 transition hover:bg-[#e5e7f4] hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+        >
+          <Search size={11} strokeWidth={2} aria-hidden="true" />
+          <Sparkles
+            size={8}
+            strokeWidth={2.5}
+            aria-hidden="true"
+            className="absolute right-[3px] top-[3px] text-violet-500"
+          />
+        </button>
+      </section>
+    );
+  }
+
   return (
-    <section className="mb-4" data-testid="vibe-search">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+    <section
+      className="relative mb-0 w-full basis-full"
+      data-testid="vibe-search"
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-2 sm:flex-row sm:items-center"
+      >
         <label className="sr-only" htmlFor="vibe-search-input">
           Search by feeling
         </label>
-        <div className="flex gap-2">
-          <div className="relative min-w-0 flex-1">
-            <input
-              id="vibe-search-input"
-              data-testid="vibe-search-input"
-              type="text"
-              inputMode="search"
-              enterKeyHint="search"
-              value={query}
-              disabled={isLoading}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Escape" && (query.length > 0 || submittedQuery)) {
-                  event.preventDefault();
+        <div className="relative min-w-0 flex-1">
+          <Sparkles
+            size={12}
+            strokeWidth={2}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-violet-500"
+          />
+          <input
+            ref={inputRef}
+            id="vibe-search-input"
+            data-testid="vibe-search-input"
+            type="text"
+            inputMode="search"
+            enterKeyHint="search"
+            value={query}
+            disabled={isLoading}
+            onChange={(event) => setQuery(event.target.value)}
+            onBlur={() => {
+              // Defer so Find / Clear clicks still register.
+              window.setTimeout(() => collapseIfIdle(), 0);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                if (query.length > 0 || submittedQuery) {
                   setQuery("");
                   resetResults();
                 }
-              }}
-              placeholder={PLACEHOLDER}
-              autoComplete="off"
-              className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-[14px] font-normal text-slate-900 placeholder:text-slate-400 shadow-none outline-none transition-[border-color,opacity] focus:border-slate-400 focus:outline-none disabled:cursor-wait disabled:opacity-70"
+                setExpanded(false);
+              }
+            }}
+            placeholder={PLACEHOLDER}
+            autoComplete="off"
+            className="h-11 w-full rounded-xl border border-slate-200 bg-white py-0 pl-9 pr-10 text-[14px] font-normal text-slate-900 placeholder:text-slate-400 shadow-none outline-none transition-[border-color,opacity] focus:border-slate-400 focus:outline-none disabled:cursor-wait disabled:opacity-70"
+          />
+          {isLoading ? (
+            <LoaderCircle
+              size={16}
+              strokeWidth={2}
+              aria-hidden="true"
+              data-testid="vibe-search-spinner"
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-500"
             />
-            {isLoading ? (
-              <LoaderCircle
-                size={16}
-                strokeWidth={2}
-                aria-hidden="true"
-                data-testid="vibe-search-spinner"
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-500"
-              />
-            ) : null}
-          </div>
+          ) : null}
+        </div>
+        <div className="flex shrink-0 gap-2">
           <button
             type="submit"
             data-testid="vibe-search-submit"
             disabled={!canSubmit}
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-[#2f3040] px-4 text-[13px] font-medium text-white transition enabled:hover:bg-[#1f2030] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#2f3040] px-4 text-[13px] font-medium text-white transition enabled:hover:bg-[#1f2030] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:flex-none"
           >
             <Search size={14} strokeWidth={2} aria-hidden="true" />
             Find
@@ -206,12 +265,25 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
               onClick={() => {
                 setQuery("");
                 resetResults();
+                setExpanded(false);
               }}
-              className="inline-flex h-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
             >
               Clear
             </button>
-          ) : null}
+          ) : (
+            <button
+              type="button"
+              data-testid="vibe-search-collapse"
+              disabled={isLoading}
+              onClick={() => {
+                setExpanded(false);
+              }}
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+            >
+              Close
+            </button>
+          )}
         </div>
       </form>
 
@@ -235,15 +307,8 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
             seconds.
           </p>
         </div>
-      ) : (
-        <p
-          className="mt-2 max-w-2xl font-sans text-[12px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
-          data-testid="vibe-search-hint"
-        >
-          Free-form mood search. Press Find when the feeling is ready — not a
-          title. Already rated films are hidden.
-        </p>
-      )}
+      ) : null}
+
     </section>
   );
 }

@@ -9,6 +9,7 @@ import RatingButtons, {
   RatingOnboardingHintChip,
 } from "@/components/RatingButtons";
 import WatchlistButton from "@/components/WatchlistButton";
+import VibeHideButton from "@/components/VibeHideButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import {
   getFilmCardMood,
@@ -63,6 +64,8 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
   ratingOnboardingHint?: RatingOnboardingHint;
   onDismissRatingOnboarding?: () => void;
   currentGuidePath?: string;
+  /** Allowlisted vibe search: hide this title from future vibe results. */
+  onVibeHide?: (filmId: string, note: string | null) => void;
 };
 
 export type FilmCardProps =
@@ -332,16 +335,25 @@ export default function FilmCard(props: FilmCardProps) {
             props.mode === "catalog" ? props.onAuthRequired : undefined
           }
         />
-        <WatchlistButton
-          filmId={film.id}
-          profileSlug={props.profileSlug}
-          profileId={props.profileId}
-          isSaved={props.savedFilmIds.has(film.id)}
-          onSavedChange={(saved) => props.onSavedChange(film, saved)}
-          onAuthRequired={
-            props.mode === "catalog" ? props.onAuthRequired : undefined
-          }
-        />
+        <div className="flex items-center gap-2">
+          {props.mode === "catalog" && props.onVibeHide ? (
+            <VibeHideButton
+              filmId={film.id}
+              filmTitle={film.title}
+              onHidden={props.onVibeHide}
+            />
+          ) : null}
+          <WatchlistButton
+            filmId={film.id}
+            profileSlug={props.profileSlug}
+            profileId={props.profileId}
+            isSaved={props.savedFilmIds.has(film.id)}
+            onSavedChange={(saved) => props.onSavedChange(film, saved)}
+            onAuthRequired={
+              props.mode === "catalog" ? props.onAuthRequired : undefined
+            }
+          />
+        </div>
       </div>
     </div>
   )}
