@@ -98,7 +98,7 @@ export default function VibeHideButton({
         onClick={() => setOpen(true)}
         disabled={isSaving}
         title="Hide from vibe results"
-        aria-label="Hide from vibe results"
+        aria-label="Archive from vibe results"
         className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white p-0 text-gray-600 transition hover:bg-gray-50 disabled:opacity-60`}
       >
         <Archive

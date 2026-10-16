@@ -325,7 +325,7 @@ export default function FilmCard(props: FilmCardProps) {
         hint={props.ratingOnboardingHint}
         onDismiss={props.onDismissRatingOnboarding}
       />
-      <div className="flex items-end justify-between gap-3 sm:gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 sm:gap-x-6">
         <RatingButtons
           filmId={film.id}
           profileId={props.profileId}
@@ -335,14 +335,7 @@ export default function FilmCard(props: FilmCardProps) {
             props.mode === "catalog" ? props.onAuthRequired : undefined
           }
         />
-        <div className="flex items-center gap-2">
-          {props.mode === "catalog" && props.onVibeHide ? (
-            <VibeHideButton
-              filmId={film.id}
-              filmTitle={film.title}
-              onHidden={props.onVibeHide}
-            />
-          ) : null}
+        <div className="flex shrink-0 items-center gap-2">
           <WatchlistButton
             filmId={film.id}
             profileSlug={props.profileSlug}
@@ -353,6 +346,13 @@ export default function FilmCard(props: FilmCardProps) {
               props.mode === "catalog" ? props.onAuthRequired : undefined
             }
           />
+          {props.mode === "catalog" && props.onVibeHide ? (
+            <VibeHideButton
+              filmId={film.id}
+              filmTitle={film.title}
+              onHidden={props.onVibeHide}
+            />
+          ) : null}
         </div>
       </div>
     </div>

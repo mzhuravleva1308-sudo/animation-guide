@@ -573,6 +573,9 @@ export default function FilmCatalog({
                 onAuthRequired={interaction?.onAuthRequired}
                 ratingOnboardingHint={getHintForIndex(index)}
                 onDismissRatingOnboarding={onDismissRatingOnboarding}
+                onVibeHide={
+                  vibeArchiveEnabled ? handleVibeHide : undefined
+                }
               />
             ))}
           </div>
@@ -645,9 +648,7 @@ export default function FilmCatalog({
                 ratingOnboardingHint={getHintForIndex(onboardingIndex)}
                 onDismissRatingOnboarding={onDismissRatingOnboarding}
                 onVibeHide={
-                  activeSearch.mode === "vibe" && vibeArchiveEnabled
-                    ? handleVibeHide
-                    : undefined
+                  vibeArchiveEnabled ? handleVibeHide : undefined
                 }
               />
             );
