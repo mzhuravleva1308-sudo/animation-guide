@@ -165,24 +165,36 @@ export default function FilmCatalog({
     void loadVibeArchive();
   }, [vibeArchiveEnabled, loadVibeArchive]);
 
+  const hiddenFilmIds = useMemo(
+    () => new Set(vibeArchivedItems.map((item) => item.film.id)),
+    [vibeArchivedItems]
+  );
+
   const handleVibeHide = useCallback(
     (filmId: string, note: string | null) => {
       setVibeState((prev) => ({
         ...prev,
         films: prev.films.filter((film) => film.id !== filmId),
       }));
+      setSearchState((prev) => ({
+        ...prev,
+        films: prev.films.filter((film) => film.id !== filmId),
+      }));
       setVibeArchivedItems((prev) => {
-        const existing = prev.find((item) => item.film.id === filmId);
-        if (existing) {
+        if (prev.some((item) => item.film.id === filmId)) {
           return prev.map((item) =>
             item.film.id === filmId ? { ...item, note } : item
           );
         }
-        const hidden = vibeState.films.find((film) => film.id === filmId);
+        const hidden =
+          vibeState.films.find((film) => film.id === filmId) ??
+          searchState.films.find((film) => film.id === filmId) ??
+          films.find((film) => film.id === filmId) ??
+          freshTastePicks.find((film) => film.id === filmId);
         return hidden ? [{ film: hidden, note }, ...prev] : prev;
       });
     },
-    [vibeState.films]
+    [vibeState.films, searchState.films, films, freshTastePicks]
   );
 
   const handleVibeRestore = useCallback(
@@ -202,7 +214,7 @@ export default function FilmCatalog({
         setVibeArchivedItems((prev) =>
           prev.filter((item) => item.film.id !== filmId)
         );
-        showToast("Restored to vibe search.", "");
+        showToast("Restored to catalog.", "");
       } catch (error) {
         showToast(
           "Couldn’t restore this film.",
@@ -240,14 +252,24 @@ export default function FilmCatalog({
     [awardWinningFilmIds]
   );
 
+  const catalogFilms = useMemo(
+    () => films.filter((film) => !hiddenFilmIds.has(film.id)),
+    [films, hiddenFilmIds]
+  );
+
+  const visibleFreshTastePicks = useMemo(
+    () => freshTastePicks.filter((film) => !hiddenFilmIds.has(film.id)),
+    [freshTastePicks, hiddenFilmIds]
+  );
+
   const quickFilteredFilms = useMemo(
     () =>
       filterFilmsByQuickFilter(
-        films,
+        catalogFilms,
         activeQuickFilter,
         awardWinningFilmIdSet
       ),
-    [films, activeQuickFilter, awardWinningFilmIdSet]
+    [catalogFilms, activeQuickFilter, awardWinningFilmIdSet]
   );
   
   function handleQuickFilterChange(filter: QuickFilter) {
@@ -308,6 +330,9 @@ export default function FilmCatalog({
   const filmRatings = interaction?.filmRatings;
 
   const visibleFilms = useMemo(() => {
+    const excludeHidden = (list: Film[]) =>
+      list.filter((film) => !hiddenFilmIds.has(film.id));
+
     const excludeRated = (list: Film[]) => {
       if (!filmRatings) {
         return list;
@@ -317,7 +342,7 @@ export default function FilmCatalog({
     };
 
     if (isSearchActive && isSearchReady) {
-      return excludeRated(activeSearch.films);
+      return excludeRated(excludeHidden(activeSearch.films));
     }
 
     const start = (currentPage - 1) * pageSize;
@@ -330,11 +355,12 @@ export default function FilmCatalog({
     isSearchReady,
     activeSearch.films,
     filmRatings,
+    hiddenFilmIds,
   ]);
 
   const isShowingSearchResults = isSearchActive && isSearchReady;
   const showFreshTastePicks =
-    freshTastePicks.length > 0 &&
+    visibleFreshTastePicks.length > 0 &&
     !activeQuickFilter &&
     !isSearchActive &&
     !loadError;
@@ -408,7 +434,7 @@ export default function FilmCatalog({
               <p className="text-[13px] text-slate-500">Loading archived…</p>
             ) : vibeArchivedItems.length === 0 ? (
               <p className="text-[13px] text-slate-500">
-                No archived films yet. Hide titles from vibe results with the
+                No archived films yet. Hide a title from the catalog with the
                 archive button on a card.
               </p>
             ) : (
@@ -548,7 +574,7 @@ export default function FilmCatalog({
             description="Recently added titles closest to your taste."
           />
           <div className="grid gap-4">
-            {freshTastePicks.map((film, index) => (
+            {visibleFreshTastePicks.map((film, index) => (
               <FilmCard
                 key={film.id}
                 mode={interaction ? "catalog" : "public"}
@@ -620,7 +646,7 @@ export default function FilmCatalog({
         <div className="grid gap-4">
           {visibleFilms.map((film, index) => {
             const onboardingIndex = showFreshTastePicks
-              ? index + freshTastePicks.length
+              ? index + visibleFreshTastePicks.length
               : index;
             return (
               <FilmCard

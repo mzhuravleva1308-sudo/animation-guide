@@ -7,6 +7,7 @@ import {
   searchFilms,
 } from "@/lib/film-search.mjs";
 import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
+import { loadArchivedFilmIdsForViewer } from "@/lib/load-archived-film-ids.mjs";
 import type { Film } from "@/types/film";
 
 const SEARCH_FILM_SELECT_FIELDS = [
@@ -54,7 +55,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const films = normalizeFilms((data as unknown as Film[] | null) ?? []);
+    const archivedIds = await loadArchivedFilmIdsForViewer();
+    const films = normalizeFilms((data as unknown as Film[] | null) ?? []).filter(
+      (film) => !archivedIds.has(film.id)
+    );
     const limit = Number.isFinite(limitParam)
       ? Math.min(
           Math.max(limitParam, 1),

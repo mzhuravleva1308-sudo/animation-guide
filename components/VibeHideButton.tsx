@@ -78,7 +78,7 @@ export default function VibeHideButton({
       onHidden(filmId, trimmedNote || null);
       setOpen(false);
       setNote("");
-      showToast("Hidden from vibe results.", "Find it in Archived.");
+      showToast("Hidden from catalog.", "Find it in Archived.");
     } catch (error) {
       showToast(
         "Couldn’t archive this film.",
@@ -97,8 +97,8 @@ export default function VibeHideButton({
         data-testid="vibe-hide-button"
         onClick={() => setOpen(true)}
         disabled={isSaving}
-        title="Hide from vibe results"
-        aria-label="Archive from vibe results"
+        title="Hide from catalog"
+        aria-label="Hide from catalog"
         className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white p-0 text-gray-600 transition hover:bg-gray-50 disabled:opacity-60`}
       >
         <Archive
@@ -130,12 +130,12 @@ export default function VibeHideButton({
               id={titleId}
               className="text-[15px] font-medium text-slate-900"
             >
-              Hide from vibe results
+              Hide from catalog
             </h2>
             <p className="mt-1 text-[13px] leading-snug text-slate-500">
               {filmTitle
-                ? `Optional: why didn’t “${filmTitle}” fit?`
-                : "Optional: why didn’t this film fit?"}
+                ? `Removes “${filmTitle}” from browse, filters, and search. Optional note:`
+                : "Removes this film from browse, filters, and search. Optional note:"}
             </p>
             <textarea
               ref={textareaRef}
@@ -168,7 +168,7 @@ export default function VibeHideButton({
                 onClick={() => void confirmHide()}
                 className="rounded-xl bg-[#2f3040] px-3 py-2 text-[13px] font-medium text-white transition hover:bg-[#1f2030] disabled:opacity-60"
               >
-                {isSaving ? "Hiding…" : "Hide"}
+                {isSaving ? "Hiding…" : "Hide from catalog"}
               </button>
             </div>
           </div>
