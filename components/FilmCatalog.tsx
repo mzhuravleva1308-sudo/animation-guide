@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
+import VibeSearch, { vibeSearchUiConstants } from "@/components/VibeSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
@@ -52,6 +53,8 @@ type FilmCatalogProps = {
   mediaType?: MediaType;
   activeQuickFilter: QuickFilter;
   onQuickFilterChange: (filter: QuickFilter) => void;
+  /** Early-access free-form mood search (allowlisted accounts). */
+  showVibeSearch?: boolean;
 };
 
 function CatalogSectionHeading({
@@ -92,6 +95,7 @@ export default function FilmCatalog({
   mediaType = MEDIA_TYPE.animation,
   activeQuickFilter,
   onQuickFilterChange,
+  showVibeSearch = false,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const availableQuickFilters = useMemo(
@@ -99,6 +103,14 @@ export default function FilmCatalog({
     [mediaType]
   );
   const [searchState, setSearchState] = useState({
+    query: "",
+    films: [] as Film[],
+    isLoading: false,
+    isActive: false,
+    error: null as string | null,
+    mode: "lookup" as "lookup" | "vibe",
+  });
+  const [vibeState, setVibeState] = useState({
     query: "",
     films: [] as Film[],
     isLoading: false,
@@ -154,14 +166,43 @@ export default function FilmCatalog({
       isActive: boolean;
       error: string | null;
     }) => {
-      setSearchState(nextState);
+      setSearchState({ ...nextState, mode: "lookup" });
     },
     []
   );
 
-  const isSearchActive = searchState.isActive;
-  const isSearchReady =
-    searchState.query.length >= filmSearchConstants.MIN_QUERY_LENGTH;
+  const handleVibeResultsChange = useCallback(
+    (nextState: {
+      query: string;
+      films: Film[];
+      isLoading: boolean;
+      isActive: boolean;
+      error: string | null;
+      mode: "vibe";
+    }) => {
+      setVibeState({
+        query: nextState.query,
+        films: nextState.films,
+        isLoading: nextState.isLoading,
+        isActive: nextState.isActive,
+        error: nextState.error,
+      });
+    },
+    []
+  );
+
+  const vibeReady =
+    vibeState.isActive &&
+    vibeState.query.length >= vibeSearchUiConstants.MIN_QUERY_LENGTH;
+  const lookupReady =
+    searchState.isActive &&
+    searchState.query.length >= filmSearchConstants.MIN_QUERY_LENGTH &&
+    !vibeReady;
+  const isSearchActive = vibeReady || lookupReady || vibeState.isActive || searchState.isActive;
+  const isSearchReady = vibeReady || lookupReady;
+  const activeSearch = vibeReady
+    ? { ...vibeState, mode: "vibe" as const }
+    : { ...searchState, mode: "lookup" as const };
 
   const totalCount = quickFilteredFilms.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -179,7 +220,7 @@ export default function FilmCatalog({
     };
 
     if (isSearchActive && isSearchReady) {
-      return excludeRated(searchState.films);
+      return excludeRated(activeSearch.films);
     }
 
     const start = (currentPage - 1) * pageSize;
@@ -190,7 +231,7 @@ export default function FilmCatalog({
     pageSize,
     isSearchActive,
     isSearchReady,
-    searchState.films,
+    activeSearch.films,
     filmRatings,
   ]);
 
@@ -208,14 +249,20 @@ export default function FilmCatalog({
     !loadError &&
     (visibleFilms.length > 0 || showFreshTastePicks);
 
+  const searchLoading = activeSearch.isLoading || (vibeReady && vibeState.isLoading);
+
   return (
     <>
+      {showVibeSearch && mediaType === MEDIA_TYPE.animation ? (
+        <VibeSearch onResultsChange={handleVibeResultsChange} />
+      ) : null}
+
       <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <FilmSearch
               onResultsChange={handleSearchResultsChange}
-              isLoading={searchState.isLoading}
+              isLoading={lookupReady && searchState.isLoading}
             />
             <QuickFilters
               activeFilter={activeQuickFilter}
@@ -248,24 +295,29 @@ export default function FilmCatalog({
         ) : null}
       </div>
 
-      {(searchState.error && isShowingSearchResults) ||
+      {(activeSearch.error && isShowingSearchResults) ||
       (isShowingSearchResults &&
-        !searchState.isLoading &&
-        !searchState.error &&
+        !searchLoading &&
+        !activeSearch.error &&
         visibleFilms.length > 0) ||
-      (isSearchActive &&
+      (vibeState.isActive &&
+        vibeState.query.length > 0 &&
+        vibeState.query.length < vibeSearchUiConstants.MIN_QUERY_LENGTH) ||
+      (lookupReady === false &&
+        searchState.isActive &&
         searchState.query.length > 0 &&
-        searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH) ? (
+        searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH &&
+        !vibeReady) ? (
         <div className="mb-2.5 min-h-0" aria-live="polite">
-          {searchState.error && isShowingSearchResults && (
+          {activeSearch.error && isShowingSearchResults && (
             <p className="text-sm text-red-600" data-testid="film-search-error">
-              {searchState.error}
+              {activeSearch.error}
             </p>
           )}
 
           {isShowingSearchResults &&
-            !searchState.isLoading &&
-            !searchState.error &&
+            !searchLoading &&
+            !activeSearch.error &&
             visibleFilms.length > 0 && (
               <p
                 className="text-sm text-slate-500"
@@ -273,11 +325,22 @@ export default function FilmCatalog({
               >
                 {visibleFilms.length}{" "}
                 {visibleFilms.length === 1 ? "film" : "films"} matched “
-                {searchState.query}”.
+                {activeSearch.query}”
+                {activeSearch.mode === "vibe" ? " by feeling" : ""}.
               </p>
             )}
 
-          {isSearchActive &&
+          {vibeState.isActive &&
+            vibeState.query.length > 0 &&
+            vibeState.query.length < vibeSearchUiConstants.MIN_QUERY_LENGTH && (
+              <p className="text-sm text-slate-500" data-testid="vibe-search-hint-length">
+                Type at least {vibeSearchUiConstants.MIN_QUERY_LENGTH} characters
+                to search by feeling.
+              </p>
+            )}
+
+          {!vibeReady &&
+            searchState.isActive &&
             searchState.query.length > 0 &&
             searchState.query.length < filmSearchConstants.MIN_QUERY_LENGTH && (
               <p className="text-sm text-slate-500" data-testid="film-search-hint">
@@ -338,7 +401,7 @@ export default function FilmCatalog({
       ) : null}
 
       {!loadError &&
-        !searchState.isLoading &&
+        !searchLoading &&
         !visibleFilms.length &&
         !showFreshTastePicks &&
         !(isSearchActive && !isSearchReady) && (
@@ -349,7 +412,9 @@ export default function FilmCatalog({
             className="rounded-2xl border border-dashed p-8 text-gray-500"
           >
             {isShowingSearchResults
-              ? `No films matched “${searchState.query}”. Try a partial title, director name, year, country, or mood tag.`
+              ? activeSearch.mode === "vibe"
+                ? `No films matched “${activeSearch.query}” by feeling. Try a clearer contrast — care vs hard world, magic in the everyday.`
+                : `No films matched “${activeSearch.query}”. Try a partial title, director name, year, country, or mood tag.`
               : activeQuickFilter
                 ? "No films match this filter."
                 : "No films in the catalog yet."}
