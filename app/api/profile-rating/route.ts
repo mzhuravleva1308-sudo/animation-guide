@@ -73,6 +73,19 @@ export async function POST(request: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    const { error: detailError } = await admin
+      .from("film_rating_details")
+      .delete()
+      .eq("film_id", filmId)
+      .eq("profile_id", profileId);
+
+    if (detailError) {
+      console.error(
+        "[profile-rating] rating detail cleanup failed:",
+        detailError
+      );
+    }
   } else {
     const { error } = await admin.from("film_ratings").upsert(
       {

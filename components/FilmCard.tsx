@@ -8,6 +8,7 @@ import { MEDIA_TYPE, normalizeMediaType } from "@/lib/media-type";
 import RatingButtons, {
   RatingOnboardingHintChip,
 } from "@/components/RatingButtons";
+import RatingDetailButton from "@/components/RatingDetailButton";
 import WatchlistButton from "@/components/WatchlistButton";
 import VibeHideButton from "@/components/VibeHideButton";
 import { getFilmPosterUrl } from "@/lib/film-poster";
@@ -16,6 +17,7 @@ import {
   getFilmCardSynopsis,
 } from "@/lib/film-card-copy.mjs";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { FilmRatingDetail } from "@/lib/rating-detail";
 import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
@@ -66,6 +68,10 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
   currentGuidePath?: string;
   /** Allowlisted: hide this title from catalog browse, filters, and search. */
   onVibeHide?: (filmId: string, note: string | null) => void;
+  /** Allowlisted Watched: open visual / mood / plot detail scores. */
+  showRatingDetail?: boolean;
+  ratingDetail?: FilmRatingDetail | null;
+  onRatingDetailChange?: (filmId: string, detail: FilmRatingDetail) => void;
 };
 
 export type FilmCardProps =
@@ -336,6 +342,17 @@ export default function FilmCard(props: FilmCardProps) {
           }
         />
         <div className="flex shrink-0 items-center gap-2">
+          {props.mode === "catalog" &&
+          props.showRatingDetail &&
+          typeof props.initialRating === "number" ? (
+            <RatingDetailButton
+              filmId={film.id}
+              filmTitle={film.title}
+              overallRating={props.initialRating}
+              initialDetail={props.ratingDetail ?? null}
+              onDetailChange={props.onRatingDetailChange}
+            />
+          ) : null}
           <WatchlistButton
             filmId={film.id}
             profileSlug={props.profileSlug}

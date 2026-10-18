@@ -13,6 +13,9 @@ import EmailAuthModal from "@/components/EmailAuthModal";
 import FilmCard from "@/components/FilmCard";
 import FilmCatalog from "@/components/FilmCatalog";
 import { canAccessVibeSearch } from "@/lib/vibe-search-access.mjs";
+import { canAccessRatingDetail } from "@/lib/rating-detail-access.mjs";
+import { loadFilmRatingDetails } from "@/lib/film-profile-mutations";
+import type { FilmRatingDetail } from "@/lib/rating-detail";
 import type { QuickFilter } from "@/components/QuickFilters";
 import {
   HeaderIconButton,
@@ -275,6 +278,10 @@ export default function FilmsPageClient({
   const [scoresLastComputedAtState, setScoresLastComputedAtState] = useState<
     string | null
   >(scoresLastComputedAt);
+  const [ratingDetails, setRatingDetails] = useState<
+    Record<string, FilmRatingDetail>
+  >({});
+  const showRatingDetail = canAccessRatingDetail(auth?.email);
   const [listMediaFilter, setListMediaFilter] =
     useState<ListMediaFilter>("all");
   const [catalogSlices, setCatalogSlices] = useState<
@@ -474,9 +481,45 @@ export default function FilmsPageClient({
 
   useEffect(() => () => clearScoresCatalogPoll(), [clearScoresCatalogPoll]);
 
+  useEffect(() => {
+    if (!showRatingDetail || !auth?.profile?.id) {
+      setRatingDetails({});
+      return;
+    }
+
+    let cancelled = false;
+    void loadFilmRatingDetails().then(({ details, error }) => {
+      if (cancelled) return;
+      if (error) {
+        console.error("Rating details load error", error);
+        return;
+      }
+      setRatingDetails(details);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [auth?.profile?.id, showRatingDetail]);
+
+  const handleRatingDetailChange = useCallback(
+    (filmId: string, detail: FilmRatingDetail) => {
+      setRatingDetails((current) => ({ ...current, [filmId]: detail }));
+    },
+    []
+  );
+
   const handleRatingChangeAndRefresh = useCallback(
     (filmId: string, rating: number | null) => {
       handleRatingChange(filmId, rating);
+      if (rating === null) {
+        setRatingDetails((current) => {
+          if (!(filmId in current)) return current;
+          const next = { ...current };
+          delete next[filmId];
+          return next;
+        });
+      }
       scheduleCatalogRefreshAfterRating();
     },
     [handleRatingChange, scheduleCatalogRefreshAfterRating]
@@ -897,6 +940,11 @@ export default function FilmsPageClient({
                   savedFilmIds={savedFilmIds}
                   onSavedChange={handleSavedChange}
                   onRatingChange={handleRatingChangeAndRefresh}
+                  showRatingDetail={
+                    showRatingDetail && activeTab === "watched"
+                  }
+                  ratingDetail={ratingDetails[film.id] ?? null}
+                  onRatingDetailChange={handleRatingDetailChange}
                   lazyLoadPoster={index >= 1}
                 />
               ))}

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
+import type { FilmRatingDetail } from "@/lib/rating-detail";
 
 type MutationError = {
   message: string;
@@ -55,6 +56,73 @@ export async function persistFilmRating({
   }
 
   return { error: null };
+}
+
+export async function persistFilmRatingDetail({
+  filmId,
+  detail,
+}: {
+  filmId: string;
+  detail: FilmRatingDetail;
+}): Promise<MutationResult> {
+  const response = await fetch("/api/profile-rating-detail", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      filmId,
+      visual: detail.visual,
+      mood: detail.mood,
+      plot: detail.plot,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    return {
+      error: {
+        message: body?.error ?? "Could not save rating detail",
+      },
+    };
+  }
+
+  return { error: null };
+}
+
+export async function loadFilmRatingDetails(): Promise<{
+  details: Record<string, FilmRatingDetail>;
+  error: MutationError | null;
+}> {
+  const response = await fetch("/api/profile-rating-detail", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as
+      | { error?: string }
+      | null;
+    return {
+      details: {},
+      error: {
+        message: body?.error ?? "Could not load rating details",
+      },
+    };
+  }
+
+  const body = (await response.json().catch(() => null)) as {
+    details?: Record<string, FilmRatingDetail>;
+  } | null;
+
+  return {
+    details: body?.details ?? {},
+    error: null,
+  };
 }
 
 export async function persistFilmSave({
