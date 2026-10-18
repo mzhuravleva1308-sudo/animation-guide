@@ -11,7 +11,7 @@ import {
 } from "./media-type.mjs";
 
 export type MediaType = "animation" | "live_action";
-export type ScoreMode = "native" | "cross_media";
+export type ScoreMode = "native" | "native_3axis" | "cross_media";
 
 export type CatalogRankingParams = {
   mediaType: MediaType;
@@ -29,6 +29,7 @@ export const MEDIA_TYPES = MEDIA_TYPES_RAW as readonly MediaType[];
 
 export const SCORE_MODE = SCORE_MODE_RAW as {
   readonly native: "native";
+  readonly native3Axis: "native_3axis";
   readonly crossMedia: "cross_media";
 };
 

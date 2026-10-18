@@ -6,6 +6,7 @@ import {
   timeSyncStage,
 } from "@/lib/catalog-page-load-log";
 import { getAuthUserSummary } from "@/lib/auth/session";
+import { canAccessAnimationThreeAxis } from "@/lib/animation-three-axis-access.mjs";
 import { canAccessLiveActionCatalog } from "@/lib/live-action-catalog-access";
 import {
   MEDIA_TYPE,
@@ -434,10 +435,17 @@ function resolveCatalogRankingForViewer(
   const parsed = parseCatalogRankingParams(rawParams ?? {});
   const showLiveActionTab = canAccessLiveActionCatalog(email);
 
+  const useAnimationThreeAxis =
+    parsed.mediaType === MEDIA_TYPE.animation &&
+    canAccessAnimationThreeAxis(email);
+  const scoreMode = useAnimationThreeAxis
+    ? SCORE_MODE.native3Axis
+    : SCORE_MODE.native;
+
   if (!showLiveActionTab) {
     return {
       mediaType: MEDIA_TYPE.animation,
-      scoreMode: SCORE_MODE.native,
+      scoreMode,
       sourceMedia: MEDIA_TYPE.animation,
       sortParam: "native",
       showLiveActionTab: false,
@@ -447,9 +455,12 @@ function resolveCatalogRankingForViewer(
   // Catalog always ranks by that media's own taste cores/scores (native).
   // Cross-media scores may still exist in the DB for later use, but are not
   // exposed as a user-facing sort mode.
+  // Allowlisted accounts read animation native_3axis; everyone else stays on
+  // legacy native (2-axis). Flip allowlist off to roll back without rebuild.
   return {
     mediaType: parsed.mediaType,
-    scoreMode: SCORE_MODE.native,
+    scoreMode:
+      parsed.mediaType === MEDIA_TYPE.animation ? scoreMode : SCORE_MODE.native,
     sourceMedia: parsed.mediaType,
     sortParam: "native",
     showLiveActionTab: true,

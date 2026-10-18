@@ -8,6 +8,11 @@ import {
   normalizeStorytellingTagsPreferVocabulary,
 } from "../lib/film-discovery-storytelling-tags.mjs";
 import {
+  ANIMATION_STORYTELLING_TAGS_MIN,
+  buildAnimationStorytellingTagsPrompt,
+  normalizeAnimationStorytellingTagsPreferVocabulary,
+} from "../lib/animation-storytelling-tags.mjs";
+import {
   describeFilmScope,
   loadScopedFilms,
   parseFilmScopeArgs,
@@ -37,6 +42,13 @@ const concurrency = Math.max(
   1,
   Number(concurrencyArg?.slice("--concurrency=".length) ?? 8) || 8
 );
+const mediaArg = scope.passthrough.find((arg) => arg.startsWith("--media="));
+const mediaRaw = mediaArg?.slice("--media=".length) ?? MEDIA_TYPE.liveAction;
+const mediaType =
+  mediaRaw === "animation" || mediaRaw === MEDIA_TYPE.animation
+    ? MEDIA_TYPE.animation
+    : MEDIA_TYPE.liveAction;
+const isAnimation = mediaType === MEDIA_TYPE.animation;
 
 function parseJson(text) {
   try {
@@ -67,11 +79,19 @@ async function mapPool(items, limit, worker) {
 }
 
 async function getFilms() {
+  const select = isAnimation
+    ? "id, title, original_title, director, year, country, synopsis, technique, the_mood, moods, aesthetic_tags, storytelling_tags, media_type, catalog_visible"
+    : "id, title, original_title, director, year, country, synopsis, the_mood, moods, visual_world_tags, storytelling_tags, media_type";
+
   return loadScopedFilms(supabase, scope, {
-    select:
-      "id, title, original_title, director, year, country, synopsis, the_mood, moods, visual_world_tags, storytelling_tags, media_type",
-    applyFilters: (query) =>
-      query.eq("media_type", MEDIA_TYPE.liveAction).order("title"),
+    select,
+    applyFilters: (query) => {
+      let next = query.eq("media_type", mediaType).order("title");
+      if (isAnimation) {
+        next = next.eq("catalog_visible", true);
+      }
+      return next;
+    },
   });
 }
 
@@ -82,10 +102,16 @@ async function generateStorytellingTags(film) {
     messages: [
       {
         role: "system",
-        content:
-          "You create precise live-action Storytelling tags. Never confuse mood, genre, or visual style with narrative mechanics.",
+        content: isAnimation
+          ? "You create precise animated-film Storytelling tags. Never confuse mood, theme, genre, or visual style with narrative mechanics."
+          : "You create precise live-action Storytelling tags. Never confuse mood, genre, or visual style with narrative mechanics.",
       },
-      { role: "user", content: buildStorytellingTagsOnlyPrompt(film) },
+      {
+        role: "user",
+        content: isAnimation
+          ? buildAnimationStorytellingTagsPrompt(film)
+          : buildStorytellingTagsOnlyPrompt(film),
+      },
     ],
   });
 
@@ -93,12 +119,13 @@ async function generateStorytellingTags(film) {
   if (!text) throw new Error("Empty AI response");
 
   const parsed = parseJson(text);
-  const preferred = normalizeStorytellingTagsPreferVocabulary(
-    parsed.storytelling_tags
+  const normalize = isAnimation
+    ? normalizeAnimationStorytellingTagsPreferVocabulary
+    : normalizeStorytellingTagsPreferVocabulary;
+  const preferred = normalize(parsed.storytelling_tags);
+  const suggested = normalize(parsed.suggested_storytelling_tags).offVocabulary.concat(
+    preferred.offVocabulary
   );
-  const suggested = normalizeStorytellingTagsPreferVocabulary(
-    parsed.suggested_storytelling_tags
-  ).offVocabulary.concat(preferred.offVocabulary);
 
   return {
     tags: preferred.tags,
@@ -112,9 +139,14 @@ async function main() {
   const targets = films.filter(
     (film) => force || !(film.storytelling_tags ?? []).length
   );
+  const minTags = isAnimation
+    ? ANIMATION_STORYTELLING_TAGS_MIN
+    : STORYTELLING_TAGS_MIN;
+  const mediaLabel = isAnimation ? "Animation" : "Live-action";
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
-  console.log(`Live-action films: ${films.length}`);
+  console.log(`Media: ${mediaType}`);
+  console.log(`${mediaLabel} films: ${films.length}`);
   console.log(`To generate: ${targets.length}`);
   console.log(
     `Mode: ${force ? "force" : "fill-missing"}${dryRun ? " dry-run" : ""} concurrency=${concurrency}`
@@ -125,7 +157,7 @@ async function main() {
     console.log(`Generating storytelling tags: ${film.title}`);
     const { tags, suggested } = await generateStorytellingTags(film);
 
-    if (tags.length < STORYTELLING_TAGS_MIN) {
+    if (tags.length < minTags) {
       console.warn(
         `  WARN under-tagged (${tags.length}): ${film.title} — ${tags.join(", ") || "(none)"}`
       );
@@ -137,6 +169,7 @@ async function main() {
       suggestions.push({
         film_id: film.id,
         title: film.title,
+        media_type: mediaType,
         suggested,
       });
     }
@@ -159,7 +192,9 @@ async function main() {
     const outPath = path.join(
       process.cwd(),
       "tmp",
-      "storytelling-tag-suggestions.json"
+      isAnimation
+        ? "animation-storytelling-tag-suggestions.json"
+        : "storytelling-tag-suggestions.json"
     );
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     fs.writeFileSync(outPath, JSON.stringify(suggestions, null, 2));

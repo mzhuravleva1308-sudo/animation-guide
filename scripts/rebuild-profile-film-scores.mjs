@@ -5,6 +5,7 @@ import {
   MEDIA_TYPES,
   SCORE_MODE,
   normalizeMediaType,
+  normalizeScoreMode,
   oppositeMediaType,
 } from "../lib/media-type.mjs";
 import {
@@ -552,6 +553,63 @@ function getGatedDimensionScores(
 }
 
 /**
+ * Animation native_3axis: Mood × Material × Storytelling.
+ * Profile gate stays emotional+aesthetic (no storytelling taste cores yet).
+ */
+function getGatedAnimationThreeAxisScores(
+  film,
+  filmMoodEmbeddingByFilmId,
+  filmAestheticEmbeddingByFilmId,
+  filmStorytellingEmbeddingByFilmId,
+  ratedFilms,
+  emotionalProfileTagWeights,
+  aestheticProfileTagWeights
+) {
+  const profileFit = getProfileFit(
+    film,
+    emotionalProfileTagWeights,
+    aestheticProfileTagWeights
+  );
+  const profileGate = getProfileGate(profileFit);
+
+  const emotionalAnchor = getNearestRatedAnchor(
+    filmMoodEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmMoodEmbeddingByFilmId
+  );
+  const materialAnchor = getNearestRatedAnchor(
+    filmAestheticEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmAestheticEmbeddingByFilmId
+  );
+  const storytellingAnchor = getNearestRatedAnchor(
+    filmStorytellingEmbeddingByFilmId.get(film.id),
+    ratedFilms,
+    filmStorytellingEmbeddingByFilmId
+  );
+
+  return {
+    emotional_score: emotionalAnchor.score * profileGate,
+    material_score: materialAnchor.score * profileGate,
+    visual_world_score: 0,
+    storytelling_score: storytellingAnchor.score * profileGate,
+    profileFit,
+    profileGate,
+    emotionalAnchor,
+    materialAnchor,
+    visualWorldAnchor: {
+      score: 0,
+      anchorTitle: null,
+      anchorRating: null,
+      similarity: 0,
+      ratingWeight: 0,
+      anchorFilmId: null,
+    },
+    storytellingAnchor,
+  };
+}
+
+/**
  * Live-action native: Mood × Visual World × Storytelling.
  * Material/aesthetic is intentionally unused (data retained for rollback).
  */
@@ -823,6 +881,10 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
   );
   const isLiveActionNative =
     !isCrossMedia && targetMedia === MEDIA_TYPE.liveAction;
+  const isAnimationThreeAxis =
+    !isCrossMedia &&
+    targetMedia === MEDIA_TYPE.animation &&
+    scoreMode === SCORE_MODE.native3Axis;
 
   const aestheticCores = isCrossMedia || isLiveActionNative
     ? []
@@ -936,9 +998,10 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
   const filmVisualWorldEmbeddingByFilmId = isLiveActionNative
     ? await getFilmEmbeddings("film_visual_world_embeddings", embedFilmIds)
     : new Map();
-  const filmStorytellingEmbeddingByFilmId = isLiveActionNative
-    ? await getFilmEmbeddings("film_storytelling_embeddings", embedFilmIds)
-    : new Map();
+  const filmStorytellingEmbeddingByFilmId =
+    isLiveActionNative || isAnimationThreeAxis
+      ? await getFilmEmbeddings("film_storytelling_embeddings", embedFilmIds)
+      : new Map();
 
   const computedAt = new Date().toISOString();
   const gatedScoresByFilmId = new Map();
@@ -962,14 +1025,24 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
             visualWorldProfileTagWeights,
             storytellingProfileTagWeights
           )
-        : getGatedDimensionScores(
-            film,
-            filmMoodEmbeddingByFilmId,
-            filmAestheticEmbeddingByFilmId,
-            ratedFilms,
-            emotionalProfileTagWeights,
-            aestheticProfileTagWeights
-          );
+        : isAnimationThreeAxis
+          ? getGatedAnimationThreeAxisScores(
+              film,
+              filmMoodEmbeddingByFilmId,
+              filmAestheticEmbeddingByFilmId,
+              filmStorytellingEmbeddingByFilmId,
+              ratedFilms,
+              emotionalProfileTagWeights,
+              aestheticProfileTagWeights
+            )
+          : getGatedDimensionScores(
+              film,
+              filmMoodEmbeddingByFilmId,
+              filmAestheticEmbeddingByFilmId,
+              ratedFilms,
+              emotionalProfileTagWeights,
+              aestheticProfileTagWeights
+            );
 
     gatedScoresByFilmId.set(film.id, gatedScores);
 
@@ -1017,31 +1090,6 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
   });
 
   if (!isCrossMedia && !isLiveActionNative) {
-    const oldRawScoresByFilmId = new Map(
-      candidateFilms.map((film) => [
-        film.id,
-        {
-          emotional: getOldBlendedEmotionalScore(
-            film,
-            filmMoodEmbeddingByFilmId,
-            ratedFilms,
-            emotionalProfileTagWeights
-          ),
-          material: getOldBlendedMaterialScore(
-            film,
-            filmAestheticEmbeddingByFilmId,
-            ratedFilms,
-            aestheticProfileTagWeights
-          ),
-        },
-      ])
-    );
-    const oldBalancedScores = buildBalancedScores(
-      candidateFilms,
-      oldRawScoresByFilmId,
-      { mediaType: MEDIA_TYPE.animation, scoreMode: SCORE_MODE.native }
-    );
-
     for (const film of candidateFilms) {
       const emotionalMatchedCount = getMatchedSignalCount(
         filmMoodEmbeddingByFilmId.get(film.id),
@@ -1053,23 +1101,61 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
         ratedFilms,
         filmAestheticEmbeddingByFilmId
       );
+      const storytellingMatchedCount = isAnimationThreeAxis
+        ? getMatchedSignalCount(
+            filmStorytellingEmbeddingByFilmId.get(film.id),
+            ratedFilms,
+            filmStorytellingEmbeddingByFilmId
+          )
+        : 0;
       const existingScore = balancedScores.get(film.id);
 
       if (existingScore) {
         existingScore.matchedSignalCount =
-          emotionalMatchedCount + materialMatchedCount;
+          emotionalMatchedCount +
+          materialMatchedCount +
+          storytellingMatchedCount;
       }
     }
 
-    const oldTopFilms = sortFilmsByScore(candidateFilms, oldBalancedScores).slice(
-      0,
-      10
-    );
-    console.log("  Old 50/50 blend top 10:");
-    oldTopFilms.forEach((film, index) => {
-      const score = oldBalancedScores.get(film.id)?.balanced ?? 0;
-      console.log(`    ${index + 1}. ${film.title} — balanced: ${score.toFixed(4)}`);
-    });
+    if (!isAnimationThreeAxis) {
+      const oldRawScoresByFilmId = new Map(
+        candidateFilms.map((film) => [
+          film.id,
+          {
+            emotional: getOldBlendedEmotionalScore(
+              film,
+              filmMoodEmbeddingByFilmId,
+              ratedFilms,
+              emotionalProfileTagWeights
+            ),
+            material: getOldBlendedMaterialScore(
+              film,
+              filmAestheticEmbeddingByFilmId,
+              ratedFilms,
+              aestheticProfileTagWeights
+            ),
+          },
+        ])
+      );
+      const oldBalancedScores = buildBalancedScores(
+        candidateFilms,
+        oldRawScoresByFilmId,
+        { mediaType: MEDIA_TYPE.animation, scoreMode: SCORE_MODE.native }
+      );
+
+      const oldTopFilms = sortFilmsByScore(
+        candidateFilms,
+        oldBalancedScores
+      ).slice(0, 10);
+      console.log("  Old 50/50 blend top 10:");
+      oldTopFilms.forEach((film, index) => {
+        const score = oldBalancedScores.get(film.id)?.balanced ?? 0;
+        console.log(
+          `    ${index + 1}. ${film.title} — balanced: ${score.toFixed(4)}`
+        );
+      });
+    }
   }
 
   if (isLiveActionNative) {
@@ -1142,8 +1228,7 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
 }
 
 function normalizeScoreModeOption(value) {
-  if (value === SCORE_MODE.crossMedia) return SCORE_MODE.crossMedia;
-  return SCORE_MODE.native;
+  return normalizeScoreMode(value, SCORE_MODE.native);
 }
 
 /**
@@ -1187,6 +1272,8 @@ export async function calculateAllProfileScoreArtifacts(
 
   // Catalog ranking is native-only per media (Films ← live-action likes,
   // Animation ← animation likes). Cross-media scores are not written here.
+  // Animation also writes native_3axis alongside legacy native for allowlisted
+  // rollback-safe rollout (readers choose which mode to load).
   for (const mediaType of MEDIA_TYPES) {
     const nativeRows = await calculateProfileScores(profile, allFilms, {
       mediaType,
@@ -1196,6 +1283,17 @@ export async function calculateAllProfileScoreArtifacts(
       quiet,
     });
     rows.push(...nativeRows);
+
+    if (mediaType === MEDIA_TYPE.animation) {
+      const threeAxisRows = await calculateProfileScores(profile, allFilms, {
+        mediaType,
+        scoreMode: SCORE_MODE.native3Axis,
+        sourceMedia: mediaType,
+        filmIds,
+        quiet,
+      });
+      rows.push(...threeAxisRows);
+    }
   }
 
   return rows;
@@ -1257,6 +1355,18 @@ export async function scoreNewFilmsForAllProfiles(filmIds, options = {}) {
           quiet: true,
         }))
       );
+
+      if (mediaType === MEDIA_TYPE.animation) {
+        scoreRows.push(
+          ...(await calculateProfileScores(profile, allFilms, {
+            mediaType,
+            scoreMode: SCORE_MODE.native3Axis,
+            sourceMedia: mediaType,
+            filmIds: mediaFilmIds,
+            quiet: true,
+          }))
+        );
+      }
     }
 
     if (!scoreRows.length) {

@@ -22,17 +22,28 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const openai = new OpenAI({ apiKey: openaiApiKey });
 const scope = parseFilmScopeArgs(process.argv.slice(2));
 const dryRun = scope.passthrough.includes("--dry-run");
+const mediaArg = scope.passthrough.find((arg) => arg.startsWith("--media="));
+const mediaRaw = mediaArg?.slice("--media=".length) ?? MEDIA_TYPE.liveAction;
+const mediaType =
+  mediaRaw === "animation" || mediaRaw === MEDIA_TYPE.animation
+    ? MEDIA_TYPE.animation
+    : MEDIA_TYPE.liveAction;
+const isAnimation = mediaType === MEDIA_TYPE.animation;
 
 function normalizeTag(tag) {
   return tag.trim().toLowerCase();
 }
 
-function buildStorytellingText(film) {
+function buildStorytellingText(film, media = mediaType) {
   const tags = (film.storytelling_tags ?? [])
     .map(normalizeTag)
     .filter(Boolean)
     .sort();
-  return `live-action film storytelling: ${tags.join(", ")}`;
+  const prefix =
+    media === MEDIA_TYPE.animation
+      ? "animated film storytelling"
+      : "live-action film storytelling";
+  return `${prefix}: ${tags.join(", ")}`;
 }
 
 function isValidEmbedding(value) {
@@ -55,12 +66,17 @@ function isValidEmbedding(value) {
 
 async function getFilms() {
   return loadScopedFilms(supabase, scope, {
-    select: "id, title, storytelling_tags, media_type",
-    applyFilters: (query) =>
-      query
-        .eq("media_type", MEDIA_TYPE.liveAction)
+    select: "id, title, storytelling_tags, media_type, catalog_visible",
+    applyFilters: (query) => {
+      let next = query
+        .eq("media_type", mediaType)
         .not("storytelling_tags", "is", null)
-        .order("title"),
+        .order("title");
+      if (isAnimation) {
+        next = next.eq("catalog_visible", true);
+      }
+      return next;
+    },
   }).then((films) => films.filter((film) => film.storytelling_tags?.length));
 }
 
@@ -96,10 +112,11 @@ async function main() {
   const existingById = await getExistingEmbeddings(films.map((film) => film.id));
 
   console.log(`Scope: ${describeFilmScope(scope)}`);
+  console.log(`Media: ${mediaType}`);
   console.log(`Films with storytelling tags: ${films.length}`);
 
   for (const film of films) {
-    const text = buildStorytellingText(film);
+    const text = buildStorytellingText(film, mediaType);
     const existing = existingById.get(film.id);
 
     if (existing?.text === text && existing.valid) {
