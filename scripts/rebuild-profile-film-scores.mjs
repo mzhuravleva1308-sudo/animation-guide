@@ -106,11 +106,21 @@ function getCoreMatchScore(filmEmbedding, cores) {
   return Math.pow(coreScore, 8);
 }
 
+/**
+ * @param {object} candidateEmbedding
+ * @param {object[]} ratedFilms
+ * @param {Map<string, number[]>} embeddingByFilmId
+ * @param {{ ratingField?: string }} [options]
+ *   ratingField: which numeric field to use as the like strength
+ *   (default "rating"; for 3-axis: moodRating / visualRating / plotRating).
+ */
 function getNearestRatedAnchor(
   candidateEmbedding,
   ratedFilms,
-  embeddingByFilmId
+  embeddingByFilmId,
+  options = {}
 ) {
+  const ratingField = options.ratingField ?? "rating";
   const emptyAnchor = {
     score: 0,
     anchorTitle: null,
@@ -127,7 +137,7 @@ function getNearestRatedAnchor(
   let bestAnchor = emptyAnchor;
 
   for (const ratedFilm of ratedFilms) {
-    const rating = Number(ratedFilm.rating ?? 0);
+    const rating = Number(ratedFilm[ratingField] ?? ratedFilm.rating ?? 0);
     const ratingWeight = getRatingWeight(rating);
 
     if (ratingWeight <= 0) {
@@ -553,8 +563,40 @@ function getGatedDimensionScores(
 }
 
 /**
+ * Build descending tag weights from likes on one axis (ad-hoc taste core).
+ * @param {object[]} ratedFilms
+ * @param {string} tagField
+ * @param {string} ratingField
+ */
+function buildAxisProfileTagWeights(ratedFilms, tagField, ratingField) {
+  const ordered = [...ratedFilms]
+    .filter((film) => getRatingWeight(Number(film[ratingField] ?? 0)) > 0)
+    .sort(
+      (a, b) =>
+        Number(b[ratingField] ?? 0) - Number(a[ratingField] ?? 0) ||
+        String(a.title ?? "").localeCompare(String(b.title ?? "")) ||
+        String(a.id).localeCompare(String(b.id))
+    );
+
+  const tags = [];
+  for (const film of ordered) {
+    for (const raw of film[tagField] ?? []) {
+      const tag = String(raw ?? "")
+        .trim()
+        .toLowerCase();
+      if (tag) tags.push(tag);
+    }
+  }
+
+  const unique = [...new Set(tags)];
+  return new Map(
+    unique.map((tag, index) => [tag, Math.max(0.55, 1 - index * 0.05)])
+  );
+}
+
+/**
  * Animation native_3axis: Mood × Material × Storytelling.
- * Profile gate stays emotional+aesthetic (no storytelling taste cores yet).
+ * Per-axis profile gates (C) + per-axis like strength from rating details (4).
  */
 function getGatedAnimationThreeAxisScores(
   film,
@@ -563,38 +605,56 @@ function getGatedAnimationThreeAxisScores(
   filmStorytellingEmbeddingByFilmId,
   ratedFilms,
   emotionalProfileTagWeights,
-  aestheticProfileTagWeights
+  aestheticProfileTagWeights,
+  storytellingProfileTagWeights
 ) {
-  const profileFit = getProfileFit(
+  const emotionalFit = getProfileTagMatchScore(
     film,
-    emotionalProfileTagWeights,
+    emotionalProfileTagWeights
+  );
+  const materialFit = getMaterialProfileTagMatchScore(
+    film,
     aestheticProfileTagWeights
   );
-  const profileGate = getProfileGate(profileFit);
+  const storytellingFit = getExactTagFieldMatchScore(
+    film,
+    "storytelling_tags",
+    storytellingProfileTagWeights
+  );
+
+  const emotionalGate = getProfileGate(emotionalFit);
+  const materialGate = getProfileGate(materialFit);
+  const storytellingGate = getProfileGate(storytellingFit);
 
   const emotionalAnchor = getNearestRatedAnchor(
     filmMoodEmbeddingByFilmId.get(film.id),
     ratedFilms,
-    filmMoodEmbeddingByFilmId
+    filmMoodEmbeddingByFilmId,
+    { ratingField: "moodRating" }
   );
   const materialAnchor = getNearestRatedAnchor(
     filmAestheticEmbeddingByFilmId.get(film.id),
     ratedFilms,
-    filmAestheticEmbeddingByFilmId
+    filmAestheticEmbeddingByFilmId,
+    { ratingField: "visualRating" }
   );
   const storytellingAnchor = getNearestRatedAnchor(
     filmStorytellingEmbeddingByFilmId.get(film.id),
     ratedFilms,
-    filmStorytellingEmbeddingByFilmId
+    filmStorytellingEmbeddingByFilmId,
+    { ratingField: "plotRating" }
   );
 
   return {
-    emotional_score: emotionalAnchor.score * profileGate,
-    material_score: materialAnchor.score * profileGate,
+    emotional_score: emotionalAnchor.score * emotionalGate,
+    material_score: materialAnchor.score * materialGate,
     visual_world_score: 0,
-    storytelling_score: storytellingAnchor.score * profileGate,
-    profileFit,
-    profileGate,
+    storytelling_score: storytellingAnchor.score * storytellingGate,
+    profileFit: (emotionalFit + materialFit + storytellingFit) / 3,
+    profileGate: (emotionalGate + materialGate + storytellingGate) / 3,
+    emotionalGate,
+    materialGate,
+    storytellingGate,
     emotionalAnchor,
     materialAnchor,
     visualWorldAnchor: {
@@ -735,6 +795,40 @@ async function getRatings(profileId) {
   }
 
   return data ?? [];
+}
+
+async function getRatingDetails(profileId) {
+  const { data, error } = await supabase
+    .from("film_rating_details")
+    .select("film_id, visual_rating, mood_rating, plot_rating")
+    .eq("profile_id", profileId);
+
+  if (error) {
+    // Table may be missing on older envs; 3-axis then falls back to overall.
+    console.warn(
+      `[rebuild-scores] film_rating_details unavailable: ${error.message}`
+    );
+    return [];
+  }
+
+  return data ?? [];
+}
+
+/**
+ * Attach overall + per-axis ratings. Detail wins when present; else overall
+ * is copied to mood/visual/plot.
+ */
+function withAxisRatings(film, overall, detail) {
+  const rating = Number(overall);
+  const hasDetail = Boolean(detail);
+  return {
+    ...film,
+    rating: Number.isFinite(rating) ? rating : null,
+    moodRating: hasDetail ? Number(detail.mood_rating) : rating,
+    visualRating: hasDetail ? Number(detail.visual_rating) : rating,
+    plotRating: hasDetail ? Number(detail.plot_rating) : rating,
+    hasRatingDetail: hasDetail,
+  };
 }
 
 async function getFilmEmbeddings(tableName, filmIds) {
@@ -951,6 +1045,13 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
       .map((item) => [item.film_id, item.rating])
   );
 
+  const ratingDetails = isAnimationThreeAxis
+    ? await getRatingDetails(profile.id)
+    : [];
+  const detailByFilmId = new Map(
+    (ratingDetails ?? []).map((row) => [row.film_id, row])
+  );
+
   const sourceFilms = filterFilmsByMediaType(allFilms, sourceMedia);
   const targetFilms = filterFilmsByMediaType(allFilms, targetMedia);
 
@@ -961,6 +1062,29 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     }))
     .filter((film) => Number(film.rating ?? 0) >= 7)
     .sort(compareFilmsById);
+
+  // 3-axis: keep every rated film; each axis applies ≥7 on its own field
+  // (detail or overall fallback). Lets overall=6 / visual=8 pull visual only.
+  const ratedFilmsThreeAxis = isAnimationThreeAxis
+    ? sourceFilms
+        .filter((film) => ratingByFilmId.has(film.id))
+        .map((film) =>
+          withAxisRatings(
+            film,
+            ratingByFilmId.get(film.id),
+            detailByFilmId.get(film.id)
+          )
+        )
+        .filter(
+          (film) =>
+            getRatingWeight(film.moodRating) > 0 ||
+            getRatingWeight(film.visualRating) > 0 ||
+            getRatingWeight(film.plotRating) > 0
+        )
+        .sort(compareFilmsById)
+    : [];
+
+  const axisAnchors = isAnimationThreeAxis ? ratedFilmsThreeAxis : ratedFilms;
 
   const candidateFilms = selectCandidateFilmsForScoring(
     targetFilms,
@@ -982,7 +1106,7 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
 
   const embedFilmIds = [
     ...new Set([
-      ...ratedFilms.map((film) => film.id),
+      ...axisAnchors.map((film) => film.id),
       ...candidateFilms.map((film) => film.id),
     ]),
   ];
@@ -1002,6 +1126,24 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
     isLiveActionNative || isAnimationThreeAxis
       ? await getFilmEmbeddings("film_storytelling_embeddings", embedFilmIds)
       : new Map();
+
+  const animationStorytellingTagWeights = isAnimationThreeAxis
+    ? buildAxisProfileTagWeights(
+        ratedFilmsThreeAxis,
+        "storytelling_tags",
+        "plotRating"
+      )
+    : storytellingProfileTagWeights;
+
+  if (isAnimationThreeAxis && !quiet) {
+    const withDetail = ratedFilmsThreeAxis.filter((f) => f.hasRatingDetail)
+      .length;
+    console.log(
+      `  3-axis anchors: ${ratedFilmsThreeAxis.length} ` +
+        `(${withDetail} with rating detail); ` +
+        `storytelling tag weights: ${animationStorytellingTagWeights.size}`
+    );
+  }
 
   const computedAt = new Date().toISOString();
   const gatedScoresByFilmId = new Map();
@@ -1031,9 +1173,10 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
               filmMoodEmbeddingByFilmId,
               filmAestheticEmbeddingByFilmId,
               filmStorytellingEmbeddingByFilmId,
-              ratedFilms,
+              ratedFilmsThreeAxis,
               emotionalProfileTagWeights,
-              aestheticProfileTagWeights
+              aestheticProfileTagWeights,
+              animationStorytellingTagWeights
             )
           : getGatedDimensionScores(
               film,
@@ -1091,20 +1234,23 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
 
   if (!isCrossMedia && !isLiveActionNative) {
     for (const film of candidateFilms) {
+      const matchAnchors = isAnimationThreeAxis
+        ? ratedFilmsThreeAxis
+        : ratedFilms;
       const emotionalMatchedCount = getMatchedSignalCount(
         filmMoodEmbeddingByFilmId.get(film.id),
-        ratedFilms,
+        matchAnchors,
         filmMoodEmbeddingByFilmId
       );
       const materialMatchedCount = getMatchedSignalCount(
         filmAestheticEmbeddingByFilmId.get(film.id),
-        ratedFilms,
+        matchAnchors,
         filmAestheticEmbeddingByFilmId
       );
       const storytellingMatchedCount = isAnimationThreeAxis
         ? getMatchedSignalCount(
             filmStorytellingEmbeddingByFilmId.get(film.id),
-            ratedFilms,
+            matchAnchors,
             filmStorytellingEmbeddingByFilmId
           )
         : 0;
@@ -1195,7 +1341,9 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
       ? "  Cross-media emotional-only top 10:"
       : isLiveActionNative
         ? "  Live-action Mood × Visual World × Storytelling top 10:"
-        : "  New anchor × lenient profileGate top 10:"
+        : isAnimationThreeAxis
+          ? "  Animation 3-axis (per-axis gate + detail ratings) top 10:"
+          : "  New anchor × lenient profileGate top 10:"
   );
 
   newTopFilms.forEach((film, index) => {
@@ -1212,6 +1360,15 @@ export async function calculateProfileScores(profile, allFilms, options = {}) {
           `visual_world=${(gatedScores?.visual_world_score ?? 0).toFixed(4)} ` +
           `storytelling=${(gatedScores?.storytelling_score ?? 0).toFixed(4)} ` +
           `profileGate=${(gatedScores?.profileGate ?? 0).toFixed(2)}`
+      );
+    } else if (isAnimationThreeAxis) {
+      console.log(
+        `       mood=${(gatedScores?.emotional_score ?? 0).toFixed(4)}` +
+          `(g=${(gatedScores?.emotionalGate ?? 0).toFixed(2)} via ${gatedScores?.emotionalAnchor?.anchorTitle ?? "—"}) ` +
+          `visual=${(gatedScores?.material_score ?? 0).toFixed(4)}` +
+          `(g=${(gatedScores?.materialGate ?? 0).toFixed(2)} via ${gatedScores?.materialAnchor?.anchorTitle ?? "—"}) ` +
+          `plot=${(gatedScores?.storytelling_score ?? 0).toFixed(4)}` +
+          `(g=${(gatedScores?.storytellingGate ?? 0).toFixed(2)} via ${gatedScores?.storytellingAnchor?.anchorTitle ?? "—"})`
       );
     } else {
       console.log(
