@@ -26,7 +26,9 @@ This repo intentionally uses magic links for the MVP. Do not add OTP input UI un
 
 After any successful sign-in, the account menu resolves the linked profile via `profiles.user_id`. Users without a linked profile still see their email in the menu.
 
-Logout is always `POST /auth/logout` regardless of how the user signed in.
+Logout is always `POST /auth/logout` regardless of how the user signed in. Sign-out uses the **local** scope so other devices/browsers stay signed in.
+
+Session cookies are long-lived (~400 days). `proxy.ts` refreshes them via `getClaims()` and ignores full auth-cookie wipes from a losing multi-tab refresh race (common after reboot when many tabs restore at once). Hosted Supabase **Authentication → Sessions / refresh token reuse interval** should be at least ~30s to match `supabase/config.toml`.
 
 Unauthenticated browsing (home, `/films`, share-link profiles) is unchanged. Signed-in users with a linked profile are redirected from `/` to `/my-profile`, which opens their guide when `slug` and `share_token` are present.
 
