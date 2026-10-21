@@ -373,18 +373,25 @@ export default function FilmCatalog({
     (visibleFilms.length > 0 || showFreshTastePicks);
 
   const searchLoading = activeSearch.isLoading || (vibeReady && vibeState.isLoading);
+  const catalogFilmCount =
+    !isShowingSearchResults && totalCount > 0 ? (
+      <p
+        className="mb-1 text-right font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+        data-testid="catalog-film-count"
+      >
+        {totalCount} {totalCount === 1 ? "film" : "films"}
+        {catalogUpdatedShortLabel ? (
+          <span data-testid="catalog-updated-short-label">
+            {" "}
+            · {catalogUpdatedShortLabel}
+          </span>
+        ) : null}
+      </p>
+    ) : null;
 
   return (
     <>
-      <div
-        className={
-          !isShowingSearchResults && totalCount > 0
-            ? "mb-1.5"
-            : activeQuickFilter
-              ? "mb-3"
-              : "mb-[18px]"
-        }
-      >
+      <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <FilmSearch
             onResultsChange={handleSearchResultsChange}
@@ -487,20 +494,6 @@ export default function FilmCatalog({
             {QUICK_FILTER_DESCRIPTIONS[activeQuickFilter]}
           </p>
         ) : null}
-        {!isShowingSearchResults && totalCount > 0 ? (
-          <p
-            className="mt-2 text-right font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-            data-testid="catalog-film-count"
-          >
-            {totalCount} {totalCount === 1 ? "film" : "films"}
-            {catalogUpdatedShortLabel ? (
-              <span data-testid="catalog-updated-short-label">
-                {" "}
-                · {catalogUpdatedShortLabel}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
       </div>
 
       {vibeState.isLoading ? (
@@ -588,6 +581,7 @@ export default function FilmCatalog({
             title="New for you"
             description="Recently added titles closest to your taste."
           />
+          {catalogFilmCount}
           <div className="grid gap-4">
             {visibleFreshTastePicks.map((film, index) => (
               <FilmCard
@@ -658,6 +652,7 @@ export default function FilmCatalog({
             description="The rest of the catalog, ranked for you."
           />
         ) : null}
+        {!showFreshTastePicks ? catalogFilmCount : null}
         <div className="grid gap-4">
           {visibleFilms.map((film, index) => {
             const onboardingIndex = showFreshTastePicks
