@@ -12,6 +12,7 @@ import {
   FESTIVALS_INDEX_PATH,
   FESTIVALS_OTTAWA_PATH,
   FESTIVALS_YEAR_PATH,
+  FESTIVALS_ZAGREB_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
@@ -185,6 +186,17 @@ export default async function AnimationFestivals2026Page() {
                         href={FESTIVALS_OTTAWA_PATH(YEAR)}
                         className={titleLinkClassName}
                         data-testid="festival-ottawa-awards-link"
+                      >
+                        2026 feature film awards
+                      </Link>
+                    </p>
+                  ) : null}
+                  {festival.festivalId === "animafest-zagreb" ? (
+                    <p className={`${bodyClassName} mt-2`}>
+                      <Link
+                        href={FESTIVALS_ZAGREB_PATH(YEAR)}
+                        className={titleLinkClassName}
+                        data-testid="festival-zagreb-awards-link"
                       >
                         2026 feature film awards
                       </Link>
