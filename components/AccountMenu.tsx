@@ -2,10 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import {
-  CURRENT_FESTIVAL_YEAR,
-  FESTIVALS_YEAR_PATH,
-} from "@/lib/festivals/public-festival-paths.mjs";
+import { FESTIVALS_INDEX_PATH } from "@/lib/festivals/public-festival-paths.mjs";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 
 type AccountMenuProps = {
@@ -115,7 +112,7 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
               Guides
             </Link>
             <Link
-              href={FESTIVALS_YEAR_PATH(CURRENT_FESTIVAL_YEAR)}
+              href={FESTIVALS_INDEX_PATH}
               role="menuitem"
               className={MENU_ITEM_CLASS}
               data-testid="account-menu-festivals"

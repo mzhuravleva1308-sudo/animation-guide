@@ -1,9 +1,6 @@
 import Link from "next/link";
 import LegalLinks from "@/components/LegalLinks";
-import {
-  CURRENT_FESTIVAL_YEAR,
-  FESTIVALS_YEAR_PATH,
-} from "@/lib/festivals/public-festival-paths.mjs";
+import { FESTIVALS_INDEX_PATH } from "@/lib/festivals/public-festival-paths.mjs";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 
 const FOOTER_LINK_CLASS =
@@ -28,7 +25,7 @@ export default function SiteFooter({
             Guides
           </Link>
           <Link
-            href={FESTIVALS_YEAR_PATH(CURRENT_FESTIVAL_YEAR)}
+            href={FESTIVALS_INDEX_PATH}
             className={FOOTER_LINK_CLASS}
             data-testid="footer-festivals-link"
           >

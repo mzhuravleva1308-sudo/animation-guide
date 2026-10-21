@@ -3,7 +3,7 @@ import GuidePageClient from "@/components/guides/GuidePageClient";
 import { OTTAWA_2026_FEATURE_AWARDS } from "@/lib/festivals/ottawa-2026-feature-awards.mjs";
 import {
   CURRENT_FESTIVAL_YEAR,
-  FESTIVALS_YEAR_PATH,
+  FESTIVALS_INDEX_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
 import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
 import {
@@ -69,7 +69,7 @@ export default async function Ottawa2026FeatureAwardsPage() {
         content={OTTAWA_2026_FEATURE_AWARDS}
         postAuthPath={PATH}
         sectionLink={{
-          href: FESTIVALS_YEAR_PATH(CURRENT_FESTIVAL_YEAR),
+          href: FESTIVALS_INDEX_PATH,
           label: "Festivals",
         }}
         pageTestId="ottawa-2026-feature-awards"

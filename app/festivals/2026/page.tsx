@@ -9,6 +9,7 @@ import {
 import {
   CURRENT_FESTIVAL_YEAR,
   FESTIVALS_ANNECY_PATH,
+  FESTIVALS_INDEX_PATH,
   FESTIVALS_OTTAWA_PATH,
   FESTIVALS_YEAR_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
@@ -120,7 +121,14 @@ export default async function AnimationFestivals2026Page() {
         </header>
 
         <article className="mt-10 max-w-[42rem] sm:mt-12">
-          <h1 className="font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+          <Link
+            href={FESTIVALS_INDEX_PATH}
+            data-testid="festival-year-section-link"
+            className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
+          >
+            Festivals
+          </Link>
+          <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
             Animation Festivals {YEAR}
           </h1>
           <p className={bodyClassName}>
