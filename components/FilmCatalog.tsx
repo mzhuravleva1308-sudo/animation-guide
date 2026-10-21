@@ -395,18 +395,27 @@ export default function FilmCatalog({
               <button
                 type="button"
                 data-testid="vibe-archive-toggle"
+                aria-label={
+                  vibeArchivedItems.length > 0
+                    ? `Archived (${vibeArchivedItems.length})`
+                    : "Archived"
+                }
+                aria-pressed={showVibeArchive}
+                title={
+                  vibeArchivedItems.length > 0
+                    ? `Archived (${vibeArchivedItems.length})`
+                    : "Archived"
+                }
                 onClick={() => {
                   const next = !showVibeArchive;
                   setShowVibeArchive(next);
                   if (next) void loadVibeArchive();
                 }}
-                className="inline-flex h-[27px] items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900"
+                className={`inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900 ${
+                  showVibeArchive ? "bg-slate-100 text-slate-900" : ""
+                }`}
               >
                 <ArchiveRestore size={13} strokeWidth={2} aria-hidden="true" />
-                Archived
-                {vibeArchivedItems.length > 0
-                  ? ` (${vibeArchivedItems.length})`
-                  : ""}
               </button>
             ) : null}
           </div>

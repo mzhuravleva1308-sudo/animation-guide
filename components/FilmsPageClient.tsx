@@ -649,10 +649,10 @@ export default function FilmsPageClient({
     listLength: listFilms.length,
   });
   const showCatalogSubtitle = showSubtitle && isCatalogTab;
-  const animationNav = headerNavLabelCollapse(activeTab === "all", "sm");
-  const filmsNav = headerNavLabelCollapse(activeTab === "films", "sm");
-  const savedNav = headerNavLabelCollapse(activeTab === "saved", "lg");
-  const watchedNav = headerNavLabelCollapse(activeTab === "watched", "md");
+  const animationNav = headerNavLabelCollapse(activeTab === "all");
+  const filmsNav = headerNavLabelCollapse(activeTab === "films");
+  const savedNav = headerNavLabelCollapse(activeTab === "saved");
+  const watchedNav = headerNavLabelCollapse(activeTab === "watched");
 
   return (
     <main

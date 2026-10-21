@@ -349,9 +349,9 @@ export default function ProfileTabs({
     setActiveTab(tab);
   }
 
-  const allNav = headerNavLabelCollapse(activeTab === "all", "sm");
-  const savedNav = headerNavLabelCollapse(activeTab === "saved", "lg");
-  const watchedNav = headerNavLabelCollapse(activeTab === "rated", "md");
+  const allNav = headerNavLabelCollapse(activeTab === "all");
+  const savedNav = headerNavLabelCollapse(activeTab === "saved");
+  const watchedNav = headerNavLabelCollapse(activeTab === "rated");
 
   return (
     <>

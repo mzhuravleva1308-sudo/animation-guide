@@ -29,9 +29,9 @@ export default function GuideSectionHeader({
   authTriggerRef,
   openAuthModal,
 }: GuideSectionHeaderProps) {
-  const animationNav = headerNavLabelCollapse(false, "sm");
-  const savedNav = headerNavLabelCollapse(false, "lg");
-  const watchedNav = headerNavLabelCollapse(false, "md");
+  const animationNav = headerNavLabelCollapse(false);
+  const savedNav = headerNavLabelCollapse(false);
+  const watchedNav = headerNavLabelCollapse(false);
 
   return (
     <header className="mb-0">

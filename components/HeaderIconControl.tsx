@@ -56,38 +56,15 @@ function headerNavLabelClass(isActive: boolean, labelClassName?: string) {
 }
 
 /**
- * Progressive label collapse with mobile exception: the active item always
- * keeps its text on small screens; inactive items stay icon-only until `from`.
- * Class strings are complete literals for the Tailwind scanner.
+ * Label only on the active nav item; inactive items stay icon-only.
+ * Hover/focus tooltips still expose the name via HeaderIconButton/Link.
  */
-export function headerNavLabelCollapse(
-  isActive: boolean,
-  from: "sm" | "md" | "lg"
-): { labelClassName: string; iconActiveClassName?: string } {
-  if (from === "sm") {
-    return {
-      labelClassName: isActive ? "inline-block" : "hidden sm:inline-block",
-    };
-  }
-
-  if (from === "md") {
-    return {
-      labelClassName: isActive
-        ? "inline-block sm:hidden md:inline-block"
-        : "hidden md:inline-block",
-      iconActiveClassName: isActive
-        ? "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] after:hidden sm:after:block md:after:hidden"
-        : undefined,
-    };
-  }
-
+export function headerNavLabelCollapse(isActive: boolean): {
+  labelClassName: string;
+  iconActiveClassName?: string;
+} {
   return {
-    labelClassName: isActive
-      ? "inline-block sm:hidden lg:inline-block"
-      : "hidden lg:inline-block",
-    iconActiveClassName: isActive
-      ? "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-[-2px] after:h-px after:bg-[rgba(177,169,217,0.35)] after:content-[''] after:hidden sm:after:block lg:after:hidden"
-      : undefined,
+    labelClassName: isActive ? "inline-block" : "hidden",
   };
 }
 
