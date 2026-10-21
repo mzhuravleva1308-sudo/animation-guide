@@ -29,6 +29,8 @@ type GuidePageClientProps = {
   loadError: string | null;
   content: GuidePageContent;
   postAuthPath: string;
+  sectionLink?: { href: string; label: string };
+  pageTestId?: string;
   anchorFilm?: Film | null;
   initialFilmRatings?: Record<string, number>;
   initialSavedFilmIds?: string[];
@@ -49,6 +51,8 @@ export default function GuidePageClient({
   loadError,
   content,
   postAuthPath,
+  sectionLink = { href: GUIDES_INDEX_PATH, label: "Guides" },
+  pageTestId = "guide-page",
   anchorFilm = null,
   initialFilmRatings,
   initialSavedFilmIds,
@@ -88,7 +92,7 @@ export default function GuidePageClient({
   return (
     <main
       className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8"
-      data-testid="guide-page"
+      data-testid={pageTestId}
       data-ratings-ready={ratingsReady ? "true" : "false"}
     >
       <GuideSectionHeader
@@ -99,11 +103,11 @@ export default function GuidePageClient({
 
       <div className="mt-10 mb-8 sm:mt-12 sm:mb-10">
         <Link
-          href={GUIDES_INDEX_PATH}
+          href={sectionLink.href}
           data-testid="guide-section-link"
           className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
         >
-          Guides
+          {sectionLink.label}
         </Link>
         <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
           {content.h1}

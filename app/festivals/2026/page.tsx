@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import ResonaleBrand from "@/components/ResonaleBrand";
 import SiteFooter from "@/components/SiteFooter";
 import {
@@ -7,6 +8,7 @@ import {
 } from "@/lib/festivals/animation-festivals-2026.mjs";
 import {
   CURRENT_FESTIVAL_YEAR,
+  FESTIVALS_ANNECY_PATH,
   FESTIVALS_YEAR_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
@@ -157,6 +159,17 @@ export default async function AnimationFestivals2026Page() {
                     {place ? ` · ${place}` : null}
                   </p>
                   <p className={bodyClassName}>{festival.description}</p>
+                  {festival.festivalId === "annecy" ? (
+                    <p className={`${bodyClassName} mt-2`}>
+                      <Link
+                        href={FESTIVALS_ANNECY_PATH(YEAR)}
+                        className={titleLinkClassName}
+                        data-testid="festival-annecy-awards-link"
+                      >
+                        2026 feature film awards
+                      </Link>
+                    </p>
+                  ) : null}
                 </li>
               );
             })}
