@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { ArchiveRestore } from "lucide-react";
 import { Film } from "@/types/film";
 import FilmSearch from "@/components/FilmSearch";
@@ -62,25 +68,41 @@ type FilmCatalogProps = {
 function CatalogSectionHeading({
   id,
   title,
-  description,
 }: {
   id: string;
   title: string;
-  description?: string;
 }) {
   return (
-    <div className="mb-3">
-      <h2
-        id={id}
-        className="font-sans text-[13px] font-medium leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-      >
-        {title}
-      </h2>
+    <h2
+      id={id}
+      className="mb-1 font-sans text-[13px] font-medium leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+    >
+      {title}
+    </h2>
+  );
+}
+
+function CatalogSectionMeta({
+  description,
+  trailing,
+}: {
+  description?: string;
+  trailing?: ReactNode;
+}) {
+  if (!description && !trailing) {
+    return null;
+  }
+
+  return (
+    <div className="mb-1 flex items-end justify-between gap-x-3 gap-y-0.5">
       {description ? (
-        <p className="mt-1.5 max-w-xl font-sans text-[13px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]">
+        <p className="min-w-0 max-w-xl font-sans text-[13px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]">
           {description}
         </p>
-      ) : null}
+      ) : (
+        <span />
+      )}
+      {trailing}
     </div>
   );
 }
@@ -376,7 +398,7 @@ export default function FilmCatalog({
   const catalogFilmCount =
     !isShowingSearchResults && totalCount > 0 ? (
       <p
-        className="mb-1 text-right font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+        className="shrink-0 whitespace-nowrap text-right font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
         data-testid="catalog-film-count"
       >
         {totalCount} {totalCount === 1 ? "film" : "films"}
@@ -579,9 +601,11 @@ export default function FilmCatalog({
           <CatalogSectionHeading
             id="fresh-taste-picks-heading"
             title="New for you"
-            description="Recently added titles closest to your taste."
           />
-          {catalogFilmCount}
+          <CatalogSectionMeta
+            description="Recently added titles closest to your taste."
+            trailing={catalogFilmCount}
+          />
           <div className="grid gap-4">
             {visibleFreshTastePicks.map((film, index) => (
               <FilmCard
@@ -649,10 +673,18 @@ export default function FilmCatalog({
           <CatalogSectionHeading
             id="taste-sorted-catalog-heading"
             title="Matched to your taste"
-            description="The rest of the catalog, ranked for you."
           />
         ) : null}
-        {!showFreshTastePicks ? catalogFilmCount : null}
+        {!showFreshTastePicks ? (
+          <CatalogSectionMeta
+            description={
+              showTasteSortedHeading
+                ? "The rest of the catalog, ranked for you."
+                : undefined
+            }
+            trailing={catalogFilmCount}
+          />
+        ) : null}
         <div className="grid gap-4">
           {visibleFilms.map((film, index) => {
             const onboardingIndex = showFreshTastePicks
