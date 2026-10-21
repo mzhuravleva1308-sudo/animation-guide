@@ -1,12 +1,21 @@
 "use client";
 
-
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
+import {
+  CURRENT_FESTIVAL_YEAR,
+  FESTIVALS_YEAR_PATH,
+} from "@/lib/festivals/public-festival-paths.mjs";
+import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 
 type AccountMenuProps = {
   email: string;
   profileName: string | null;
 };
+
+const MENU_ITEM_CLASS =
+  "block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50";
+
 
 function getInitials(profileName: string | null, email: string): string {
   if (profileName?.trim()) {
@@ -96,11 +105,29 @@ export default function AccountMenu({ email, profileName }: AccountMenuProps) {
           </div>
 
           <div className="py-1">
+            <Link
+              href={GUIDES_INDEX_PATH}
+              role="menuitem"
+              className={MENU_ITEM_CLASS}
+              data-testid="account-menu-guides"
+              onClick={() => setOpen(false)}
+            >
+              Guides
+            </Link>
+            <Link
+              href={FESTIVALS_YEAR_PATH(CURRENT_FESTIVAL_YEAR)}
+              role="menuitem"
+              className={MENU_ITEM_CLASS}
+              data-testid="account-menu-festivals"
+              onClick={() => setOpen(false)}
+            >
+              Festivals
+            </Link>
             <form action="/auth/logout" method="post" role="none">
               <button
                 type="submit"
                 role="menuitem"
-                className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                className={MENU_ITEM_CLASS}
                 data-testid="auth-logout"
               >
                 Log out
