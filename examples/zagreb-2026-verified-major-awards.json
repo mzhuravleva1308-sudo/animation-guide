@@ -1,0 +1,68 @@
+[
+  {
+    "film_match": {
+      "title": "Death Does Not Exist",
+      "year": 2025
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Animafest Zagreb",
+        "festival_year": 2026,
+        "section": "Grand Competition Feature Film",
+        "recognition_type": "award",
+        "award_name": "Grand Prix — Best Feature Film",
+        "award_result": "grand_prize",
+        "source_url": "https://www.animafest.hr/en/vijesti/pobjednici-svjetskog-festivala-animiranog-filma-animafesta-zagreb-2026",
+        "source_label": "Animafest Zagreb 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Grand Prix — Best Feature Film — Death Does Not Exist (dir. Félix Dufour-Laperrière)",
+        "import_key": "official-zagreb-2026-death-does-not-exist-grand-prix-feature"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Son of a Bitch",
+      "year": 2026
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Animafest Zagreb",
+        "festival_year": 2026,
+        "section": "Grand Competition Feature Film",
+        "recognition_type": "award",
+        "award_name": "Special Mention",
+        "award_result": "mention",
+        "source_url": "https://www.animafest.hr/en/vijesti/pobjednici-svjetskog-festivala-animiranog-filma-animafesta-zagreb-2026",
+        "source_label": "Animafest Zagreb 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Special Mention — Son of a Bitch (dirs. Erica Maradona, Otto Guerra, Sávi Leite, Tania Anaya)",
+        "import_key": "official-zagreb-2026-son-of-a-bitch-special-mention-feature"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Samurai Ballerina",
+      "year": 2026
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Animafest Zagreb",
+        "festival_year": 2026,
+        "section": "Grand Competition Feature Film",
+        "recognition_type": "award",
+        "award_name": "Mr. M Audience Award for Best Feature Film",
+        "award_result": "winner",
+        "source_url": "https://www.animafest.hr/en/vijesti/pobjednici-svjetskog-festivala-animiranog-filma-animafesta-zagreb-2026",
+        "source_label": "Animafest Zagreb 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Mr. M Audience Award for Best Feature Film — Samurai Ballerina (dir. Goro Taniguchi)",
+        "import_key": "official-zagreb-2026-samurai-ballerina-mr-m-audience-feature"
+      }
+    ]
+  }
+]

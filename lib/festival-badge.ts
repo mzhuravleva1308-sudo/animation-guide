@@ -31,6 +31,16 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     backgroundColor: "#F9EBEF",
     patterns: [/ottawa international animation/i, /\boiaf\b/i, /\bottawa\b/i],
   },
+  zagreb: {
+    label: "Zagreb",
+    fullName: "Animafest Zagreb",
+    description:
+      "One of the world's oldest animation festivals, held each June in Zagreb, Croatia.",
+    color: "#1B4F72",
+    backgroundColor: "#E8F1F8",
+    patterns: [/animafest\s*zagreb/i, /\banimafest\b/i, /\bzagreb\b/i],
+    aliases: ["animafest-zagreb"],
+  },
   cannes: {
     label: "Cannes",
     fullName: "Cannes Film Festival",
@@ -157,6 +167,7 @@ export const FESTIVAL_BADGE_CONFIG: Record<
 const BADGE_ORDER: FestivalBadgeId[] = [
   "annecy",
   "ottawa",
+  "zagreb",
   "cannes",
   "venice",
   "berlinale",

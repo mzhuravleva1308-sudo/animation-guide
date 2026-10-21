@@ -387,7 +387,7 @@ function getCachedPublicCatalogBaseLoader(mediaType: string) {
     [
       "public-film-catalog-base",
       "fields-v3-media",
-      "badges-ottawa-v1",
+      "badges-zagreb-v1",
       "awards-mention-v1",
       "no-error-cache-v1",
       mediaType,
