@@ -66,9 +66,19 @@ const DEFAULT_FILTERS: QuickFilterOption[] = [
   "distance",
 ];
 
+const THEME_FILTERS = ["sci-fi", "sarcasm", "cultures"] as const;
+const THEME_FILTER_SET = new Set<QuickFilterOption>(THEME_FILTERS);
 const MOOD_FILTERS = ["connection", "distance"] as const;
 const MOOD_FILTER_SET = new Set<QuickFilterOption>(MOOD_FILTERS);
 const FEATURED_FILTERS = new Set<QuickFilterOption>(["recent", "award-winners"]);
+
+function isThemeFilter(
+  filter: QuickFilter
+): filter is (typeof THEME_FILTERS)[number] {
+  return (
+    filter === "sci-fi" || filter === "sarcasm" || filter === "cultures"
+  );
+}
 
 function isMoodFilter(
   filter: QuickFilter
@@ -346,6 +356,115 @@ function TechniqueFilterControl({
   );
 }
 
+function ThemeFilterControl({
+  activeFilter,
+  onFilterChange,
+  availableThemes,
+}: {
+  activeFilter: QuickFilter;
+  onFilterChange: (filter: QuickFilter) => void;
+  availableThemes: Array<(typeof THEME_FILTERS)[number]>;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const defaultTheme = availableThemes.includes("sci-fi")
+    ? "sci-fi"
+    : availableThemes[0];
+  const isThemeActive =
+    isThemeFilter(activeFilter) && availableThemes.includes(activeFilter);
+  const label = isThemeActive
+    ? FILTER_LABELS[activeFilter]
+    : FILTER_LABELS[defaultTheme];
+  const panelRef = useSplitFilterMenuPanel(open, label);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  if (!defaultTheme) {
+    return null;
+  }
+
+  return (
+    <div
+      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      ref={menuRef}
+      role="group"
+      aria-label="Theme"
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(false);
+          onFilterChange(isThemeActive ? null : defaultTheme);
+        }}
+        aria-pressed={isThemeActive}
+        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isThemeActive)}`}
+      >
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        aria-label="Theme filters"
+        data-testid="theme-filter-menu-trigger"
+        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
+          isThemeActive ? "border-white/25" : "border-[#d8dae8]"
+        } ${splitChipTone(isThemeActive)}`}
+      >
+        <ChevronDown
+          size={12}
+          strokeWidth={2}
+          className={`shrink-0 ${open ? "rotate-180" : ""} ${
+            isThemeActive ? "text-white" : "text-[#5c5d6e]"
+          }`}
+          aria-hidden="true"
+        />
+      </button>
+
+      <SplitFilterMenuPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        menuId={menuId}
+        ariaLabel="Theme filters"
+        testId="theme-filter-menu"
+        panelRef={panelRef}
+      >
+        {availableThemes.map((option) => (
+          <SplitFilterOption
+            key={option}
+            label={FILTER_LABELS[option]}
+            isSelected={activeFilter === option}
+            testId={`theme-filter-option-${option}`}
+            onSelect={() => {
+              onFilterChange(option);
+              setOpen(false);
+            }}
+          />
+        ))}
+      </SplitFilterMenuPanel>
+    </div>
+  );
+}
+
 function MoodFilterControl({
   activeFilter,
   onFilterChange,
@@ -463,13 +582,20 @@ export default function QuickFilters({
     FEATURED_FILTERS.has(option)
   );
   const primaryOptions = availableFilters.filter(
-    (option) => !MOOD_FILTER_SET.has(option) && !FEATURED_FILTERS.has(option)
+    (option) =>
+      !THEME_FILTER_SET.has(option) &&
+      !MOOD_FILTER_SET.has(option) &&
+      !FEATURED_FILTERS.has(option)
+  );
+  const themeOptions = THEME_FILTERS.filter((option) =>
+    availableFilters.includes(option)
   );
   const moodOptions = MOOD_FILTERS.filter((option) =>
     availableFilters.includes(option)
   );
   const showFeaturedDivider = featuredOptions.length > 0 && primaryOptions.length > 0;
   const showTechniquePicker = availableFilters.includes("stop-motion");
+  const showThemePicker = themeOptions.length > 0;
   const showMoodPicker = moodOptions.length > 0;
 
   return (
@@ -515,6 +641,14 @@ export default function QuickFilters({
           />
         );
       })}
+
+      {showThemePicker ? (
+        <ThemeFilterControl
+          activeFilter={activeFilter}
+          onFilterChange={onFilterChange}
+          availableThemes={themeOptions}
+        />
+      ) : null}
 
       {showMoodPicker ? (
         <MoodFilterControl
