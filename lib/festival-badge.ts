@@ -41,6 +41,20 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     patterns: [/animafest\s*zagreb/i, /\banimafest\b/i, /\bzagreb\b/i],
     aliases: ["animafest-zagreb"],
   },
+  stuttgart: {
+    label: "Stuttgart",
+    fullName: "Stuttgart International Festival of Animated Film (ITFS)",
+    description:
+      "A major animation festival held each May in Stuttgart, Germany.",
+    color: "#0F5C4C",
+    backgroundColor: "#E6F3EF",
+    patterns: [
+      /stuttgart international festival of animated/i,
+      /\bitfs\b/i,
+      /\bstuttgart\b/i,
+    ],
+    aliases: ["itfs-stuttgart", "stuttgart"],
+  },
   cannes: {
     label: "Cannes",
     fullName: "Cannes Film Festival",
@@ -168,6 +182,7 @@ const BADGE_ORDER: FestivalBadgeId[] = [
   "annecy",
   "ottawa",
   "zagreb",
+  "stuttgart",
   "cannes",
   "venice",
   "berlinale",

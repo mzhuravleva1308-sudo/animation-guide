@@ -1,0 +1,68 @@
+[
+  {
+    "film_match": {
+      "title": "A Story About Fire",
+      "year": 2025
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Stuttgart International Festival of Animated Film",
+        "festival_year": 2026,
+        "section": "AniMovie Competition",
+        "recognition_type": "award",
+        "award_name": "AniMovie Award — Best Animated Feature Film",
+        "award_result": "grand_prize",
+        "source_url": "https://itfs.de/en/professionals_talents/winners-2026/",
+        "source_label": "ITFS 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "AniMovie Award — Best Animated Feature Film — A Story About Fire / Ran Bi Wa (dir. Li Wenyu)",
+        "import_key": "official-stuttgart-2026-a-story-about-fire-animovie"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Little Amélie or the Character of Rain",
+      "year": 2025
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Stuttgart International Festival of Animated Film",
+        "festival_year": 2026,
+        "section": "AniMovie Competition",
+        "recognition_type": "award",
+        "award_name": "Special Mention",
+        "award_result": "mention",
+        "source_url": "https://itfs.de/en/professionals_talents/winners-2026/",
+        "source_label": "ITFS 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Special Mention — Little Amélie or the Character of Rain (dirs. Maïlys Vallade, Liane-Cho Han)",
+        "import_key": "official-stuttgart-2026-little-amelie-special-mention"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Allah Is Not Obliged",
+      "year": 2025
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Stuttgart International Festival of Animated Film",
+        "festival_year": 2026,
+        "section": "AniMovie Competition",
+        "recognition_type": "award",
+        "award_name": "Special Mention",
+        "award_result": "mention",
+        "source_url": "https://itfs.de/en/professionals_talents/winners-2026/",
+        "source_label": "ITFS 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Special Mention — Allah Is Not Obliged (dir. Zaven Najjar)",
+        "import_key": "official-stuttgart-2026-allah-is-not-obliged-special-mention"
+      }
+    ]
+  }
+]
