@@ -377,63 +377,61 @@ export default function FilmCatalog({
   return (
     <>
       <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            <FilmSearch
-              onResultsChange={handleSearchResultsChange}
-              isLoading={lookupReady && searchState.isLoading}
-            />
-            {vibeArchiveEnabled ? (
-              <VibeSearch onResultsChange={handleVibeResultsChange} />
-            ) : null}
-            <QuickFilters
-              activeFilter={activeQuickFilter}
-              onFilterChange={handleQuickFilterChange}
-              availableFilters={availableQuickFilters}
-            />
-            {vibeArchiveEnabled ? (
-              <button
-                type="button"
-                data-testid="vibe-archive-toggle"
-                aria-label={
-                  vibeArchivedItems.length > 0
-                    ? `Archived (${vibeArchivedItems.length})`
-                    : "Archived"
-                }
-                aria-pressed={showVibeArchive}
-                title={
-                  vibeArchivedItems.length > 0
-                    ? `Archived (${vibeArchivedItems.length})`
-                    : "Archived"
-                }
-                onClick={() => {
-                  const next = !showVibeArchive;
-                  setShowVibeArchive(next);
-                  if (next) void loadVibeArchive();
-                }}
-                className={`inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900 ${
-                  showVibeArchive ? "bg-slate-100 text-slate-900" : ""
-                }`}
-              >
-                <ArchiveRestore size={13} strokeWidth={2} aria-hidden="true" />
-              </button>
-            ) : null}
-          </div>
-          {!isShowingSearchResults && totalCount > 0 ? (
-            <p
-              className="shrink-0 translate-y-[9px] whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-              data-testid="catalog-film-count"
+        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+          <FilmSearch
+            onResultsChange={handleSearchResultsChange}
+            isLoading={lookupReady && searchState.isLoading}
+          />
+          {vibeArchiveEnabled ? (
+            <VibeSearch onResultsChange={handleVibeResultsChange} />
+          ) : null}
+          <QuickFilters
+            activeFilter={activeQuickFilter}
+            onFilterChange={handleQuickFilterChange}
+            availableFilters={availableQuickFilters}
+          />
+          {vibeArchiveEnabled ? (
+            <button
+              type="button"
+              data-testid="vibe-archive-toggle"
+              aria-label={
+                vibeArchivedItems.length > 0
+                  ? `Archived (${vibeArchivedItems.length})`
+                  : "Archived"
+              }
+              aria-pressed={showVibeArchive}
+              title={
+                vibeArchivedItems.length > 0
+                  ? `Archived (${vibeArchivedItems.length})`
+                  : "Archived"
+              }
+              onClick={() => {
+                const next = !showVibeArchive;
+                setShowVibeArchive(next);
+                if (next) void loadVibeArchive();
+              }}
+              className={`inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900 ${
+                showVibeArchive ? "bg-slate-100 text-slate-900" : ""
+              }`}
             >
-              {totalCount} {totalCount === 1 ? "film" : "films"}
-              {catalogUpdatedShortLabel ? (
-                <span data-testid="catalog-updated-short-label">
-                  {" "}
-                  · {catalogUpdatedShortLabel}
-                </span>
-              ) : null}
-            </p>
+              <ArchiveRestore size={13} strokeWidth={2} aria-hidden="true" />
+            </button>
           ) : null}
         </div>
+        {!isShowingSearchResults && totalCount > 0 ? (
+          <p
+            className="mt-2 whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+            data-testid="catalog-film-count"
+          >
+            {totalCount} {totalCount === 1 ? "film" : "films"}
+            {catalogUpdatedShortLabel ? (
+              <span data-testid="catalog-updated-short-label">
+                {" "}
+                · {catalogUpdatedShortLabel}
+              </span>
+            ) : null}
+          </p>
+        ) : null}
         {vibeArchiveEnabled && showVibeArchive ? (
           <section
             className="mt-3 rounded-xl border border-slate-200 bg-[#fafafc] p-3"
