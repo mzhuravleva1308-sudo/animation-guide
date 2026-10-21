@@ -376,7 +376,15 @@ export default function FilmCatalog({
 
   return (
     <>
-      <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
+      <div
+        className={
+          !isShowingSearchResults && totalCount > 0
+            ? "mb-1.5"
+            : activeQuickFilter
+              ? "mb-3"
+              : "mb-[18px]"
+        }
+      >
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           <FilmSearch
             onResultsChange={handleSearchResultsChange}
@@ -418,20 +426,6 @@ export default function FilmCatalog({
             </button>
           ) : null}
         </div>
-        {!isShowingSearchResults && totalCount > 0 ? (
-          <p
-            className="mt-2 whitespace-nowrap font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
-            data-testid="catalog-film-count"
-          >
-            {totalCount} {totalCount === 1 ? "film" : "films"}
-            {catalogUpdatedShortLabel ? (
-              <span data-testid="catalog-updated-short-label">
-                {" "}
-                · {catalogUpdatedShortLabel}
-              </span>
-            ) : null}
-          </p>
-        ) : null}
         {vibeArchiveEnabled && showVibeArchive ? (
           <section
             className="mt-3 rounded-xl border border-slate-200 bg-[#fafafc] p-3"
@@ -491,6 +485,20 @@ export default function FilmCatalog({
             className="mt-3.5 max-w-xl font-sans text-[14px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
           >
             {QUICK_FILTER_DESCRIPTIONS[activeQuickFilter]}
+          </p>
+        ) : null}
+        {!isShowingSearchResults && totalCount > 0 ? (
+          <p
+            className="mt-2 text-right font-sans text-[13px] font-normal leading-none tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
+            data-testid="catalog-film-count"
+          >
+            {totalCount} {totalCount === 1 ? "film" : "films"}
+            {catalogUpdatedShortLabel ? (
+              <span data-testid="catalog-updated-short-label">
+                {" "}
+                · {catalogUpdatedShortLabel}
+              </span>
+            ) : null}
           </p>
         ) : null}
       </div>
