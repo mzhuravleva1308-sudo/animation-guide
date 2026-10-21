@@ -45,8 +45,8 @@ const bodyClassName =
   "mt-3 font-sans text-[15px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]";
 const metaClassName =
   "mt-1 font-sans text-[14px] font-normal leading-[1.5] text-[#7a7b90] antialiased [font-synthesis:none]";
-const linkClassName =
-  "underline decoration-[#c5c2d6] underline-offset-2 hover:text-[#1A1B2E]";
+const titleLinkClassName =
+  "text-[#1A1B2E] underline decoration-[#c5c2d6] underline-offset-2 transition hover:decoration-[#1A1B2E]";
 
 const festivals = listAnimationFestivals2026();
 
@@ -121,8 +121,8 @@ export default async function AnimationFestivals2026Page() {
             Animation Festivals {YEAR}
           </h1>
           <p className={bodyClassName}>
-            The major animation festivals Resonale uses for festival
-            participation — dates, places, and official sites for {YEAR}.
+            The major animation festivals Resonale tracks — dates and places
+            for {YEAR}.
           </p>
 
           <ol className="mt-10 list-none space-y-10 p-0">
@@ -141,25 +141,22 @@ export default async function AnimationFestivals2026Page() {
                   key={festival.festivalId}
                   data-testid={`festival-${festival.festivalId}`}
                 >
-                  <h2 className="font-sans text-[20px] font-medium leading-[1.3] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none]">
-                    {festival.name}
+                  <h2 className="font-sans text-[20px] font-medium leading-[1.3] tracking-tight antialiased [font-synthesis:none]">
+                    <a
+                      href={festival.url}
+                      className={titleLinkClassName}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid={`festival-link-${festival.festivalId}`}
+                    >
+                      {festival.name}
+                    </a>
                   </h2>
                   <p className={metaClassName}>
                     {dates}
                     {place ? ` · ${place}` : null}
                   </p>
                   <p className={bodyClassName}>{festival.description}</p>
-                  <p className={`${bodyClassName} mt-2`}>
-                    <a
-                      href={festival.url}
-                      className={linkClassName}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid={`festival-link-${festival.festivalId}`}
-                    >
-                      Official site
-                    </a>
-                  </p>
                 </li>
               );
             })}
