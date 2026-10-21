@@ -1,5 +1,6 @@
 export type FestivalBadgeId =
   | "annecy"
+  | "ottawa"
   | "cannes"
   | "tiff"
   | "berlinale"

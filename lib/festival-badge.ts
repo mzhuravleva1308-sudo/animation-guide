@@ -22,6 +22,15 @@ export const FESTIVAL_BADGE_CONFIG: Record<
     backgroundColor: "#EAF0FB",
     patterns: [/annecy/i],
   },
+  ottawa: {
+    label: "Ottawa",
+    fullName: "Ottawa International Animation Festival",
+    description:
+      "North America's leading animation festival, held each autumn in Ottawa, Canada.",
+    color: "#A31F34",
+    backgroundColor: "#F9EBEF",
+    patterns: [/ottawa international animation/i, /\boiaf\b/i, /\bottawa\b/i],
+  },
   cannes: {
     label: "Cannes",
     fullName: "Cannes Film Festival",
@@ -147,6 +156,7 @@ export const FESTIVAL_BADGE_CONFIG: Record<
 
 const BADGE_ORDER: FestivalBadgeId[] = [
   "annecy",
+  "ottawa",
   "cannes",
   "venice",
   "berlinale",

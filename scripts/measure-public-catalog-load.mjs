@@ -102,7 +102,12 @@ async function loadPublicBase() {
         .select("film_id")
         .eq("import_source", "manual_verified_major_awards_v1")
         .eq("recognition_type", "award")
-        .eq("award_result", "grand_prize")
+        .in("award_result", [
+          "grand_prize",
+          "winner",
+          "jury_prize",
+          "mention",
+        ])
     ),
   ]);
 

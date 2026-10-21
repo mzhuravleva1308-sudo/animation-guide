@@ -1,0 +1,68 @@
+[
+  {
+    "film_match": {
+      "title": "We Are Aliens",
+      "year": 2026
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Ottawa International Animation Festival",
+        "festival_year": 2026,
+        "section": "Animated Feature Competition",
+        "recognition_type": "award",
+        "award_name": "Grand Prize for Animated Feature",
+        "award_result": "grand_prize",
+        "source_url": "https://www.animationfestival.ca/festival/screenings/#winners",
+        "source_label": "OIAF 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Grand Prize for Animated Feature — We Are Aliens (dir. Kohei Kadowaki)",
+        "import_key": "official-ottawa-2026-we-are-aliens-grand-prize-feature"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Magic Atlas",
+      "year": 2026
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Ottawa International Animation Festival",
+        "festival_year": 2026,
+        "section": "Animated Feature Competition",
+        "recognition_type": "award",
+        "award_name": "Honourable Mention for Animated Feature",
+        "award_result": "mention",
+        "source_url": "https://www.animationfestival.ca/festival/screenings/#winners",
+        "source_label": "OIAF 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Honourable Mention — Magic Atlas (dir. Xun Sun)",
+        "import_key": "official-ottawa-2026-magic-atlas-honourable-mention-feature"
+      }
+    ]
+  },
+  {
+    "film_match": {
+      "title": "Tangles",
+      "year": 2026
+    },
+    "import_source": "manual_verified_major_awards_v1",
+    "recognitions": [
+      {
+        "festival_name": "Ottawa International Animation Festival",
+        "festival_year": 2026,
+        "section": "Animated Feature Competition",
+        "recognition_type": "award",
+        "award_name": "Honourable Mention for Animated Feature",
+        "award_result": "mention",
+        "source_url": "https://www.animationfestival.ca/festival/screenings/#winners",
+        "source_label": "OIAF 2026 Award Winners — official",
+        "source_type": "official_source",
+        "original_text": "Honourable Mention — Tangles (dir. Leah Nelson)",
+        "import_key": "official-ottawa-2026-tangles-honourable-mention-feature"
+      }
+    ]
+  }
+]

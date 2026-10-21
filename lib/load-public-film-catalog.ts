@@ -337,7 +337,13 @@ async function loadPublicCatalogBaseUncached(
         .select("film_id")
         .eq("import_source", "manual_verified_major_awards_v1")
         .eq("recognition_type", "award")
-        .eq("award_result", "grand_prize")
+        // Top prizes + jury honourable mentions at verified major festivals.
+        .in("award_result", [
+          "grand_prize",
+          "winner",
+          "jury_prize",
+          "mention",
+        ])
     ),
   ]);
 
@@ -381,7 +387,8 @@ function getCachedPublicCatalogBaseLoader(mediaType: string) {
     [
       "public-film-catalog-base",
       "fields-v3-media",
-      "badges-slim",
+      "badges-ottawa-v1",
+      "awards-mention-v1",
       "no-error-cache-v1",
       mediaType,
     ],
