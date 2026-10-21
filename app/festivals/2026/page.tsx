@@ -11,6 +11,7 @@ import {
   FESTIVALS_ANNECY_PATH,
   FESTIVALS_INDEX_PATH,
   FESTIVALS_OTTAWA_PATH,
+  FESTIVALS_STUTTGART_PATH,
   FESTIVALS_YEAR_PATH,
   FESTIVALS_ZAGREB_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
@@ -197,6 +198,17 @@ export default async function AnimationFestivals2026Page() {
                         href={FESTIVALS_ZAGREB_PATH(YEAR)}
                         className={titleLinkClassName}
                         data-testid="festival-zagreb-awards-link"
+                      >
+                        2026 feature film awards
+                      </Link>
+                    </p>
+                  ) : null}
+                  {festival.festivalId === "itfs-stuttgart" ? (
+                    <p className={`${bodyClassName} mt-2`}>
+                      <Link
+                        href={FESTIVALS_STUTTGART_PATH(YEAR)}
+                        className={titleLinkClassName}
+                        data-testid="festival-stuttgart-awards-link"
                       >
                         2026 feature film awards
                       </Link>
