@@ -47,14 +47,14 @@ export default function GuideEditorialGroups({
   onAuthRequired,
   currentGuidePath,
 }: GuideEditorialGroupsProps) {
-  const films = groups.flatMap((group) => group.items.map((item) => item.film));
+  // Taste unlock is account-wide: do not scope to films on this page only,
+  // or logged-in users with an existing profile still see "start shaping…".
   const { getHintForIndex, onDismissRatingOnboarding } = useRatingOnboarding(
     filmRatings,
     {
       enabled: true,
       ratingsReady,
       mediaType: MEDIA_TYPE.animation,
-      scopeFilmIds: films.map((film) => film.id),
     }
   );
 
