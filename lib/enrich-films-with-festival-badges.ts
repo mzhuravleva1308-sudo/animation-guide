@@ -1,4 +1,5 @@
 import { buildFilmFestivalBadges } from "@/lib/festival-badge";
+import { applyFestivalPageAwardLabels } from "@/lib/festivals/festival-page-award-labels.mjs";
 import type { FestivalBadge } from "@/types/festival-badge";
 import type { Film } from "@/types/film";
 
@@ -24,7 +25,7 @@ export function enrichFilmsWithFestivalBadges(
         raw_festival_name: recognition.festival_name ?? null,
       })
     );
-    const badges: FestivalBadge[] = buildFilmFestivalBadges({
+    const baseBadges: FestivalBadge[] = buildFilmFestivalBadges({
       catalogFestival: film.festival ?? null,
       claims: [
         ...(claimsByFilmId.get(film.id) ?? []),
@@ -32,9 +33,14 @@ export function enrichFilmsWithFestivalBadges(
       ],
     });
 
-    if (badges.length === 0) {
+    if (baseBadges.length === 0) {
       return film;
     }
+
+    const badges = applyFestivalPageAwardLabels(
+      baseBadges,
+      film.title
+    ) as FestivalBadge[];
 
     return {
       ...film,

@@ -35,6 +35,9 @@ function LaurelRight() {
 
 function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
   const tooltipId = `festival-badge-tip-${badge.id}`;
+  const awardLabel = badge.label.includes(" · ")
+    ? badge.label.slice(badge.label.indexOf(" · ") + 3)
+    : null;
 
   return (
     <span className="group/badge relative inline-flex">
@@ -59,6 +62,11 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
         <span className="block text-xs font-semibold leading-snug text-gray-900">
           {badge.fullName}
         </span>
+        {awardLabel ? (
+          <span className="mt-1 block text-[11px] font-medium leading-snug text-gray-800">
+            {awardLabel}
+          </span>
+        ) : null}
         <span className="mt-1 block text-[11px] leading-snug text-gray-600">
           {badge.description}
         </span>
