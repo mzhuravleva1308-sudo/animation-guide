@@ -830,6 +830,7 @@ export default function FilmsPageClient({
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}
               showVibeSearch={canAccessVibeSearch(auth?.email)}
+              showArchive={Boolean(auth)}
               interaction={{
                 profileId,
                 profileSlug,

@@ -66,7 +66,7 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
   ratingOnboardingHint?: RatingOnboardingHint;
   onDismissRatingOnboarding?: () => void;
   currentGuidePath?: string;
-  /** Allowlisted: hide this title from catalog browse, filters, and search. */
+  /** Signed-in: hide this title from catalog browse, filters, and search. */
   onVibeHide?: (filmId: string, note: string | null) => void;
   /** Allowlisted Watched: open visual / mood / plot detail scores. */
   showRatingDetail?: boolean;

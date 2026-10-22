@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { getUserDisplayEmail } from "@/lib/auth/user-display";
-import { canAccessVibeSearch } from "@/lib/vibe-search-access.mjs";
 import { VIBE_HIDDEN_LIST_TYPE } from "@/lib/vibe-hidden.mjs";
 import { normalizeFilms } from "@/lib/normalize-film";
 import type { Film } from "@/types/film";
@@ -40,7 +38,7 @@ function normalizeNote(value: unknown): string | null {
   return trimmed.length > 0 ? trimmed : null;
 }
 
-async function requireAllowlistedProfile() {
+async function requireAuthenticatedProfile() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -52,13 +50,6 @@ async function requireAllowlistedProfile() {
         { error: "Authentication required" },
         { status: 401 }
       ),
-    };
-  }
-
-  const email = getUserDisplayEmail(user);
-  if (!canAccessVibeSearch(email)) {
-    return {
-      error: NextResponse.json({ error: "Not available" }, { status: 403 }),
     };
   }
 
@@ -89,7 +80,7 @@ async function requireAllowlistedProfile() {
 
 export async function GET() {
   try {
-    const resolved = await requireAllowlistedProfile();
+    const resolved = await requireAuthenticatedProfile();
     if ("error" in resolved && resolved.error) return resolved.error;
 
     const { admin, profileId } = resolved as {
@@ -189,7 +180,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const resolved = await requireAllowlistedProfile();
+    const resolved = await requireAuthenticatedProfile();
     if ("error" in resolved && resolved.error) return resolved.error;
 
     const { admin, profileId } = resolved as {

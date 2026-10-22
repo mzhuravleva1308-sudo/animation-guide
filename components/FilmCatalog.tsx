@@ -63,6 +63,8 @@ type FilmCatalogProps = {
   onQuickFilterChange: (filter: QuickFilter) => void;
   /** Early-access free-form mood search (allowlisted accounts). */
   showVibeSearch?: boolean;
+  /** Signed-in: archive icon on cards + Archived panel in the toolbar. */
+  showArchive?: boolean;
 };
 
 function CatalogSectionHeading({
@@ -120,6 +122,7 @@ export default function FilmCatalog({
   activeQuickFilter,
   onQuickFilterChange,
   showVibeSearch = false,
+  showArchive = false,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const availableQuickFilters = useMemo(
@@ -148,7 +151,8 @@ export default function FilmCatalog({
   const [showVibeArchive, setShowVibeArchive] = useState(false);
   const [vibeArchiveLoading, setVibeArchiveLoading] = useState(false);
   const { showToast } = useToast();
-  const vibeArchiveEnabled =
+  const vibeArchiveEnabled = showArchive;
+  const vibeSearchEnabled =
     showVibeSearch && mediaType === MEDIA_TYPE.animation;
 
   const loadVibeArchive = useCallback(async () => {
@@ -419,7 +423,7 @@ export default function FilmCatalog({
             onResultsChange={handleSearchResultsChange}
             isLoading={lookupReady && searchState.isLoading}
           />
-          {vibeArchiveEnabled ? (
+          {vibeSearchEnabled ? (
             <VibeSearch onResultsChange={handleVibeResultsChange} />
           ) : null}
           <QuickFilters
