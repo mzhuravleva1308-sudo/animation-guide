@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import EmailAuthModal from "@/components/EmailAuthModal";
+import FestivalYearSwitcher, {
+  type FestivalYearOption,
+} from "@/components/festivals/FestivalYearSwitcher";
 import GuideEditorialGroups, {
   type GuideEditorialGroup,
 } from "@/components/guides/GuideEditorialGroups";
@@ -32,6 +35,7 @@ type GuidePageClientProps = {
   sectionLink?: { href: string; label: string };
   pageTestId?: string;
   anchorFilm?: Film | null;
+  yearSwitcher?: { years: FestivalYearOption[]; activeYear: number } | null;
   initialFilmRatings?: Record<string, number>;
   initialSavedFilmIds?: string[];
   initialRatingUpdatedAtMs?: Record<string, number>;
@@ -54,6 +58,7 @@ export default function GuidePageClient({
   sectionLink = { href: GUIDES_INDEX_PATH, label: "Guides" },
   pageTestId = "guide-page",
   anchorFilm = null,
+  yearSwitcher = null,
   initialFilmRatings,
   initialSavedFilmIds,
   initialRatingUpdatedAtMs,
@@ -112,6 +117,12 @@ export default function GuidePageClient({
         <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
           {content.h1}
         </h1>
+        {yearSwitcher ? (
+          <FestivalYearSwitcher
+            years={yearSwitcher.years}
+            activeYear={yearSwitcher.activeYear}
+          />
+        ) : null}
         {anchorPosterUrl ? (
           <div className="mt-4 flex flex-wrap items-start gap-x-5 gap-y-3 min-[425px]:flex-nowrap min-[425px]:gap-6">
             <img

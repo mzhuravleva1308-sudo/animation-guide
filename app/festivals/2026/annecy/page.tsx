@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import GuidePageClient from "@/components/guides/GuidePageClient";
 import { ANNECY_2026_FEATURE_AWARDS } from "@/lib/festivals/annecy-2026-feature-awards.mjs";
+import { annecyFeatureAwardYearOptions } from "@/lib/festivals/annecy-award-years.mjs";
 import {
   CURRENT_FESTIVAL_YEAR,
   FESTIVALS_INDEX_PATH,
@@ -18,7 +19,8 @@ import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const PATH = `/festivals/${CURRENT_FESTIVAL_YEAR}/annecy`;
+const YEAR = CURRENT_FESTIVAL_YEAR;
+const PATH = `/festivals/${YEAR}/annecy`;
 const DESCRIPTION =
   ANNECY_2026_FEATURE_AWARDS.metaDescription ??
   ANNECY_2026_FEATURE_AWARDS.intro[0];
@@ -73,6 +75,13 @@ export default async function Annecy2026FeatureAwardsPage() {
           label: "Festivals",
         }}
         pageTestId="annecy-2026-feature-awards"
+        yearSwitcher={{
+          years: annecyFeatureAwardYearOptions(YEAR).map(({ year, href }) => ({
+            year,
+            href,
+          })),
+          activeYear: YEAR,
+        }}
         initialFilmRatings={page.initialFilmRatings}
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
