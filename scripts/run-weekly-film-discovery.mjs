@@ -24,7 +24,6 @@ import { sendWeeklyFilmDiscoveryEmail } from "../lib/send-weekly-film-discovery-
 import { DISCOVERY_ELIGIBILITY } from "../lib/film-discovery.mjs";
 import { curateDiscoveryMedia } from "../lib/film-discovery-media.mjs";
 import { curateDiscoveryContent } from "../lib/film-discovery-content.mjs";
-import { curateDiscoveryContent } from "../lib/film-discovery-content.mjs";
 
 function parseArgs(argv) {
   const options = {
