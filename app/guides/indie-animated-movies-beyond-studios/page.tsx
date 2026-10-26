@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import GuidePageClient from "@/components/guides/GuidePageClient";
-import { WEIRD_ANIMATED_MOVIES_GUIDE } from "@/lib/guides/weird-animated-movies.mjs";
+import { INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE } from "@/lib/guides/indie-animated-movies-beyond-studios.mjs";
 import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
 import {
   buildGuideDocumentMetadata,
@@ -14,17 +14,19 @@ import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const PATH = `/guides/${WEIRD_ANIMATED_MOVIES_GUIDE.slug}`;
+const PATH = `/guides/${INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.slug}`;
 const DESCRIPTION =
-  WEIRD_ANIMATED_MOVIES_GUIDE.metaDescription ??
-  WEIRD_ANIMATED_MOVIES_GUIDE.intro[0];
+  INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.metaDescription ??
+  INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.intro[0];
 
 export async function generateMetadata(): Promise<Metadata> {
-  const page = await loadGuidePage(WEIRD_ANIMATED_MOVIES_GUIDE);
+  const page = await loadGuidePage(INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE);
   const indexable = !page.loadError && page.missingTitles.length === 0;
 
   return buildGuideDocumentMetadata({
-    h1: WEIRD_ANIMATED_MOVIES_GUIDE.h1,
+    h1:
+      INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.documentTitle ??
+      INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.h1,
     description: DESCRIPTION,
     path: PATH,
     indexable,
@@ -32,16 +34,18 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function WeirdAnimatedMoviesGuidePage() {
-  const page = await loadGuidePage(WEIRD_ANIMATED_MOVIES_GUIDE);
+export default async function IndieAnimatedMoviesBeyondStudiosGuidePage() {
+  const page = await loadGuidePage(INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE);
   const showJsonLd = !page.loadError && page.missingTitles.length === 0;
   const jsonLd = showJsonLd
     ? buildGuideJsonLd({
         origin: PUBLIC_SITE_ORIGIN,
         path: PATH,
-        name: WEIRD_ANIMATED_MOVIES_GUIDE.h1,
+        name: INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE.h1,
         description: DESCRIPTION,
-        filmTitles: listGuideFilmTitles(WEIRD_ANIMATED_MOVIES_GUIDE),
+        filmTitles: listGuideFilmTitles(
+          INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE
+        ),
       })
     : null;
 
@@ -60,7 +64,7 @@ export default async function WeirdAnimatedMoviesGuidePage() {
         groups={page.groups}
         missingTitles={page.missingTitles}
         loadError={page.loadError}
-        content={WEIRD_ANIMATED_MOVIES_GUIDE}
+        content={INDIE_ANIMATED_MOVIES_BEYOND_STUDIOS_GUIDE}
         postAuthPath={PATH}
         anchorFilm={page.anchorFilm}
         initialFilmRatings={page.initialFilmRatings}

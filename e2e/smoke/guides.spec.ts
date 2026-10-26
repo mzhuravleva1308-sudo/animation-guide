@@ -77,14 +77,14 @@ test.describe("Films like Flow guide", () => {
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Weird animated movies",
+        name: "Strange festival animated movies",
       })
-    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Non-Disney animated movies",
+        name: "Indie animated movies beyond the studios",
       })
-    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
     await expect(page.getByTestId("nav-films")).toHaveCount(0);
     await expect(page.getByTestId("nav-saved")).toHaveCount(0);
     await expect(page.getByTestId("auth-status")).toBeVisible();
@@ -195,9 +195,9 @@ test.describe("Beautiful animated films guide", () => {
     ).toHaveAttribute("href", "/guides/films-like-flow");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Weird animated movies",
+        name: "Strange festival animated movies",
       })
-    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
         name: "Animation styles",
@@ -205,9 +205,9 @@ test.describe("Beautiful animated films guide", () => {
     ).toHaveAttribute("href", "/guides/animation-styles");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Non-Disney animated movies",
+        name: "Indie animated movies beyond the studios",
       })
-    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -237,17 +237,17 @@ test.describe("Beautiful animated films guide", () => {
   });
 });
 
-const WEIRD_PATH = "/guides/weird-animated-movies";
-const WEIRD_TITLE =
-  "Weird Animated Movies: Strange Films You Probably Haven’t Seen | Resonale";
-const WEIRD_DESCRIPTION =
-  "Weird animated movies worth discovering: strange independent and festival films where the world, the story, or familiar things refuse to behave.";
+const STRANGE_PATH = "/guides/strange-festival-animated-movies";
+const STRANGE_TITLE =
+  "Strange Festival Animated Movies You Probably Haven’t Seen | Resonale";
+const STRANGE_DESCRIPTION =
+  "Strange festival animated movies worth discovering: unusual independent and festival films where the world, the story, or familiar things refuse to behave.";
 
-test.describe("Weird animated movies guide", () => {
+test.describe("Strange festival animated movies guide", () => {
   test("has dedicated metadata, canonical URL, and JSON-LD when complete", async ({
     request,
   }) => {
-    const response = await request.get(WEIRD_PATH);
+    const response = await request.get(STRANGE_PATH);
 
     expect(response.status()).toBe(200);
     const html = await response.text();
@@ -255,10 +255,10 @@ test.describe("Weird animated movies guide", () => {
       "&amp;",
       "&"
     );
-    expect(title).toBe(WEIRD_TITLE);
-    expect(html).toContain(WEIRD_DESCRIPTION);
-    expect(html).toContain(`https://resonale.com${WEIRD_PATH}`);
-    expect(html).toContain(`property="og:title" content="${WEIRD_TITLE}"`);
+    expect(title).toBe(STRANGE_TITLE);
+    expect(html).toContain(STRANGE_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${STRANGE_PATH}`);
+    expect(html).toContain(`property="og:title" content="${STRANGE_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
@@ -273,19 +273,19 @@ test.describe("Weird animated movies guide", () => {
     }
   });
 
-  test("renders grouped weird animated movies as a catalog page", async ({
+  test("renders grouped strange festival animated movies as a catalog page", async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
     page.on("pageerror", (error) => consoleErrors.push(error.message));
 
-    await page.goto(WEIRD_PATH);
+    await page.goto(STRANGE_PATH);
 
     await expect(page.getByTestId("guide-page")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Weird Animated Movies: Strange Films You Probably Haven’t Seen",
+        name: "Strange Festival Animated Movies",
       })
     ).toBeVisible();
     await expect(
@@ -316,9 +316,9 @@ test.describe("Weird animated movies guide", () => {
     ).toHaveAttribute("href", "/guides/films-like-flow");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Non-Disney animated movies",
+        name: "Indie animated movies beyond the studios",
       })
-    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -432,14 +432,14 @@ test.describe("Animation styles guide", () => {
     ).toHaveAttribute("href", "/guides/films-like-flow");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Weird animated movies",
+        name: "Strange festival animated movies",
       })
-    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Non-Disney animated movies",
+        name: "Indie animated movies beyond the studios",
       })
-    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
 
     const cards = page.getByTestId("film-card");
     const cardCount = await cards.count();
@@ -470,17 +470,17 @@ test.describe("Animation styles guide", () => {
   });
 });
 
-const NON_DISNEY_PATH = "/guides/non-disney-animated-movies";
-const NON_DISNEY_TITLE =
-  "Non-Disney Animated Movies Beyond the Big Studios | Resonale";
-const NON_DISNEY_DESCRIPTION =
-  "Non-Disney animated movies beyond the big studios: nine independent and festival films with real wonder, handmade worlds, and stories Disney would not tell.";
+const INDIE_PATH = "/guides/indie-animated-movies-beyond-studios";
+const INDIE_TITLE =
+  "Indie Animated Movies Beyond the Big Studios | Resonale";
+const INDIE_DESCRIPTION =
+  "Indie animated movies beyond the big studios: nine independent and festival films with real wonder, handmade worlds, and stories studio formulas would not tell.";
 
-test.describe("Non-Disney animated movies guide", () => {
+test.describe("Indie animated movies beyond studios guide", () => {
   test("has dedicated metadata, canonical URL, and JSON-LD when complete", async ({
     request,
   }) => {
-    const response = await request.get(NON_DISNEY_PATH);
+    const response = await request.get(INDIE_PATH);
 
     expect(response.status()).toBe(200);
     const html = await response.text();
@@ -488,10 +488,10 @@ test.describe("Non-Disney animated movies guide", () => {
       "&amp;",
       "&"
     );
-    expect(title).toBe(NON_DISNEY_TITLE);
-    expect(html).toContain(NON_DISNEY_DESCRIPTION);
-    expect(html).toContain(`https://resonale.com${NON_DISNEY_PATH}`);
-    expect(html).toContain(`property="og:title" content="${NON_DISNEY_TITLE}"`);
+    expect(title).toBe(INDIE_TITLE);
+    expect(html).toContain(INDIE_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${INDIE_PATH}`);
+    expect(html).toContain(`property="og:title" content="${INDIE_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
@@ -506,19 +506,19 @@ test.describe("Non-Disney animated movies guide", () => {
     }
   });
 
-  test("renders grouped non-Disney animated movies as a catalog page", async ({
+  test("renders grouped indie animated movies beyond studios as a catalog page", async ({
     page,
   }) => {
     const consoleErrors: string[] = [];
     page.on("pageerror", (error) => consoleErrors.push(error.message));
 
-    await page.goto(NON_DISNEY_PATH);
+    await page.goto(INDIE_PATH);
 
     await expect(page.getByTestId("guide-page")).toBeVisible();
     await expect(
       page.getByRole("heading", {
         level: 1,
-        name: "Non-Disney Animated Movies: A World Beyond the Big Studios",
+        name: "Indie Animated Movies Beyond the Big Studios",
       })
     ).toBeVisible();
     await expect(
@@ -527,7 +527,7 @@ test.describe("Non-Disney animated movies guide", () => {
       })
     ).toBeVisible();
     await expect(
-      page.getByText("non-Disney animated movies", { exact: false })
+      page.getByText("indie animated movies beyond the studios", { exact: false })
     ).toBeVisible();
     await expect(page.getByTestId("guide-anchor-poster")).toHaveCount(0);
     await expect(page.getByTestId("guide-personal-note")).toBeVisible();
@@ -552,9 +552,9 @@ test.describe("Non-Disney animated movies guide", () => {
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
-        name: "Weird animated movies",
+        name: "Strange festival animated movies",
       })
-    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
         name: "Animation styles",
@@ -621,8 +621,8 @@ test.describe("Guides index", () => {
       page.getByTestId("guides-index-beautiful-animated-films")
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
     await expect(
-      page.getByTestId("guides-index-weird-animated-movies")
-    ).toHaveAttribute("href", "/guides/weird-animated-movies");
+      page.getByTestId("guides-index-strange-festival-animated-movies")
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
     await expect(
       page.getByTestId("guides-index-animation-styles")
     ).toHaveAttribute("href", "/guides/animation-styles");
@@ -633,16 +633,16 @@ test.describe("Guides index", () => {
       page.getByTestId("guides-index-cover-beautiful-animated-films")
     ).toBeVisible();
     await expect(
-      page.getByTestId("guides-index-cover-weird-animated-movies")
+      page.getByTestId("guides-index-cover-strange-festival-animated-movies")
     ).toBeVisible();
     await expect(
       page.getByTestId("guides-index-cover-animation-styles")
     ).toBeVisible();
     await expect(
-      page.getByTestId("guides-index-non-disney-animated-movies")
-    ).toHaveAttribute("href", "/guides/non-disney-animated-movies");
+      page.getByTestId("guides-index-indie-animated-movies-beyond-studios")
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
     await expect(
-      page.getByTestId("guides-index-cover-non-disney-animated-movies")
+      page.getByTestId("guides-index-cover-indie-animated-movies-beyond-studios")
     ).toBeVisible();
   });
 
@@ -675,7 +675,7 @@ test.describe("Guide links in the public footer", () => {
       page.getByTestId("footer-guide-beautiful-animated-films")
     ).toHaveCount(0);
     await expect(
-      page.getByTestId("footer-guide-weird-animated-movies")
+      page.getByTestId("footer-guide-strange-festival-animated-movies")
     ).toHaveCount(0);
   });
 });

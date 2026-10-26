@@ -64,13 +64,13 @@ test.describe("Public SEO basics", () => {
       "<loc>https://resonale.com/guides/beautiful-animated-films</loc>"
     );
     expect(body).toContain(
-      "<loc>https://resonale.com/guides/weird-animated-movies</loc>"
+      "<loc>https://resonale.com/guides/strange-festival-animated-movies</loc>"
     );
     expect(body).toContain(
       "<loc>https://resonale.com/guides/animation-styles</loc>"
     );
     expect(body).toContain(
-      "<loc>https://resonale.com/guides/non-disney-animated-movies</loc>"
+      "<loc>https://resonale.com/guides/indie-animated-movies-beyond-studios</loc>"
     );
     expect(body).toContain("<lastmod>");
     expect(body).not.toContain("https://resonale.com/privacy");
