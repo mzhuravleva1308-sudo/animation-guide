@@ -102,6 +102,7 @@ export default async function FestivalsIndexPage() {
       href: festival.href,
       title: festival.title,
       description: festival.description,
+      country: festival.country,
       coverPosterUrl: film ? getFilmPosterUrl(film) : null,
     };
   });

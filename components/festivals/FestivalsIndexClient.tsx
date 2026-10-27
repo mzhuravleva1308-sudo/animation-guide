@@ -21,6 +21,7 @@ export type FestivalsIndexItem = {
   href: string;
   title: string;
   description: string;
+  country: string;
   coverPosterUrl: string | null;
 };
 
@@ -111,6 +112,9 @@ export default function FestivalsIndexClient({
                       {festival.title}
                     </span>
                   </h2>
+                  <p className="mt-1 font-sans text-[14px] font-normal leading-[1.5] text-[#7a7b90] antialiased [font-synthesis:none]">
+                    {festival.country}
+                  </p>
                   <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
                     {festival.description}
                   </p>
