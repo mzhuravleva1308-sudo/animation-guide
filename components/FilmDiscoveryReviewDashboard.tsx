@@ -514,23 +514,6 @@ export function FilmDiscoveryReviewDashboard({
           <p className="text-sm text-gray-500">No candidates awaiting review.</p>
         ) : (
           <>
-            <div data-testid="discovery-pending-needs-attention">
-              <h3 className="text-lg font-medium">
-                Needs a careful look ({needsAttention.length})
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                Missing poster/trailer, incomplete media/content, or incomplete
-                tag axes / festival assessment.
-              </p>
-              {needsAttention.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">
-                  Nothing in this queue right now.
-                </p>
-              ) : (
-                renderPendingList(needsAttention, "needs_attention")
-              )}
-            </div>
-
             <div data-testid="discovery-pending-looks-good">
               <h3 className="text-lg font-medium">
                 Looks good ({looksGood.length})
@@ -545,6 +528,23 @@ export function FilmDiscoveryReviewDashboard({
                 </p>
               ) : (
                 renderPendingList(looksGood, "looks_good")
+              )}
+            </div>
+
+            <div data-testid="discovery-pending-needs-attention">
+              <h3 className="text-lg font-medium">
+                Needs a careful look ({needsAttention.length})
+              </h3>
+              <p className="mt-1 text-sm text-gray-600">
+                Missing poster/trailer, incomplete media/content, or incomplete
+                tag axes / festival assessment.
+              </p>
+              {needsAttention.length === 0 ? (
+                <p className="mt-4 text-sm text-gray-500">
+                  Nothing in this queue right now.
+                </p>
+              ) : (
+                renderPendingList(needsAttention, "needs_attention")
               )}
             </div>
           </>
