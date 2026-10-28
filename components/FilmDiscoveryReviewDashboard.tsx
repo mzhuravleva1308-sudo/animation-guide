@@ -6,6 +6,10 @@ import { buildDiscoveryCatalogFilterPills, formatDiscoveryQuickFilterLabels } fr
 import { formatDiscoveryFestivalClaimLabels } from "@/lib/film-discovery-festival-participation.mjs";
 import { formatDiscoveryFestivalLabels } from "@/lib/film-discovery-festivals.mjs";
 import {
+  DISCOVERY_CHILDREN_AUDIENCE_TAG_LABEL,
+  discoveryRowPrimarilyForChildren,
+} from "@/lib/film-discovery-children-audience.mjs";
+import {
   classifyDiscoveryPendingReview,
   partitionDiscoveryPendingReview,
 } from "@/lib/film-discovery-pending-review.mjs";
@@ -58,6 +62,8 @@ export type DiscoveryCandidateRow = {
   release_queue_id?: string | null;
   release_blockers?: string[] | null;
   film_id?: string | null;
+  review_flags?: string[] | null;
+  eligibility_evidence?: Record<string, unknown> | null;
 };
 
 function asUrlList(value: unknown): string[] {
@@ -169,6 +175,13 @@ function PendingCandidateCard({
                   {contentStatusLabel(film.content_status)}
                 </span>
               </p>
+              {discoveryRowPrimarilyForChildren(film) ? (
+                <p className="mt-2" data-testid="discovery-kids-tag">
+                  <span className="inline-flex border border-rose-300 bg-rose-50 px-2 py-0.5 text-xs text-rose-900">
+                    {DISCOVERY_CHILDREN_AUDIENCE_TAG_LABEL}
+                  </span>
+                </p>
+              ) : null}
               {attentionReasons.length ? (
                 <p
                   className="mt-2 flex flex-wrap gap-1.5"
