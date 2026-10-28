@@ -5,6 +5,7 @@ import {
   type DiscoveryCandidateRow,
 } from "@/components/FilmDiscoveryReviewDashboard";
 import { getAdminAccessStatus } from "@/lib/auth/require-admin";
+import { annotateDiscoveryCandidatesWithNearDuplicates } from "@/lib/film-discovery-pending-review.mjs";
 import { getFestivalAdminSupabase } from "@/lib/get-festival-admin-supabase.mjs";
 
 export const dynamic = "force-dynamic";
@@ -64,7 +65,19 @@ export default async function FilmDiscoveryAdminPage() {
     throw error;
   }
 
-  const candidates = (data ?? []) as DiscoveryCandidateRow[];
+  const { data: catalogFilms, error: catalogError } = await supabase
+    .from("films")
+    .select(
+      "id, title, original_title, year, normalized_title, normalized_original_title"
+    );
+  if (catalogError) {
+    throw catalogError;
+  }
+
+  const candidates = annotateDiscoveryCandidatesWithNearDuplicates(
+    (data ?? []) as DiscoveryCandidateRow[],
+    catalogFilms ?? []
+  ) as DiscoveryCandidateRow[];
 
   return (
     <main className="mx-auto max-w-6xl p-8">

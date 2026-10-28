@@ -64,6 +64,13 @@ export type DiscoveryCandidateRow = {
   film_id?: string | null;
   review_flags?: string[] | null;
   eligibility_evidence?: Record<string, unknown> | null;
+  possible_catalog_duplicates?: Array<{
+    id?: string | null;
+    title: string;
+    year: number;
+    match?: string;
+    year_delta?: number;
+  }> | null;
 };
 
 function asUrlList(value: unknown): string[] {
