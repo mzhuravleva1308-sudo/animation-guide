@@ -23,7 +23,7 @@ import {
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const SELECT =
-  "id, title, original_title, year, directors, countries, festival_recognitions, source";
+  "id, title, original_title, year, directors, countries, festival_recognitions, source, review_status";
 
 function parseArgs(argv) {
   const options = {
@@ -31,6 +31,7 @@ function parseArgs(argv) {
     limit: null,
     write: false,
     force: false,
+    reviewStatus: null,
     out: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -42,7 +43,10 @@ function parseArgs(argv) {
     else if (arg === "--write") options.write = true;
     else if (arg === "--dry-run") options.write = false;
     else if (arg === "--force") options.force = true;
-    else if (arg === "--out") options.out = argv[++i];
+    else if (arg === "--review-status") options.reviewStatus = argv[++i];
+    else if (arg.startsWith("--review-status=")) {
+      options.reviewStatus = arg.slice("--review-status=".length);
+    } else if (arg === "--out") options.out = argv[++i];
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (options.limit != null && (!Number.isInteger(options.limit) || options.limit < 1)) {
@@ -81,6 +85,7 @@ async function main() {
     .select(SELECT)
     .eq("source", options.source)
     .order("title", { ascending: true });
+  if (options.reviewStatus) query = query.eq("review_status", options.reviewStatus);
   if (options.limit) query = query.limit(options.limit);
 
   const { data, error } = await query;
