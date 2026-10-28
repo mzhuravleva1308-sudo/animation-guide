@@ -25,11 +25,11 @@ export default async function FilmDiscoveryAdminPage() {
   let { data, error } = await supabase
     .from("film_discovery_candidates")
     .select(
-      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes, synopsis, the_mood, technique, moods, aesthetic_tags, quick_filters, has_festival, festival_claims, festival_recognitions, content_status, content_note, content_revision_count, release_status, release_queue_id, release_blockers, film_id"
+      "id, title, original_title, year, directors, countries, runtime_minutes, source_urls, manager_why, researcher_why, eligibility_result, review_status, reject_reason, source, created_at, poster_url, poster_source_label, trailer_url, trailer_source_label, media_status, media_notes, synopsis, the_mood, technique, moods, aesthetic_tags, storytelling_tags, quick_filters, has_festival, festival_claims, festival_recognitions, content_status, content_note, content_revision_count, release_status, release_queue_id, release_blockers, film_id"
     )
     .order("created_at", { ascending: false });
 
-  if (error && /synopsis|the_mood|content_status|technique|content_note|aesthetic_tags|quick_filters|has_festival|festival_claims|festival_recognitions|release_status/i.test(error.message)) {
+  if (error && /synopsis|the_mood|content_status|technique|content_note|aesthetic_tags|storytelling_tags|quick_filters|has_festival|festival_claims|festival_recognitions|release_status/i.test(error.message)) {
     const fallback = await supabase
       .from("film_discovery_candidates")
       .select(
@@ -43,6 +43,7 @@ export default async function FilmDiscoveryAdminPage() {
       technique: null,
       moods: null,
       aesthetic_tags: null,
+      storytelling_tags: null,
       quick_filters: null,
       has_festival: null,
       festival_claims: null,

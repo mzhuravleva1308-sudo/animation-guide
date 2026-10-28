@@ -208,7 +208,12 @@ function readiness(film, moodEmbedding, aestheticEmbedding, options = {}) {
       moodEmbedding &&
       visualWorldEmbedding &&
       storytellingEmbedding
-    : moods && aestheticTags && moodEmbedding && aestheticEmbedding;
+    : moods &&
+      aestheticTags &&
+      storytellingTags &&
+      moodEmbedding &&
+      aestheticEmbedding &&
+      storytellingEmbedding;
   return {
     metadata,
     moods,
@@ -539,6 +544,9 @@ function buildFilmInsertPayload(film) {
   // Never set poster_url here — cache-posters must write the Storage URL.
   if (hasTags(film.moods)) payload.moods = film.moods;
   if (hasTags(film.aesthetic_tags)) payload.aesthetic_tags = film.aesthetic_tags;
+  if (hasTags(film.storytelling_tags)) {
+    payload.storytelling_tags = film.storytelling_tags;
+  }
   if (nonEmpty(film.material_fact)) payload.material_fact = film.material_fact;
   if (nonEmpty(film.image_url)) payload.image_url = film.image_url;
   if (nonEmpty(film.external_image_url)) {
@@ -566,6 +574,7 @@ function buildFilmInsertPayload(film) {
 function buildPipelineChecklistPatch(film, state, input) {
   const moodsPreserved = hasTags(input?.moods);
   const aestheticPreserved = hasTags(input?.aesthetic_tags);
+  const storytellingPreserved = hasTags(input?.storytelling_tags);
   const trailerPreserved = nonEmpty(input?.trailer_url);
   return {
     inserted: true,
@@ -575,8 +584,14 @@ function buildPipelineChecklistPatch(film, state, input) {
       : state?.aestheticTags
         ? "filled"
         : "pending",
+    storytelling_tags: storytellingPreserved
+      ? "preserved"
+      : state?.storytellingTags
+        ? "filled"
+        : "pending",
     mood_embedding: state?.moodEmbedding ? "done" : "pending",
     aesthetic_embedding: state?.aestheticEmbedding ? "done" : "pending",
+    storytelling_embedding: state?.storytellingEmbedding ? "done" : "pending",
     image_sourced: Boolean(
       nonEmpty(film?.image_url) || nonEmpty(film?.external_image_url)
     ),
@@ -1093,13 +1108,19 @@ export async function processFilmBatch({
     (film) =>
       film.media_type !== "live_action" && !hasTags(film.aesthetic_tags)
   );
+  const animationFilms = initial.films.filter(
+    (film) => film.media_type !== "live_action"
+  );
   const liveActionFilms = initial.films.filter(
     (film) => film.media_type === "live_action"
   );
   const missingVisualWorldTags = liveActionFilms.filter(
     (film) => !hasTags(film.visual_world_tags)
   );
-  const missingStorytellingTags = liveActionFilms.filter(
+  const missingStorytellingTagsLiveAction = liveActionFilms.filter(
+    (film) => !hasTags(film.storytelling_tags)
+  );
+  const missingStorytellingTagsAnimation = animationFilms.filter(
     (film) => !hasTags(film.storytelling_tags)
   );
   const missingMaterialFact = liveActionFilms.filter(
@@ -1110,7 +1131,8 @@ export async function processFilmBatch({
       missingMoodTags.length +
       missingAestheticTags.length +
       missingVisualWorldTags.length +
-      missingStorytellingTags.length +
+      missingStorytellingTagsLiveAction.length +
+      missingStorytellingTagsAnimation.length +
       missingMaterialFact.length
     }, embedding calls planned for mood/aesthetic/VW/ST as needed, profiles=${profiles.length}`
   );
@@ -1133,6 +1155,8 @@ export async function processFilmBatch({
                 hasTags(film.aesthetic_tags)
                   ? "skip aesthetic tags"
                   : "would fill aesthetic tags"
+              }; ${
+                hasTags(film.storytelling_tags) ? "skip ST" : "would fill ST"
               }`
         }`
       );
@@ -1158,6 +1182,10 @@ export async function processFilmBatch({
                 initialStates.get(film.id).aestheticEmbedding
                   ? "skip aesthetic"
                   : "would create aesthetic"
+              }; ${
+                initialStates.get(film.id).storytellingEmbedding
+                  ? "skip ST"
+                  : "would create ST"
               }`
         }`
       );
@@ -1183,7 +1211,8 @@ export async function processFilmBatch({
       missingMoodTags.length ||
       missingAestheticTags.length ||
       missingVisualWorldTags.length ||
-      missingStorytellingTags.length ||
+      missingStorytellingTagsLiveAction.length ||
+      missingStorytellingTagsAnimation.length ||
       missingMaterialFact.length
     ) {
       if (missingMoodTags.length) {
@@ -1207,11 +1236,19 @@ export async function processFilmBatch({
           false
         );
       }
-      if (missingStorytellingTags.length) {
+      if (missingStorytellingTagsLiveAction.length) {
         await runScript(
           "fill-storytelling-tags.mjs",
-          missingStorytellingTags.map((film) => film.id),
+          missingStorytellingTagsLiveAction.map((film) => film.id),
           false
+        );
+      }
+      if (missingStorytellingTagsAnimation.length) {
+        await runScript(
+          "fill-storytelling-tags.mjs",
+          missingStorytellingTagsAnimation.map((film) => film.id),
+          false,
+          ["--media=animation"]
         );
       }
       if (missingMaterialFact.length) {
@@ -1230,7 +1267,9 @@ export async function processFilmBatch({
           hasTags(film.visual_world_tags) &&
           hasTags(film.storytelling_tags) &&
           nonEmpty(film.material_fact)
-        : hasTags(film.moods) && hasTags(film.aesthetic_tags);
+        : hasTags(film.moods) &&
+          hasTags(film.aesthetic_tags) &&
+          hasTags(film.storytelling_tags);
       logFilm("enrichment", film, tagsOk ? "complete" : "incomplete");
     }
     if (
@@ -1243,7 +1282,11 @@ export async function processFilmBatch({
             !nonEmpty(film.material_fact)
           );
         }
-        return !hasTags(film.moods) || !hasTags(film.aesthetic_tags);
+        return (
+          !hasTags(film.moods) ||
+          !hasTags(film.aesthetic_tags) ||
+          !hasTags(film.storytelling_tags)
+        );
       })
     ) {
       throw new Error("Enrichment did not make every film ranking-ready for tags");
@@ -1261,9 +1304,14 @@ export async function processFilmBatch({
         film.media_type === "live_action" &&
         !validEmbedding(current.visualWorldById.get(film.id)?.embedding)
     );
-    const filmsMissingStorytellingEmbeddings = current.films.filter(
+    const filmsMissingStorytellingEmbeddingsLiveAction = current.films.filter(
       (film) =>
         film.media_type === "live_action" &&
+        !validEmbedding(current.storytellingById.get(film.id)?.embedding)
+    );
+    const filmsMissingStorytellingEmbeddingsAnimation = current.films.filter(
+      (film) =>
+        film.media_type !== "live_action" &&
         !validEmbedding(current.storytellingById.get(film.id)?.embedding)
     );
     if (filmsMissingMoodEmbeddings.length) {
@@ -1287,11 +1335,19 @@ export async function processFilmBatch({
         false
       );
     }
-    if (filmsMissingStorytellingEmbeddings.length) {
+    if (filmsMissingStorytellingEmbeddingsLiveAction.length) {
       await runScript(
         "fill-film-storytelling-embeddings.mjs",
-        filmsMissingStorytellingEmbeddings.map((film) => film.id),
+        filmsMissingStorytellingEmbeddingsLiveAction.map((film) => film.id),
         false
+      );
+    }
+    if (filmsMissingStorytellingEmbeddingsAnimation.length) {
+      await runScript(
+        "fill-film-storytelling-embeddings.mjs",
+        filmsMissingStorytellingEmbeddingsAnimation.map((film) => film.id),
+        false,
+        ["--media=animation"]
       );
     }
     current = await loadState(supabase, filmIds);
@@ -1305,7 +1361,9 @@ export async function processFilmBatch({
           ? state.moodEmbedding &&
             state.visualWorldEmbedding &&
             state.storytellingEmbedding
-          : state.moodEmbedding && state.aestheticEmbedding;
+          : state.moodEmbedding &&
+            state.aestheticEmbedding &&
+            state.storytellingEmbedding;
       logFilm("embeddings", film, embedsOk ? "valid" : "invalid");
     }
     if (options.skipMedia) {

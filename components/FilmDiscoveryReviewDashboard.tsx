@@ -33,6 +33,7 @@ export type DiscoveryCandidateRow = {
   technique?: string | null;
   moods?: string[] | null;
   aesthetic_tags?: string[] | null;
+  storytelling_tags?: string[] | null;
   quick_filters?: string[] | null;
   has_festival?: boolean | null;
   festival_claims?: Array<{
@@ -271,6 +272,15 @@ export function FilmDiscoveryReviewDashboard({
                           <span className="font-medium">Material / aesthetic:</span>{" "}
                           {(film.aesthetic_tags ?? []).length
                             ? (film.aesthetic_tags ?? []).join(", ")
+                            : "—"}
+                        </p>
+                        <p
+                          className="text-sm text-gray-700"
+                          data-testid="discovery-storytelling-tags"
+                        >
+                          <span className="font-medium">Plot:</span>{" "}
+                          {(film.storytelling_tags ?? []).length
+                            ? (film.storytelling_tags ?? []).join(", ")
                             : "—"}
                         </p>
                         <p
