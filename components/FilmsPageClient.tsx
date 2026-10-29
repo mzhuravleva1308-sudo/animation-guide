@@ -23,7 +23,9 @@ import {
   HEADER_NAV_ICON,
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
-import ResonaleBrand from "@/components/ResonaleBrand";
+import ResonaleBrand, {
+  RESONALE_BRAND_TAGLINE,
+} from "@/components/ResonaleBrand";
 import SiteFooter from "@/components/SiteFooter";
 import UpdateTasteProfileButton from "@/components/UpdateTasteProfileButton";
 import type { AuthUserSummary } from "@/lib/auth/session";
@@ -563,14 +565,16 @@ export default function FilmsPageClient({
   const catalogSubtitle =
     activeMedia === MEDIA_TYPE.liveAction
       ? {
+          title: "Indie & Festival Films",
           primary:
             "Find distinctive, beautiful and emotionally resonant films to watch next.",
           secondary:
             "Films with a world and pulse of their own, from independent voices and celebrated auteurs.",
         }
       : {
+          title: RESONALE_BRAND_TAGLINE,
           primary:
-            "Find strange, beautiful and emotionally resonant animated films to watch next.",
+            "Discover strange, beautiful and emotionally resonant animated films to watch next.",
           secondary:
             "Independent, artist-led and festival animation from around the world.",
         };
@@ -662,7 +666,10 @@ export default function FilmsPageClient({
     >
       <header className={isCatalogTab ? "mb-0" : "mb-[18px]"}>
         <div className="flex flex-nowrap items-center justify-between gap-1 sm:gap-3">
-          <ResonaleBrand onClick={() => handleTabChange("all")} />
+          <ResonaleBrand
+            onClick={() => handleTabChange("all")}
+            showTagline={!showCatalogSubtitle}
+          />
 
           <nav
             aria-label="Catalog and lists"
@@ -766,19 +773,7 @@ export default function FilmsPageClient({
           </nav>
         </div>
 
-        {showCatalogSubtitle ? (
-          <div className="mt-[18px] mb-[22px]">
-            <h1 className="sr-only">Resonale</h1>
-            <p className="font-sans text-[16px] font-normal leading-[1.3] tracking-tight text-[#4a4b5c] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              {catalogSubtitle.primary}
-            </p>
-            <p className="mt-1 font-sans text-[14px] font-normal leading-[1.3] tracking-tight text-[#7a7b90] antialiased [font-synthesis:none] sm:whitespace-nowrap">
-              {catalogSubtitle.secondary}
-            </p>
-          </div>
-        ) : (
-          <h1 className="sr-only">Resonale</h1>
-        )}
+        {showCatalogSubtitle ? null : <h1 className="sr-only">Resonale</h1>}
       </header>
 
       {!isCatalogTab && showLiveActionTab ? (
@@ -829,8 +824,24 @@ export default function FilmsPageClient({
               mediaType={activeMedia}
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}
-              showVibeSearch={canAccessVibeSearch(auth?.email)}
+              showVibeSearch={
+                !auth || canAccessVibeSearch(auth?.email)
+              }
+              vibeSearchUnlocked={canAccessVibeSearch(auth?.email)}
+              onVibeSearchAuthRequired={
+                auth
+                  ? undefined
+                  : () => openAuthModal(authTriggerRef.current)
+              }
               showArchive={Boolean(auth)}
+              hero={
+                showCatalogSubtitle
+                  ? {
+                      title: catalogSubtitle.title,
+                      subtitle: catalogSubtitle.primary,
+                    }
+                  : null
+              }
               interaction={{
                 profileId,
                 profileSlug,

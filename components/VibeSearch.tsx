@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import { LoaderCircle, Search, Sparkles } from "lucide-react";
+import { RESONALE_LAVENDER } from "@/components/ResonaleBrand";
 import { Film } from "@/types/film";
 
 const MIN_QUERY_LENGTH = 4;
@@ -38,9 +39,17 @@ type VibeSearchProps = {
     error: string | null;
     mode: "vibe";
   }) => void;
+  /** Allowlisted signed-in users can expand and search. */
+  unlocked?: boolean;
+  /** Guests: open auth instead of expanding. */
+  onAuthRequired?: () => void;
 };
 
-export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
+export default function VibeSearch({
+  onResultsChange,
+  unlocked = true,
+  onAuthRequired,
+}: VibeSearchProps) {
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | null>(null);
@@ -173,18 +182,28 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
         <button
           type="button"
           data-testid="vibe-search-expand"
-          aria-label="Search by feeling"
-          title="Search by feeling"
-          onClick={() => setExpanded(true)}
-          className="relative inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg bg-[#eef0f8] text-slate-700 transition hover:bg-[#e5e7f4] hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+          aria-label="AI Search"
+          title="AI Search"
+          onClick={() => {
+            if (!unlocked) {
+              onAuthRequired?.();
+              return;
+            }
+            setExpanded(true);
+          }}
+          className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 font-sans text-[13px] font-medium tracking-tight transition hover:brightness-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+          style={{
+            backgroundColor: "#efeaf8",
+            color: "#6b5ea8",
+          }}
         >
-          <Search size={11} strokeWidth={2} aria-hidden="true" />
           <Sparkles
-            size={8}
-            strokeWidth={2.5}
+            size={13}
+            strokeWidth={2}
+            style={{ color: RESONALE_LAVENDER }}
             aria-hidden="true"
-            className="absolute right-[3px] top-[3px] text-violet-500"
           />
+          AI Search
         </button>
       </section>
     );
@@ -204,10 +223,11 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
         </label>
         <div className="relative min-w-0 flex-1">
           <Sparkles
-            size={12}
+            size={13}
             strokeWidth={2}
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-violet-500"
+            className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2"
+            style={{ color: RESONALE_LAVENDER }}
           />
           <input
             ref={inputRef}
@@ -235,7 +255,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
             }}
             placeholder={PLACEHOLDER}
             autoComplete="off"
-            className="h-11 w-full rounded-xl border border-slate-200 bg-white py-0 pl-9 pr-10 text-[14px] font-normal text-slate-900 placeholder:text-slate-400 shadow-none outline-none transition-[border-color,opacity] focus:border-slate-400 focus:outline-none disabled:cursor-wait disabled:opacity-70"
+            className="h-[34px] w-full rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] py-0 pr-10 pl-9 font-sans text-[13px] font-normal tracking-tight text-[#2f3040] shadow-none outline-none backdrop-blur-[14px] placeholder:text-[#9a9baf] transition-[border-color,box-shadow,opacity] hover:border-[rgba(177,169,217,0.48)] focus:border-[rgba(177,169,217,0.55)] focus:ring-2 focus:ring-[rgba(177,169,217,0.18)] focus:outline-none disabled:cursor-wait disabled:opacity-70"
           />
           {isLoading ? (
             <LoaderCircle
@@ -243,7 +263,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
               strokeWidth={2}
               aria-hidden="true"
               data-testid="vibe-search-spinner"
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 animate-spin text-slate-500"
+              className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-[#8b8c9e]"
             />
           ) : null}
         </div>
@@ -252,7 +272,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
             type="submit"
             data-testid="vibe-search-submit"
             disabled={!canSubmit}
-            className="inline-flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#2f3040] px-4 text-[13px] font-medium text-white transition enabled:hover:bg-[#1f2030] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:flex-none"
+            className="inline-flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-full bg-[#2f3040] px-4 text-[13px] font-medium text-white transition enabled:hover:bg-[#1f2030] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:flex-none"
           >
             <Search size={14} strokeWidth={2} aria-hidden="true" />
             Find
@@ -267,7 +287,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
                 resetResults();
                 setExpanded(false);
               }}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex h-[34px] items-center justify-center rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] px-3 text-[13px] font-medium text-[#5c5d6e] backdrop-blur-[14px] transition hover:bg-[rgba(255,255,255,0.8)] hover:text-[#2f3040] disabled:cursor-wait disabled:opacity-60"
             >
               Clear
             </button>
@@ -279,7 +299,7 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
               onClick={() => {
                 setExpanded(false);
               }}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex h-[34px] items-center justify-center rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] px-3 text-[13px] font-medium text-[#5c5d6e] backdrop-blur-[14px] transition hover:bg-[rgba(255,255,255,0.8)] hover:text-[#2f3040] disabled:cursor-wait disabled:opacity-60"
             >
               Close
             </button>
@@ -308,7 +328,6 @@ export default function VibeSearch({ onResultsChange }: VibeSearchProps) {
           </p>
         </div>
       ) : null}
-
     </section>
   );
 }

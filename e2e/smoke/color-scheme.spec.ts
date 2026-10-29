@@ -21,8 +21,8 @@ async function assertLightPalette(page: Page) {
       return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
     }
 
-    const searchExpand = document.querySelector(
-      '[data-testid="film-search-expand"]'
+    const searchInput = document.querySelector(
+      '[data-testid="film-search-input"]'
     );
     const filmCard = document.querySelector('[data-testid="film-card"]');
     const titleButton = filmCard?.querySelector("button[title='Click to copy title']");
@@ -33,11 +33,11 @@ async function assertLightPalette(page: Page) {
       bodyColor: bodyStyles.color,
       bodyBackgroundLuminance: luminance(bodyStyles.backgroundColor),
       bodyColorLuminance: luminance(bodyStyles.color),
-      searchExpandBackground: searchExpand
-        ? getComputedStyle(searchExpand).backgroundColor
+      searchExpandBackground: searchInput
+        ? getComputedStyle(searchInput).backgroundColor
         : null,
-      searchExpandBackgroundLuminance: searchExpand
-        ? luminance(getComputedStyle(searchExpand).backgroundColor)
+      searchExpandBackgroundLuminance: searchInput
+        ? luminance(getComputedStyle(searchInput).backgroundColor)
         : -1,
       titleColor: titleButton ? getComputedStyle(titleButton).color : null,
       titleColorLuminance: titleButton

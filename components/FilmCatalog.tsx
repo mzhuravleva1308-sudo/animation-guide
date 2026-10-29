@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ArchiveRestore } from "lucide-react";
 import { Film } from "@/types/film";
+import CatalogHeroBanner from "@/components/CatalogHeroBanner";
 import FilmSearch from "@/components/FilmSearch";
 import VibeSearch, { vibeSearchUiConstants } from "@/components/VibeSearch";
 import FilmCard from "@/components/FilmCard";
@@ -62,10 +63,16 @@ type FilmCatalogProps = {
   mediaType?: MediaType;
   activeQuickFilter: QuickFilter;
   onQuickFilterChange: (filter: QuickFilter) => void;
-  /** Early-access free-form mood search (allowlisted accounts). */
+  /** Show AI Search pill on the animation catalog (guests included). */
   showVibeSearch?: boolean;
+  /** Allowlisted signed-in users can run vibe search. */
+  vibeSearchUnlocked?: boolean;
+  /** Guests clicking AI Search — open auth. */
+  onVibeSearchAuthRequired?: () => void;
   /** Signed-in: archive icon on cards + Archived panel in the toolbar. */
   showArchive?: boolean;
+  /** Catalog hero (title + art); search may lift into it on narrow screens. */
+  hero?: { title: string; subtitle: string } | null;
 };
 
 function CatalogSectionHeading({
@@ -123,9 +130,22 @@ export default function FilmCatalog({
   activeQuickFilter,
   onQuickFilterChange,
   showVibeSearch = false,
+  vibeSearchUnlocked = false,
+  onVibeSearchAuthRequired,
   showArchive = false,
+  hero = null,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
+  const [keepSearchUp, setKeepSearchUp] = useState(false);
+  const handleKeepSearchUpChange = useCallback((next: boolean) => {
+    setKeepSearchUp(next);
+  }, []);
+
+  useEffect(() => {
+    if (!hero) {
+      setKeepSearchUp(false);
+    }
+  }, [hero]);
   const availableQuickFilters = useMemo(
     () => getQuickFiltersForMedia(mediaType),
     [mediaType]
@@ -420,17 +440,41 @@ export default function FilmCatalog({
       </p>
     ) : null;
 
+  const searchControls = (
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+      <FilmSearch
+        onResultsChange={handleSearchResultsChange}
+        isLoading={lookupReady && searchState.isLoading}
+      />
+      {vibeSearchEnabled ? (
+        <VibeSearch
+          onResultsChange={handleVibeResultsChange}
+          unlocked={vibeSearchUnlocked}
+          onAuthRequired={onVibeSearchAuthRequired}
+        />
+      ) : null}
+    </div>
+  );
+
   return (
     <>
-      <div className={activeQuickFilter ? "mb-3" : "mb-[18px]"}>
-        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-          <FilmSearch
-            onResultsChange={handleSearchResultsChange}
-            isLoading={lookupReady && searchState.isLoading}
-          />
-          {vibeSearchEnabled ? (
-            <VibeSearch onResultsChange={handleVibeResultsChange} />
-          ) : null}
+      {hero ? (
+        <CatalogHeroBanner
+          title={hero.title}
+          subtitle={hero.subtitle}
+          topControls={searchControls}
+          onKeepSearchUpChange={handleKeepSearchUpChange}
+        />
+      ) : null}
+      <div
+        className={`relative z-10 ${activeQuickFilter ? "mb-3" : "mb-8 sm:mb-10"}`}
+      >
+        {keepSearchUp ? null : searchControls}
+        <div
+          className={`flex min-w-0 flex-wrap items-center gap-1.5 ${
+            keepSearchUp ? undefined : "mt-2.5"
+          }`}
+        >
           <QuickFilters
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
@@ -457,8 +501,10 @@ export default function FilmCatalog({
                 setShowVibeArchive(next);
                 if (next) void loadVibeArchive();
               }}
-              className={`inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg text-[#5c5d6e] transition hover:bg-slate-100 hover:text-slate-900 ${
-                showVibeArchive ? "bg-slate-100 text-slate-900" : ""
+              className={`inline-flex h-[27px] w-[27px] items-center justify-center rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] text-[#6b6c80] backdrop-blur-[14px] transition hover:bg-[rgba(255,255,255,0.8)] hover:text-[#2f3040] ${
+                showVibeArchive
+                  ? "border-[rgba(177,169,217,0.5)] bg-[rgba(255,255,255,0.78)] text-[#2f3040]"
+                  : ""
               }`}
             >
               <ArchiveRestore size={13} strokeWidth={2} aria-hidden="true" />
@@ -521,7 +567,7 @@ export default function FilmCatalog({
         {activeQuickFilter ? (
           <p
             data-testid="quick-filter-description"
-            className="mt-3.5 max-w-xl font-sans text-[14px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
+            className="mt-3.5 max-w-xl font-sans text-[14px] font-normal leading-snug tracking-tight text-[#5c5d6e] antialiased [font-synthesis:none]"
           >
             {QUICK_FILTER_DESCRIPTIONS[activeQuickFilter]}
           </p>

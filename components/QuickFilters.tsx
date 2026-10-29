@@ -9,7 +9,15 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { CalendarClock, Check, ChevronDown, Trophy } from "lucide-react";
+import {
+  CalendarClock,
+  Check,
+  ChevronDown,
+  Film as FilmIcon,
+  Rocket,
+  Sun,
+  Trophy,
+} from "lucide-react";
 import {
   ANIMATION_TECHNIQUE_FILTERS,
   isAnimationTechniqueFilter,
@@ -117,17 +125,42 @@ function FilterDivider() {
 }
 
 function filterChipClass(isActive: boolean) {
-  return `inline-flex ${catalogChipHeightClass} shrink-0 items-center gap-[4.5px] rounded-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
+  return `inline-flex ${catalogChipHeightClass} shrink-0 items-center gap-[4.5px] rounded-[14px] border px-[9px] font-sans text-[13px] leading-none tracking-tight antialiased backdrop-blur-[14px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${
     isActive
-      ? "bg-[#5b5f8a] text-white shadow-sm"
-      : "bg-[#eef0f8] text-[#5c5d6e] hover:bg-[#e5e7f4] hover:text-[#1A1B2E]"
+      ? "border-[rgba(177,169,217,0.75)] bg-[#efeaf8] font-medium text-[#4a3f7a]"
+      : "border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] font-normal text-[#5c5d6e] hover:border-[rgba(177,169,217,0.48)] hover:bg-[rgba(255,255,255,0.8)] hover:text-[#1A1B2E]"
   }`;
 }
 
-function splitChipTone(isActive: boolean) {
-  return isActive
-    ? "bg-[#5b5f8a] text-white shadow-sm"
-    : "bg-[#eef0f8] text-[#5c5d6e] hover:bg-[#e5e7f4] hover:text-[#1A1B2E]";
+function splitShellClass(isActive: boolean, open: boolean) {
+  const tone = open
+    ? isActive
+      ? "border-[rgba(177,169,217,0.85)] bg-[#efeaf8] text-[#4a3f7a]"
+      : "border-[rgba(177,169,217,0.65)] bg-[rgba(255,255,255,0.82)] text-[#4a4b5c]"
+    : isActive
+      ? "border-[rgba(177,169,217,0.75)] bg-[#efeaf8] text-[#4a3f7a]"
+      : "border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] text-[#4a4b5c] hover:bg-[rgba(255,255,255,0.8)]";
+  return `relative z-30 inline-flex ${catalogChipHeightClass} items-stretch overflow-hidden rounded-[14px] border backdrop-blur-[14px] transition-[background-color,border-color,color] duration-150 ${tone}`;
+}
+
+function splitApplyBtnClass(isActive: boolean) {
+  return `inline-flex h-full items-center gap-[4.5px] px-[9px] font-sans text-[13px] leading-none tracking-tight antialiased transition-colors [font-synthesis:none] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-slate-900 ${
+    isActive
+      ? "font-medium text-[#4a3f7a] hover:text-[#3a3266]"
+      : "font-normal text-[#4a4b5c] hover:text-[#2f3040]"
+  }`;
+}
+
+function splitChevronBtnClass(isActive: boolean) {
+  return `inline-flex h-full min-w-[28px] items-center justify-center px-2 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-slate-900 sm:min-w-0 sm:px-[6px] ${
+    isActive
+      ? "text-[#6b5ea8] hover:text-[#4a3f7a]"
+      : "text-[#6b6c80] hover:text-[#2f3040]"
+  }`;
+}
+
+function filterIconClass(isActive: boolean) {
+  return `shrink-0 ${isActive ? "text-[#6b5ea8]" : "text-[#6b6c80]"}`;
 }
 
 function FilterChip({
@@ -151,7 +184,7 @@ function FilterChip({
           <Trophy
             size={11}
             strokeWidth={2}
-            className={`shrink-0 ${isActive ? "text-white" : "text-[#5c5d6e]"}`}
+            className={filterIconClass(isActive)}
             aria-hidden="true"
           />
           <span className="sm:hidden">Winners</span>
@@ -162,7 +195,7 @@ function FilterChip({
           <CalendarClock
             size={11}
             strokeWidth={2}
-            className={`shrink-0 ${isActive ? "text-white" : "text-[#5c5d6e]"}`}
+            className={filterIconClass(isActive)}
             aria-hidden="true"
           />
           {FILTER_LABELS[option]}
@@ -231,7 +264,7 @@ function SplitFilterMenuPanel({
         role="menu"
         aria-label={ariaLabel}
         data-testid={testId}
-        className="absolute left-0 top-full z-30 mt-1.5 max-h-[min(20rem,calc(100dvh-7rem))] w-max min-w-[11.5rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-xl border border-[#e4e6f0] bg-white py-1 shadow-lg"
+        className="absolute left-0 top-full z-30 mt-2 max-h-[min(20rem,calc(100dvh-7rem))] w-max min-w-[11.5rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.72)] py-1.5 shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
       >
         {children}
       </div>
@@ -259,8 +292,8 @@ function SplitFilterOption({
       onClick={onSelect}
       className={`flex min-h-10 w-full items-center justify-between gap-3 px-3 py-2 text-left font-sans text-[13px] font-normal leading-none tracking-tight antialiased sm:min-h-0 sm:py-1.5 [font-synthesis:none] ${
         isSelected
-          ? "bg-[#eef0f8] text-[#1A1B2E]"
-          : "text-[#4a4b5c] hover:bg-[#f6f7fb] hover:text-[#1A1B2E]"
+          ? "bg-[rgba(177,169,217,0.22)] text-[#2f3040]"
+          : "text-[#4a4b5c] hover:bg-[rgba(255,255,255,0.55)] hover:text-[#2f3040]"
       }`}
     >
       {label}
@@ -268,7 +301,7 @@ function SplitFilterOption({
         <Check
           size={12}
           strokeWidth={2}
-          className="shrink-0 text-[#5b5f8a]"
+          className="shrink-0 text-[#6b5ea8]"
           aria-hidden="true"
         />
       ) : (
@@ -325,51 +358,53 @@ function AwardWinnersFilterControl({
       role="group"
       aria-label="Award winners and festivals"
     >
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(false);
-          onFilterChange(isAwardActive ? null : "award-winners");
-        }}
-        aria-pressed={isAwardActive}
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center gap-[4.5px] rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isAwardActive)}`}
-      >
-        <Trophy
-          size={11}
-          strokeWidth={2}
-          className={`shrink-0 ${isAwardActive ? "text-white" : "text-[#5c5d6e]"}`}
-          aria-hidden="true"
-        />
-        {showMobileShortLabel ? (
-          <>
-            <span className="sm:hidden">Winners</span>
-            <span className="hidden sm:inline">{label}</span>
-          </>
-        ) : (
-          label
-        )}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        aria-label="Award winners and festivals"
-        data-testid="award-filter-menu-trigger"
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
-          isAwardActive ? "border-white/25" : "border-[#d8dae8]"
-        } ${splitChipTone(isAwardActive)}`}
-      >
-        <ChevronDown
-          size={12}
-          strokeWidth={2}
-          className={`shrink-0 ${open ? "rotate-180" : ""} ${
-            isAwardActive ? "text-white" : "text-[#5c5d6e]"
-          }`}
-          aria-hidden="true"
-        />
-      </button>
+      <div className={splitShellClass(isAwardActive, open)}>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onFilterChange(isAwardActive ? null : "award-winners");
+          }}
+          aria-pressed={isAwardActive}
+          className={splitApplyBtnClass(isAwardActive)}
+        >
+          {!isFestivalActive ? (
+            <Trophy
+              size={11}
+              strokeWidth={2}
+              className={filterIconClass(isAwardActive)}
+              aria-hidden="true"
+            />
+          ) : null}
+          {showMobileShortLabel ? (
+            <>
+              <span className="sm:hidden">Winners</span>
+              <span className="hidden sm:inline">{label}</span>
+            </>
+          ) : (
+            label
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          aria-label="Award winners and festivals"
+          data-testid="award-filter-menu-trigger"
+          className={splitChevronBtnClass(isAwardActive)}
+        >
+          <ChevronDown
+            size={12}
+            strokeWidth={2}
+            className={`shrink-0 transition-transform duration-150 ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
 
       <SplitFilterMenuPanel
         open={open}
@@ -419,6 +454,7 @@ function TechniqueFilterControl({
   const label = isTechniqueActive
     ? TECHNIQUE_LABELS[activeFilter]
     : TECHNIQUE_LABELS["stop-motion"];
+  const showDefaultIcon = !isTechniqueActive || activeFilter === "stop-motion";
   const panelRef = useSplitFilterMenuPanel(open, label);
 
   useEffect(() => {
@@ -446,38 +482,46 @@ function TechniqueFilterControl({
       role="group"
       aria-label="Animation technique"
     >
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(false);
-          onFilterChange(isTechniqueActive ? null : "stop-motion");
-        }}
-        aria-pressed={isTechniqueActive}
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isTechniqueActive)}`}
-      >
-        {label}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        aria-label="Animation techniques"
-        data-testid="technique-filter-menu-trigger"
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
-          isTechniqueActive ? "border-white/25" : "border-[#d8dae8]"
-        } ${splitChipTone(isTechniqueActive)}`}
-      >
-        <ChevronDown
-          size={12}
-          strokeWidth={2}
-          className={`shrink-0 ${open ? "rotate-180" : ""} ${
-            isTechniqueActive ? "text-white" : "text-[#5c5d6e]"
-          }`}
-          aria-hidden="true"
-        />
-      </button>
+      <div className={splitShellClass(isTechniqueActive, open)}>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onFilterChange(isTechniqueActive ? null : "stop-motion");
+          }}
+          aria-pressed={isTechniqueActive}
+          className={splitApplyBtnClass(isTechniqueActive)}
+        >
+          {showDefaultIcon ? (
+            <FilmIcon
+              size={11}
+              strokeWidth={2}
+              className={filterIconClass(isTechniqueActive)}
+              aria-hidden="true"
+            />
+          ) : null}
+          {label}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          aria-label="Animation techniques"
+          data-testid="technique-filter-menu-trigger"
+          className={splitChevronBtnClass(isTechniqueActive)}
+        >
+          <ChevronDown
+            size={12}
+            strokeWidth={2}
+            className={`shrink-0 transition-transform duration-150 ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
 
       <SplitFilterMenuPanel
         open={open}
@@ -524,6 +568,7 @@ function ThemeFilterControl({
   const label = isThemeActive
     ? FILTER_LABELS[activeFilter]
     : FILTER_LABELS[defaultTheme];
+  const showDefaultIcon = !isThemeActive || activeFilter === defaultTheme;
   const panelRef = useSplitFilterMenuPanel(open, label);
 
   useEffect(() => {
@@ -555,38 +600,46 @@ function ThemeFilterControl({
       role="group"
       aria-label="Theme"
     >
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(false);
-          onFilterChange(isThemeActive ? null : defaultTheme);
-        }}
-        aria-pressed={isThemeActive}
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isThemeActive)}`}
-      >
-        {label}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        aria-label="Theme filters"
-        data-testid="theme-filter-menu-trigger"
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
-          isThemeActive ? "border-white/25" : "border-[#d8dae8]"
-        } ${splitChipTone(isThemeActive)}`}
-      >
-        <ChevronDown
-          size={12}
-          strokeWidth={2}
-          className={`shrink-0 ${open ? "rotate-180" : ""} ${
-            isThemeActive ? "text-white" : "text-[#5c5d6e]"
-          }`}
-          aria-hidden="true"
-        />
-      </button>
+      <div className={splitShellClass(isThemeActive, open)}>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onFilterChange(isThemeActive ? null : defaultTheme);
+          }}
+          aria-pressed={isThemeActive}
+          className={splitApplyBtnClass(isThemeActive)}
+        >
+          {showDefaultIcon ? (
+            <Rocket
+              size={11}
+              strokeWidth={2}
+              className={filterIconClass(isThemeActive)}
+              aria-hidden="true"
+            />
+          ) : null}
+          {label}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          aria-label="Theme filters"
+          data-testid="theme-filter-menu-trigger"
+          className={splitChevronBtnClass(isThemeActive)}
+        >
+          <ChevronDown
+            size={12}
+            strokeWidth={2}
+            className={`shrink-0 transition-transform duration-150 ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
 
       <SplitFilterMenuPanel
         open={open}
@@ -632,6 +685,7 @@ function MoodFilterControl({
   const label = isMoodActive
     ? FILTER_LABELS[activeFilter]
     : FILTER_LABELS[defaultMood];
+  const showDefaultIcon = !isMoodActive || activeFilter === defaultMood;
   const panelRef = useSplitFilterMenuPanel(open, label);
 
   useEffect(() => {
@@ -663,38 +717,46 @@ function MoodFilterControl({
       role="group"
       aria-label="Mood"
     >
-      <button
-        type="button"
-        onClick={() => {
-          setOpen(false);
-          onFilterChange(isMoodActive ? null : defaultMood);
-        }}
-        aria-pressed={isMoodActive}
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isMoodActive)}`}
-      >
-        {label}
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-controls={menuId}
-        aria-label="Mood filters"
-        data-testid="mood-filter-menu-trigger"
-        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
-          isMoodActive ? "border-white/25" : "border-[#d8dae8]"
-        } ${splitChipTone(isMoodActive)}`}
-      >
-        <ChevronDown
-          size={12}
-          strokeWidth={2}
-          className={`shrink-0 ${open ? "rotate-180" : ""} ${
-            isMoodActive ? "text-white" : "text-[#5c5d6e]"
-          }`}
-          aria-hidden="true"
-        />
-      </button>
+      <div className={splitShellClass(isMoodActive, open)}>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            onFilterChange(isMoodActive ? null : defaultMood);
+          }}
+          aria-pressed={isMoodActive}
+          className={splitApplyBtnClass(isMoodActive)}
+        >
+          {showDefaultIcon ? (
+            <Sun
+              size={11}
+              strokeWidth={2}
+              className={filterIconClass(isMoodActive)}
+              aria-hidden="true"
+            />
+          ) : null}
+          {label}
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          aria-expanded={open}
+          aria-haspopup="menu"
+          aria-controls={menuId}
+          aria-label="Mood filters"
+          data-testid="mood-filter-menu-trigger"
+          className={splitChevronBtnClass(isMoodActive)}
+        >
+          <ChevronDown
+            size={12}
+            strokeWidth={2}
+            className={`shrink-0 transition-transform duration-150 ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+      </div>
 
       <SplitFilterMenuPanel
         open={open}

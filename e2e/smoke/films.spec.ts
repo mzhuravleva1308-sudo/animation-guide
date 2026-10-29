@@ -11,7 +11,7 @@ test.describe("Public films catalog", () => {
     await page.goto("/films");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("film-search-expand")).toBeVisible();
+    await expect(page.getByTestId("film-search-input")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
     await expect(page.getByTestId("film-card").first()).toBeVisible();
     await expect(

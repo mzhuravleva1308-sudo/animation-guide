@@ -8,7 +8,7 @@ test.describe("Home page", () => {
     await page.goto("/");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("film-search-expand")).toBeVisible();
+    await expect(page.getByTestId("film-search-input")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
     await expect(page.getByTestId("auth-status")).toHaveAttribute(
       "aria-label",

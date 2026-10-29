@@ -21,7 +21,7 @@ export async function gotoProfilePage(
   await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
   await expect(
     page.getByText(
-      "Find strange, beautiful and emotionally resonant animated films to watch next."
+      "Discover strange, beautiful and emotionally resonant animated films to watch next."
     )
   ).toBeVisible();
   await expect(page.getByTestId("film-list")).toBeVisible();
@@ -54,11 +54,6 @@ export async function openProfileTab(
 
 export async function expandFilmSearch(page: Page) {
   const input = page.getByTestId("film-search-input");
-  if (await input.isVisible()) {
-    return input;
-  }
-
-  await page.getByTestId("film-search-expand").click();
   await expect(input).toBeVisible();
   return input;
 }

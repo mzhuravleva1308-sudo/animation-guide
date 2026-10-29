@@ -45,6 +45,9 @@ type FilmSearchProps = {
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+const SEARCH_FIELD_CLASS =
+  "h-[34px] w-full rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] py-0 pr-3 pl-9 font-sans text-[13px] font-normal tracking-tight text-[#2f3040] shadow-none outline-none backdrop-blur-[14px] placeholder:text-[#9a9baf] transition-[border-color,box-shadow] hover:border-[rgba(177,169,217,0.48)] focus:border-[rgba(177,169,217,0.55)] focus:ring-2 focus:ring-[rgba(177,169,217,0.18)] focus:outline-none focus-visible:border-[rgba(177,169,217,0.55)] focus-visible:outline-none";
+
 export default function FilmSearch({
   onResultsChange,
   isLoading = false,
@@ -56,11 +59,9 @@ export default function FilmSearch({
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
 
   const isDebouncing = query.trim() !== debouncedQuery;
   const trimmedQuery = query.trim();
-  const isExpanded = expanded || trimmedQuery.length > 0;
   const canShowSuggestions =
     trimmedQuery.length >= filmSearchConstants.MIN_QUERY_LENGTH &&
     (suggestions.length > 0 || suggestionsLoading);
@@ -74,39 +75,13 @@ export default function FilmSearch({
     setSuggestionsOpen(true);
   }, []);
 
-  const expandSearch = useCallback(() => {
-    setExpanded(true);
-  }, []);
-
-  const collapseIfIdle = useCallback(() => {
-    if (query.trim().length > 0) {
-      return;
-    }
-
-    setExpanded(false);
-    setSuggestionsOpen(false);
-  }, [query]);
-
   const applySearchQuery = useCallback((nextQuery: string) => {
     const normalizedQuery = nextQuery.trim();
     setQuery(normalizedQuery);
     setDebouncedQuery(normalizedQuery);
     setSuggestions([]);
     setSuggestionsOpen(false);
-    setExpanded(true);
   }, []);
-
-  useEffect(() => {
-    if (!isExpanded) {
-      return;
-    }
-
-    const frameId = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-
-    return () => window.cancelAnimationFrame(frameId);
-  }, [isExpanded]);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -175,12 +150,12 @@ export default function FilmSearch({
   }, [debouncedQuery]);
 
   useEffect(() => {
-    const trimmedQuery = debouncedQuery.trim();
-    const isActive = trimmedQuery.length > 0;
+    const trimmed = debouncedQuery.trim();
+    const isActive = trimmed.length > 0;
 
-    if (trimmedQuery.length < filmSearchConstants.MIN_QUERY_LENGTH) {
+    if (trimmed.length < filmSearchConstants.MIN_QUERY_LENGTH) {
       onResultsChange({
-        query: trimmedQuery,
+        query: trimmed,
         films: [],
         isLoading: false,
         isActive,
@@ -194,7 +169,7 @@ export default function FilmSearch({
 
     async function runSearch() {
       onResultsChange({
-        query: trimmedQuery,
+        query: trimmed,
         films: [],
         isLoading: true,
         isActive: true,
@@ -203,7 +178,7 @@ export default function FilmSearch({
 
       try {
         const response = await fetch(
-          `/api/search-films?q=${encodeURIComponent(trimmedQuery)}`,
+          `/api/search-films?q=${encodeURIComponent(trimmed)}`,
           { signal: controller.signal }
         );
         const payload = (await response.json()) as FilmSearchResponse;
@@ -217,7 +192,7 @@ export default function FilmSearch({
         }
 
         onResultsChange({
-          query: trimmedQuery,
+          query: trimmed,
           films: payload.results.map((result) => result.film),
           isLoading: false,
           isActive: true,
@@ -238,7 +213,7 @@ export default function FilmSearch({
             : "Search failed";
 
         onResultsChange({
-          query: trimmedQuery,
+          query: trimmed,
           films: [],
           isLoading: false,
           isActive: true,
@@ -259,7 +234,6 @@ export default function FilmSearch({
     function handlePointerDown(event: MouseEvent) {
       if (!searchRootRef.current?.contains(event.target as Node)) {
         closeSuggestions();
-        collapseIfIdle();
       }
     }
 
@@ -274,130 +248,112 @@ export default function FilmSearch({
       document.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("scroll", handleScroll, true);
     };
-  }, [closeSuggestions, collapseIfIdle]);
+  }, [closeSuggestions]);
 
   const showLoading = isDebouncing || isLoading;
 
   return (
     <section
       ref={searchRootRef}
-      className={
-        isExpanded
-          ? "relative mb-0 w-[10.125rem] shrink-0 sm:w-[9.75rem]"
-          : "relative mb-0 shrink-0"
-      }
+      className="relative mb-0 w-full max-w-[18.5rem] shrink-0 sm:max-w-[20rem]"
       data-testid="film-search"
     >
-      {!isExpanded ? (
-        <button
-          type="button"
-          data-testid="film-search-expand"
-          aria-label="Search films"
-          onClick={expandSearch}
-          className="inline-flex h-[27px] w-[27px] items-center justify-center rounded-lg bg-[#eef0f8] text-slate-700 transition hover:bg-[#e5e7f4] hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-        >
-          <Search size={11} strokeWidth={2} aria-hidden="true" />
-        </button>
-      ) : (
-        <div className="relative w-full min-w-0">
-          <Search
-            size={11}
-            strokeWidth={2}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 top-1/2 z-10 -translate-y-1/2 text-slate-500"
-          />
-          <input
-            ref={inputRef}
-            id="film-search-input"
-            data-testid="film-search-input"
-            type="text"
-            inputMode="search"
-            enterKeyHint="search"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              openSuggestions();
-            }}
-            onFocus={openSuggestions}
-            onBlur={(event) => {
-              const relatedTarget = event.relatedTarget as Node | null;
-              if (!searchRootRef.current?.contains(relatedTarget)) {
+      <div className="relative w-full min-w-0">
+        <Search
+          size={14}
+          strokeWidth={2}
+          aria-hidden="true"
+          className="pointer-events-none absolute top-1/2 left-3 z-10 -translate-y-1/2 text-[#8b8c9e]"
+        />
+        <input
+          ref={inputRef}
+          id="film-search-input"
+          data-testid="film-search-input"
+          type="search"
+          inputMode="search"
+          enterKeyHint="search"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            openSuggestions();
+          }}
+          onFocus={openSuggestions}
+          onBlur={(event) => {
+            const relatedTarget = event.relatedTarget as Node | null;
+            if (!searchRootRef.current?.contains(relatedTarget)) {
+              closeSuggestions();
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              if (showSuggestionsDropdown) {
                 closeSuggestions();
-                collapseIfIdle();
+                return;
               }
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Escape") {
-                if (showSuggestionsDropdown) {
-                  closeSuggestions();
-                  return;
-                }
 
-                if (query.trim().length > 0) {
-                  setQuery("");
-                  setDebouncedQuery("");
-                  return;
-                }
-
-                collapseIfIdle();
-                inputRef.current?.blur();
+              if (query.trim().length > 0) {
+                setQuery("");
+                setDebouncedQuery("");
+                return;
               }
-            }}
-            placeholder="Search…"
-            aria-label="Search by title, director, or mood"
-            className="h-[27px] w-full min-w-0 rounded-none border-0 border-b border-slate-200 bg-transparent py-0 pl-4 pr-12 text-[13px] font-normal text-slate-900 placeholder:text-slate-500 shadow-none outline-none transition-[border-color,width] focus:border-slate-400 focus:outline-none focus:shadow-none focus-visible:border-slate-400 focus-visible:outline-none focus-visible:shadow-none"
-            autoComplete="off"
-            role="combobox"
-            aria-expanded={showSuggestionsDropdown}
-            aria-controls="film-search-suggestions-listbox"
-          />
-          <span
-            data-testid="film-search-loading"
-            aria-hidden={!showLoading}
-            className={`pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[8.25px] text-slate-500 ${
-              showLoading ? "visible" : "invisible"
-            }`}
+
+              inputRef.current?.blur();
+            }
+          }}
+          placeholder="Search films, directors, festivals, themes..."
+          aria-label="Search by title, director, or mood"
+          className={SEARCH_FIELD_CLASS}
+          autoComplete="off"
+          role="combobox"
+          aria-expanded={showSuggestionsDropdown}
+          aria-controls="film-search-suggestions-listbox"
+        />
+        <span
+          data-testid="film-search-loading"
+          aria-hidden={!showLoading}
+          className={`pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[10px] text-[#8b8c9e] ${
+            showLoading ? "visible" : "invisible"
+          }`}
+        >
+          Searching…
+        </span>
+
+        {showSuggestionsDropdown && (
+          <div
+            data-testid="film-search-suggestions-dropdown"
+            className="absolute top-full right-0 left-0 z-20 mt-2 overflow-hidden rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.92)] shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
           >
-            Searching…
-          </span>
-
-          {showSuggestionsDropdown && (
-            <div
-              data-testid="film-search-suggestions-dropdown"
-              className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
+            <ul
+              id="film-search-suggestions-listbox"
+              role="listbox"
+              className="max-h-56 overflow-y-auto py-1"
             >
-              <ul
-                id="film-search-suggestions-listbox"
-                role="listbox"
-                className="max-h-56 overflow-y-auto py-1"
-              >
-                {suggestionsLoading && suggestions.length === 0 && (
-                  <li className="px-3 py-2 text-xs text-slate-400">
-                    Finding suggestions…
-                  </li>
-                )}
-                {suggestions.map((suggestion) => (
-                  <li key={`${suggestion.type}-${suggestion.label}`} role="none">
-                    <button
-                      type="button"
-                      role="option"
-                      data-testid="film-search-suggestion-item"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => applySearchQuery(suggestion.label)}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-900 hover:bg-slate-50"
-                    >
-                      <span className="truncate">{suggestion.label}</span>
-                      <span className="shrink-0 text-xs capitalize text-slate-400">
-                        {suggestion.type}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+              {suggestionsLoading && suggestions.length === 0 && (
+                <li className="px-3 py-2 text-xs text-[#8b8c9e]">
+                  Finding suggestions…
+                </li>
+              )}
+              {suggestions.map((suggestion) => (
+                <li key={`${suggestion.type}-${suggestion.label}`} role="none">
+                  <button
+                    type="button"
+                    role="option"
+                    data-testid="film-search-suggestion-item"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => applySearchQuery(suggestion.label)}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-[#2f3040] hover:bg-[rgba(255,255,255,0.55)]"
+                  >
+                    <span className="truncate">{suggestion.label}</span>
+                    <span className="shrink-0 text-xs capitalize text-[#8b8c9e]">
+                      {suggestion.type}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </section>
   );
 }

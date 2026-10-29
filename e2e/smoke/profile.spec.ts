@@ -427,10 +427,9 @@ test.describe("Profile page", () => {
       await gotoProfilePage(page, credentials);
       await openProfileTab(page, "All films");
 
-      await expect(page.getByTestId("film-search-expand")).toBeVisible();
+      await expect(page.getByTestId("film-search-input")).toBeVisible();
 
       await openProfileTab(page, "Saved");
-      await expect(page.getByTestId("film-search-expand")).not.toBeVisible();
       await expect(page.getByTestId("film-search-input")).not.toBeVisible();
 
       await openProfileTab(page, "All films");
