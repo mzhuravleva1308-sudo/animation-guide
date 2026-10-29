@@ -15,7 +15,9 @@ const ratingEndIconClass = "h-3.5 w-3.5 shrink-0 stroke-[1.75]";
 
 const RATING_END_TOOLTIP: Partial<Record<number, string>> = {
   1: "Didn't like it",
-  5: "It was fine",
+  3: "Meh",
+  5: "It was okay",
+  7: "Liked it",
   10: "Loved it",
 };
 
