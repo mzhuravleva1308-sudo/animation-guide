@@ -132,7 +132,7 @@ export default function CatalogHeroBanner({
             width={2172}
             height={724}
             decoding="async"
-            className="h-full w-full select-none object-cover object-right"
+            className="h-full w-full select-none object-cover object-right grayscale-[45%] contrast-[0.96] saturate-[0.85]"
           />
         </div>
       ) : null}
