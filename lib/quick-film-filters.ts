@@ -23,8 +23,10 @@ export function getQuickFiltersForMedia(
   return getQuickFiltersForMediaRaw(mediaType) as QuickFilterOption[];
 }
 
-export const QUICK_FILTER_DESCRIPTIONS =
-  QUICK_FILTER_DESCRIPTIONS_RAW as Record<QuickFilterOption, string>;
+export const QUICK_FILTER_DESCRIPTIONS = QUICK_FILTER_DESCRIPTIONS_RAW as Record<
+  Exclude<QuickFilter, null>,
+  string
+>;
 
 export const isStopMotionTechnique = isStopMotionTechniqueRaw as (
   technique: string | null | undefined

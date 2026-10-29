@@ -14,14 +14,28 @@ import {
   ANIMATION_TECHNIQUE_FILTERS,
   isAnimationTechniqueFilter,
 } from "@/lib/animation-technique-filters.mjs";
+import {
+  AWARD_FESTIVAL_FILTERS,
+  isAwardFestivalFilter,
+} from "@/lib/award-festival-filters.mjs";
 import { catalogChipHeightClass } from "@/lib/catalog-control-size";
 
 export type AnimationTechniqueFilter =
   (typeof ANIMATION_TECHNIQUE_FILTERS)[number]["id"];
 
+export type AwardFestivalFilter =
+  (typeof AWARD_FESTIVAL_FILTERS)[number]["id"];
+
+export type AwardFestivalFilterOption = {
+  id: AwardFestivalFilter;
+  label: string;
+  description: string;
+};
+
 export type QuickFilter =
   | "recent"
   | AnimationTechniqueFilter
+  | AwardFestivalFilter
   | "landscapes"
   | "award-winners"
   | "sci-fi"
@@ -37,11 +51,17 @@ type QuickFiltersProps = {
   activeFilter: QuickFilter;
   onFilterChange: (filter: QuickFilter) => void;
   availableFilters?: QuickFilterOption[];
+  /** Festivals with enough catalog films; empty hides the Award winners menu. */
+  availableAwardFestivals?: AwardFestivalFilterOption[];
 };
 
 const TECHNIQUE_LABELS = Object.fromEntries(
   ANIMATION_TECHNIQUE_FILTERS.map((row) => [row.id, row.label])
 ) as Record<AnimationTechniqueFilter, string>;
+
+const FESTIVAL_LABELS = Object.fromEntries(
+  AWARD_FESTIVAL_FILTERS.map((row) => [row.id, row.label])
+) as Record<AwardFestivalFilter, string>;
 
 const FILTER_LABELS: Record<QuickFilterOption, string> = {
   recent: "Recent",
@@ -53,6 +73,7 @@ const FILTER_LABELS: Record<QuickFilterOption, string> = {
   connection: "Light",
   distance: "Shadow",
   ...TECHNIQUE_LABELS,
+  ...FESTIVAL_LABELS,
 };
 
 const DEFAULT_FILTERS: QuickFilterOption[] = [
@@ -254,6 +275,133 @@ function SplitFilterOption({
         <span className="w-3 shrink-0" aria-hidden="true" />
       )}
     </button>
+  );
+}
+
+function AwardWinnersFilterControl({
+  activeFilter,
+  onFilterChange,
+  availableFestivals,
+}: {
+  activeFilter: QuickFilter;
+  onFilterChange: (filter: QuickFilter) => void;
+  availableFestivals: AwardFestivalFilterOption[];
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const menuId = useId();
+  const isFestivalActive =
+    isAwardFestivalFilter(activeFilter) &&
+    availableFestivals.some((row) => row.id === activeFilter);
+  const isAwardActive = activeFilter === "award-winners" || isFestivalActive;
+  const label = isFestivalActive
+    ? FESTIVAL_LABELS[activeFilter]
+    : FILTER_LABELS["award-winners"];
+  const panelRef = useSplitFilterMenuPanel(open, label);
+  const showMobileShortLabel = !isFestivalActive;
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div
+      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      ref={menuRef}
+      role="group"
+      aria-label="Award winners and festivals"
+    >
+      <button
+        type="button"
+        onClick={() => {
+          setOpen(false);
+          onFilterChange(isAwardActive ? null : "award-winners");
+        }}
+        aria-pressed={isAwardActive}
+        className={`relative z-30 inline-flex ${catalogChipHeightClass} items-center gap-[4.5px] rounded-l-lg px-[9px] font-sans text-[13px] font-normal leading-none tracking-tight antialiased transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 [font-synthesis:none] ${splitChipTone(isAwardActive)}`}
+      >
+        <Trophy
+          size={11}
+          strokeWidth={2}
+          className={`shrink-0 ${isAwardActive ? "text-white" : "text-[#5c5d6e]"}`}
+          aria-hidden="true"
+        />
+        {showMobileShortLabel ? (
+          <>
+            <span className="sm:hidden">Winners</span>
+            <span className="hidden sm:inline">{label}</span>
+          </>
+        ) : (
+          label
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-controls={menuId}
+        aria-label="Award winners and festivals"
+        data-testid="award-filter-menu-trigger"
+        className={`relative z-30 inline-flex ${catalogChipHeightClass} min-w-[28px] items-center justify-center rounded-r-lg border-l px-2 sm:min-w-0 sm:px-[6px] transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 ${
+          isAwardActive ? "border-white/25" : "border-[#d8dae8]"
+        } ${splitChipTone(isAwardActive)}`}
+      >
+        <ChevronDown
+          size={12}
+          strokeWidth={2}
+          className={`shrink-0 ${open ? "rotate-180" : ""} ${
+            isAwardActive ? "text-white" : "text-[#5c5d6e]"
+          }`}
+          aria-hidden="true"
+        />
+      </button>
+
+      <SplitFilterMenuPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        menuId={menuId}
+        ariaLabel="Award winners and festivals"
+        testId="award-filter-menu"
+        panelRef={panelRef}
+      >
+        <SplitFilterOption
+          label={FILTER_LABELS["award-winners"]}
+          isSelected={activeFilter === "award-winners"}
+          testId="award-filter-option-award-winners"
+          onSelect={() => {
+            onFilterChange("award-winners");
+            setOpen(false);
+          }}
+        />
+        {availableFestivals.map((option) => (
+          <SplitFilterOption
+            key={option.id}
+            label={option.label}
+            isSelected={activeFilter === option.id}
+            testId={`award-filter-option-${option.id}`}
+            onSelect={() => {
+              onFilterChange(option.id);
+              setOpen(false);
+            }}
+          />
+        ))}
+      </SplitFilterMenuPanel>
+    </div>
   );
 }
 
@@ -577,7 +725,11 @@ export default function QuickFilters({
   activeFilter,
   onFilterChange,
   availableFilters = DEFAULT_FILTERS,
+  availableAwardFestivals = [],
 }: QuickFiltersProps) {
+  const showAwardPicker =
+    availableFilters.includes("award-winners") &&
+    availableAwardFestivals.length > 0;
   const featuredOptions = availableFilters.filter((option) =>
     FEATURED_FILTERS.has(option)
   );
@@ -605,14 +757,37 @@ export default function QuickFilters({
       aria-label="Quick filters"
     >
       {featuredOptions.map((option) => {
-        const isActive = activeFilter === option;
+        if (option === "award-winners" && showAwardPicker) {
+          return (
+            <AwardWinnersFilterControl
+              key={option}
+              activeFilter={activeFilter}
+              onFilterChange={onFilterChange}
+              availableFestivals={availableAwardFestivals}
+            />
+          );
+        }
+
+        const isActive =
+          option === "award-winners"
+            ? activeFilter === "award-winners" ||
+              isAwardFestivalFilter(activeFilter)
+            : activeFilter === option;
 
         return (
           <FilterChip
             key={option}
             option={option}
             isActive={isActive}
-            onClick={() => onFilterChange(isActive ? null : option)}
+            onClick={() =>
+              onFilterChange(
+                isActive
+                  ? null
+                  : option === "award-winners"
+                    ? "award-winners"
+                    : option
+              )
+            }
           />
         );
       })}

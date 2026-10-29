@@ -75,6 +75,32 @@ test.describe("Public films catalog", () => {
     await expect(page).toHaveURL(/[?&]filter=rotoscope(?:&|$)/);
   });
 
+  test("can pick a festival from the Award winners filter", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByTestId("award-filter-menu-trigger")).toBeVisible();
+    await page.getByTestId("award-filter-menu-trigger").click();
+
+    const menu = page.getByTestId("award-filter-menu");
+    await expect(menu).toBeVisible();
+    await expect(
+      menu.getByRole("menuitemradio", { name: "Award winners" })
+    ).toBeVisible();
+    await expect(menu.getByRole("menuitemradio", { name: "Annecy" })).toBeVisible();
+
+    await page.getByTestId("award-filter-option-annecy").click();
+
+    await expect(menu).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Annecy" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    await expect(page.getByTestId("quick-filter-description")).toHaveText(
+      "Films that played at Annecy International Animation Film Festival."
+    );
+    await expect(page).toHaveURL(/[?&]filter=annecy(?:&|$)/);
+  });
+
   test("keeps a quick filter in the URL across reload", async ({ page }) => {
     await page.goto("/");
 

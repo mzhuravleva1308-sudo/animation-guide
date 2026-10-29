@@ -18,6 +18,7 @@ import ResonaleBrand from "@/components/ResonaleBrand";
 import { HeaderIconButton, HEADER_NAV_ICON, headerNavLabelCollapse } from "@/components/HeaderIconControl";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
+import { getAwardFestivalFiltersForFilms } from "@/lib/award-festival-filters.mjs";
 import {
   filterFilmsByQuickFilter,
   QUICK_FILTER_DESCRIPTIONS,
@@ -241,6 +242,11 @@ export default function ProfileTabs({
   const awardWinningFilmIdSet = useMemo(
     () => new Set(awardWinningFilmIds),
     [awardWinningFilmIds]
+  );
+
+  const availableAwardFestivals = useMemo(
+    () => getAwardFestivalFiltersForFilms(allFilmsSorted),
+    [allFilmsSorted]
   );
 
   const localAllFilmsSorted = useMemo(() => {
@@ -512,6 +518,7 @@ export default function ProfileTabs({
                   activeFilter={activeQuickFilter}
                   onFilterChange={handleQuickFilterChange}
                   availableFilters={QUICK_FILTERS}
+                  availableAwardFestivals={availableAwardFestivals}
                 />
               </div>
               {!isAllFilmsSearchActive && totalAllFilmsCount > 0 ? (

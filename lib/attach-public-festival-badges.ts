@@ -15,20 +15,26 @@ export async function attachPublicFestivalBadges(
     return films;
   }
 
-  try {
-    const filmIds = films.map((film) => film.id);
-    const [claimsByFilmId, recognitionsByFilmId] = await Promise.all([
-      loadPublicFestivalClaimsByFilmIds(supabase, filmIds),
-      loadFilmFestivalRecognitionsByFilmIds(supabase, filmIds, {
-        fields: PUBLIC_FESTIVAL_RECOGNITION_BADGE_FIELDS,
-      }),
-    ]);
-    return enrichFilmsWithFestivalBadges(
-      films,
-      claimsByFilmId,
-      recognitionsByFilmId
-    );
-  } catch {
-    return enrichFilmsWithFestivalBadges(films, new Map());
-  }
+  const filmIds = films.map((film) => film.id);
+
+  // Load independently so one source failing still keeps the other badges.
+  const [claimsResult, recognitionsResult] = await Promise.allSettled([
+    loadPublicFestivalClaimsByFilmIds(supabase, filmIds),
+    loadFilmFestivalRecognitionsByFilmIds(supabase, filmIds, {
+      fields: PUBLIC_FESTIVAL_RECOGNITION_BADGE_FIELDS,
+    }),
+  ]);
+
+  const claimsByFilmId =
+    claimsResult.status === "fulfilled" ? claimsResult.value : new Map();
+  const recognitionsByFilmId =
+    recognitionsResult.status === "fulfilled"
+      ? recognitionsResult.value
+      : new Map();
+
+  return enrichFilmsWithFestivalBadges(
+    films,
+    claimsByFilmId,
+    recognitionsByFilmId
+  );
 }

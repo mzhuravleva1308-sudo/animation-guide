@@ -14,6 +14,7 @@ import VibeSearch, { vibeSearchUiConstants } from "@/components/VibeSearch";
 import FilmCard from "@/components/FilmCard";
 import { filmSearchConstants } from "@/lib/film-search.mjs";
 import QuickFilters, { QuickFilter } from "@/components/QuickFilters";
+import { getAwardFestivalFiltersForFilms } from "@/lib/award-festival-filters.mjs";
 import {
   filterFilmsByQuickFilter,
   getQuickFiltersForMedia,
@@ -128,6 +129,10 @@ export default function FilmCatalog({
   const availableQuickFilters = useMemo(
     () => getQuickFiltersForMedia(mediaType),
     [mediaType]
+  );
+  const availableAwardFestivals = useMemo(
+    () => getAwardFestivalFiltersForFilms(films),
+    [films]
   );
   const [searchState, setSearchState] = useState({
     query: "",
@@ -430,6 +435,7 @@ export default function FilmCatalog({
             activeFilter={activeQuickFilter}
             onFilterChange={handleQuickFilterChange}
             availableFilters={availableQuickFilters}
+            availableAwardFestivals={availableAwardFestivals}
           />
           {vibeArchiveEnabled ? (
             <button
