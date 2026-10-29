@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const EXPECTED_DESCRIPTION =
-  "Find distinctive, beautiful and emotionally resonant animation and films to watch next.";
+  "Find strange, beautiful and emotionally resonant animated films to watch next. Indie and festival animation worldwide.";
 
 test.describe("Public SEO basics", () => {
   test("home title and description use the Resonale brand", async ({
@@ -13,9 +13,14 @@ test.describe("Public SEO basics", () => {
     const html = await response.text();
     const title = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "";
     expect(title).toContain("Resonale");
-    expect(title).toMatch(/Animation/);
-    expect(title).toMatch(/Film Guide/);
+    expect(title).toMatch(/Indie/);
+    expect(title).toMatch(/Festival Animation Guide/);
     expect(html).toContain(`content="${EXPECTED_DESCRIPTION}"`);
+    expect(html).toContain("og:image");
+    expect(html).toContain("/og.png");
+    expect(html).toContain("application/ld+json");
+    expect(html).toContain('"@type":"WebSite"');
+    expect(html).toContain('"@type":"Organization"');
   });
 
   test("filter query URLs canonicalize to the homepage", async ({
