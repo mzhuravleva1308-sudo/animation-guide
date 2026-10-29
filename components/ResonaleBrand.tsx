@@ -10,6 +10,11 @@ const NAVY = RESONALE_NAVY;
 const LAVENDER = RESONALE_LAVENDER;
 const GUIDE_LABEL = "GUIDE";
 
+/** Site name beside the lockup — shortens on smaller breakpoints. */
+export const RESONALE_BRAND_TAGLINE = "Indie & Festival Animation";
+const BRAND_TAGLINE_MEDIUM = "Festival Animation";
+const BRAND_TAGLINE_SHORT = "Animation";
+
 /** GUIDE left edge at the middle of “n” in “nale”. */
 const ESONALE_START_X = 122;
 const GUIDE_X = 184;
@@ -102,38 +107,67 @@ function ResonaleLogoMark({ className }: { className?: string }) {
 type ResonaleBrandProps = {
   href?: string;
   onClick?: () => void;
+  /** Show the site name beside the lockup (default on). */
+  showTagline?: boolean;
 };
 
-export default function ResonaleBrand({ href = "/", onClick }: ResonaleBrandProps) {
+export default function ResonaleBrand({
+  href = "/",
+  onClick,
+  showTagline = true,
+}: ResonaleBrandProps) {
   return (
-    <Link
-      href={href}
-      onClick={(event) => {
-        if (!onClick) {
-          return;
-        }
+    <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
+      <Link
+        href={href}
+        onClick={(event) => {
+          if (!onClick) {
+            return;
+          }
 
-        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
-          return;
-        }
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+            return;
+          }
 
-        if (event.button !== 0) {
-          return;
-        }
+          if (event.button !== 0) {
+            return;
+          }
 
-        event.preventDefault();
-        onClick();
-      }}
-      className="inline-flex shrink-0 items-center overflow-visible rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-      aria-label="Resonale home"
-    >
-      {/*
-        Layout box matches the Resonale wordmark band so sibling nav
-        centers against “esonale”, while GUIDE hangs below.
-      */}
-      <span className="relative block h-[21px] w-[8.5rem] overflow-visible sm:h-6 sm:w-[10.6875rem]">
-        <ResonaleLogoMark className="pointer-events-none absolute top-[-0.3rem] left-0 h-[30px] w-auto max-w-none overflow-visible sm:top-[-0.4125rem] sm:h-[39px]" />
-      </span>
-    </Link>
+          event.preventDefault();
+          onClick();
+        }}
+        className="inline-flex shrink-0 items-center overflow-visible rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+        aria-label="Resonale home"
+      >
+        {/* Full lockup height (wordmark + GUIDE) so the title can center against it. */}
+        {/* Width hugs ink (through GUIDE), not empty SVG trailing space. */}
+        <span className="relative block h-[30px] w-[6.75rem] overflow-visible sm:h-[39px] sm:w-[8.5rem]">
+          <ResonaleLogoMark className="pointer-events-none absolute top-0 left-0 h-full w-auto max-w-none overflow-visible" />
+        </span>
+      </Link>
+
+      {showTagline ? (
+        /*
+          Separate from the lockup. One large line, optically as tall as
+          Resonale + GUIDE. Shortens when the header gets tight:
+          full → Festival Animation → Animation.
+        */
+        <p
+          aria-hidden="true"
+          className="m-0 hidden shrink-0 font-sans text-[20px] font-medium leading-none tracking-tight antialiased [font-synthesis:none] sm:block sm:text-[23px] md:text-[26px]"
+          style={{ color: NAVY }}
+        >
+          <span className="hidden whitespace-nowrap lg:inline">
+            {RESONALE_BRAND_TAGLINE}
+          </span>
+          <span className="hidden whitespace-nowrap md:inline lg:hidden">
+            {BRAND_TAGLINE_MEDIUM}
+          </span>
+          <span className="inline whitespace-nowrap md:hidden">
+            {BRAND_TAGLINE_SHORT}
+          </span>
+        </p>
+      ) : null}
+    </div>
   );
 }
