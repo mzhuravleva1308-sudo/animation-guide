@@ -76,19 +76,29 @@ function lockupSvgFragment() {
       font-size="16" font-weight="600" letter-spacing="0.22em">GUIDE</text>`;
 }
 
-/** Match live header lockup + tagline (1200×630). */
+/**
+ * OG card: centered lockup, tagline below (no side-by-side collision).
+ * Lockup viewBox is 350×78; ink ends ~x 280 through GUIDE.
+ */
 function ogSvg() {
   const W = 1200;
   const H = 630;
+  const logoW = 720;
+  const logoH = Math.round((78 / 350) * logoW);
+  const logoX = Math.round((W - logoW) / 2);
+  const logoY = Math.round((H - logoH) / 2) - 36;
+  const s = logoW / 350;
+  const taglineY = logoY + logoH + 56;
+
   return Buffer.from(`<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
   <rect width="${W}" height="${H}" fill="${BG}"/>
-  <g transform="translate(160, 255) scale(2.1)">
+  <g transform="translate(${logoX} ${logoY}) scale(${s})">
     ${lockupSvgFragment()}
   </g>
-  <text x="560" y="318" fill="${NAVY}" fill-opacity="0.78"
+  <text x="${W / 2}" y="${taglineY}" text-anchor="middle" fill="${NAVY}" fill-opacity="0.72"
     font-family="ui-sans-serif, system-ui, -apple-system, Helvetica, Arial, sans-serif"
-    font-size="42" font-weight="500" letter-spacing="-0.02em">Indie &amp; Festival Animation</text>
+    font-size="32" font-weight="500" letter-spacing="-0.01em">Indie &amp; Festival Animation</text>
 </svg>`);
 }
 
