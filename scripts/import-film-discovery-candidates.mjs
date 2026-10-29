@@ -85,6 +85,8 @@ async function main() {
     catalogFilms,
     existingCandidates,
     dryRun: options.dryRun,
+    tmdbApiKey:
+      process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || null,
     insertFn: async (rows) => {
       if (!supabase) throw new Error("Supabase client missing");
       const { error } = await supabase
@@ -104,6 +106,7 @@ async function main() {
         film_count: result.validation.filmCount,
         would_insert: result.plan?.would_insert ?? 0,
         skipped_duplicates: result.plan?.skipped_duplicates ?? [],
+        review_signals: result.plan?.review_signals ?? null,
         writes_to_films_table: result.plan?.writes_to_films_table ?? false,
         sample_rows: (result.plan?.rows ?? []).slice(0, 3).map((row) => ({
           title: row.title,
@@ -114,6 +117,8 @@ async function main() {
           runtime_minutes: row.runtime_minutes,
           review_status: row.review_status,
           source: row.source,
+          review_flags:
+            row.eligibility_evidence?.review_flags ?? row.review_flags ?? [],
         })),
       },
       null,

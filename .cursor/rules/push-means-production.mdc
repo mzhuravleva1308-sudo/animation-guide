@@ -1,0 +1,15 @@
+---
+description: Push means land on main and production, not a leftover PR branch
+alwaysApply: true
+---
+
+# Push means production
+
+When the user asks to **push** / **запушить** / **кати** app work, take it all the way to **production**:
+
+1. Run the pre-release build (`ALLOW_LOCAL_STACK_ENV=1 npm run build`) and fix failures.
+2. Commit if needed.
+3. Land on `main` (merge the PR, or push `main` directly if that is the current path).
+4. Do not stop at a feature-branch push or an open PR. Preview deploys are off; only `main` builds **Production** on resonale.com (`vercel.json`).
+
+A PR is an intermediate step, not the delivery. Confirm the merge to `main` (and that Vercel started a Production deploy) before treating the push as done.

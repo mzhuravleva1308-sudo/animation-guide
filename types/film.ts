@@ -27,6 +27,15 @@ export type Film = {
     aesthetic_tags: string[] | null;
     visual_world_tags?: string[] | null;
     storytelling_tags?: string[] | null;
+    /**
+     * Free-form plot hook (independent of storytelling_tags).
+     * { headline, charge_lines, confidence? }
+     */
+    plot_charge?: {
+      headline: string;
+      charge_lines: string[];
+      confidence?: "high" | "medium" | "low";
+    } | null;
     narrative_tags: string[] | null;
     themes?: string[] | null;
     dialogue?: string | null;

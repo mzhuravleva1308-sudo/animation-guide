@@ -18,6 +18,7 @@ import { applyAppEnv } from "./load-app-env.mjs";
 import { CATALOG_ANALYTICS_FILM_FIELDS } from "../lib/load-films-catalog.mjs";
 import {
   callDiscoveryChat,
+  callDiscoveryResearcher,
   runWeeklyFilmDiscovery,
 } from "../lib/film-discovery-workflow.mjs";
 import { sendWeeklyFilmDiscoveryEmail } from "../lib/send-weekly-film-discovery-email.mjs";
@@ -92,12 +93,15 @@ async function main() {
     existingCandidates: existingCandidates ?? [],
     dryRun: options.dryRun,
     skipEmail: options.skipEmail || options.dryRun,
+    exclusionListMode: "summary",
+    tmdbApiKey: process.env.TMDB_API_KEY || undefined,
     researcherFn: async (prompt) => {
       if (!openai) {
         return { candidates: [] };
       }
-      return callDiscoveryChat(openai, {
-        system: "You are Researcher for Resonale film discovery. Return JSON only.",
+      return callDiscoveryResearcher(openai, {
+        system:
+          "You are Researcher for Resonale film discovery. Prefer web search. Return JSON only.",
         user: prompt,
       });
     },

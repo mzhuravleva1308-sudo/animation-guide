@@ -10,6 +10,7 @@ import {
 import {
   ANIMATION_STORYTELLING_TAGS_MIN,
   buildAnimationStorytellingTagsPrompt,
+  getCanonicalAnimationPlotTags,
   normalizeAnimationStorytellingTagsPreferVocabulary,
 } from "../lib/animation-storytelling-tags.mjs";
 import {
@@ -96,14 +97,21 @@ async function getFilms() {
 }
 
 async function generateStorytellingTags(film) {
+  if (isAnimation) {
+    const canonical = getCanonicalAnimationPlotTags(film.title);
+    if (canonical) {
+      return { tags: canonical, suggested: [], source: "canonical" };
+    }
+  }
+
   const response = await openai.chat.completions.create({
     model: process.env.OPENAI_TAG_MODEL ?? "gpt-4o-mini",
-    temperature: 0.3,
+    temperature: isAnimation ? 0.2 : 0.3,
     messages: [
       {
         role: "system",
         content: isAnimation
-          ? "You create precise animated-film Storytelling tags. Never confuse mood, theme, genre, or visual style with narrative mechanics."
+          ? "You create precise animated-film Plot tags. Workflow: free 3–5 plot elements first, then map to vocab (exact/equivalent only); missing → suggested. Never approximate substitutes. Never pad to a count. Never tag side-effects of friendship/danger/growth as building trust / confronting danger / searching for identity unless central. Prefer distinctive engines over generic labels."
           : "You create precise live-action Storytelling tags. Never confuse mood, genre, or visual style with narrative mechanics.",
       },
       {
@@ -130,6 +138,7 @@ async function generateStorytellingTags(film) {
   return {
     tags: preferred.tags,
     suggested: [...new Set(suggested)],
+    source: "model",
   };
 }
 
@@ -155,14 +164,15 @@ async function main() {
   let done = 0;
   await mapPool(targets, concurrency, async (film) => {
     console.log(`Generating storytelling tags: ${film.title}`);
-    const { tags, suggested } = await generateStorytellingTags(film);
+    const { tags, suggested, source } = await generateStorytellingTags(film);
 
     if (tags.length < minTags) {
       console.warn(
         `  WARN under-tagged (${tags.length}): ${film.title} — ${tags.join(", ") || "(none)"}`
       );
     } else {
-      console.log(`  ${film.title}: ${tags.join(", ")}`);
+      const prefix = source === "canonical" ? "canonical" : "model";
+      console.log(`  ${film.title} [${prefix}]: ${tags.join(", ")}`);
     }
     if (suggested.length) {
       console.log(`  suggested(off-vocab): ${suggested.join(", ")}`);

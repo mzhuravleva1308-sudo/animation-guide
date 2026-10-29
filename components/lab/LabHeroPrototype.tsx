@@ -213,17 +213,56 @@ export default function LabHeroPrototype() {
   const [selectedLabels, setSelectedLabels] = useState<Record<string, string>>(
     {}
   );
+  const [artTone, setArtTone] = useState<"color" | "soft" | "bw">("soft");
   const animationNav = headerNavLabelCollapse(true);
   const filmsNav = headerNavLabelCollapse(false);
   const savedNav = headerNavLabelCollapse(false);
   const watchedNav = headerNavLabelCollapse(false);
+  const artToneClass =
+    artTone === "bw"
+      ? "grayscale"
+      : artTone === "soft"
+        ? "grayscale-[45%] contrast-[0.96] saturate-[0.85]"
+        : "";
 
   return (
     <main className="min-h-screen bg-white text-[#1a1a2e]">
       <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:p-8">
-        <p className="mb-3 font-sans text-[11px] tracking-wide text-[#a0a1b4]">
-          Lab prototype · not wired to production catalog
-        </p>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <p className="font-sans text-[11px] tracking-wide text-[#a0a1b4]">
+            Lab prototype · not wired to production catalog
+          </p>
+          <div
+            className="inline-flex items-center gap-1 rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] p-0.5"
+            role="group"
+            aria-label="Hero art tone"
+          >
+            {(
+              [
+                { id: "color", label: "Color" },
+                { id: "soft", label: "Soft" },
+                { id: "bw", label: "B&W" },
+              ] as const
+            ).map((option) => {
+              const selected = artTone === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => setArtTone(option.id)}
+                  className={`rounded-full px-2.5 py-1 font-sans text-[11px] tracking-wide transition-colors ${
+                    selected
+                      ? "bg-[#1a1b2e] text-white"
+                      : "text-[#8b8c9e] hover:text-[#2f3040]"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Current production header — logo without tagline */}
         <header>
@@ -320,7 +359,7 @@ export default function LabHeroPrototype() {
               width={2172}
               height={724}
               decoding="async"
-              className="h-full w-full select-none object-cover object-right"
+              className={`h-full w-full select-none object-cover object-right ${artToneClass}`}
             />
           </div>
 

@@ -138,8 +138,10 @@ Trailer priority:
 4. Other TMDB `Trailer` on identity-confirmed match
 5. Trusted-channel Clip
 6. If the chosen TMDB trailer is **non-English and has no English-subtitle signal**, YouTube search for **original language + English subtitles** (may replace that TMDB pick). Skipped after first 429 in a run.
-7. Otherwise keep the non-English TMDB trailer, or fall back to general YouTube search when TMDB has no Trailer/Teaser/Clip
-8. Otherwise `media_partial` / `media_failed` — no random video
+7. If TMDB has **no** Trailer/Teaser/Clip and the film is not English-original, same YouTube **original + English subtitles** pass first, then general YouTube search
+8. Otherwise keep the non-English TMDB trailer, or use the general YouTube result
+9. General YouTube ranking prefers `english_accessible` cuts; an English **release title** (when original title differs) counts as english-accessible even without “English subs” wording
+10. Otherwise `media_partial` / `media_failed` — no random video
 
 Channel resolve for TMDB Clip trust uses YouTube **oEmbed** (not Search API quota).
 

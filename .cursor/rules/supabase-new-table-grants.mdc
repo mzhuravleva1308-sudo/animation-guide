@@ -1,0 +1,23 @@
+---
+description: Explicit GRANTs required for new public tables (Data API)
+globs: supabase/**/*.sql
+alwaysApply: false
+---
+
+# New public tables need explicit GRANTs
+
+From **October 30, 2026**, Supabase no longer auto-grants Data API access on new `public` tables (existing tables keep current grants).
+
+When a migration **creates** a table in `public`, add grants in the **same** migration. Do not rely on auto-expose or only on `ALTER DEFAULT PRIVILEGES` from older migrations.
+
+Typical pattern (adjust roles to match the table’s access model; see `20261018_film_rating_details.sql` and harden migrations):
+
+```sql
+GRANT SELECT ON TABLE public.your_table TO anon; -- only if public read is intended
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.your_table TO authenticated;
+GRANT ALL ON TABLE public.your_table TO service_role;
+```
+
+Also applies to `supabase db reset`, preview branches, and new projects. Column-only `ALTER TABLE` does not need new grants.
+
+`supabase/migrations/20250620_grant_api_role_access.sql` sets default privileges for local/reset; still write explicit grants for clarity and hosted Data API.

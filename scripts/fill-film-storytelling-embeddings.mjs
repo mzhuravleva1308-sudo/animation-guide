@@ -28,7 +28,6 @@ const mediaType =
   mediaRaw === "animation" || mediaRaw === MEDIA_TYPE.animation
     ? MEDIA_TYPE.animation
     : MEDIA_TYPE.liveAction;
-const isAnimation = mediaType === MEDIA_TYPE.animation;
 
 function normalizeTag(tag) {
   return tag.trim().toLowerCase();
@@ -65,18 +64,16 @@ function isValidEmbedding(value) {
 }
 
 async function getFilms() {
+  // Do not require catalog_visible — discovery prep inserts animation films
+  // hidden (catalog_visible=false) and needs storytelling embeddings before
+  // ready_for_release / Go Live.
   return loadScopedFilms(supabase, scope, {
     select: "id, title, storytelling_tags, media_type, catalog_visible",
-    applyFilters: (query) => {
-      let next = query
+    applyFilters: (query) =>
+      query
         .eq("media_type", mediaType)
         .not("storytelling_tags", "is", null)
-        .order("title");
-      if (isAnimation) {
-        next = next.eq("catalog_visible", true);
-      }
-      return next;
-    },
+        .order("title"),
   }).then((films) => films.filter((film) => film.storytelling_tags?.length));
 }
 
