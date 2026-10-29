@@ -17,7 +17,13 @@ function formatWhen(value: string | null): string {
   });
 }
 
-export default async function AdminUsersPage() {
+type AdminUsersPageProps = {
+  searchParams: Promise<{ error?: string }>;
+};
+
+export default async function AdminUsersPage({
+  searchParams,
+}: AdminUsersPageProps) {
   const access = await getAdminAccessStatus();
 
   if (access === "unauthenticated") {
@@ -27,6 +33,8 @@ export default async function AdminUsersPage() {
   if (access !== "admin") {
     notFound();
   }
+
+  const { error } = await searchParams;
 
   const supabase = await createClient();
   const {
@@ -52,6 +60,11 @@ export default async function AdminUsersPage() {
             your admin session in this browser — sign out and magic-link back
             in as admin when you are done.
           </p>
+          {error ? (
+            <p className="mt-3 text-sm text-red-600" role="alert">
+              {error}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col items-end gap-2 text-sm text-gray-500">

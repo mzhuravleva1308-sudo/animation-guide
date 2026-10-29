@@ -1,7 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createCallbackClient } from "@/lib/supabase/callback";
 import { requireAdminApiAccess } from "@/lib/auth/require-admin";
-import { buildImpersonationCallbackPath } from "@/lib/auth/admin-impersonate";
+import { ensureAuthProfileForUser } from "@/lib/auth/ensure-auth-profile";
+import { resolveAuthOriginFromRequest } from "@/lib/auth/callback-origin";
+import { AUTH_NEXT_PATH_COOKIE_NAME } from "@/lib/auth/auth-next-path";
+import { PENDING_FILM_ACTION_COOKIE_NAME } from "@/lib/pending-film-action";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -23,15 +27,26 @@ async function resolveTargetUserId(request: NextRequest): Promise<string> {
     );
   }
 
-  if (
-    contentType.includes("application/x-www-form-urlencoded") ||
-    contentType.includes("multipart/form-data")
-  ) {
+  // HTML forms and most browsers: always try form body first for POST.
+  try {
     const form = await request.formData();
-    return readUserId(form.get("userId"));
+    const fromForm = readUserId(form.get("userId"));
+    if (fromForm) return fromForm;
+  } catch {
+    // Not a form body — fall through.
   }
 
   return readUserId(request.nextUrl.searchParams.get("userId"));
+}
+
+function redirectToUsersError(request: NextRequest, message: string) {
+  const origin = resolveAuthOriginFromRequest(
+    request,
+    process.env.NEXT_PUBLIC_SITE_URL
+  );
+  const url = new URL("/admin/users", origin);
+  url.searchParams.set("error", message);
+  return NextResponse.redirect(url, 303);
 }
 
 export async function POST(request: NextRequest) {
@@ -42,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   const targetUserId = await resolveTargetUserId(request);
   if (!targetUserId) {
-    return NextResponse.json({ error: "userId is required" }, { status: 400 });
+    return redirectToUsersError(request, "Missing user id.");
   }
 
   const sessionClient = await createClient();
@@ -58,10 +73,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (adminUser.id === targetUserId) {
-    return NextResponse.json(
-      { error: "Already signed in as this user" },
-      { status: 400 }
-    );
+    return redirectToUsersError(request, "Already signed in as this user.");
   }
 
   const admin = getAdminSupabase();
@@ -69,14 +81,14 @@ export async function POST(request: NextRequest) {
     await admin.auth.admin.getUserById(targetUserId);
 
   if (targetError || !target.user) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return redirectToUsersError(request, "User not found.");
   }
 
   const email = target.user.email?.trim();
   if (!email) {
-    return NextResponse.json(
-      { error: "Target user has no email; cannot generate a session link" },
-      { status: 400 }
+    return redirectToUsersError(
+      request,
+      "That account has no email, so a session link cannot be created."
     );
   }
 
@@ -92,10 +104,61 @@ export async function POST(request: NextRequest) {
       targetUserId,
       message: error?.message ?? "missing hashed_token",
     });
-    return NextResponse.json(
-      { error: "Failed to create impersonation session" },
-      { status: 500 }
+    return redirectToUsersError(
+      request,
+      "Failed to create impersonation session."
     );
+  }
+
+  const origin = resolveAuthOriginFromRequest(
+    request,
+    process.env.NEXT_PUBLIC_SITE_URL
+  );
+  // Complete the session switch here — do not send the browser through
+  // /auth/callback. That path applies pending film-action cookies and can
+  // surface a post-login error even though the takeover succeeded.
+  const response = NextResponse.redirect(new URL("/", origin), 303);
+  response.cookies.set(PENDING_FILM_ACTION_COOKIE_NAME, "", {
+    path: "/",
+    maxAge: 0,
+  });
+  response.cookies.set(AUTH_NEXT_PATH_COOKIE_NAME, "", {
+    path: "/",
+    maxAge: 0,
+  });
+
+  const supabase = createCallbackClient(request, response);
+  const { error: verifyError } = await supabase.auth.verifyOtp({
+    token_hash: hashedToken,
+    type: "magiclink",
+  });
+
+  if (verifyError) {
+    console.error("[admin/impersonate] verifyOtp failed", {
+      adminUserId: adminUser.id,
+      targetUserId,
+      message: verifyError.message,
+      code: verifyError.code,
+    });
+    return redirectToUsersError(
+      request,
+      "Could not switch session. Try again."
+    );
+  }
+
+  try {
+    await ensureAuthProfileForUser(admin, {
+      id: target.user.id,
+      email: target.user.email,
+    });
+  } catch (profileError) {
+    // Session is already the target user; profile can be repaired later.
+    console.error("[admin/impersonate] profile ensure failed", {
+      adminUserId: adminUser.id,
+      targetUserId,
+      message:
+        profileError instanceof Error ? profileError.message : "unknown error",
+    });
   }
 
   console.info("[admin/impersonate] session takeover", {
@@ -103,6 +166,5 @@ export async function POST(request: NextRequest) {
     targetUserId,
   });
 
-  const callbackPath = buildImpersonationCallbackPath(hashedToken, "/");
-  return NextResponse.redirect(new URL(callbackPath, request.url), 303);
+  return response;
 }
