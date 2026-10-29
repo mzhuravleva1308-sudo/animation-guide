@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { PartyPopper, ThumbsDown } from "lucide-react";
 import { persistFilmRating } from "@/lib/film-profile-mutations";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import {
@@ -9,6 +10,14 @@ import {
 } from "@/lib/rating-onboarding";
 import { useToast } from "@/components/ToastProvider";
 import { catalogCircleControlClass } from "@/lib/catalog-control-size";
+
+const ratingEndIconClass = "h-3.5 w-3.5 shrink-0 stroke-[1.75]";
+
+const RATING_END_TOOLTIP: Partial<Record<number, string>> = {
+  1: "Didn't like it",
+  5: "It was fine",
+  10: "Loved it",
+};
 
 type RatingChangeOptions = {
   skipOrderUpdate?: boolean;
@@ -194,6 +203,7 @@ export default function RatingButtons({
                 key={value}
                 type="button"
                 aria-label={`Rate ${value} out of 10`}
+                title={RATING_END_TOOLTIP[value]}
                 aria-pressed={rating === value}
                 disabled={isSaving}
                 onClick={() => saveRating(value)}
@@ -203,7 +213,19 @@ export default function RatingButtons({
                     : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
                 }`}
               >
-                {value}
+                {value === 1 ? (
+                  <ThumbsDown
+                    aria-hidden="true"
+                    className={ratingEndIconClass}
+                  />
+                ) : value === 10 ? (
+                  <PartyPopper
+                    aria-hidden="true"
+                    className={ratingEndIconClass}
+                  />
+                ) : (
+                  value
+                )}
               </button>
             ))}
           </div>
