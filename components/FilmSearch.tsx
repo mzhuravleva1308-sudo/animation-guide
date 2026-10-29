@@ -241,11 +241,11 @@ export default function FilmSearch({
       closeSuggestions();
     }
 
-    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("mousedown", handlePointerDown, true);
     window.addEventListener("scroll", handleScroll, true);
 
     return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("mousedown", handlePointerDown, true);
       window.removeEventListener("scroll", handleScroll, true);
     };
   }, [closeSuggestions]);
@@ -255,7 +255,9 @@ export default function FilmSearch({
   return (
     <section
       ref={searchRootRef}
-      className="relative mb-0 w-full max-w-[18.5rem] shrink-0 sm:max-w-[20rem]"
+      className={`relative mb-0 w-full max-w-[18.5rem] shrink-0 sm:max-w-[20rem] ${
+        showSuggestionsDropdown ? "z-50" : ""
+      }`}
       data-testid="film-search"
     >
       <div className="relative w-full min-w-0">
@@ -321,7 +323,7 @@ export default function FilmSearch({
         {showSuggestionsDropdown && (
           <div
             data-testid="film-search-suggestions-dropdown"
-            className="absolute top-full right-0 left-0 z-20 mt-2 overflow-hidden rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.92)] shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
+              className="absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.92)] shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
           >
             <ul
               id="film-search-suggestions-listbox"

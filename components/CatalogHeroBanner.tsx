@@ -137,7 +137,7 @@ export default function CatalogHeroBanner({
         </div>
       ) : null}
 
-      <div className="relative z-10">
+      <div className="relative z-40">
         <div className="max-w-fit">
           <h1
             className="font-sans text-[22px] font-semibold leading-[1.08] tracking-tight antialiased [font-synthesis:none] sm:whitespace-nowrap sm:text-[28px] md:text-[30px]"

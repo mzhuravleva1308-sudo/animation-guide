@@ -467,7 +467,7 @@ export default function FilmCatalog({
         />
       ) : null}
       <div
-        className={`relative z-10 ${activeQuickFilter ? "mb-3" : "mb-8 sm:mb-10"}`}
+        className={`relative z-40 ${activeQuickFilter ? "mb-3" : "mb-8 sm:mb-10"}`}
       >
         {keepSearchUp ? null : searchControls}
         <div

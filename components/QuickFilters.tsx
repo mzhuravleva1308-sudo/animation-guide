@@ -140,7 +140,7 @@ function splitShellClass(isActive: boolean, open: boolean) {
     : isActive
       ? "border-[rgba(177,169,217,0.75)] bg-[#efeaf8] text-[#4a3f7a]"
       : "border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] text-[#4a4b5c] hover:bg-[rgba(255,255,255,0.8)]";
-  return `relative z-30 inline-flex ${catalogChipHeightClass} items-stretch overflow-hidden rounded-[14px] border backdrop-blur-[14px] transition-[background-color,border-color,color] duration-150 ${tone}`;
+  return `relative z-50 inline-flex ${catalogChipHeightClass} items-stretch overflow-hidden rounded-[14px] border backdrop-blur-[14px] transition-[background-color,border-color,color] duration-150 ${tone}`;
 }
 
 function splitApplyBtnClass(isActive: boolean) {
@@ -235,6 +235,7 @@ function SplitFilterMenuPanel({
   ariaLabel,
   testId,
   panelRef,
+  rootRef,
   children,
 }: {
   open: boolean;
@@ -243,32 +244,45 @@ function SplitFilterMenuPanel({
   ariaLabel: string;
   testId: string;
   panelRef: RefObject<HTMLDivElement | null>;
+  /** Chip + menu root — clicks outside this close the menu. */
+  rootRef: RefObject<HTMLDivElement | null>;
   children: ReactNode;
 }) {
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) {
+        return;
+      }
+      onClose();
+    }
+
+    // Capture so we still close when a card/poster sits above any local overlay.
+    document.addEventListener("mousedown", handlePointerDown, true);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown, true);
+    };
+  }, [open, onClose, rootRef]);
+
   if (!open) {
     return null;
   }
 
   return (
-    <>
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-hidden="true"
-        className="fixed inset-0 z-20 cursor-default"
-        onClick={onClose}
-      />
-      <div
-        ref={panelRef}
-        id={menuId}
-        role="menu"
-        aria-label={ariaLabel}
-        data-testid={testId}
-        className="absolute left-0 top-full z-30 mt-2 max-h-[min(20rem,calc(100dvh-7rem))] w-max min-w-[11.5rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.72)] py-1.5 shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
-      >
-        {children}
-      </div>
-    </>
+    <div
+      ref={panelRef}
+      id={menuId}
+      role="menu"
+      aria-label={ariaLabel}
+      data-testid={testId}
+      className="absolute left-0 top-full z-50 mt-2 max-h-[min(20rem,calc(100dvh-7rem))] w-max min-w-[11.5rem] max-w-[calc(100vw-2rem)] overflow-y-auto overscroll-contain rounded-[14px] border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.72)] py-1.5 shadow-[0_8px_28px_rgba(35,36,61,0.1)] backdrop-blur-[14px]"
+    >
+      {children}
+    </div>
   );
 }
 
@@ -353,7 +367,7 @@ function AwardWinnersFilterControl({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      className={`relative inline-flex shrink-0 ${open ? "z-50" : ""}`}
       ref={menuRef}
       role="group"
       aria-label="Award winners and festivals"
@@ -413,6 +427,7 @@ function AwardWinnersFilterControl({
         ariaLabel="Award winners and festivals"
         testId="award-filter-menu"
         panelRef={panelRef}
+        rootRef={menuRef}
       >
         <SplitFilterOption
           label={FILTER_LABELS["award-winners"]}
@@ -477,7 +492,7 @@ function TechniqueFilterControl({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      className={`relative inline-flex shrink-0 ${open ? "z-50" : ""}`}
       ref={menuRef}
       role="group"
       aria-label="Animation technique"
@@ -530,6 +545,7 @@ function TechniqueFilterControl({
         ariaLabel="Animation techniques"
         testId="technique-filter-menu"
         panelRef={panelRef}
+        rootRef={menuRef}
       >
         {ANIMATION_TECHNIQUE_FILTERS.map((option) => (
           <SplitFilterOption
@@ -595,7 +611,7 @@ function ThemeFilterControl({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      className={`relative inline-flex shrink-0 ${open ? "z-50" : ""}`}
       ref={menuRef}
       role="group"
       aria-label="Theme"
@@ -648,6 +664,7 @@ function ThemeFilterControl({
         ariaLabel="Theme filters"
         testId="theme-filter-menu"
         panelRef={panelRef}
+        rootRef={menuRef}
       >
         {availableThemes.map((option) => (
           <SplitFilterOption
@@ -712,7 +729,7 @@ function MoodFilterControl({
 
   return (
     <div
-      className={`relative inline-flex shrink-0 ${open ? "z-30" : ""}`}
+      className={`relative inline-flex shrink-0 ${open ? "z-50" : ""}`}
       ref={menuRef}
       role="group"
       aria-label="Mood"
@@ -765,6 +782,7 @@ function MoodFilterControl({
         ariaLabel="Mood filters"
         testId="mood-filter-menu"
         panelRef={panelRef}
+        rootRef={menuRef}
       >
         {availableMoods.map((option) => (
           <SplitFilterOption
