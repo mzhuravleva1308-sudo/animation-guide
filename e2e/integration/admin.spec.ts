@@ -31,4 +31,9 @@ test.describe("Admin pages", () => {
     await page.goto("/admin/film-discovery");
     await expect(page).toHaveURL(/\/login/);
   });
+
+  test("unauthenticated admin users redirects to login", async ({ page }) => {
+    await page.goto("/admin/users");
+    await expect(page).toHaveURL(/\/login/);
+  });
 });

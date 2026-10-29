@@ -48,6 +48,9 @@ export default async function CatalogAnalyticsPage() {
         </div>
 
         <div className="flex flex-col items-end gap-2 text-sm text-gray-500">
+          <Link href="/admin/users" className="hover:text-black">
+            Users →
+          </Link>
           <Link href="/admin/film-discovery" className="hover:text-black">
             Film discovery review →
           </Link>
