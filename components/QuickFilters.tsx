@@ -140,7 +140,7 @@ function splitShellClass(isActive: boolean, open: boolean) {
     : isActive
       ? "border-[rgba(177,169,217,0.75)] bg-[#efeaf8] text-[#4a3f7a]"
       : "border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] text-[#4a4b5c] hover:bg-[rgba(255,255,255,0.8)]";
-  return `relative z-50 inline-flex ${catalogChipHeightClass} items-stretch overflow-hidden rounded-[14px] border backdrop-blur-[14px] transition-[background-color,border-color,color] duration-150 ${tone}`;
+  return `relative inline-flex ${catalogChipHeightClass} items-stretch overflow-hidden rounded-[14px] border backdrop-blur-[14px] transition-[background-color,border-color,color] duration-150 ${tone}`;
 }
 
 function splitApplyBtnClass(isActive: boolean) {

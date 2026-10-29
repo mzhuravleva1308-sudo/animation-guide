@@ -467,11 +467,11 @@ export default function FilmCatalog({
         />
       ) : null}
       <div
-        className={`relative z-40 ${activeQuickFilter ? "mb-3" : "mb-8 sm:mb-10"}`}
+        className={`relative ${activeQuickFilter ? "mb-3" : "mb-8 sm:mb-10"}`}
       >
         {keepSearchUp ? null : searchControls}
         <div
-          className={`flex min-w-0 flex-wrap items-center gap-1.5 ${
+          className={`relative flex min-w-0 flex-wrap items-center gap-1.5 ${
             keepSearchUp ? undefined : "mt-2.5"
           }`}
         >
