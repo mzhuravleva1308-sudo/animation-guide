@@ -198,36 +198,56 @@ export default function RatingButtons({
           [6, 7, 8, 9, 10],
         ].map((group) => (
           <div key={group[0]} className="flex gap-1.5">
-            {group.map((value) => (
-              <button
-                key={value}
-                type="button"
-                aria-label={`Rate ${value} out of 10`}
-                title={RATING_END_TOOLTIP[value]}
-                aria-pressed={rating === value}
-                disabled={isSaving}
-                onClick={() => saveRating(value)}
-                className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
-                  rating === value
-                    ? "border-black bg-black text-white"
-                    : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
-                }`}
-              >
-                {value === 1 ? (
-                  <ThumbsDown
-                    aria-hidden="true"
-                    className={ratingEndIconClass}
-                  />
-                ) : value === 10 ? (
-                  <PartyPopper
-                    aria-hidden="true"
-                    className={ratingEndIconClass}
-                  />
-                ) : (
-                  value
-                )}
-              </button>
-            ))}
+            {group.map((value) => {
+              const tip = RATING_END_TOOLTIP[value];
+              const button = (
+                <button
+                  type="button"
+                  aria-label={`Rate ${value} out of 10`}
+                  aria-pressed={rating === value}
+                  disabled={isSaving}
+                  onClick={() => saveRating(value)}
+                  className={`inline-flex ${catalogCircleControlClass} shrink-0 items-center justify-center rounded-full border p-0 text-sm leading-none touch-manipulation ${
+                    rating === value
+                      ? "border-black bg-black text-white"
+                      : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                  }`}
+                >
+                  {value === 1 ? (
+                    <ThumbsDown
+                      aria-hidden="true"
+                      className={ratingEndIconClass}
+                    />
+                  ) : value === 10 ? (
+                    <PartyPopper
+                      aria-hidden="true"
+                      className={ratingEndIconClass}
+                    />
+                  ) : (
+                    value
+                  )}
+                </button>
+              );
+
+              if (!tip) {
+                return <span key={value}>{button}</span>;
+              }
+
+              return (
+                <span
+                  key={value}
+                  className="group/rating-tip relative inline-flex"
+                >
+                  {button}
+                  <span
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-[calc(100%+0.35rem)] left-1/2 z-30 -translate-x-1/2 rounded-md bg-[#1A1B2E] px-2 py-1 text-[11px] font-normal whitespace-nowrap text-white opacity-0 group-hover/rating-tip:opacity-100 group-focus-within/rating-tip:opacity-100"
+                  >
+                    {tip}
+                  </span>
+                </span>
+              );
+            })}
           </div>
         ))}
       </div>
