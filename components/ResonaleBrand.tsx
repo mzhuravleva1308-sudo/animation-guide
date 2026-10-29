@@ -66,6 +66,24 @@ function ResonaleLogoMark({ className }: { className?: string }) {
         strokeLinejoin="round"
       />
 
+      {/* Eyes in the R bowl — vertical ovals, ~19° tops-left (ref crop) */}
+      <ellipse
+        cx="97.4"
+        cy="24.2"
+        rx="2.15"
+        ry="3.7"
+        fill={NAVY}
+        transform="rotate(-19 97.4 24.2)"
+      />
+      <ellipse
+        cx="104.8"
+        cy="21.6"
+        rx="2.15"
+        ry="3.7"
+        fill={NAVY}
+        transform="rotate(-19 104.8 21.6)"
+      />
+
       <text
         x={ESONALE_START_X}
         y="35"
