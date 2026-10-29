@@ -284,8 +284,10 @@ export default function FilmsPageClient({
     Record<string, FilmRatingDetail>
   >({});
   const showRatingDetail = canAccessRatingDetail(auth?.email);
-  const [listMediaFilter, setListMediaFilter] =
-    useState<ListMediaFilter>("all");
+  // Allowlisted live-action early access only: Saved/Watched open on Animation.
+  const [listMediaFilter, setListMediaFilter] = useState<ListMediaFilter>(() =>
+    showLiveActionTab ? MEDIA_TYPE.animation : "all"
+  );
   const [catalogSlices, setCatalogSlices] = useState<
     Record<string, CatalogSlice>
   >(() => ({
