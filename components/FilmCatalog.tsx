@@ -65,7 +65,7 @@ type FilmCatalogProps = {
   onQuickFilterChange: (filter: QuickFilter) => void;
   /** Show AI Search pill on the animation catalog (guests included). */
   showVibeSearch?: boolean;
-  /** Allowlisted signed-in users can run vibe search. */
+  /** Signed-in users can run vibe search; guests see the pill and get auth. */
   vibeSearchUnlocked?: boolean;
   /** Guests clicking AI Search — open auth. */
   onVibeSearchAuthRequired?: () => void;
@@ -137,8 +137,22 @@ export default function FilmCatalog({
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const [keepSearchUp, setKeepSearchUp] = useState(false);
+  const [vibeSearchExpanded, setVibeSearchExpanded] = useState(false);
   const handleKeepSearchUpChange = useCallback((next: boolean) => {
     setKeepSearchUp(next);
+  }, []);
+  const handleVibeExpandedChange = useCallback((next: boolean) => {
+    setVibeSearchExpanded(next);
+    if (next) {
+      setSearchState({
+        query: "",
+        films: [],
+        isLoading: false,
+        isActive: false,
+        error: null,
+        mode: "lookup",
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -442,15 +456,18 @@ export default function FilmCatalog({
 
   const searchControls = (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-      <FilmSearch
-        onResultsChange={handleSearchResultsChange}
-        isLoading={lookupReady && searchState.isLoading}
-      />
+      {vibeSearchExpanded ? null : (
+        <FilmSearch
+          onResultsChange={handleSearchResultsChange}
+          isLoading={lookupReady && searchState.isLoading}
+        />
+      )}
       {vibeSearchEnabled ? (
         <VibeSearch
           onResultsChange={handleVibeResultsChange}
           unlocked={vibeSearchUnlocked}
           onAuthRequired={onVibeSearchAuthRequired}
+          onExpandedChange={handleVibeExpandedChange}
         />
       ) : null}
     </div>
@@ -620,7 +637,7 @@ export default function FilmCatalog({
             !activeSearch.error &&
             visibleFilms.length > 0 && (
               <p
-                className="text-sm text-slate-500"
+                className="font-sans text-[13px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
                 data-testid="film-search-results-count"
               >
                 {visibleFilms.length}{" "}

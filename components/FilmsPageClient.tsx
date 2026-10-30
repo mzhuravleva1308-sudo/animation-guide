@@ -810,9 +810,7 @@ export default function FilmsPageClient({
               mediaType={activeMedia}
               activeQuickFilter={activeQuickFilter}
               onQuickFilterChange={handleQuickFilterChange}
-              showVibeSearch={
-                !auth || canAccessVibeSearch(auth?.email)
-              }
+              showVibeSearch
               vibeSearchUnlocked={canAccessVibeSearch(auth?.email)}
               onVibeSearchAuthRequired={
                 auth

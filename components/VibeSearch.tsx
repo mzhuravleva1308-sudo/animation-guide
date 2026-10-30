@@ -7,14 +7,17 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { LoaderCircle, Search, Sparkles } from "lucide-react";
+import { LoaderCircle, Search, Sparkles, X } from "lucide-react";
 import { RESONALE_LAVENDER } from "@/components/ResonaleBrand";
 import { Film } from "@/types/film";
 
 const MIN_QUERY_LENGTH = 4;
 
 const PLACEHOLDER =
-  "Describe a feeling — e.g. забота в сложном мире, волшебство в обыденности";
+  "Describe a feeling — care in a hard world, magic in the everyday";
+
+const FIELD_CLASS =
+  "h-[34px] w-full rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] py-0 pl-9 font-sans text-[13px] font-normal tracking-tight text-[#2f3040] shadow-none outline-none backdrop-blur-[14px] placeholder:text-[#9a9baf] transition-[border-color,box-shadow,opacity] hover:border-[rgba(177,169,217,0.48)] focus:border-[rgba(177,169,217,0.55)] focus:ring-2 focus:ring-[rgba(177,169,217,0.18)] focus:outline-none disabled:cursor-wait disabled:opacity-70";
 
 type VibeSearchResult = {
   film: Film;
@@ -39,16 +42,19 @@ type VibeSearchProps = {
     error: string | null;
     mode: "vibe";
   }) => void;
-  /** Allowlisted signed-in users can expand and search. */
+  /** Signed-in users can expand and search. */
   unlocked?: boolean;
   /** Guests: open auth instead of expanding. */
   onAuthRequired?: () => void;
+  /** Parent hides title search while the vibe field is open. */
+  onExpandedChange?: (expanded: boolean) => void;
 };
 
 export default function VibeSearch({
   onResultsChange,
   unlocked = true,
   onAuthRequired,
+  onExpandedChange,
 }: VibeSearchProps) {
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
@@ -64,6 +70,11 @@ export default function VibeSearch({
     !isLoading &&
     trimmedQuery !== submittedQuery;
   const isExpanded = expanded || isLoading || Boolean(submittedQuery);
+  const showClear = Boolean(query.length > 0 || submittedQuery);
+
+  useEffect(() => {
+    onExpandedChange?.(isExpanded);
+  }, [isExpanded, onExpandedChange]);
 
   const resetResults = useCallback(() => {
     abortRef.current?.abort();
@@ -80,7 +91,7 @@ export default function VibeSearch({
     });
   }, [onResultsChange]);
 
-  const collapseIfIdle = useCallback(() => {
+  const collapseIdle = useCallback(() => {
     if (isLoading || submittedQuery || trimmedQuery.length > 0) return;
     setExpanded(false);
   }, [isLoading, submittedQuery, trimmedQuery]);
@@ -176,6 +187,12 @@ export default function VibeSearch({
     [trimmedQuery, isLoading, submittedQuery, runSearch]
   );
 
+  const handleClear = useCallback(() => {
+    setQuery("");
+    resetResults();
+    setExpanded(false);
+  }, [resetResults]);
+
   if (!isExpanded) {
     return (
       <section className="relative mb-0 shrink-0" data-testid="vibe-search">
@@ -191,11 +208,7 @@ export default function VibeSearch({
             }
             setExpanded(true);
           }}
-          className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full px-3.5 font-sans text-[13px] font-medium tracking-tight transition hover:brightness-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-          style={{
-            backgroundColor: "#efeaf8",
-            color: "#6b5ea8",
-          }}
+          className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[rgba(177,169,217,0.45)] bg-[#efeaf8] px-3.5 font-sans text-[13px] font-medium tracking-tight text-[#6b5ea8] transition hover:border-[rgba(177,169,217,0.65)] hover:bg-[#e8e1f5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
         >
           <Sparkles
             size={13}
@@ -211,12 +224,12 @@ export default function VibeSearch({
 
   return (
     <section
-      className="relative mb-0 w-full basis-full"
+      className="relative mb-0 w-full max-w-[22rem] shrink-0 sm:max-w-[26rem]"
       data-testid="vibe-search"
     >
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-2 sm:flex-row sm:items-center"
+        className="flex min-w-0 items-center gap-1.5"
       >
         <label className="sr-only" htmlFor="vibe-search-input">
           Search by feeling
@@ -241,21 +254,19 @@ export default function VibeSearch({
             onChange={(event) => setQuery(event.target.value)}
             onBlur={() => {
               // Defer so Find / Clear clicks still register.
-              window.setTimeout(() => collapseIfIdle(), 0);
+              window.setTimeout(() => collapseIdle(), 0);
             }}
             onKeyDown={(event) => {
               if (event.key === "Escape") {
                 event.preventDefault();
-                if (query.length > 0 || submittedQuery) {
-                  setQuery("");
-                  resetResults();
-                }
-                setExpanded(false);
+                handleClear();
               }
             }}
             placeholder={PLACEHOLDER}
             autoComplete="off"
-            className="h-[34px] w-full rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] py-0 pr-10 pl-9 font-sans text-[13px] font-normal tracking-tight text-[#2f3040] shadow-none outline-none backdrop-blur-[14px] placeholder:text-[#9a9baf] transition-[border-color,box-shadow,opacity] hover:border-[rgba(177,169,217,0.48)] focus:border-[rgba(177,169,217,0.55)] focus:ring-2 focus:ring-[rgba(177,169,217,0.18)] focus:outline-none disabled:cursor-wait disabled:opacity-70"
+            className={`${FIELD_CLASS} ${
+              showClear || isLoading ? "pr-10" : "pr-3"
+            }`}
           />
           {isLoading ? (
             <LoaderCircle
@@ -265,68 +276,37 @@ export default function VibeSearch({
               data-testid="vibe-search-spinner"
               className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 animate-spin text-[#8b8c9e]"
             />
-          ) : null}
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="submit"
-            data-testid="vibe-search-submit"
-            disabled={!canSubmit}
-            className="inline-flex h-[34px] flex-1 items-center justify-center gap-1.5 rounded-full bg-[#2f3040] px-4 text-[13px] font-medium text-white transition enabled:hover:bg-[#1f2030] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 sm:flex-none"
-          >
-            <Search size={14} strokeWidth={2} aria-hidden="true" />
-            Find
-          </button>
-          {submittedQuery ? (
+          ) : showClear ? (
             <button
               type="button"
               data-testid="vibe-search-clear"
-              disabled={isLoading}
-              onClick={() => {
-                setQuery("");
-                resetResults();
-                setExpanded(false);
-              }}
-              className="inline-flex h-[34px] items-center justify-center rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] px-3 text-[13px] font-medium text-[#5c5d6e] backdrop-blur-[14px] transition hover:bg-[rgba(255,255,255,0.8)] hover:text-[#2f3040] disabled:cursor-wait disabled:opacity-60"
+              aria-label="Clear AI search"
+              onClick={handleClear}
+              className="absolute top-1/2 right-1.5 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#8b8c9e] transition hover:bg-[rgba(177,169,217,0.16)] hover:text-[#2f3040]"
             >
-              Clear
+              <X size={14} strokeWidth={2} aria-hidden="true" />
             </button>
-          ) : (
-            <button
-              type="button"
-              data-testid="vibe-search-collapse"
-              disabled={isLoading}
-              onClick={() => {
-                setExpanded(false);
-              }}
-              className="inline-flex h-[34px] items-center justify-center rounded-full border border-[rgba(176,178,198,0.42)] bg-[rgba(255,255,255,0.65)] px-3 text-[13px] font-medium text-[#5c5d6e] backdrop-blur-[14px] transition hover:bg-[rgba(255,255,255,0.8)] hover:text-[#2f3040] disabled:cursor-wait disabled:opacity-60"
-            >
-              Close
-            </button>
-          )}
+          ) : null}
         </div>
+        <button
+          type="submit"
+          data-testid="vibe-search-submit"
+          disabled={!canSubmit}
+          className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[rgba(177,169,217,0.45)] bg-[#efeaf8] px-3.5 text-[13px] font-medium text-[#6b5ea8] transition enabled:hover:border-[rgba(177,169,217,0.65)] enabled:hover:bg-[#e8e1f5] enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:border-[rgba(176,178,198,0.35)] disabled:bg-[rgba(255,255,255,0.45)] disabled:text-[#9a9baf]"
+        >
+          <Search size={14} strokeWidth={2} aria-hidden="true" />
+          Find
+        </button>
       </form>
 
       {isLoading ? (
-        <div
-          className="mt-3 rounded-xl border border-slate-200 bg-[#f7f7fb] px-3.5 py-3"
+        <p
+          className="mt-2 font-sans text-[13px] font-normal leading-snug tracking-tight text-[#8b8c9e] antialiased [font-synthesis:none]"
           data-testid="vibe-search-loading"
           aria-live="polite"
         >
-          <p className="flex items-center gap-2 text-[13px] font-medium text-slate-700">
-            <LoaderCircle
-              size={14}
-              strokeWidth={2}
-              aria-hidden="true"
-              className="animate-spin text-slate-500"
-            />
-            Finding films that match this feeling…
-          </p>
-          <p className="mt-1 text-[12px] leading-snug text-slate-500">
-            Translating your mood and ranking against your taste — usually a few
-            seconds.
-          </p>
-        </div>
+          Matching this feeling to your taste…
+        </p>
       ) : null}
     </section>
   );
