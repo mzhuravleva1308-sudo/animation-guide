@@ -201,7 +201,7 @@ type FilmsPageClientProps = {
     | "native"
     | "cross_from_animation"
     | "cross_from_live_action";
-  /** Films catalog tab is allowlisted (early access). */
+  /** Films catalog tab (live-action); gated, currently off for everyone. */
   showLiveActionTab?: boolean;
 };
 

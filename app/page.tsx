@@ -61,7 +61,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   // loadPublicFilmCatalog in development via [catalog] load.
   // Public films/badges are cached inside the loader; this page stays dynamic
   // because auth + personalized order are request-specific.
-  // Live-action Films catalog is available to all viewers.
+  // Live-action Films catalog tab is gated (currently hidden for everyone).
   const catalog = await loadPublicFilmCatalog({
     media: params.media,
     sort: params.sort,

@@ -98,9 +98,7 @@ test.describe("Profile page", () => {
       );
       await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
       await expect(page.getByRole("button", { name: "Watched" })).toBeVisible();
-      await expect(
-        page.getByRole("button", { name: "Films", exact: true })
-      ).toBeVisible();
+      await expect(page.getByTestId("nav-films")).toHaveCount(0);
 
       await expect(filmList(page)).toBeVisible();
       await expectTabHasFilms(page);
