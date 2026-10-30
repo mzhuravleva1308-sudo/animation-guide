@@ -10,9 +10,15 @@ import {
   discoveryRowPrimarilyForChildren,
 } from "@/lib/film-discovery-children-audience.mjs";
 import {
+  DISCOVERY_PENDING_REVIEW_BUCKET,
   classifyDiscoveryPendingReview,
   partitionDiscoveryPendingReview,
 } from "@/lib/film-discovery-pending-review.mjs";
+
+type PendingReviewTab =
+  | typeof DISCOVERY_PENDING_REVIEW_BUCKET.looksGood
+  | typeof DISCOVERY_PENDING_REVIEW_BUCKET.needsAttention
+  | typeof DISCOVERY_PENDING_REVIEW_BUCKET.missingTrailer;
 
 export type DiscoveryCandidateRow = {
   id: string;
@@ -119,7 +125,7 @@ function PendingCandidateCard({
   onOpenTrailer,
 }: {
   film: DiscoveryCandidateRow;
-  bucket: "needs_attention" | "looks_good";
+  bucket: PendingReviewTab;
   attentionReasons: string[];
   pendingId: string | null;
   isPending: boolean;
@@ -478,12 +484,29 @@ export function FilmDiscoveryReviewDashboard({
     {}
   );
   const [activeTrailerId, setActiveTrailerId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<PendingReviewTab | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const pending = candidates.filter((row) => row.review_status === "pending_review");
   const decided = candidates.filter((row) => row.review_status !== "pending_review");
-  const { needsAttention, looksGood } = partitionDiscoveryPendingReview(pending);
+  const { needsAttention, looksGood, missingTrailer } =
+    partitionDiscoveryPendingReview(pending);
+
+  const tabCounts: Record<PendingReviewTab, number> = {
+    [DISCOVERY_PENDING_REVIEW_BUCKET.looksGood]: looksGood.length,
+    [DISCOVERY_PENDING_REVIEW_BUCKET.needsAttention]: needsAttention.length,
+    [DISCOVERY_PENDING_REVIEW_BUCKET.missingTrailer]: missingTrailer.length,
+  };
+
+  const defaultTab: PendingReviewTab =
+    missingTrailer.length > 0
+      ? DISCOVERY_PENDING_REVIEW_BUCKET.missingTrailer
+      : needsAttention.length > 0
+        ? DISCOVERY_PENDING_REVIEW_BUCKET.needsAttention
+        : DISCOVERY_PENDING_REVIEW_BUCKET.looksGood;
+
+  const selectedTab = activeTab ?? defaultTab;
 
   function trailerDraftFor(film: DiscoveryCandidateRow): string {
     return Object.prototype.hasOwnProperty.call(trailerDrafts, film.id)
@@ -549,9 +572,45 @@ export function FilmDiscoveryReviewDashboard({
     }
   }
 
+  const pendingTabs: Array<{
+    id: PendingReviewTab;
+    label: string;
+    description: string;
+    films: DiscoveryCandidateRow[];
+    testId: string;
+  }> = [
+    {
+      id: DISCOVERY_PENDING_REVIEW_BUCKET.looksGood,
+      label: "Looks good",
+      description:
+        "Poster, trailer, media complete, content ready, and all three tag axes plus festival assessment are filled.",
+      films: looksGood,
+      testId: "discovery-pending-looks-good",
+    },
+    {
+      id: DISCOVERY_PENDING_REVIEW_BUCKET.needsAttention,
+      label: "Needs a careful look",
+      description:
+        "Missing poster, incomplete media/content, or incomplete tag axes / festival assessment (trailer present).",
+      films: needsAttention,
+      testId: "discovery-pending-needs-attention",
+    },
+    {
+      id: DISCOVERY_PENDING_REVIEW_BUCKET.missingTrailer,
+      label: "No trailer",
+      description:
+        "Paste a YouTube or Mubi trailer URL, then save. Other review flags still show on the card.",
+      films: missingTrailer,
+      testId: "discovery-pending-missing-trailer",
+    },
+  ];
+
+  const activePendingTab =
+    pendingTabs.find((tab) => tab.id === selectedTab) ?? pendingTabs[0];
+
   function renderPendingList(
     films: DiscoveryCandidateRow[],
-    bucket: "needs_attention" | "looks_good"
+    bucket: PendingReviewTab
   ) {
     return (
       <ul className="mt-6 space-y-10">
@@ -563,7 +622,9 @@ export function FilmDiscoveryReviewDashboard({
               film={film}
               bucket={bucket}
               attentionReasons={
-                bucket === "needs_attention" ? attention.reasons : []
+                bucket === DISCOVERY_PENDING_REVIEW_BUCKET.looksGood
+                  ? []
+                  : attention.reasons
               }
               pendingId={pendingId}
               isPending={isPending}
@@ -595,7 +656,7 @@ export function FilmDiscoveryReviewDashboard({
         </p>
       ) : null}
 
-      <section className="space-y-10">
+      <section className="space-y-4">
         <div>
           <h2 className="text-xl font-semibold">
             Pending review ({pending.length})
@@ -610,37 +671,51 @@ export function FilmDiscoveryReviewDashboard({
           <p className="text-sm text-gray-500">No candidates awaiting review.</p>
         ) : (
           <>
-            <div data-testid="discovery-pending-looks-good">
-              <h3 className="text-lg font-medium">
-                Looks good ({looksGood.length})
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                Poster, trailer, media complete, content ready, and all three tag
-                axes plus festival assessment are filled.
-              </p>
-              {looksGood.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-500">
-                  Nothing in this queue right now.
-                </p>
-              ) : (
-                renderPendingList(looksGood, "looks_good")
-              )}
+            <div
+              className="flex flex-wrap gap-2 border-b border-gray-200"
+              role="tablist"
+              aria-label="Pending review filters"
+              data-testid="discovery-pending-tabs"
+            >
+              {pendingTabs.map((tab) => {
+                const selected = tab.id === selectedTab;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    data-testid={`discovery-pending-tab-${tab.id}`}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`-mb-px border-b-2 px-3 py-2 text-sm transition ${
+                      selected
+                        ? "border-black font-medium text-black"
+                        : "border-transparent text-gray-500 hover:text-black"
+                    }`}
+                  >
+                    {tab.label}{" "}
+                    <span className="tabular-nums text-gray-500">
+                      ({tabCounts[tab.id]})
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            <div data-testid="discovery-pending-needs-attention">
-              <h3 className="text-lg font-medium">
-                Needs a careful look ({needsAttention.length})
-              </h3>
-              <p className="mt-1 text-sm text-gray-600">
-                Missing poster/trailer, incomplete media/content, or incomplete
-                tag axes / festival assessment.
+            <div
+              role="tabpanel"
+              data-testid={activePendingTab.testId}
+              data-discovery-tab={activePendingTab.id}
+            >
+              <p className="text-sm text-gray-600">
+                {activePendingTab.description}
               </p>
-              {needsAttention.length === 0 ? (
+              {activePendingTab.films.length === 0 ? (
                 <p className="mt-4 text-sm text-gray-500">
                   Nothing in this queue right now.
                 </p>
               ) : (
-                renderPendingList(needsAttention, "needs_attention")
+                renderPendingList(activePendingTab.films, activePendingTab.id)
               )}
             </div>
           </>
