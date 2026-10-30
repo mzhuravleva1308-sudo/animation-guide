@@ -1,7 +1,6 @@
 import { after, NextResponse } from "next/server";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { logProfileActivity } from "@/lib/log-profile-activity";
-import { createClient } from "@/lib/supabase/server";
-import { getAdminSupabase } from "@/lib/supabase/admin";
 
 type ProfileSaveRequest = {
   filmId?: string;
@@ -10,14 +9,13 @@ type ProfileSaveRequest = {
 
 export async function POST(request: Request) {
   // Require an authenticated session. Token/slug/profileId from the client
-  // are not accepted as proof of identity.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  // are not accepted as proof of identity. Admin view-as uses the target profile.
+  const resolved = await requireActingProfileId();
+  if (!resolved.ok) {
+    return NextResponse.json(
+      { error: resolved.error, ...(resolved.code ? { code: resolved.code } : {}) },
+      { status: resolved.status }
+    );
   }
 
   let body: ProfileSaveRequest;
@@ -33,27 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid save request" }, { status: 400 });
   }
 
-  // Resolve the profile server-side by the authenticated user's id only.
-  const admin = getAdminSupabase();
-  const { data: profile, error: profileError } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    console.error("[profile-save] profile lookup failed:", profileError);
-    return NextResponse.json({ error: "Could not resolve profile" }, { status: 500 });
-  }
-
-  if (!profile) {
-    return NextResponse.json(
-      { error: "No profile found for this account", code: "profile_not_found" },
-      { status: 404 }
-    );
-  }
-
-  const profileId = profile.id;
+  const { admin, profileId } = resolved;
 
   if (saved) {
     const { data: existingItem, error: existingError } = await admin

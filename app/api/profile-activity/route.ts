@@ -1,8 +1,7 @@
 import { after, NextResponse } from "next/server";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { logProfileActivity } from "@/lib/log-profile-activity";
 import { ProfileActivityEventType } from "@/lib/profile-activity-types";
-import { createClient } from "@/lib/supabase/server";
-import { getAdminSupabase } from "@/lib/supabase/admin";
 
 const CLIENT_EVENT_TYPES = new Set<ProfileActivityEventType>([
   "rating_set",
@@ -22,14 +21,13 @@ type ActivityRequestBody = {
 
 export async function POST(request: Request) {
   // Require an authenticated session. Client-supplied profileId is never
-  // used as identity — resolve the profile from the session user only.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+  // used as identity — resolve the acting profile (honors admin view-as).
+  const resolved = await requireActingProfileId();
+  if (!resolved.ok) {
+    return NextResponse.json(
+      { error: resolved.error, ...(resolved.code ? { code: resolved.code } : {}) },
+      { status: resolved.status }
+    );
   }
 
   let body: ActivityRequestBody;
@@ -53,27 +51,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
-  const admin = getAdminSupabase();
-  const { data: profile, error: profileError } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    console.error("[profile-activity] profile lookup failed:", profileError);
-    return NextResponse.json({ error: "Could not resolve profile" }, { status: 500 });
-  }
-
-  if (!profile) {
-    return NextResponse.json(
-      { error: "No profile found for this account", code: "profile_not_found" },
-      { status: 404 }
-    );
-  }
-
   const logInput = {
-    profileId: profile.id,
+    profileId: resolved.profileId,
     filmId: filmId ?? null,
     eventType: eventType as ProfileActivityEventType,
     eventData,

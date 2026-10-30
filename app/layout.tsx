@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import AuthSessionKeeper from "@/components/AuthSessionKeeper";
+import ViewAsBanner from "@/components/ViewAsBanner";
 import { ToastProvider } from "@/components/ToastProvider";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/lib/site-seo";
 import "./globals.css";
@@ -44,6 +45,7 @@ export default function RootLayout({
     >
       <body className="min-h-full w-full font-sans antialiased">
         <AuthSessionKeeper />
+        <ViewAsBanner />
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>

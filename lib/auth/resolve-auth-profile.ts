@@ -1,5 +1,3 @@
-import { createClient } from "@/lib/supabase/client";
-
 export type AuthenticatedProfileSummary = {
   profileId: string;
   profileSlug: string;
@@ -8,39 +6,73 @@ export type AuthenticatedProfileSummary = {
   tasteProfileUpdatedAt: string | null;
 };
 
-export async function resolveAuthenticatedProfile(): Promise<AuthenticatedProfileSummary | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export type ActingCatalogState = {
+  profile: AuthenticatedProfileSummary | null;
+  savedFilmIds: Set<string>;
+  filmRatings: Record<string, number>;
+  ratingUpdatedAtMs: Record<string, number>;
+  savedAtMs: Record<string, number>;
+  viewAs: { userId: string; email: string } | null;
+};
 
-  if (!user) {
+type CatalogStateResponse = {
+  profile: {
+    profileId: string;
+    profileSlug: string;
+    profileName: string | null;
+    tasteProfile: string | null;
+    tasteProfileUpdatedAt: string | null;
+  } | null;
+  savedFilmIds?: string[];
+  filmRatings?: Record<string, number>;
+  ratingUpdatedAtMs?: Record<string, number>;
+  savedAtMs?: Record<string, number>;
+  viewAs?: { userId: string; email: string } | null;
+};
+
+/**
+ * Load acting profile + film lists via the server (honors admin view-as).
+ * Replaces direct RLS reads so view-as does not snap back to the admin's lists.
+ */
+export async function loadActingCatalogState(): Promise<ActingCatalogState | null> {
+  const response = await fetch("/api/me/catalog-state", {
+    method: "GET",
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+
+  if (response.status === 401) {
     return null;
   }
 
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("id, slug, name, taste_profile, taste_profile_updated_at")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (error || !profile?.id || !profile.slug) {
+  if (!response.ok) {
     return null;
   }
+
+  const payload = (await response.json()) as CatalogStateResponse;
+  const profile = payload.profile?.profileId && payload.profile.profileSlug
+    ? {
+        profileId: payload.profile.profileId,
+        profileSlug: payload.profile.profileSlug,
+        profileName: payload.profile.profileName ?? null,
+        tasteProfile: payload.profile.tasteProfile ?? null,
+        tasteProfileUpdatedAt: payload.profile.tasteProfileUpdatedAt ?? null,
+      }
+    : null;
 
   return {
-    profileId: profile.id,
-    profileSlug: profile.slug,
-    profileName: profile.name ?? null,
-    tasteProfile: profile.taste_profile ?? null,
-    tasteProfileUpdatedAt: profile.taste_profile_updated_at ?? null,
+    profile,
+    savedFilmIds: new Set(payload.savedFilmIds ?? []),
+    filmRatings: { ...(payload.filmRatings ?? {}) },
+    ratingUpdatedAtMs: { ...(payload.ratingUpdatedAtMs ?? {}) },
+    savedAtMs: { ...(payload.savedAtMs ?? {}) },
+    viewAs: payload.viewAs ?? null,
   };
 }
 
-function toEpochMs(value: string | null | undefined): number | null {
-  if (!value) return null;
-  const ms = Date.parse(value);
-  return Number.isFinite(ms) ? ms : null;
+export async function resolveAuthenticatedProfile(): Promise<AuthenticatedProfileSummary | null> {
+  const state = await loadActingCatalogState();
+  return state?.profile ?? null;
 }
 
 export async function loadAuthenticatedProfileFilmState(
@@ -48,46 +80,23 @@ export async function loadAuthenticatedProfileFilmState(
 ): Promise<{
   savedFilmIds: Set<string>;
   filmRatings: Record<string, number>;
-  /** film_ratings.updated_at as epoch ms — newest Watched first */
   ratingUpdatedAtMs: Record<string, number>;
-  /** profile_film_lists.created_at as epoch ms — newest Saved first */
   savedAtMs: Record<string, number>;
 }> {
-  const supabase = createClient();
-
-  const [ratingsResult, savedResult] = await Promise.all([
-    supabase
-      .from("film_ratings")
-      .select("film_id, rating, updated_at")
-      .eq("profile_id", profileId),
-    supabase
-      .from("profile_film_lists")
-      .select("film_id, created_at")
-      .eq("profile_id", profileId)
-      .eq("list_type", "to_watch"),
-  ]);
-
-  const filmRatings: Record<string, number> = {};
-  const ratingUpdatedAtMs: Record<string, number> = {};
-  for (const row of ratingsResult.data ?? []) {
-    if (typeof row.rating === "number") {
-      filmRatings[row.film_id] = row.rating;
-      const ms = toEpochMs(row.updated_at);
-      if (ms != null) {
-        ratingUpdatedAtMs[row.film_id] = ms;
-      }
-    }
+  const state = await loadActingCatalogState();
+  if (!state?.profile || state.profile.profileId !== profileId) {
+    return {
+      savedFilmIds: new Set(),
+      filmRatings: {},
+      ratingUpdatedAtMs: {},
+      savedAtMs: {},
+    };
   }
 
-  const savedFilmIds = new Set<string>();
-  const savedAtMs: Record<string, number> = {};
-  for (const row of savedResult.data ?? []) {
-    savedFilmIds.add(row.film_id);
-    const ms = toEpochMs(row.created_at);
-    if (ms != null) {
-      savedAtMs[row.film_id] = ms;
-    }
-  }
-
-  return { savedFilmIds, filmRatings, ratingUpdatedAtMs, savedAtMs };
+  return {
+    savedFilmIds: state.savedFilmIds,
+    filmRatings: state.filmRatings,
+    ratingUpdatedAtMs: state.ratingUpdatedAtMs,
+    savedAtMs: state.savedAtMs,
+  };
 }

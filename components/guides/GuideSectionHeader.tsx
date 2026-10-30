@@ -89,7 +89,7 @@ export default function GuideSectionHeader({
           ) : null}
           {auth ? (
             <AccountMenu
-              email={auth.email}
+              email={auth.viewAs?.email ?? auth.email}
               profileName={auth.profile?.name ?? null}
             />
           ) : (

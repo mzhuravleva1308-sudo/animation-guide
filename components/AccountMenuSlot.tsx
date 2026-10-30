@@ -9,6 +9,9 @@ export default async function AccountMenuSlot() {
   }
 
   return (
-    <AccountMenu email={auth.email} profileName={auth.profile?.name ?? null} />
+    <AccountMenu
+      email={auth.viewAs?.email ?? auth.email}
+      profileName={auth.profile?.name ?? null}
+    />
   );
 }

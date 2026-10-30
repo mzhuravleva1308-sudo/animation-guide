@@ -1,5 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
-import { getUserDisplayEmail } from "@/lib/auth/user-display";
+import { getActingAuthContext } from "@/lib/auth/acting-context";
 
 export type LinkedProfile = {
   id: string;
@@ -8,33 +7,35 @@ export type LinkedProfile = {
 };
 
 export type AuthUserSummary = {
+  /** Display / gate email: session email (admin stays allowlisted while view-as). */
   email: string;
+  /** Library being shown — acting profile when view-as is on. */
   profile: LinkedProfile | null;
+  viewAs: {
+    userId: string;
+    email: string;
+  } | null;
 };
 
 export async function getAuthUserSummary(): Promise<AuthUserSummary | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  const context = await getActingAuthContext();
+  if (!context) {
     return null;
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, name, slug")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
   return {
-    email: getUserDisplayEmail(user),
-    profile: profile?.id && profile.slug
+    email: context.sessionEmail,
+    profile: context.actingProfile
       ? {
-          id: profile.id,
-          name: profile.name ?? profile.slug,
-          slug: profile.slug,
+          id: context.actingProfile.id,
+          name: context.actingProfile.name ?? context.actingProfile.slug,
+          slug: context.actingProfile.slug,
+        }
+      : null,
+    viewAs: context.isViewAs
+      ? {
+          userId: context.actingUserId,
+          email: context.actingEmail,
         }
       : null,
   };

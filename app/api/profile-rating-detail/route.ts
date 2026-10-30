@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { getUserDisplayEmail } from "@/lib/auth/user-display";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 import {
   isValidFilmRatingDetail,
   type FilmRatingDetail,
 } from "@/lib/rating-detail";
 import { canAccessRatingDetail } from "@/lib/rating-detail-access.mjs";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 
 type ProfileRatingDetailRequest = {
   filmId?: string;
@@ -16,68 +15,45 @@ type ProfileRatingDetailRequest = {
 };
 
 type ResolvedProfile =
-  | { ok: true; admin: ReturnType<typeof getAdminSupabase>; profileId: string }
+  | {
+      ok: true;
+      admin: ReturnType<typeof getAdminSupabase>;
+      profileId: string;
+    }
   | { ok: false; response: NextResponse };
 
-async function resolveAllowlistedProfile(
-  userId: string,
-  email: string
-): Promise<ResolvedProfile> {
-  if (!canAccessRatingDetail(email)) {
+async function resolveAllowlistedActingProfile(): Promise<ResolvedProfile> {
+  const resolved = await requireActingProfileId();
+  if (!resolved.ok) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        {
+          error: resolved.error,
+          ...(resolved.code ? { code: resolved.code } : {}),
+        },
+        { status: resolved.status }
+      ),
+    };
+  }
+
+  // Feature gate stays on the real session email so admin allowlists still work.
+  if (!canAccessRatingDetail(resolved.sessionEmail)) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
     };
   }
 
-  const admin = getAdminSupabase();
-  const { data: profile, error: profileError } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (profileError) {
-    console.error("[profile-rating-detail] profile lookup failed:", profileError);
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { error: "Could not resolve profile" },
-        { status: 500 }
-      ),
-    };
-  }
-
-  if (!profile) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        {
-          error: "No profile found for this account",
-          code: "profile_not_found",
-        },
-        { status: 404 }
-      ),
-    };
-  }
-
-  return { ok: true, admin, profileId: profile.id as string };
+  return {
+    ok: true,
+    admin: resolved.admin,
+    profileId: resolved.profileId,
+  };
 }
 
 export async function GET() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
-
-  const resolved = await resolveAllowlistedProfile(
-    user.id,
-    getUserDisplayEmail(user)
-  );
+  const resolved = await resolveAllowlistedActingProfile();
   if (!resolved.ok) {
     return resolved.response;
   }
@@ -106,15 +82,6 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
-
   let body: ProfileRatingDetailRequest;
   try {
     body = (await request.json()) as ProfileRatingDetailRequest;
@@ -135,10 +102,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const resolved = await resolveAllowlistedProfile(
-    user.id,
-    getUserDisplayEmail(user)
-  );
+  const resolved = await resolveAllowlistedActingProfile();
   if (!resolved.ok) {
     return resolved.response;
   }

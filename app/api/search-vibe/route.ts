@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { createClient } from "@/lib/supabase/server";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { getAdminSupabase } from "@/lib/supabase/admin";
-import { getUserDisplayEmail } from "@/lib/auth/user-display";
 import { canAccessVibeSearch } from "@/lib/vibe-search-access.mjs";
 import { MEDIA_TYPE, SCORE_MODE } from "@/lib/media-type.mjs";
 import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
@@ -99,20 +98,18 @@ async function loadMoodEmbeddings(
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    const resolved = await requireActingProfileId();
+    if (!resolved.ok) {
       return NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
+        {
+          error:
+            resolved.status === 404 ? "Profile required" : resolved.error,
+        },
+        { status: resolved.status === 404 ? 400 : resolved.status }
       );
     }
 
-    const email = getUserDisplayEmail(user);
-    if (!canAccessVibeSearch(email)) {
+    if (!canAccessVibeSearch(resolved.sessionEmail)) {
       return NextResponse.json({ error: "Not available" }, { status: 403 });
     }
 
@@ -138,27 +135,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (profileError) {
-      return NextResponse.json(
-        { error: profileError.message },
-        { status: 500 }
-      );
-    }
-
-    if (!profile?.id) {
-      return NextResponse.json(
-        { error: "Profile required" },
-        { status: 400 }
-      );
-    }
-
-    const admin = getAdminSupabase();
+    const { admin, profileId } = resolved;
     const films = await loadVisibleAnimationFilms(admin);
     const filmIds = films.map((film) => film.id);
     const openai = new OpenAI({ apiKey: openaiApiKey });
@@ -174,19 +151,19 @@ export async function GET(request: Request) {
       admin
         .from("film_ratings")
         .select("film_id")
-        .eq("profile_id", profile.id),
+        .eq("profile_id", profileId),
       admin
         .from("profile_film_scores")
         .select(
           "film_id, emotional_score, material_score, visual_world_score, storytelling_score"
         )
-        .eq("profile_id", profile.id)
+        .eq("profile_id", profileId)
         .eq("score_mode", SCORE_MODE.native)
         .eq("source_media", MEDIA_TYPE.animation),
       admin
         .from("profile_film_lists")
         .select("film_id")
-        .eq("profile_id", profile.id)
+        .eq("profile_id", profileId)
         .eq("list_type", VIBE_HIDDEN_LIST_TYPE),
       normalizeVibeQueryToEnglish(openai, query),
     ]);

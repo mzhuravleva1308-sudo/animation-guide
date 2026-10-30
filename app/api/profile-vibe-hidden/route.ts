@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { VIBE_HIDDEN_LIST_TYPE } from "@/lib/vibe-hidden.mjs";
 import { normalizeFilms } from "@/lib/normalize-film";
@@ -39,43 +39,22 @@ function normalizeNote(value: unknown): string | null {
 }
 
 async function requireAuthenticatedProfile() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  const resolved = await requireActingProfileId();
+  if (!resolved.ok) {
+    const status =
+      resolved.status === 404 ? 400 : resolved.status;
     return {
       error: NextResponse.json(
-        { error: "Authentication required" },
-        { status: 401 }
+        {
+          error:
+            resolved.status === 404 ? "Profile required" : resolved.error,
+        },
+        { status }
       ),
     };
   }
 
-  const admin = getAdminSupabase();
-  const { data: profile, error: profileError } = await admin
-    .from("profiles")
-    .select("id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (profileError) {
-    return {
-      error: NextResponse.json(
-        { error: profileError.message },
-        { status: 500 }
-      ),
-    };
-  }
-
-  if (!profile?.id) {
-    return {
-      error: NextResponse.json({ error: "Profile required" }, { status: 400 }),
-    };
-  }
-
-  return { admin, profileId: profile.id as string };
+  return { admin: resolved.admin, profileId: resolved.profileId };
 }
 
 export async function GET() {

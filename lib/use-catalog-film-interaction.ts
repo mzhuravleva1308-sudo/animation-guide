@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
-import {
-  loadAuthenticatedProfileFilmState,
-  resolveAuthenticatedProfile,
-} from "@/lib/auth/resolve-auth-profile";
+import { loadActingCatalogState } from "@/lib/auth/resolve-auth-profile";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
 import { createClient } from "@/lib/supabase/client";
@@ -121,8 +118,8 @@ export function useCatalogFilmInteraction({
   );
 
   const syncAuthenticatedInteractionState = useCallback(async () => {
-    const profile = await resolveAuthenticatedProfile();
-    if (!profile) {
+    const state = await loadActingCatalogState();
+    if (!state?.profile) {
       setProfileId(undefined);
       setProfileSlug(undefined);
       setTasteProfile(null);
@@ -134,8 +131,8 @@ export function useCatalogFilmInteraction({
       return null;
     }
 
+    const profile = state.profile;
     const generationAtStart = interactionGenerationRef.current;
-    const state = await loadAuthenticatedProfileFilmState(profile.profileId);
     setProfileId(profile.profileId);
     setProfileSlug(profile.profileSlug);
     setTasteProfile(profile.tasteProfile);
@@ -305,8 +302,9 @@ export function useCatalogFilmInteraction({
 
       preAuthSnapshotRef.current = null;
 
-      const profile = await resolveAuthenticatedProfile();
-      if (profile) {
+      const catalogState = await loadActingCatalogState();
+      const profile = catalogState?.profile ?? null;
+      if (profile && catalogState) {
         setProfileId(profile.profileId);
         setProfileSlug(profile.profileSlug);
         setTasteProfile(profile.tasteProfile);
@@ -314,14 +312,16 @@ export function useCatalogFilmInteraction({
         await applyPendingActionForProfile(profile.profileId);
 
         const generationAtStart = interactionGenerationRef.current;
-        const state = await loadAuthenticatedProfileFilmState(profile.profileId);
         if (generationAtStart === interactionGenerationRef.current) {
-          setSavedFilmIds(state.savedFilmIds);
-          applyServerListTimestamps(state.ratingUpdatedAtMs, state.savedAtMs);
+          setSavedFilmIds(catalogState.savedFilmIds);
+          applyServerListTimestamps(
+            catalogState.ratingUpdatedAtMs,
+            catalogState.savedAtMs
+          );
         } else {
-          applyServerListTimestamps(state.ratingUpdatedAtMs);
+          applyServerListTimestamps(catalogState.ratingUpdatedAtMs);
         }
-        applyServerFilmRatings(state.filmRatings);
+        applyServerFilmRatings(catalogState.filmRatings);
         setRatingsReady(true);
       }
 
@@ -334,6 +334,7 @@ export function useCatalogFilmInteraction({
               name: profile.profileName ?? profile.profileSlug,
             }
           : null,
+        viewAs: catalogState?.viewAs ?? null,
       });
     }
 

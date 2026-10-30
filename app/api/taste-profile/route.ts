@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { Film } from "@/types/film";
-import { createClient } from "@/lib/supabase/server";
-import { getAdminSupabase } from "@/lib/supabase/admin";
+import { requireActingProfileId } from "@/lib/auth/acting-context";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -15,24 +14,20 @@ type RatingRow = {
 
 export async function POST(request: Request) {
   // Require an authenticated session. slug+token query params are no longer
-  // accepted as proof of identity.
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  // accepted as proof of identity. Admin view-as uses the target profile.
+  const resolved = await requireActingProfileId();
+  if (!resolved.ok) {
     return NextResponse.json(
-      { error: "Authentication required" },
-      { status: 401 }
+      { error: resolved.status === 404 ? "Profile not found" : resolved.error },
+      { status: resolved.status }
     );
   }
 
-  const admin = getAdminSupabase();
+  const { admin, profileId } = resolved;
   const { data: profile, error: profileError } = await admin
     .from("profiles")
     .select("id, name")
-    .eq("user_id", user.id)
+    .eq("id", profileId)
     .maybeSingle();
 
   if (profileError || !profile) {

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAdminAccessStatus } from "@/lib/auth/require-admin";
+import { getActingAuthContext } from "@/lib/auth/acting-context";
 import { loadAdminUsers } from "@/lib/load-admin-users";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function AdminUsersPage({
     data: { user: adminUser },
   } = await supabase.auth.getUser();
 
+  const acting = await getActingAuthContext();
   const users = await loadAdminUsers();
 
   return (
@@ -56,10 +58,24 @@ export default async function AdminUsersPage({
         <div>
           <h1 className="text-3xl font-semibold">Users</h1>
           <p className="mt-2 max-w-2xl text-gray-600">
-            Sign in as a user to see their library and ratings. This replaces
-            your admin session in this browser — sign out and magic-link back
-            in as admin when you are done.
+            View the site as a user without leaving your admin session. Ratings
+            and saves apply to their library. Use the banner or Exit to stop.
           </p>
+          {acting?.isViewAs ? (
+            <div className="mt-3 text-sm text-amber-800">
+              Currently viewing as {acting.actingEmail}.{" "}
+              <form
+                action="/api/admin/view-as/clear"
+                method="post"
+                className="inline"
+              >
+                <input type="hidden" name="next" value="/admin/users" />
+                <button type="submit" className="underline hover:no-underline">
+                  Exit
+                </button>
+              </form>
+            </div>
+          ) : null}
           {error ? (
             <p className="mt-3 text-sm text-red-600" role="alert">
               {error}
@@ -98,6 +114,8 @@ export default async function AdminUsersPage({
             ) : (
               users.map((row) => {
                 const isSelf = row.userId === adminUser?.id;
+                const isCurrentViewAs =
+                  acting?.isViewAs && acting.actingUserId === row.userId;
                 return (
                   <tr
                     key={row.userId}
@@ -109,6 +127,11 @@ export default async function AdminUsersPage({
                       </div>
                       {isSelf ? (
                         <div className="mt-0.5 text-xs text-gray-500">You</div>
+                      ) : null}
+                      {isCurrentViewAs ? (
+                        <div className="mt-0.5 text-xs text-amber-700">
+                          Viewing
+                        </div>
                       ) : null}
                     </td>
                     <td className="py-3 pr-4 text-gray-700">
@@ -130,13 +153,24 @@ export default async function AdminUsersPage({
                       {formatWhen(row.lastSignInAt)}
                     </td>
                     <td className="py-3 text-right">
-                      {isSelf || !row.email ? (
+                      {isSelf ? (
                         <span className="text-xs text-gray-400">—</span>
+                      ) : isCurrentViewAs ? (
+                        <form action="/api/admin/view-as/clear" method="post">
+                          <input
+                            type="hidden"
+                            name="next"
+                            value="/admin/users"
+                          />
+                          <button
+                            type="submit"
+                            className="rounded border border-amber-400 px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-50"
+                          >
+                            Exit
+                          </button>
+                        </form>
                       ) : (
-                        <form
-                          action="/api/admin/impersonate"
-                          method="post"
-                        >
+                        <form action="/api/admin/view-as" method="post">
                           <input
                             type="hidden"
                             name="userId"
@@ -146,7 +180,7 @@ export default async function AdminUsersPage({
                             type="submit"
                             className="rounded border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-800 hover:border-black hover:bg-gray-50"
                           >
-                            Log in as
+                            View as
                           </button>
                         </form>
                       )}
