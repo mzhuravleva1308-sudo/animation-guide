@@ -1,28 +1,43 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Films magic-link auth", () => {
-  test("shows a subtle login control when signed out", async ({ page }) => {
+  test("shows a guest account menu with guides, festivals, and login", async ({
+    page,
+  }) => {
     await page.goto("/films");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+    await expect(page.getByTestId("account-menu-trigger")).toHaveAttribute(
       "aria-label",
-      "Log in"
+      "Account menu"
     );
-    await expect(page.getByTestId("account-menu-trigger")).toHaveCount(0);
+
+    await page.getByTestId("account-menu-trigger").click();
+    await expect(page.getByTestId("account-menu-dropdown")).toBeVisible();
+    await expect(page.getByTestId("account-menu-guides")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(page.getByTestId("account-menu-festivals")).toHaveAttribute(
+      "href",
+      "/festivals"
+    );
+    await expect(page.getByTestId("account-menu-login")).toBeVisible();
   });
 
   test("closes the modal with Escape and overlay click", async ({ page }) => {
     await page.goto("/films");
     await expect(page.getByTestId("film-list")).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toBeVisible();
-    await page.getByTestId("auth-status").click();
+    await expect(page.getByTestId("account-menu-trigger")).toBeVisible();
+    await page.getByTestId("account-menu-trigger").click();
+    await page.getByTestId("account-menu-login").click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
 
-    await page.getByTestId("auth-status").click();
+    await page.getByTestId("account-menu-trigger").click();
+    await page.getByTestId("account-menu-login").click();
     await page.getByTestId("email-auth-modal-overlay").click({
       position: { x: 8, y: 8 },
     });

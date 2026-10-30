@@ -10,9 +10,9 @@ test.describe("Home page", () => {
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
     await expect(page.getByTestId("film-search-input")).toBeVisible();
     await expect(page.getByTestId("film-list")).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+    await expect(page.getByTestId("account-menu-trigger")).toHaveAttribute(
       "aria-label",
-      "Log in"
+      "Account menu"
     );
     expect(consoleErrors).toEqual([]);
 

@@ -6,7 +6,8 @@ test.describe("Films magic-link send handling", () => {
 
   async function openFilmsAuthModal(page: import("@playwright/test").Page) {
     await page.goto("/films");
-    await page.getByTestId("auth-status").click();
+    await page.getByTestId("account-menu-trigger").click();
+    await page.getByTestId("account-menu-login").click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
   }
 

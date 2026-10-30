@@ -6,7 +6,6 @@ import {
   CircleCheck,
   Clapperboard,
   Film as FilmIcon,
-  UserRound,
 } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import EmailAuthModal from "@/components/EmailAuthModal";
@@ -19,7 +18,6 @@ import type { FilmRatingDetail } from "@/lib/rating-detail";
 import type { QuickFilter } from "@/components/QuickFilters";
 import {
   HeaderIconButton,
-  HEADER_LOGIN_ICON,
   HEADER_NAV_ICON,
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
@@ -753,24 +751,10 @@ export default function FilmsPageClient({
                 profileName={auth.profile?.name ?? null}
               />
             ) : (
-              <HeaderIconButton
-                label="Log in"
-                showLabel={false}
-                buttonRef={authTriggerRef}
-                onMouseDown={(event) => {
-                  event.preventDefault();
-                }}
-                onClick={() => openAuthModal(authTriggerRef.current)}
-                data-testid="auth-status"
-              >
-                <UserRound
-                  size={HEADER_LOGIN_ICON.size}
-                  strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
-                  fill="none"
-                  className="shrink-0"
-                  aria-hidden="true"
-                />
-              </HeaderIconButton>
+              <AccountMenu
+                triggerRef={authTriggerRef}
+                onLogin={() => openAuthModal(authTriggerRef.current)}
+              />
             )}
           </nav>
         </div>

@@ -22,7 +22,8 @@ export async function requestFilmsMagicLink(
   const sentAfter = new Date();
 
   await page.goto("/films");
-  await page.getByTestId("auth-status").click();
+  await page.getByTestId("account-menu-trigger").click();
+  await page.getByTestId("account-menu-login").click();
   await page.getByTestId("email-auth-email").fill(email);
   await page.getByTestId("email-auth-continue").click();
   await page.getByTestId("email-auth-sent-heading").waitFor({ timeout: 10_000 });

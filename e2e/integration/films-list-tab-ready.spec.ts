@@ -73,7 +73,8 @@ test.describe("Films Saved/Watched list ready vs empty", () => {
 
     const sentAfter = new Date();
     await page.goto("/");
-    await page.getByTestId("auth-status").click();
+    await page.getByTestId("account-menu-trigger").click();
+    await page.getByTestId("account-menu-login").click();
     await page.getByTestId("email-auth-email").fill(email);
     await page.getByTestId("email-auth-continue").click();
     await page.getByTestId("email-auth-sent-heading").waitFor({ timeout: 10_000 });
@@ -123,7 +124,8 @@ test.describe("Films Saved/Watched list ready vs empty", () => {
 
     const sentAfter = new Date();
     await page.goto("/");
-    await page.getByTestId("auth-status").click();
+    await page.getByTestId("account-menu-trigger").click();
+    await page.getByTestId("account-menu-login").click();
     await page.getByTestId("email-auth-email").fill(email);
     await page.getByTestId("email-auth-continue").click();
     await page.getByTestId("email-auth-sent-heading").waitFor({ timeout: 10_000 });

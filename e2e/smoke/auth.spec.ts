@@ -28,14 +28,18 @@ test.describe("Login page", () => {
 });
 
 test.describe("Account control", () => {
-  test("shows login link on the home page when signed out", async ({ page }) => {
+  test("shows guest account menu on the home page when signed out", async ({
+    page,
+  }) => {
     await page.goto("/");
 
     await expect(page.getByRole("link", { name: /Resonale/i })).toBeVisible();
-    await expect(page.getByTestId("auth-status")).toHaveAttribute(
+    await expect(page.getByTestId("account-menu-trigger")).toHaveAttribute(
       "aria-label",
-      "Log in"
+      "Account menu"
     );
+    await page.getByTestId("account-menu-trigger").click();
+    await expect(page.getByTestId("account-menu-login")).toBeVisible();
     await expect(page.getByTestId("auth-email")).toHaveCount(0);
   });
 });

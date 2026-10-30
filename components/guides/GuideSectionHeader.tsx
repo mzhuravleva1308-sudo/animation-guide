@@ -4,13 +4,10 @@ import {
   Bookmark,
   CircleCheck,
   Film as FilmIcon,
-  UserRound,
 } from "lucide-react";
 import AccountMenu from "@/components/AccountMenu";
 import {
-  HeaderIconButton,
   HeaderIconLink,
-  HEADER_LOGIN_ICON,
   HEADER_NAV_ICON,
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
@@ -96,24 +93,10 @@ export default function GuideSectionHeader({
               profileName={auth.profile?.name ?? null}
             />
           ) : (
-            <HeaderIconButton
-              label="Log in"
-              showLabel={false}
-              buttonRef={authTriggerRef}
-              onMouseDown={(event) => {
-                event.preventDefault();
-              }}
-              onClick={() => openAuthModal(authTriggerRef.current)}
-              data-testid="auth-status"
-            >
-              <UserRound
-                size={HEADER_LOGIN_ICON.size}
-                strokeWidth={HEADER_LOGIN_ICON.strokeWidth}
-                fill="none"
-                className="shrink-0"
-                aria-hidden="true"
-              />
-            </HeaderIconButton>
+            <AccountMenu
+              triggerRef={authTriggerRef}
+              onLogin={() => openAuthModal(authTriggerRef.current)}
+            />
           )}
         </nav>
       </div>
