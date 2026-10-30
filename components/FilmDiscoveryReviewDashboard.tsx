@@ -109,10 +109,13 @@ function PendingCandidateCard({
   pendingId,
   isPending,
   rejectDraft,
+  trailerDraft,
   activeTrailerId,
   onApprove,
   onReject,
   onRejectReasonChange,
+  onTrailerDraftChange,
+  onSaveTrailer,
   onOpenTrailer,
 }: {
   film: DiscoveryCandidateRow;
@@ -121,14 +124,19 @@ function PendingCandidateCard({
   pendingId: string | null;
   isPending: boolean;
   rejectDraft: string;
+  trailerDraft: string;
   activeTrailerId: string | null;
   onApprove: () => void;
   onReject: () => void;
   onRejectReasonChange: (value: string) => void;
+  onTrailerDraftChange: (value: string) => void;
+  onSaveTrailer: () => void;
   onOpenTrailer: () => void;
 }) {
   const thumb = youtubeThumb(film.trailer_url);
   const mediaLabel = film.media_status ?? "media_pending";
+  const trailerDirty = trailerDraft.trim() !== (film.trailer_url ?? "").trim();
+  const savingThis = isPending || pendingId === film.id;
 
   return (
     <li
@@ -350,7 +358,7 @@ function PendingCandidateCard({
             </p>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-3 space-y-2">
             {film.trailer_url ? (
               <div data-testid="discovery-trailer">
                 {activeTrailerId === film.id ? (
@@ -398,6 +406,29 @@ function PendingCandidateCard({
                 No trailer found
               </p>
             )}
+
+            <label className="block text-sm text-gray-600">
+              Trailer URL (YouTube)
+              <div className="mt-1 flex max-w-xl flex-wrap items-center gap-2">
+                <input
+                  type="url"
+                  value={trailerDraft}
+                  onChange={(event) => onTrailerDraftChange(event.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=…"
+                  className="min-w-0 flex-1 border border-gray-300 px-2 py-1"
+                  data-testid="discovery-trailer-url-input"
+                />
+                <button
+                  type="button"
+                  data-testid="discovery-trailer-save"
+                  disabled={savingThis || !trailerDirty}
+                  onClick={onSaveTrailer}
+                  className="border border-gray-400 px-3 py-1.5 text-sm disabled:opacity-50"
+                >
+                  Save trailer
+                </button>
+              </div>
+            </label>
           </div>
 
           <div className="mt-2 text-sm text-gray-600">
@@ -443,6 +474,9 @@ export function FilmDiscoveryReviewDashboard({
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [rejectDrafts, setRejectDrafts] = useState<Record<string, string>>({});
+  const [trailerDrafts, setTrailerDrafts] = useState<Record<string, string>>(
+    {}
+  );
   const [activeTrailerId, setActiveTrailerId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -450,6 +484,12 @@ export function FilmDiscoveryReviewDashboard({
   const pending = candidates.filter((row) => row.review_status === "pending_review");
   const decided = candidates.filter((row) => row.review_status !== "pending_review");
   const { needsAttention, looksGood } = partitionDiscoveryPendingReview(pending);
+
+  function trailerDraftFor(film: DiscoveryCandidateRow): string {
+    return Object.prototype.hasOwnProperty.call(trailerDrafts, film.id)
+      ? trailerDrafts[film.id]
+      : film.trailer_url ?? "";
+  }
 
   async function submit(id: string, action: "approve" | "reject") {
     setError(null);
@@ -478,6 +518,37 @@ export function FilmDiscoveryReviewDashboard({
     }
   }
 
+  async function saveTrailer(film: DiscoveryCandidateRow) {
+    setError(null);
+    setPendingId(film.id);
+    try {
+      const response = await fetch("/api/admin/film-discovery/trailer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: film.id,
+          trailer_url: trailerDraftFor(film),
+        }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(body.error || `Request failed (${response.status})`);
+      }
+      setTrailerDrafts((prev) => {
+        const next = { ...prev };
+        delete next[film.id];
+        return next;
+      });
+      startTransition(() => {
+        router.refresh();
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save trailer");
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   function renderPendingList(
     films: DiscoveryCandidateRow[],
     bucket: "needs_attention" | "looks_good"
@@ -497,12 +568,17 @@ export function FilmDiscoveryReviewDashboard({
               pendingId={pendingId}
               isPending={isPending}
               rejectDraft={rejectDrafts[film.id] ?? ""}
+              trailerDraft={trailerDraftFor(film)}
               activeTrailerId={activeTrailerId}
               onApprove={() => submit(film.id, "approve")}
               onReject={() => submit(film.id, "reject")}
               onRejectReasonChange={(value) =>
                 setRejectDrafts((prev) => ({ ...prev, [film.id]: value }))
               }
+              onTrailerDraftChange={(value) =>
+                setTrailerDrafts((prev) => ({ ...prev, [film.id]: value }))
+              }
+              onSaveTrailer={() => saveTrailer(film)}
               onOpenTrailer={() => setActiveTrailerId(film.id)}
             />
           );
