@@ -408,13 +408,13 @@ function PendingCandidateCard({
             )}
 
             <label className="block text-sm text-gray-600">
-              Trailer URL (YouTube)
+              Trailer URL (YouTube, Mubi, …)
               <div className="mt-1 flex max-w-xl flex-wrap items-center gap-2">
                 <input
                   type="url"
                   value={trailerDraft}
                   onChange={(event) => onTrailerDraftChange(event.target.value)}
-                  placeholder="https://www.youtube.com/watch?v=…"
+                  placeholder="https://www.youtube.com/watch?v=… or Mubi trailer"
                   className="min-w-0 flex-1 border border-gray-300 px-2 py-1"
                   data-testid="discovery-trailer-url-input"
                 />
