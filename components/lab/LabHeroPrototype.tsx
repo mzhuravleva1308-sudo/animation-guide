@@ -395,7 +395,12 @@ export default function LabHeroPrototype() {
 
               <button
                 type="button"
-                className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full border border-[rgba(177,169,217,0.45)] bg-[#efeaf8] px-3.5 font-sans text-[13px] font-medium tracking-tight text-[#6b5ea8] transition hover:border-[rgba(177,169,217,0.65)] hover:bg-[#e8e1f5]"
+                className="inline-flex h-[34px] shrink-0 items-center justify-center gap-1.5 rounded-full border px-3.5 font-sans text-[13px] font-medium tracking-tight transition hover:brightness-[0.98]"
+                style={{
+                  backgroundColor: "#efeaf8",
+                  borderColor: "#e4dcf2",
+                  color: "#6b5ea8",
+                }}
               >
                 <Sparkles
                   size={13}
