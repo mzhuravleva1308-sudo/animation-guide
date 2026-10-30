@@ -68,7 +68,7 @@ export default async function FilmDiscoveryAdminPage() {
   const { data: catalogFilms, error: catalogError } = await supabase
     .from("films")
     .select(
-      "id, title, original_title, year, normalized_title, normalized_original_title"
+      "id, title, original_title, year, normalized_title, normalized_original_title, poster_url, image_url"
     );
   if (catalogError) {
     throw catalogError;

@@ -76,8 +76,26 @@ export type DiscoveryCandidateRow = {
     year: number;
     match?: string;
     year_delta?: number;
+    poster_url?: string | null;
   }> | null;
 };
+
+function resolveNearDuplicateMatches(film: DiscoveryCandidateRow) {
+  if (
+    Array.isArray(film.possible_catalog_duplicates) &&
+    film.possible_catalog_duplicates.length > 0
+  ) {
+    return film.possible_catalog_duplicates;
+  }
+  const evidence = film.eligibility_evidence;
+  const stored = evidence?.possible_catalog_duplicates;
+  if (Array.isArray(stored) && stored.length > 0) {
+    return stored as NonNullable<
+      DiscoveryCandidateRow["possible_catalog_duplicates"]
+    >;
+  }
+  return [];
+}
 
 function asUrlList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
@@ -143,6 +161,11 @@ function PendingCandidateCard({
   const mediaLabel = film.media_status ?? "media_pending";
   const trailerDirty = trailerDraft.trim() !== (film.trailer_url ?? "").trim();
   const savingThis = isPending || pendingId === film.id;
+  const nearDupes = resolveNearDuplicateMatches(film);
+  const posterColumnClass =
+    nearDupes.length > 0
+      ? "md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
+      : "md:grid-cols-[160px_1fr]";
 
   return (
     <li
@@ -150,27 +173,69 @@ function PendingCandidateCard({
       data-testid="discovery-candidate"
       data-discovery-bucket={bucket}
     >
-      <div className="grid gap-6 md:grid-cols-[160px_1fr]">
-        <div>
-          {film.poster_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={film.poster_url}
-              alt={`Poster for ${film.title}`}
-              data-testid="discovery-poster"
-              className="aspect-[2/3] w-full object-cover bg-gray-100"
-            />
-          ) : (
-            <div
-              className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500"
-              data-testid="discovery-poster-missing"
-            >
-              No poster found
+      <div className={`grid gap-6 ${posterColumnClass}`}>
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-3">
+            <div className="w-[140px] shrink-0">
+              {film.poster_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={film.poster_url}
+                  alt={`Poster for ${film.title}`}
+                  data-testid="discovery-poster"
+                  className="aspect-[2/3] w-full object-cover bg-gray-100"
+                />
+              ) : (
+                <div
+                  className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500"
+                  data-testid="discovery-poster-missing"
+                >
+                  No poster found
+                </div>
+              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Candidate
+                {film.poster_source_label
+                  ? ` · ${film.poster_source_label}`
+                  : ""}
+              </p>
             </div>
-          )}
-          {film.poster_source_label ? (
-            <p className="mt-1 text-xs text-gray-500">{film.poster_source_label}</p>
-          ) : null}
+
+            {nearDupes.length > 0 ? (
+              <div
+                className="flex flex-wrap gap-3"
+                data-testid="discovery-near-dupe-posters"
+              >
+                {nearDupes.slice(0, 3).map((dupe) => (
+                  <div
+                    key={`${dupe.id ?? dupe.title}-${dupe.year}`}
+                    className="w-[140px] shrink-0"
+                    data-testid="discovery-near-dupe-poster"
+                  >
+                    {dupe.poster_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={dupe.poster_url}
+                        alt={`Catalog poster for ${dupe.title}`}
+                        className="aspect-[2/3] w-full object-cover bg-gray-100 ring-2 ring-amber-300"
+                      />
+                    ) : (
+                      <div className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500 ring-2 ring-amber-300">
+                        No catalog poster
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-amber-900">
+                      Catalog · {dupe.title} ({dupe.year})
+                      {Number.isInteger(dupe.year_delta) &&
+                      (dupe.year_delta ?? 0) > 0
+                        ? ` · ±${dupe.year_delta}`
+                        : ""}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div>
