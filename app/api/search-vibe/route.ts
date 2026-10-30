@@ -4,7 +4,10 @@ import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { canAccessVibeSearch } from "@/lib/vibe-search-access.mjs";
 import { MEDIA_TYPE, SCORE_MODE } from "@/lib/media-type.mjs";
-import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
+import {
+  applyPublicCatalogMediaTypeFilter,
+  applyPublicCatalogVisibilityFilter,
+} from "@/lib/public-catalog-films.mjs";
 import { normalizeFilms } from "@/lib/normalize-film";
 import { buildBalancedScores } from "@/lib/profile-film-scoring.mjs";
 import { parseEmbedding } from "@/lib/per-like-catalog-ranking.mjs";
@@ -52,14 +55,14 @@ async function loadVisibleAnimationFilms(
   const pageSize = 500;
 
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await applyPublicCatalogVisibilityFilter(
-      admin
-        .from("films")
-        .select(FILM_SELECT)
-        .eq("media_type", MEDIA_TYPE.animation)
-        .order("title")
-        .range(from, from + pageSize - 1)
-    );
+    const { data, error } = await applyPublicCatalogMediaTypeFilter(
+      applyPublicCatalogVisibilityFilter(
+        admin.from("films").select(FILM_SELECT)
+      ),
+      MEDIA_TYPE.animation
+    )
+      .order("title")
+      .range(from, from + pageSize - 1);
 
     if (error) throw error;
     if (!data?.length) break;

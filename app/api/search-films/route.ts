@@ -6,7 +6,11 @@ import {
   isSearchQueryUsable,
   searchFilms,
 } from "@/lib/film-search.mjs";
-import { applyPublicCatalogVisibilityFilter } from "@/lib/public-catalog-films.mjs";
+import { MEDIA_TYPE } from "@/lib/media-type.mjs";
+import {
+  applyPublicCatalogMediaTypeFilter,
+  applyPublicCatalogVisibilityFilter,
+} from "@/lib/public-catalog-films.mjs";
 import { loadArchivedFilmIdsForViewer } from "@/lib/load-archived-film-ids.mjs";
 import type { Film } from "@/types/film";
 
@@ -47,8 +51,11 @@ export async function GET(request: Request) {
       });
     }
 
-    const { data, error } = await applyPublicCatalogVisibilityFilter(
-      supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS)
+    const { data, error } = await applyPublicCatalogMediaTypeFilter(
+      applyPublicCatalogVisibilityFilter(
+        supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS)
+      ),
+      MEDIA_TYPE.animation
     ).order("title");
 
     if (error) {
