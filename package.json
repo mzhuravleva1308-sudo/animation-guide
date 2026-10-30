@@ -36,7 +36,6 @@
     "films:discovery-seed": "node scripts/import-film-discovery-candidates.mjs",
     "films:discovery-media": "node scripts/run-film-discovery-media.mjs",
     "films:discovery-content": "node scripts/run-film-discovery-content.mjs",
-
     "films:mood-writing-guide": "node scripts/generate-resonale-mood-writing-guide.mjs",
     "films:mood-only-compare": "node scripts/run-mood-only-comparison.mjs",
     "hosted:migrate": "APP_ENV=hosted node scripts/apply-hosted-migrations.mjs",
@@ -60,7 +59,8 @@
     "next": "16.2.7",
     "openai": "^6.42.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.61.0",

@@ -6,7 +6,9 @@ import {
 } from "@/components/FilmDiscoveryReviewDashboard";
 import { getAdminAccessStatus } from "@/lib/auth/require-admin";
 import { annotateDiscoveryCandidatesWithNearDuplicates } from "@/lib/film-discovery-pending-review.mjs";
+import { autoRejectSamePosterNearDuplicates } from "@/lib/film-discovery-poster-dupe-actions.mjs";
 import { getFestivalAdminSupabase } from "@/lib/get-festival-admin-supabase.mjs";
+import { enrichNearDuplicatesWithPosterSimilarity } from "@/lib/poster-similarity.mjs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -74,9 +76,31 @@ export default async function FilmDiscoveryAdminPage() {
     throw catalogError;
   }
 
-  const candidates = annotateDiscoveryCandidatesWithNearDuplicates(
+  const annotated = annotateDiscoveryCandidatesWithNearDuplicates(
     (data ?? []) as DiscoveryCandidateRow[],
     catalogFilms ?? []
+  ) as DiscoveryCandidateRow[];
+
+  const enriched = (await enrichNearDuplicatesWithPosterSimilarity(
+    annotated,
+    { onlyPendingReview: true, concurrency: 4 }
+  )) as DiscoveryCandidateRow[];
+
+  const { rejected: autoRejected } = await autoRejectSamePosterNearDuplicates(
+    supabase,
+    enriched
+  );
+  const rejectedIds = new Set(autoRejected.map((row) => row.id));
+  const candidates = enriched.map((row) =>
+    rejectedIds.has(row.id)
+      ? {
+          ...row,
+          review_status: "rejected",
+          reject_reason:
+            autoRejected.find((item) => item.id === row.id)?.reason ??
+            row.reject_reason,
+        }
+      : row
   ) as DiscoveryCandidateRow[];
 
   return (

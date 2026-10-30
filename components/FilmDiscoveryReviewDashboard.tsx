@@ -77,8 +77,38 @@ export type DiscoveryCandidateRow = {
     match?: string;
     year_delta?: number;
     poster_url?: string | null;
+    poster_similarity?: "same" | "similar" | "different" | "unknown" | null;
+    poster_distance?: number | null;
   }> | null;
 };
+
+function posterSimilarityBadge(verdict: string | null | undefined): {
+  label: string;
+  className: string;
+} {
+  switch (verdict) {
+    case "same":
+      return {
+        label: "Same poster",
+        className: "border-rose-300 bg-rose-50 text-rose-900",
+      };
+    case "similar":
+      return {
+        label: "Similar poster",
+        className: "border-amber-300 bg-amber-50 text-amber-900",
+      };
+    case "different":
+      return {
+        label: "Different posters",
+        className: "border-emerald-300 bg-emerald-50 text-emerald-900",
+      };
+    default:
+      return {
+        label: "Not compared",
+        className: "border-gray-300 bg-gray-50 text-gray-600",
+      };
+  }
+}
 
 function resolveNearDuplicateMatches(film: DiscoveryCandidateRow) {
   if (
@@ -206,33 +236,43 @@ function PendingCandidateCard({
                 className="flex flex-wrap gap-3"
                 data-testid="discovery-near-dupe-posters"
               >
-                {nearDupes.slice(0, 3).map((dupe) => (
-                  <div
-                    key={`${dupe.id ?? dupe.title}-${dupe.year}`}
-                    className="w-[140px] shrink-0"
-                    data-testid="discovery-near-dupe-poster"
-                  >
-                    {dupe.poster_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={dupe.poster_url}
-                        alt={`Catalog poster for ${dupe.title}`}
-                        className="aspect-[2/3] w-full object-cover bg-gray-100 ring-2 ring-amber-300"
-                      />
-                    ) : (
-                      <div className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500 ring-2 ring-amber-300">
-                        No catalog poster
-                      </div>
-                    )}
-                    <p className="mt-1 text-xs text-amber-900">
-                      Catalog · {dupe.title} ({dupe.year})
-                      {Number.isInteger(dupe.year_delta) &&
-                      (dupe.year_delta ?? 0) > 0
-                        ? ` · ±${dupe.year_delta}`
-                        : ""}
-                    </p>
-                  </div>
-                ))}
+                {nearDupes.slice(0, 3).map((dupe) => {
+                  const badge = posterSimilarityBadge(dupe.poster_similarity);
+                  return (
+                    <div
+                      key={`${dupe.id ?? dupe.title}-${dupe.year}`}
+                      className="w-[140px] shrink-0"
+                      data-testid="discovery-near-dupe-poster"
+                      data-poster-similarity={dupe.poster_similarity ?? "unknown"}
+                    >
+                      {dupe.poster_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={dupe.poster_url}
+                          alt={`Catalog poster for ${dupe.title}`}
+                          className="aspect-[2/3] w-full object-cover bg-gray-100 ring-2 ring-amber-300"
+                        />
+                      ) : (
+                        <div className="flex aspect-[2/3] items-center justify-center bg-gray-100 px-2 text-center text-xs text-gray-500 ring-2 ring-amber-300">
+                          No catalog poster
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs text-amber-900">
+                        Catalog · {dupe.title} ({dupe.year})
+                        {Number.isInteger(dupe.year_delta) &&
+                        (dupe.year_delta ?? 0) > 0
+                          ? ` · ±${dupe.year_delta}`
+                          : ""}
+                      </p>
+                      <p
+                        className={`mt-1 inline-flex border px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${badge.className}`}
+                        data-testid="discovery-poster-similarity"
+                      >
+                        {badge.label}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
           </div>
