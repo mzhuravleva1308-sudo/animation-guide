@@ -44,6 +44,11 @@ import {
 } from "@/lib/fresh-taste-picks.mjs";
 import { loadRecentCatalogFilmIds } from "@/lib/load-recent-catalog-film-ids";
 import { getAdminSupabase } from "@/lib/supabase/admin";
+import {
+  PUBLIC_CATALOG_FILM_FIELDS_WITH_WATCH,
+  PUBLIC_CATALOG_FILM_FIELDS_WITHOUT_WATCH,
+  isMissingWatchAvailabilityColumnError,
+} from "@/lib/films-select-fields.mjs";
 import { Film } from "@/types/film";
 
 export const PUBLIC_CATALOG_PAGE_SIZE = 100;
@@ -59,31 +64,9 @@ function normalizeCatalogRankingMode(value: unknown): CatalogRankingMode {
 
 /**
  * Fields actually rendered on catalog FilmCards / quick filters / cold-start sort.
- * Excludes tag arrays (debug-only on cards; search uses /api/search-films) and
- * import-only image source URLs.
+ * Prefer watch_availability; loader falls back if the column is not migrated yet.
  */
-export const PUBLIC_CATALOG_FILM_FIELDS = [
-  "id",
-  "title",
-  "director",
-  "year",
-  "country",
-  "duration_minutes",
-  "festival",
-  "poster_url",
-  "image_url",
-  "trailer_url",
-  "availability",
-  "watch_availability",
-  "synopsis",
-  "what_it_is",
-  "the_mood",
-  "technique",
-  "material_fact",
-  "cold_start_score",
-  "quick_filters",
-  "media_type",
-].join(", ");
+export const PUBLIC_CATALOG_FILM_FIELDS = PUBLIC_CATALOG_FILM_FIELDS_WITH_WATCH;
 
 type ProfileRatingRow = {
   film_id: string;
@@ -320,18 +303,32 @@ async function loadPersonalizedCatalogRankingData(
   }
 }
 
+async function loadPublicCatalogFilms(mediaType: string) {
+  const withWatch = await applyPublicCatalogMediaTypeFilter(
+    applyPublicCatalogVisibilityFilter(
+      supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS_WITH_WATCH)
+    ),
+    mediaType
+  );
+  if (
+    withWatch.error &&
+    isMissingWatchAvailabilityColumnError(withWatch.error.message)
+  ) {
+    return applyPublicCatalogMediaTypeFilter(
+      applyPublicCatalogVisibilityFilter(
+        supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS_WITHOUT_WATCH)
+      ),
+      mediaType
+    );
+  }
+  return withWatch;
+}
+
 async function loadPublicCatalogBaseUncached(
   mediaType: string
 ): Promise<PublicCatalogBase> {
   const [filmsTimed, awardIdsTimed] = await Promise.all([
-    timeAsyncStage(() =>
-      applyPublicCatalogMediaTypeFilter(
-        applyPublicCatalogVisibilityFilter(
-          supabase.from("films").select(PUBLIC_CATALOG_FILM_FIELDS)
-        ),
-        mediaType
-      )
-    ),
+    timeAsyncStage(() => loadPublicCatalogFilms(mediaType)),
     timeAsyncStage(() =>
       supabase
         .from("film_festival_recognitions")
@@ -387,7 +384,7 @@ function getCachedPublicCatalogBaseLoader(mediaType: string) {
       ) as PublicCatalogBase,
     [
       "public-film-catalog-base",
-      "fields-v3-media",
+      "fields-v4-watch",
       "badges-stuttgart-v1",
       "awards-mention-v1",
       "no-error-cache-v1",

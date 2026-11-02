@@ -12,31 +12,12 @@ import {
   applyPublicCatalogVisibilityFilter,
 } from "@/lib/public-catalog-films.mjs";
 import { loadArchivedFilmIdsForViewer } from "@/lib/load-archived-film-ids.mjs";
+import {
+  SEARCH_FILM_SELECT_FIELDS_WITH_WATCH,
+  SEARCH_FILM_SELECT_FIELDS_WITHOUT_WATCH,
+  isMissingWatchAvailabilityColumnError,
+} from "@/lib/films-select-fields.mjs";
 import type { Film } from "@/types/film";
-
-const SEARCH_FILM_SELECT_FIELDS = [
-  "id",
-  "title",
-  "original_title",
-  "director",
-  "year",
-  "country",
-  "duration_minutes",
-  "poster_url",
-  "image_url",
-  "trailer_url",
-  "availability",
-  "watch_availability",
-  "synopsis",
-  "what_it_is",
-  "the_mood",
-  "technique",
-  "material_fact",
-  "media_type",
-  "moods",
-  "aesthetic_tags",
-  "narrative_tags",
-].join(", ");
 
 export async function GET(request: Request) {
   try {
@@ -52,12 +33,20 @@ export async function GET(request: Request) {
       });
     }
 
-    const { data, error } = await applyPublicCatalogMediaTypeFilter(
+    let { data, error } = await applyPublicCatalogMediaTypeFilter(
       applyPublicCatalogVisibilityFilter(
-        supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS)
+        supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS_WITH_WATCH)
       ),
       MEDIA_TYPE.animation
     ).order("title");
+    if (error && isMissingWatchAvailabilityColumnError(error.message)) {
+      ({ data, error } = await applyPublicCatalogMediaTypeFilter(
+        applyPublicCatalogVisibilityFilter(
+          supabase.from("films").select(SEARCH_FILM_SELECT_FIELDS_WITHOUT_WATCH)
+        ),
+        MEDIA_TYPE.animation
+      ).order("title"));
+    }
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -3,35 +3,14 @@ import { requireActingProfileId } from "@/lib/auth/acting-context";
 import { getAdminSupabase } from "@/lib/supabase/admin";
 import { VIBE_HIDDEN_LIST_TYPE } from "@/lib/vibe-hidden.mjs";
 import { normalizeFilms } from "@/lib/normalize-film";
+import { SEARCH_FILM_SELECT_FIELDS_WITH_WATCH } from "@/lib/films-select-fields.mjs";
 import type { Film } from "@/types/film";
 
 export const runtime = "nodejs";
 
 const MAX_NOTE_LENGTH = 280;
 
-const FILM_SELECT = [
-  "id",
-  "title",
-  "original_title",
-  "director",
-  "year",
-  "country",
-  "duration_minutes",
-  "poster_url",
-  "image_url",
-  "trailer_url",
-  "availability",
-  "watch_availability",
-  "synopsis",
-  "what_it_is",
-  "the_mood",
-  "technique",
-  "material_fact",
-  "media_type",
-  "moods",
-  "aesthetic_tags",
-  "narrative_tags",
-].join(", ");
+const FILM_SELECT = SEARCH_FILM_SELECT_FIELDS_WITH_WATCH;
 
 function normalizeNote(value: unknown): string | null {
   if (typeof value !== "string") return null;

@@ -17,6 +17,7 @@ import {
 } from "@/lib/vibe-search.mjs";
 import { normalizeVibeQueryToEnglish } from "@/lib/normalize-vibe-query.mjs";
 import { VIBE_HIDDEN_LIST_TYPE } from "@/lib/vibe-hidden.mjs";
+import { SEARCH_FILM_SELECT_FIELDS_WITH_WATCH } from "@/lib/films-select-fields.mjs";
 import type { Film } from "@/types/film";
 
 export const runtime = "nodejs";
@@ -25,29 +26,7 @@ const MIN_QUERY_LENGTH = 4;
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 24;
 
-const FILM_SELECT = [
-  "id",
-  "title",
-  "original_title",
-  "director",
-  "year",
-  "country",
-  "duration_minutes",
-  "poster_url",
-  "image_url",
-  "trailer_url",
-  "availability",
-  "watch_availability",
-  "synopsis",
-  "what_it_is",
-  "the_mood",
-  "technique",
-  "material_fact",
-  "media_type",
-  "moods",
-  "aesthetic_tags",
-  "narrative_tags",
-].join(", ");
+const FILM_SELECT = SEARCH_FILM_SELECT_FIELDS_WITH_WATCH;
 
 async function loadVisibleAnimationFilms(
   admin: ReturnType<typeof getAdminSupabase>
