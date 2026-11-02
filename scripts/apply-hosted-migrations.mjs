@@ -27,6 +27,7 @@ const DEFAULT_MIGRATION_FILES = [
   "supabase/migrations/20261019_profile_film_lists_vibe_hidden.sql",
   "supabase/migrations/20261020_films_plot_charge.sql",
   "supabase/migrations/20261028_film_discovery_candidates_review_flags.sql",
+  "supabase/migrations/20261102_films_watch_availability.sql",
 ];
 
 function parseArgs(argv) {

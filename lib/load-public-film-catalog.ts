@@ -74,6 +74,7 @@ export const PUBLIC_CATALOG_FILM_FIELDS = [
   "image_url",
   "trailer_url",
   "availability",
+  "watch_availability",
   "synopsis",
   "what_it_is",
   "the_mood",

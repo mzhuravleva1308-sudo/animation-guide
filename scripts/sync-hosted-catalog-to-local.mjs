@@ -20,6 +20,7 @@ const LOCAL_SYNC_FILM_COLUMNS = [
   "external_image_url",
   "trailer_url",
   "availability",
+  "watch_availability",
   "synopsis",
   "technique",
   "moods",

@@ -26,6 +26,7 @@ const SEARCH_FILM_SELECT_FIELDS = [
   "image_url",
   "trailer_url",
   "availability",
+  "watch_availability",
   "synopsis",
   "what_it_is",
   "the_mood",

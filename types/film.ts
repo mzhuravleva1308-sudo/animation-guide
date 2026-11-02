@@ -19,6 +19,25 @@ export type Film = {
     trailer_video_id?: string | null;
     trailer_source?: "manual" | "auto" | null;
     availability?: string | null;
+    /**
+     * TMDB/JustWatch where-to-watch summary for VPN UX:
+     * curated providers with ISO region codes (no deep links).
+     */
+    watch_availability?: {
+      source: "tmdb";
+      checked_at: string;
+      tmdb_id: number | null;
+      offers: Array<{
+        provider: string;
+        type: "flatrate" | "rent" | "buy" | "free" | "ads";
+        regions: string[];
+      }>;
+      apple_links?: {
+        checked_at: string;
+        track_id?: number | null;
+        by_region: Record<string, string>;
+      } | null;
+    } | null;
     synopsis?: string | null;
     technique?: string | null;
     /** Live-action card header: "Object. Place" material fact. */

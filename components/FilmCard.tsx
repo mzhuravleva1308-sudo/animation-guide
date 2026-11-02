@@ -20,8 +20,10 @@ import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import type { FilmRatingDetail } from "@/lib/rating-detail";
 import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
+import FilmWatchAvailability from "@/components/FilmWatchAvailability";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
 import { getCatalogGuideLink } from "@/lib/guides/catalog-guide-links.mjs";
+import { normalizeWatchAvailability } from "@/lib/film-watch-availability.mjs";
 
 type FilmCardBaseProps = {
   film: Film;
@@ -116,6 +118,9 @@ export default function FilmCard(props: FilmCardProps) {
       (props.mode !== "catalog" ||
         catalogGuideLink.href !== props.currentGuidePath)
   );
+  const showWatchButton = Boolean(
+    normalizeWatchAvailability(film.watch_availability)?.offers.length
+  );
 
   return (
     <article
@@ -142,24 +147,27 @@ export default function FilmCard(props: FilmCardProps) {
           </div>
         )}
 
-        {film.trailer_url && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center px-3">
-            <a
-              href={film.trailer_url}
-              target="_blank"
-              rel="noreferrer"
-              data-testid="film-trailer-link"
-              className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-medium leading-none text-black shadow-sm backdrop-blur transition hover:bg-white"
-            >
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 24 24"
-                className="h-4 w-4 shrink-0 fill-current"
+        {(film.trailer_url || showWatchButton) && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center gap-2 px-3">
+            {film.trailer_url ? (
+              <a
+                href={film.trailer_url}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="film-trailer-link"
+                className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-medium leading-none text-black shadow-sm backdrop-blur transition hover:bg-white"
               >
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              <span>Trailer</span>
-            </a>
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  className="h-4 w-4 shrink-0 fill-current"
+                >
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                <span>Trailer</span>
+              </a>
+            ) : null}
+            {showWatchButton ? <FilmWatchAvailability film={film} /> : null}
           </div>
         )}
       </div>
