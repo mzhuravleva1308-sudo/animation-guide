@@ -6,7 +6,9 @@ import {
   groupWatchOffersByCountry,
   isWatchAvailabilityStale,
   normalizeWatchAvailability,
+  readWatchCountryFilter,
   watchOfferTypeLabel,
+  writeWatchCountryFilter,
 } from "@/lib/film-watch-availability.mjs";
 import { lockBodyScroll } from "@/lib/modal-body-scroll-lock";
 import type { Film } from "@/types/film";
@@ -45,6 +47,7 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
 
   useEffect(() => {
     setMounted(true);
+    setCountryQuery(readWatchCountryFilter());
   }, []);
 
   useEffect(() => {
@@ -66,11 +69,10 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open]);
 
-  useEffect(() => {
-    if (!open) {
-      setCountryQuery("");
-    }
-  }, [open]);
+  function updateCountryQuery(next: string) {
+    setCountryQuery(next);
+    writeWatchCountryFilter(next);
+  }
 
   async function openWatchDialog() {
     setOpen(true);
@@ -152,7 +154,7 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
                   id={filterId}
                   type="search"
                   value={countryQuery}
-                  onChange={(event) => setCountryQuery(event.target.value)}
+                  onChange={(event) => updateCountryQuery(event.target.value)}
                   placeholder="Find country or service…"
                   data-testid="film-watch-availability-filter"
                   className="mt-3 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-900 outline-none placeholder:text-stone-400 focus:border-stone-400 focus:bg-white"
