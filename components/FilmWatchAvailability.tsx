@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   groupWatchOffersByCountry,
-  isWatchAvailabilityStale,
   normalizeWatchAvailability,
   readWatchCountryFilter,
   watchOfferTypeLabel,
@@ -21,7 +20,6 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [countryQuery, setCountryQuery] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
   const [availability, setAvailability] = useState(() =>
     normalizeWatchAvailability(film.watch_availability)
   );
@@ -35,6 +33,7 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
     mubiCanonicalUrl: availability?.mubi_links?.url ?? null,
     amazonCanonicalUrl: availability?.amazon_links?.url ?? null,
     primeCanonicalUrl: availability?.prime_links?.url ?? null,
+    youtubeCanonicalUrl: availability?.youtube_links?.url ?? null,
   });
   const countryQueryNormalized = countryQuery.trim().toLowerCase();
   const filteredCountries = countryQueryNormalized
@@ -77,36 +76,12 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
     writeWatchCountryFilter(next);
   }
 
-  async function openWatchDialog() {
+  function openWatchDialog() {
     // Re-read on every open: other film cards may have mounted before the
     // filter was saved, so their in-memory state can be stale.
+    // Do not refresh offers from TMDB — provider lists there are untrusted.
     setCountryQuery(readWatchCountryFilter());
     setOpen(true);
-
-    const current = availability;
-    if (!isWatchAvailabilityStale(current?.checked_at)) {
-      return;
-    }
-
-    setRefreshing(true);
-    try {
-      const response = await fetch("/api/films/watch-availability", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ filmId: film.id }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (response.ok && payload.watch_availability) {
-        const next = normalizeWatchAvailability(payload.watch_availability);
-        if (next) {
-          setAvailability(next);
-        }
-      }
-    } catch {
-      // Keep previously shown data if refresh fails.
-    } finally {
-      setRefreshing(false);
-    }
   }
 
   if (!availability?.offers.length) {
@@ -165,14 +140,6 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
                   data-testid="film-watch-availability-filter"
                   className="mt-3 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 py-2 text-sm text-stone-900 outline-none placeholder:text-stone-400 focus:border-stone-400 focus:bg-white"
                 />
-                {refreshing ? (
-                  <p
-                    className="mt-2 text-[12px] text-stone-400"
-                    data-testid="film-watch-availability-refreshing"
-                  >
-                    Updating…
-                  </p>
-                ) : null}
               </div>
 
               <div
@@ -256,7 +223,7 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          void openWatchDialog();
+          openWatchDialog();
         }}
         onPointerDown={(event) => event.stopPropagation()}
         className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-white/35 bg-black/35 px-3 py-1.5 text-sm font-normal leading-none text-white/90 backdrop-blur-sm transition hover:bg-black/45 hover:text-white"

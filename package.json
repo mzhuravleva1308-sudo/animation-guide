@@ -44,6 +44,7 @@
     "sync:mubi-watch-links": "node scripts/sync-mubi-watch-links.mjs",
     "sync:amazon-watch-links": "node scripts/sync-amazon-watch-links.mjs",
     "sync:prime-video-watch-links": "node scripts/sync-prime-video-watch-links.mjs",
+    "sync:youtube-watch-links": "node scripts/sync-youtube-watch-links.mjs",
     "hosted:sync-editorial": "APP_ENV=hosted node scripts/sync-local-editorial-copy-to-hosted.mjs",
     "hosted:verify": "APP_ENV=hosted node scripts/verify-hosted-film-fields.mjs",
     "hosted:audit-posters": "APP_ENV=hosted node scripts/audit-hosted-posters.mjs",

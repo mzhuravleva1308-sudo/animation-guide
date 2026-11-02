@@ -8,7 +8,10 @@
  */
 import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
-import { normalizeWatchAvailability } from "../lib/film-watch-availability.mjs";
+import {
+  normalizeWatchAvailability,
+  stripWatchProviders,
+} from "../lib/film-watch-availability.mjs";
 import {
   offersIncludePrimeVideo,
   resolvePrimeVideoLink,
@@ -73,7 +76,8 @@ async function main() {
   for (const film of films) {
     const availability = normalizeWatchAvailability(film.watch_availability);
     if (!availability || !offersIncludePrimeVideo(availability.offers)) continue;
-    if (!options.force && availability.prime_links?.url) continue;
+    // Skip once checked — including misses (url null) — unless --force.
+    if (!options.force && availability.prime_links?.checked_at) continue;
     jobs.push({ film, availability });
   }
 
@@ -115,6 +119,26 @@ async function main() {
       if (!resolved) {
         missing += 1;
         samples.push({ title: job.film.title, year: job.film.year, url: null });
+        if (options.dryRun) continue;
+        const missPayload = {
+          ...job.availability,
+          offers: stripWatchProviders(job.availability.offers, "Prime Video"),
+          prime_links: {
+            checked_at: new Date().toISOString(),
+            url: null,
+            id: null,
+          },
+        };
+        const { error } = await supabase
+          .from("films")
+          .update({ watch_availability: missPayload })
+          .eq("id", job.film.id);
+        if (error) {
+          errors += 1;
+          console.error(`Update failed ${job.film.title}: ${error.message}`);
+        } else {
+          written += 1;
+        }
         continue;
       }
       found += 1;

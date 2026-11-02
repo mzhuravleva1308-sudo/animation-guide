@@ -11,6 +11,7 @@ import OpenAI from "openai";
 import { createClient } from "@supabase/supabase-js";
 import {
   normalizeWatchAvailability,
+  stripWatchProviders,
 } from "../lib/film-watch-availability.mjs";
 import {
   offersIncludeMubi,
@@ -132,6 +133,26 @@ async function main() {
           year: job.film.year,
           url: null,
         });
+        if (options.dryRun) continue;
+        const missPayload = {
+          ...job.availability,
+          offers: stripWatchProviders(job.availability.offers, "MUBI"),
+          mubi_links: {
+            checked_at: new Date().toISOString(),
+            url: null,
+            slug: null,
+          },
+        };
+        const { error } = await supabase
+          .from("films")
+          .update({ watch_availability: missPayload })
+          .eq("id", job.film.id);
+        if (error) {
+          errors += 1;
+          console.error(`Update failed ${job.film.title}: ${error.message}`);
+        } else {
+          written += 1;
+        }
         continue;
       }
       found += 1;

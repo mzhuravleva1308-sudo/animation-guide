@@ -18,6 +18,7 @@ import {
 import {
   appleRegionsFromOffers,
   normalizeWatchAvailability,
+  stripWatchProviders,
 } from "../lib/film-watch-availability.mjs";
 import { applyAppEnv } from "./load-app-env.mjs";
 
@@ -25,35 +26,40 @@ applyAppEnv();
 
 function parseArgs(argv) {
   const limitArg = argv.find((a) => a.startsWith("--limit="));
+  const regionsArg = argv.find((a) => a.startsWith("--regions="));
   return {
     limit: limitArg ? Number(limitArg.slice("--limit=".length)) : null,
+    maxRegions: regionsArg
+      ? Number(regionsArg.slice("--regions=".length))
+      : Number(process.env.WATCH_APPLE_MAX_REGIONS ?? 5) || 5,
     visibleOnly: argv.includes("--visible-only"),
+    animationOnly: argv.includes("--animation-only"),
     force: argv.includes("--force"),
     dryRun: argv.includes("--dry-run"),
   };
 }
 
-async function loadFilms(supabase, { visibleOnly, limit }) {
+async function loadFilms(supabase, { visibleOnly, animationOnly }) {
   const pageSize = 1000;
   const films = [];
   for (let from = 0; ; from += pageSize) {
     let query = supabase
       .from("films")
       .select(
-        "id, title, original_title, year, catalog_visible, watch_availability"
+        "id, title, original_title, year, catalog_visible, media_type, watch_availability"
       )
       .order("title")
       .range(from, from + pageSize - 1);
     if (visibleOnly) {
       query = query.eq("catalog_visible", true);
     }
+    if (animationOnly) {
+      query = query.eq("media_type", "animation");
+    }
     const { data, error } = await query;
     if (error) throw error;
     films.push(...(data ?? []));
     if ((data ?? []).length < pageSize) break;
-  }
-  if (limit != null && Number.isFinite(limit) && limit > 0) {
-    return films.slice(0, limit);
   }
   return films;
 }
@@ -80,8 +86,11 @@ async function main() {
   for (const film of films) {
     const availability = normalizeWatchAvailability(film.watch_availability);
     if (!availability?.offers?.length) continue;
+    // Skip once checked (including empty by_region) unless --force.
+    if (!options.force && availability.apple_links?.checked_at) continue;
     const appleRegions = prioritizeAppleLinkRegions(
-      appleRegionsFromOffers(availability.offers)
+      appleRegionsFromOffers(availability.offers),
+      options.maxRegions
     );
     if (!appleRegions.length) continue;
 
@@ -101,8 +110,25 @@ async function main() {
     });
   }
 
+  const limited =
+    options.limit != null && Number.isFinite(options.limit) && options.limit > 0
+      ? jobs.slice(0, options.limit)
+      : jobs;
+
   console.log(
-    `Films scanned: ${films.length}; Apple jobs: ${jobs.length}; force=${options.force}; dryRun=${options.dryRun}`
+    JSON.stringify(
+      {
+        scanned: films.length,
+        appleCandidates: jobs.length,
+        running: limited.length,
+        maxRegions: options.maxRegions,
+        pauseMs: Number(process.env.WATCH_APPLE_PAUSE_MS ?? 3500) || 3500,
+        force: options.force,
+        dryRun: options.dryRun,
+      },
+      null,
+      2
+    )
   );
 
   let filmsWithLinks = 0;
@@ -111,12 +137,12 @@ async function main() {
   let errors = 0;
   let rateLimited = false;
 
-  for (let index = 0; index < jobs.length; index += 1) {
+  const pauseMs = Number(process.env.WATCH_APPLE_PAUSE_MS ?? 3500) || 3500;
+
+  for (let index = 0; index < limited.length; index += 1) {
     if (rateLimited) break;
-    const job = jobs[index];
-    if (index > 0 && index % 10 === 0) {
-      console.log(`… ${index}/${jobs.length}`);
-    }
+    const job = limited[index];
+    console.log(`… ${index + 1}/${limited.length} ${job.film.title}`);
 
     try {
       const resolved = await resolveAppleMovieLinksForRegions({
@@ -125,6 +151,7 @@ async function main() {
         year: job.film.year,
         regions: job.regions,
         knownTrackId: job.knownTrackId,
+        pauseMs,
         sleep,
       });
 
@@ -138,8 +165,17 @@ async function main() {
         linkCount += newCount;
       }
 
+      const foundCount = Object.keys(nextLinks).length;
       const payload = {
         ...job.availability,
+        // No Apple store page found → drop Apple from our snapshot.
+        offers:
+          foundCount > 0
+            ? job.availability.offers
+            : stripWatchProviders(job.availability.offers, [
+                "Apple TV",
+                "Apple TV+",
+              ]),
         apple_links: {
           checked_at: new Date().toISOString(),
           track_id: resolved.trackId,
@@ -147,23 +183,24 @@ async function main() {
         },
       };
 
-      if (options.dryRun) {
-        console.log(
-          JSON.stringify(
-            {
-              title: job.film.title,
-              trackId: resolved.trackId,
-              requested: job.regions.length,
-              found: Object.keys(resolved.byRegion).length,
-              sample: Object.entries(resolved.byRegion)
-                .slice(0, 3)
-                .map(([code, url]) => ({ code, url })),
-            },
-            null,
-            2
-          )
-        );
-      } else {
+      console.log(
+        JSON.stringify(
+          {
+            title: job.film.title,
+            trackId: resolved.trackId,
+            requested: job.regions.length,
+            found: Object.keys(resolved.byRegion).length,
+            strippedApple: foundCount === 0,
+            sample: Object.entries(resolved.byRegion)
+              .slice(0, 3)
+              .map(([code, url]) => ({ code, url })),
+          },
+          null,
+          2
+        )
+      );
+
+      if (!options.dryRun) {
         const { error } = await supabase
           .from("films")
           .update({ watch_availability: payload })
@@ -176,7 +213,7 @@ async function main() {
         }
       }
 
-      await sleep(500);
+      await sleep(pauseMs);
     } catch (error) {
       errors += 1;
       const message = error instanceof Error ? error.message : String(error);
@@ -185,7 +222,7 @@ async function main() {
         rateLimited = true;
         console.error("Stopping early due to iTunes rate limit; re-run later.");
       } else {
-        await sleep(1000);
+        await sleep(pauseMs * 2);
       }
     }
   }
@@ -194,6 +231,7 @@ async function main() {
     JSON.stringify(
       {
         jobs: jobs.length,
+        ran: limited.length,
         filmsWithLinks,
         linkCount,
         written: options.dryRun ? 0 : written,

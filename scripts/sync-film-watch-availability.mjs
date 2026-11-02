@@ -1,11 +1,9 @@
 /**
  * Sync films.watch_availability from TMDB watch/providers (all regions).
  *
- * Usage:
- *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs
- *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --visible-only --limit=20
- *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --dry-run --visible-only --limit=5
- *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --resolve-tmdb --visible-only
+ * DISABLED by default — TMDB/JustWatch provider lists are untrusted.
+ * Only run with an explicit override if you really need a fresh snapshot:
+ *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --override-untrusted-tmdb --visible-only --limit=20
  */
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -28,6 +26,7 @@ function parseArgs(argv) {
     visibleOnly: argv.includes("--visible-only"),
     resolveTmdb: argv.includes("--resolve-tmdb"),
     dryRun: argv.includes("--dry-run"),
+    overrideUntrustedTmdb: argv.includes("--override-untrusted-tmdb"),
   };
 }
 
@@ -181,6 +180,11 @@ async function mapPool(items, concurrency, worker) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  if (!options.overrideUntrustedTmdb) {
+    throw new Error(
+      "Refusing TMDB watch/providers sync (untrusted). Pass --override-untrusted-tmdb only if you intentionally want a fresh snapshot."
+    );
+  }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const tmdbApiKey =

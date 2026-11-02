@@ -50,8 +50,13 @@ export type Film = {
       } | null;
       prime_links?: {
         checked_at: string;
-        url: string;
-        id: string;
+        url: string | null;
+        id: string | null;
+      } | null;
+      youtube_links?: {
+        checked_at: string;
+        url: string | null;
+        videoId: string | null;
       } | null;
     } | null;
     synopsis?: string | null;
