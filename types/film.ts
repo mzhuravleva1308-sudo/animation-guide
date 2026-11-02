@@ -37,6 +37,11 @@ export type Film = {
         track_id?: number | null;
         by_region: Record<string, string>;
       } | null;
+      mubi_links?: {
+        checked_at: string;
+        url: string;
+        slug: string;
+      } | null;
     } | null;
     synopsis?: string | null;
     technique?: string | null;

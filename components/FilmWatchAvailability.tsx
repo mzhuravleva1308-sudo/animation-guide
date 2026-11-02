@@ -32,6 +32,7 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
 
   const countries = groupWatchOffersByCountry(availability?.offers ?? [], {
     appleLinksByRegion: availability?.apple_links?.by_region ?? null,
+    mubiCanonicalUrl: availability?.mubi_links?.url ?? null,
   });
   const countryQueryNormalized = countryQuery.trim().toLowerCase();
   const filteredCountries = countryQueryNormalized

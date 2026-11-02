@@ -41,6 +41,7 @@
     "hosted:migrate": "APP_ENV=hosted node scripts/apply-hosted-migrations.mjs",
     "sync:watch-availability": "node scripts/sync-film-watch-availability.mjs",
     "sync:apple-watch-links": "node scripts/sync-apple-watch-links.mjs",
+    "sync:mubi-watch-links": "node scripts/sync-mubi-watch-links.mjs",
     "hosted:sync-editorial": "APP_ENV=hosted node scripts/sync-local-editorial-copy-to-hosted.mjs",
     "hosted:verify": "APP_ENV=hosted node scripts/verify-hosted-film-fields.mjs",
     "hosted:audit-posters": "APP_ENV=hosted node scripts/audit-hosted-posters.mjs",
