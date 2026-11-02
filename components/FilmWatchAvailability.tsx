@@ -33,6 +33,8 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
   const countries = groupWatchOffersByCountry(availability?.offers ?? [], {
     appleLinksByRegion: availability?.apple_links?.by_region ?? null,
     mubiCanonicalUrl: availability?.mubi_links?.url ?? null,
+    amazonCanonicalUrl: availability?.amazon_links?.url ?? null,
+    primeCanonicalUrl: availability?.prime_links?.url ?? null,
   });
   const countryQueryNormalized = countryQuery.trim().toLowerCase();
   const filteredCountries = countryQueryNormalized
@@ -76,6 +78,9 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
   }
 
   async function openWatchDialog() {
+    // Re-read on every open: other film cards may have mounted before the
+    // filter was saved, so their in-memory state can be stale.
+    setCountryQuery(readWatchCountryFilter());
     setOpen(true);
 
     const current = availability;

@@ -42,6 +42,17 @@ export type Film = {
         url: string;
         slug: string;
       } | null;
+      amazon_links?: {
+        checked_at: string;
+        url: string;
+        asin: string | null;
+        kind: "amazon" | "primevideo";
+      } | null;
+      prime_links?: {
+        checked_at: string;
+        url: string;
+        id: string;
+      } | null;
     } | null;
     synopsis?: string | null;
     technique?: string | null;
