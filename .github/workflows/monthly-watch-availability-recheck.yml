@@ -1,0 +1,85 @@
+name: Monthly empty watch availability recheck
+
+# 1st of each month, 07:00 UTC. Re-asks TMDB only for films that already have a
+# watch snapshot with zero offers and checked_at older than 30 days.
+
+on:
+  schedule:
+    - cron: "0 7 1 * *"
+  workflow_dispatch:
+    inputs:
+      empty_stale_days:
+        description: "Recheck empty snapshots older than N days"
+        required: false
+        default: "30"
+      limit:
+        description: "Optional max films (empty = all due)"
+        required: false
+        default: ""
+      dry_run:
+        description: "Preview without writing"
+        type: boolean
+        required: false
+        default: false
+      visible_only:
+        description: "Only catalog_visible films"
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: monthly-watch-availability-recheck
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  recheck-empty-watch:
+    name: Recheck empty TMDB watch snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Recheck empty watch_availability
+        env:
+          APP_ENV: hosted
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: |
+          set -euo pipefail
+          ARGS=(--recheck-empty)
+
+          if [ "${{ github.event.inputs.visible_only }}" != "false" ]; then
+            ARGS+=(--visible-only)
+          fi
+
+          STALE_DAYS="${{ github.event.inputs.empty_stale_days }}"
+          if [ -z "${STALE_DAYS}" ]; then
+            STALE_DAYS="30"
+          fi
+          ARGS+=(--empty-stale-days="${STALE_DAYS}")
+
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            ARGS+=(--dry-run)
+          fi
+
+          LIMIT="${{ github.event.inputs.limit }}"
+          if [ -n "${LIMIT}" ]; then
+            ARGS+=(--limit="${LIMIT}")
+          fi
+
+          echo "Running: npm run sync:watch-availability -- ${ARGS[*]}"
+          npm run sync:watch-availability -- "${ARGS[@]}"

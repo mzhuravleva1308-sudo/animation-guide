@@ -1,8 +1,13 @@
 /**
  * Sync films.watch_availability from TMDB watch/providers (all regions).
  *
- * DISABLED by default — TMDB/JustWatch provider lists are untrusted.
- * Only run with an explicit override if you really need a fresh snapshot:
+ * Fill films that still have no snapshot (weekly):
+ *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --missing-only --visible-only
+ *
+ * Recheck previously empty snapshots older than N days (monthly):
+ *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --recheck-empty --visible-only
+ *
+ * Full refresh (overwrites TMDB offers; keeps deep-link fields) requires override:
  *   APP_ENV=hosted node scripts/sync-film-watch-availability.mjs --override-untrusted-tmdb --visible-only --limit=20
  */
 import { createClient } from "@supabase/supabase-js";
@@ -12,7 +17,12 @@ import {
   getTitleSimilarity,
   getYearDifference,
 } from "../lib/tmdb-film-matching.mjs";
-import { buildWatchAvailabilityFromTmdbResults } from "../lib/film-watch-availability.mjs";
+import { normalizeWatchAvailability } from "../lib/film-watch-availability.mjs";
+import {
+  isMissingWatchAvailability,
+  loadWatchAvailabilityFromTmdb,
+  needsEmptyWatchRecheck,
+} from "../lib/tmdb-watch-providers.mjs";
 import { applyAppEnv } from "./load-app-env.mjs";
 
 applyAppEnv();
@@ -21,38 +31,70 @@ const CONCURRENCY = 6;
 
 function parseArgs(argv) {
   const limitArg = argv.find((a) => a.startsWith("--limit="));
+  const staleDaysArg = argv.find((a) => a.startsWith("--empty-stale-days="));
+  const staleDays = staleDaysArg
+    ? Number(staleDaysArg.slice("--empty-stale-days=".length))
+    : 30;
   return {
     limit: limitArg ? Number(limitArg.slice("--limit=".length)) : null,
     visibleOnly: argv.includes("--visible-only"),
     resolveTmdb: argv.includes("--resolve-tmdb"),
     dryRun: argv.includes("--dry-run"),
+    missingOnly: argv.includes("--missing-only"),
+    recheckEmpty: argv.includes("--recheck-empty"),
+    emptyStaleDays:
+      Number.isFinite(staleDays) && staleDays > 0 ? staleDays : 30,
     overrideUntrustedTmdb: argv.includes("--override-untrusted-tmdb"),
   };
 }
 
-async function loadFilms(supabase, { visibleOnly, limit }) {
+async function loadFilms(
+  supabase,
+  { visibleOnly, missingOnly, recheckEmpty, emptyStaleDays, limit }
+) {
   const pageSize = 1000;
   const films = [];
   for (let from = 0; ; from += pageSize) {
     let query = supabase
       .from("films")
       .select(
-        "id, title, original_title, director, year, country, media_type, catalog_visible, tmdb_id"
+        "id, title, original_title, director, year, country, media_type, catalog_visible, tmdb_id, watch_availability"
       )
       .order("title")
       .range(from, from + pageSize - 1);
     if (visibleOnly) {
       query = query.eq("catalog_visible", true);
     }
+    if (missingOnly) {
+      // Prefer DB nulls; also post-filter invalid snapshots below.
+      query = query.is("watch_availability", null);
+    } else if (recheckEmpty) {
+      query = query.not("watch_availability", "is", null);
+    }
     const { data, error } = await query;
     if (error) throw error;
     films.push(...(data ?? []));
     if ((data ?? []).length < pageSize) break;
   }
-  if (limit != null && Number.isFinite(limit) && limit > 0) {
-    return films.slice(0, limit);
+
+  const emptyMaxAgeMs = emptyStaleDays * 24 * 60 * 60 * 1000;
+  let filtered = films;
+  if (missingOnly) {
+    filtered = films.filter((film) =>
+      isMissingWatchAvailability(film.watch_availability)
+    );
+  } else if (recheckEmpty) {
+    filtered = films.filter((film) =>
+      needsEmptyWatchRecheck(film.watch_availability, {
+        maxAgeMs: emptyMaxAgeMs,
+      })
+    );
   }
-  return films;
+
+  if (limit != null && Number.isFinite(limit) && limit > 0) {
+    return filtered.slice(0, limit);
+  }
+  return filtered;
 }
 
 async function searchTmdbMovies(apiKey, film) {
@@ -144,25 +186,6 @@ async function resolveTmdbId(apiKey, film, { resolveTmdb }) {
   return pickTmdbMatch(film, results);
 }
 
-async function fetchWatchProviders(apiKey, tmdbId) {
-  const url = new URL(
-    `https://api.themoviedb.org/3/movie/${tmdbId}/watch/providers`
-  );
-  url.searchParams.set("api_key", apiKey);
-  const response = await fetch(url);
-  if (response.status === 404) {
-    return { ok: false, status: 404, results: {} };
-  }
-  if (!response.ok) {
-    const text = await response.text().catch(() => "");
-    throw new Error(
-      `TMDB watch/providers ${tmdbId}: ${response.status} ${text.slice(0, 120)}`
-    );
-  }
-  const data = await response.json();
-  return { ok: true, status: response.status, results: data.results ?? {} };
-}
-
 async function mapPool(items, concurrency, worker) {
   const results = new Array(items.length);
   let next = 0;
@@ -180,9 +203,16 @@ async function mapPool(items, concurrency, worker) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  if (!options.overrideUntrustedTmdb) {
+  if (options.missingOnly && options.recheckEmpty) {
+    throw new Error("Use either --missing-only or --recheck-empty, not both.");
+  }
+  if (
+    !options.missingOnly &&
+    !options.recheckEmpty &&
+    !options.overrideUntrustedTmdb
+  ) {
     throw new Error(
-      "Refusing TMDB watch/providers sync (untrusted). Pass --override-untrusted-tmdb only if you intentionally want a fresh snapshot."
+      "Refusing full TMDB watch/providers sync. Use --missing-only, --recheck-empty, or --override-untrusted-tmdb."
     );
   }
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -203,7 +233,7 @@ async function main() {
 
   const films = await loadFilms(supabase, options);
   console.log(
-    `Films: ${films.length}; visibleOnly=${options.visibleOnly}; resolveTmdb=${options.resolveTmdb}; dryRun=${options.dryRun}`
+    `Films: ${films.length}; missingOnly=${options.missingOnly}; recheckEmpty=${options.recheckEmpty}; emptyStaleDays=${options.emptyStaleDays}; visibleOnly=${options.visibleOnly}; resolveTmdb=${options.resolveTmdb}; dryRun=${options.dryRun}`
   );
 
   let withOffers = 0;
@@ -218,18 +248,24 @@ async function main() {
     }
     try {
       const resolved = await resolveTmdbId(tmdbApiKey, film, options);
+      const current = normalizeWatchAvailability(film.watch_availability);
       if (resolved.tmdbId == null) {
         unresolved += 1;
-        const payload = buildWatchAvailabilityFromTmdbResults(
-          {},
-          { tmdbId: null }
-        );
-        return { filmId: film.id, title: film.title, payload, skipWrite: false };
+        // Do not write an empty snapshot without a TMDB id — leave missing
+        // so a later resolve-tmdb pass can still fill it.
+        return {
+          filmId: film.id,
+          title: film.title,
+          payload: null,
+          skipWrite: true,
+          matchStatus: resolved.matchStatus,
+        };
       }
 
-      const providers = await fetchWatchProviders(tmdbApiKey, resolved.tmdbId);
-      const payload = buildWatchAvailabilityFromTmdbResults(providers.results, {
+      const payload = await loadWatchAvailabilityFromTmdb({
         tmdbId: resolved.tmdbId,
+        apiKey: tmdbApiKey,
+        current,
       });
       if (payload.offers.length) withOffers += 1;
       else emptyOffers += 1;
@@ -252,7 +288,9 @@ async function main() {
 
   if (!options.dryRun) {
     for (let i = 0; i < rows.length; i += 50) {
-      const chunk = rows.slice(i, i + 50).filter((row) => !row.skipWrite && row.payload);
+      const chunk = rows
+        .slice(i, i + 50)
+        .filter((row) => !row.skipWrite && row.payload);
       await Promise.all(
         chunk.map(async (row) => {
           const { error } = await supabase
@@ -290,6 +328,9 @@ async function main() {
         errors,
         written: options.dryRun ? 0 : written,
         dryRun: options.dryRun,
+        missingOnly: options.missingOnly,
+        recheckEmpty: options.recheckEmpty,
+        emptyStaleDays: options.emptyStaleDays,
         samples,
       },
       null,

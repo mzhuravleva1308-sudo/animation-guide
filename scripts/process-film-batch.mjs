@@ -17,6 +17,10 @@ import {
   shouldDeferProfileEnqueueForFilm,
 } from "../lib/discovery-to-import-payload.mjs";
 import { syncDiscoveryFestivalsByCandidateId } from "../lib/sync-discovery-festivals-to-catalog.mjs";
+import {
+  isMissingWatchAvailability,
+  loadWatchAvailabilityFromTmdb,
+} from "../lib/tmdb-watch-providers.mjs";
 import { validateFile } from "./validate-film-import-batch.mjs";
 
 /** Lazy so unit tests can import this file without SERVICE_ROLE_KEY. */
@@ -44,7 +48,7 @@ const EMBEDDING_DIMENSIONS =
     ? configuredEmbeddingDimensions
     : null;
 const FILM_SELECT =
-  "id,title,year,synopsis,the_mood,technique,material_fact,moods,aesthetic_tags,visual_world_tags,storytelling_tags,media_type,image_url,poster_url,external_image_url,trailer_url,catalog_visible";
+  "id,title,year,synopsis,the_mood,technique,material_fact,moods,aesthetic_tags,visual_world_tags,storytelling_tags,media_type,image_url,poster_url,external_image_url,trailer_url,catalog_visible,tmdb_id,watch_availability";
 const IMMUTABLE_FIELDS = [
   "synopsis",
   "the_mood",
@@ -782,10 +786,87 @@ async function rollbackCreatedFilm(supabase, filmId) {
   }
 }
 
+/**
+ * Soft-fail TMDB watch/providers attach for insert / prep.
+ * Missing key or tmdb id → leave payload unchanged.
+ */
+async function attachWatchAvailabilityToPayload(filmPayload) {
+  const tmdbId =
+    filmPayload?.tmdb_id != null && Number.isFinite(Number(filmPayload.tmdb_id))
+      ? Number(filmPayload.tmdb_id)
+      : null;
+  const apiKey =
+    process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || "";
+  if (tmdbId == null || !apiKey) return filmPayload;
+  if (!isMissingWatchAvailability(filmPayload.watch_availability)) {
+    return filmPayload;
+  }
+  try {
+    const watch_availability = await loadWatchAvailabilityFromTmdb({
+      tmdbId,
+      apiKey,
+      current: filmPayload.watch_availability,
+    });
+    return { ...filmPayload, watch_availability };
+  } catch (error) {
+    console.error(
+      `[watch_availability] tmdb=${tmdbId} failed:`,
+      error instanceof Error ? error.message : error
+    );
+    return filmPayload;
+  }
+}
+
+async function fillMissingWatchAvailability(supabase, films) {
+  const apiKey =
+    process.env.TMDB_API_KEY || process.env.NEXT_PUBLIC_TMDB_API_KEY || "";
+  if (!apiKey) {
+    console.log("[watch_availability] skipped — TMDB_API_KEY missing");
+    return;
+  }
+  const targets = (films ?? []).filter(
+    (film) =>
+      film?.tmdb_id != null &&
+      Number.isFinite(Number(film.tmdb_id)) &&
+      isMissingWatchAvailability(film.watch_availability)
+  );
+  if (!targets.length) return;
+
+  let filled = 0;
+  for (const film of targets) {
+    try {
+      const watch_availability = await loadWatchAvailabilityFromTmdb({
+        tmdbId: Number(film.tmdb_id),
+        apiKey,
+        current: film.watch_availability,
+      });
+      const { error } = await supabase
+        .from("films")
+        .update({ watch_availability })
+        .eq("id", film.id);
+      if (error) throw error;
+      film.watch_availability = watch_availability;
+      filled += 1;
+      console.log(
+        `[watch_availability] ${film.title} — offers=${watch_availability.offers.length}`
+      );
+    } catch (error) {
+      console.error(
+        `[watch_availability] ${film.title} failed:`,
+        error instanceof Error ? error.message : error
+      );
+    }
+  }
+  console.log(
+    `[watch_availability] filled ${filled}/${targets.length} missing snapshot(s)`
+  );
+}
+
 async function importOneFilm(supabase, item) {
+  const filmPayload = await attachWatchAvailabilityToPayload(item.filmPayload);
   const { data: film, error: filmError } = await supabase
     .from("films")
-    .insert(item.filmPayload)
+    .insert(filmPayload)
     .select("id")
     .single();
   if (filmError) throw filmError;
@@ -1097,8 +1178,29 @@ export async function processFilmBatch({
   const needsPosterCache =
     !options.skipMedia &&
     initial.films.some((film) => !hasStoragePoster(film));
-  if (allInitiallyReady && !needsPosterCache && !options.rebuildAllProfiles) {
+  const needsWatchAvailability = initial.films.some(
+    (film) =>
+      film?.tmdb_id != null &&
+      isMissingWatchAvailability(film.watch_availability)
+  );
+  if (
+    allInitiallyReady &&
+    !needsPosterCache &&
+    !needsWatchAvailability &&
+    !options.rebuildAllProfiles
+  ) {
     console.log("Fully ranking-ready batch: no-op (use --rebuild-all-profiles to enqueue).");
+    printTable(initial.films, initialStates);
+    return { noOp: true, profiles, states: initialStates, films: initial.films };
+  }
+  if (
+    allInitiallyReady &&
+    !needsPosterCache &&
+    needsWatchAvailability &&
+    !options.rebuildAllProfiles &&
+    !options.dryRun
+  ) {
+    await fillMissingWatchAvailability(supabase, initial.films);
     printTable(initial.films, initialStates);
     return { noOp: true, profiles, states: initialStates, films: initial.films };
   }
@@ -1207,6 +1309,8 @@ export async function processFilmBatch({
   }
 
   try {
+    await fillMissingWatchAvailability(supabase, initial.films);
+
     if (
       missingMoodTags.length ||
       missingAestheticTags.length ||
