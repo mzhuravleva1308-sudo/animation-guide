@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import FilmsCatalogPendingShell from "@/components/FilmsCatalogPendingShell";
 import FilmsPageClient from "@/components/FilmsPageClient";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { parseCatalogQuickFilter } from "@/lib/catalog-url";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import {
   loadPublicFilmCatalog,
+  PUBLIC_CATALOG_PAGE_SIZE,
   resolveCatalogRankingForViewer,
 } from "@/lib/load-public-film-catalog";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
@@ -111,11 +111,15 @@ async function HomeCatalogBody({
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const params = await searchParams;
-  // Resolve auth first so the real header can paint while the catalog streams.
+  // Resolve auth first so header + search/filters can paint while films stream.
   const auth = await getAuthUserSummary();
   const ranking = resolveCatalogRankingForViewer(
     { media: params.media, sort: params.sort },
     auth?.email
+  );
+  const initialQuickFilter = parseCatalogQuickFilter(
+    params.filter,
+    ranking.mediaType
   );
 
   return (
@@ -128,10 +132,16 @@ export default async function HomePage({ searchParams }: HomePageProps) {
       />
       <Suspense
         fallback={
-          <FilmsCatalogPendingShell
+          <FilmsPageClient
             auth={auth}
-            showLiveActionTab={ranking.showLiveActionTab}
+            films={[]}
+            awardWinningFilmIds={[]}
+            pageSize={PUBLIC_CATALOG_PAGE_SIZE}
+            loadError={null}
             mediaType={ranking.mediaType}
+            showLiveActionTab={ranking.showLiveActionTab}
+            initialQuickFilter={initialQuickFilter}
+            catalogPending
             showSubtitle
           />
         }

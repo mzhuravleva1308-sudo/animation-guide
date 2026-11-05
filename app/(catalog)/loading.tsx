@@ -1,10 +1,20 @@
-import FilmsCatalogPendingShell from "@/components/FilmsCatalogPendingShell";
+import FilmsPageClient from "@/components/FilmsPageClient";
+import { PUBLIC_CATALOG_PAGE_SIZE } from "@/lib/load-public-film-catalog";
 
 /**
- * Outer route fallback before the page shell resolves auth.
- * Guest chrome is fine here — Suspense fallback upgrades Saved/Watched once
- * auth is known, then cards stream in.
+ * Outer route fallback before auth resolves. Guest chrome + real
+ * search/filters; Suspense then upgrades Saved/Watched once auth is known.
  */
 export default function FilmsLoading() {
-  return <FilmsCatalogPendingShell showSubtitle />;
+  return (
+    <FilmsPageClient
+      auth={null}
+      films={[]}
+      awardWinningFilmIds={[]}
+      pageSize={PUBLIC_CATALOG_PAGE_SIZE}
+      loadError={null}
+      catalogPending
+      showSubtitle
+    />
+  );
 }

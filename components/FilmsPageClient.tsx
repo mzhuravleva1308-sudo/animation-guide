@@ -211,6 +211,10 @@ type FilmsPageClientProps = {
     | "cross_from_live_action";
   /** Films catalog tab (live-action); gated, currently off for everyone. */
   showLiveActionTab?: boolean;
+  /**
+   * Suspense/route fallback: keep header + search/filters, skeleton cards only.
+   */
+  catalogPending?: boolean;
 };
 
 function sortFilmsByRecency(
@@ -242,6 +246,7 @@ export default function FilmsPageClient({
   mediaType: initialMediaType = MEDIA_TYPE.animation,
   sortParam: _unusedSortParam = "native",
   showLiveActionTab = false,
+  catalogPending = false,
 }: FilmsPageClientProps) {
   useLayoutEffect(() => {
     if (!showSubtitle) return;
@@ -811,49 +816,48 @@ export default function FilmsPageClient({
 
       {isCatalogTab ? (
         <div className={showCatalogSubtitle ? undefined : "mt-[18px]"}>
-          {catalogLoading && !currentSlice ? (
-            <ListTabSkeleton />
-          ) : (
-            <FilmCatalog
-              films={unratedFilms}
-              freshTastePicks={unratedFreshTastePicks}
-              rankingMode={catalogRankingMode}
-              awardWinningFilmIds={catalogAwardIds}
-              pageSize={pageSize}
-              loadError={catalogLoadError}
-              catalogUpdatedShortLabel={catalogUpdatedShortLabel}
-              mediaType={activeMedia}
-              activeQuickFilter={activeQuickFilter}
-              onQuickFilterChange={handleQuickFilterChange}
-              showVibeSearch
-              vibeSearchUnlocked={canAccessVibeSearch(auth?.email)}
-              onVibeSearchAuthRequired={
-                auth
-                  ? undefined
-                  : () => openAuthModal(authTriggerRef.current)
-              }
-              showArchive={Boolean(auth)}
-              hero={
-                showCatalogSubtitle
-                  ? {
-                      title: catalogSubtitle.title,
-                      subtitle: catalogSubtitle.primary,
-                    }
-                  : null
-              }
-              interaction={{
-                profileId,
-                profileSlug,
-                savedFilmIds,
-                filmRatings,
-                ratingsReady,
-                ratingOnboardingFilmIds,
-                onSavedChange: handleSavedChange,
-                onRatingChange: handleRatingChangeAndRefresh,
-                onAuthRequired: auth ? undefined : handleAuthRequired,
-              }}
-            />
-          )}
+          <FilmCatalog
+            films={unratedFilms}
+            freshTastePicks={unratedFreshTastePicks}
+            rankingMode={catalogRankingMode}
+            awardWinningFilmIds={catalogAwardIds}
+            pageSize={pageSize}
+            loadError={catalogLoadError}
+            catalogUpdatedShortLabel={catalogUpdatedShortLabel}
+            mediaType={activeMedia}
+            activeQuickFilter={activeQuickFilter}
+            onQuickFilterChange={handleQuickFilterChange}
+            showVibeSearch
+            vibeSearchUnlocked={canAccessVibeSearch(auth?.email)}
+            onVibeSearchAuthRequired={
+              auth
+                ? undefined
+                : () => openAuthModal(authTriggerRef.current)
+            }
+            showArchive={Boolean(auth)}
+            filmsPending={
+              catalogPending || (catalogLoading && !currentSlice)
+            }
+            hero={
+              showCatalogSubtitle
+                ? {
+                    title: catalogSubtitle.title,
+                    subtitle: catalogSubtitle.primary,
+                  }
+                : null
+            }
+            interaction={{
+              profileId,
+              profileSlug,
+              savedFilmIds,
+              filmRatings,
+              ratingsReady,
+              ratingOnboardingFilmIds,
+              onSavedChange: handleSavedChange,
+              onRatingChange: handleRatingChangeAndRefresh,
+              onAuthRequired: auth ? undefined : handleAuthRequired,
+            }}
+          />
         </div>
       ) : (
         <>

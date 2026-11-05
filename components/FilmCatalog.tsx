@@ -73,6 +73,11 @@ type FilmCatalogProps = {
   showArchive?: boolean;
   /** Catalog hero (title + art); search may lift into it on narrow screens. */
   hero?: { title: string; subtitle: string } | null;
+  /**
+   * Catalog rows still loading — keep search/filters visible and show card
+   * skeletons instead of the empty state.
+   */
+  filmsPending?: boolean;
 };
 
 function CatalogSectionHeading({
@@ -134,6 +139,7 @@ export default function FilmCatalog({
   onVibeSearchAuthRequired,
   showArchive = false,
   hero = null,
+  filmsPending = false,
 }: FilmCatalogProps) {
   const [page, setPage] = useState(1);
   const [keepSearchUp, setKeepSearchUp] = useState(false);
@@ -591,10 +597,15 @@ export default function FilmCatalog({
         ) : null}
       </div>
 
-      {vibeState.isLoading ? (
+      {vibeState.isLoading ||
+      (filmsPending && !isSearchActive && !vibeState.isActive) ? (
         <div
           className="mb-4 grid gap-3"
-          data-testid="vibe-search-results-loading"
+          data-testid={
+            vibeState.isLoading
+              ? "vibe-search-results-loading"
+              : "films-loading-skeleton"
+          }
           aria-busy="true"
           aria-live="polite"
         >
@@ -614,7 +625,8 @@ export default function FilmCatalog({
         </div>
       ) : null}
 
-      {!vibeState.isLoading &&
+      {!filmsPending &&
+      !vibeState.isLoading &&
       ((activeSearch.error && isShowingSearchResults) ||
         (isShowingSearchResults &&
           !searchLoading &&
@@ -665,7 +677,7 @@ export default function FilmCatalog({
         </div>
       )}
 
-      {showFreshTastePicks && !vibeState.isLoading ? (
+      {showFreshTastePicks && !filmsPending && !vibeState.isLoading ? (
         <section
           data-testid="fresh-taste-picks"
           className="mb-10 border-b border-[#e4e2f0] pb-10"
@@ -714,7 +726,8 @@ export default function FilmCatalog({
         </section>
       ) : null}
 
-      {!loadError &&
+      {!filmsPending &&
+        !loadError &&
         !searchLoading &&
         !visibleFilms.length &&
         !showFreshTastePicks &&
@@ -735,7 +748,7 @@ export default function FilmCatalog({
           </div>
         )}
 
-      {!vibeState.isLoading ? (
+      {(!filmsPending || isShowingSearchResults) && !vibeState.isLoading ? (
       <section
         data-testid={isShowingSearchResults ? "film-search-results" : "film-list"}
         aria-labelledby={
