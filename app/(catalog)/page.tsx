@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import FilmsPageClient from "@/components/FilmsPageClient";
-import { getAuthUserSummary } from "@/lib/auth/session";
 import { parseCatalogQuickFilter } from "@/lib/catalog-url";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
-import {
-  loadPublicFilmCatalog,
-  PUBLIC_CATALOG_PAGE_SIZE,
-  resolveCatalogRankingForViewer,
-} from "@/lib/load-public-film-catalog";
+import { loadPublicFilmCatalog } from "@/lib/load-public-film-catalog";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 import {
   SITE_DESCRIPTION,
@@ -22,14 +16,12 @@ const siteJsonLd = buildSiteJsonLd();
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-type HomeSearchParams = {
-  media?: string;
-  sort?: string;
-  filter?: string;
-};
-
 type HomePageProps = {
-  searchParams: Promise<HomeSearchParams>;
+  searchParams: Promise<{
+    media?: string;
+    sort?: string;
+    filter?: string;
+  }>;
 };
 
 export const metadata: Metadata = {
@@ -63,64 +55,16 @@ export const metadata: Metadata = {
   },
 };
 
-async function HomeCatalogBody({
-  params,
-  auth,
-}: {
-  params: HomeSearchParams;
-  auth: Awaited<ReturnType<typeof getAuthUserSummary>>;
-}) {
-  // Stage timings (incl. totalMs ≈ server page work) are logged from
-  // loadPublicFilmCatalog in development via [catalog] load.
-  // Public films/badges are cached inside the loader; this page stays dynamic
-  // because auth + personalized order are request-specific.
-  // Live-action Films catalog tab is gated (currently hidden for everyone).
+export default async function HomePage({ searchParams }: HomePageProps) {
+  const params = await searchParams;
+  // Do not wrap FilmsPageClient in page-level Suspense with the same client
+  // component as fallback — soft nav from guides left the catalogPending
+  // shell forever after the RSC payload arrived. Route loading.tsx still
+  // shows pending chrome while this page resolves.
   const catalog = await loadPublicFilmCatalog({
     media: params.media,
     sort: params.sort,
-    reuseAuth: auth,
   });
-
-  return (
-    <FilmsPageClient
-      auth={catalog.auth}
-      films={catalog.films}
-      freshTastePicks={catalog.freshTastePicks}
-      rankingMode={catalog.rankingMode}
-      awardWinningFilmIds={catalog.awardWinningFilmIds}
-      pageSize={catalog.pageSize}
-      loadError={catalog.loadError}
-      initialFilmRatings={catalog.initialFilmRatings}
-      initialSavedFilmIds={catalog.initialSavedFilmIds}
-      initialRatingUpdatedAtMs={catalog.initialRatingUpdatedAtMs}
-      initialSavedAtMs={catalog.initialSavedAtMs}
-      scoresLastComputedAt={catalog.scoresLastComputedAt}
-      catalogUpdatedLabel={catalog.catalogUpdatedLabel}
-      catalogUpdatedShortLabel={catalog.catalogUpdatedShortLabel}
-      mediaType={catalog.mediaType}
-      sortParam={catalog.sortParam}
-      showLiveActionTab={catalog.showLiveActionTab}
-      initialQuickFilter={parseCatalogQuickFilter(
-        params.filter,
-        catalog.mediaType
-      )}
-      showSubtitle
-    />
-  );
-}
-
-export default async function HomePage({ searchParams }: HomePageProps) {
-  const params = await searchParams;
-  // Resolve auth first so header + search/filters can paint while films stream.
-  const auth = await getAuthUserSummary();
-  const ranking = resolveCatalogRankingForViewer(
-    { media: params.media, sort: params.sort },
-    auth?.email
-  );
-  const initialQuickFilter = parseCatalogQuickFilter(
-    params.filter,
-    ranking.mediaType
-  );
 
   return (
     <>
@@ -130,24 +74,30 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           __html: serializeJsonLd(siteJsonLd),
         }}
       />
-      <Suspense
-        fallback={
-          <FilmsPageClient
-            auth={auth}
-            films={[]}
-            awardWinningFilmIds={[]}
-            pageSize={PUBLIC_CATALOG_PAGE_SIZE}
-            loadError={null}
-            mediaType={ranking.mediaType}
-            showLiveActionTab={ranking.showLiveActionTab}
-            initialQuickFilter={initialQuickFilter}
-            catalogPending
-            showSubtitle
-          />
-        }
-      >
-        <HomeCatalogBody params={params} auth={auth} />
-      </Suspense>
+      <FilmsPageClient
+        auth={catalog.auth}
+        films={catalog.films}
+        freshTastePicks={catalog.freshTastePicks}
+        rankingMode={catalog.rankingMode}
+        awardWinningFilmIds={catalog.awardWinningFilmIds}
+        pageSize={catalog.pageSize}
+        loadError={catalog.loadError}
+        initialFilmRatings={catalog.initialFilmRatings}
+        initialSavedFilmIds={catalog.initialSavedFilmIds}
+        initialRatingUpdatedAtMs={catalog.initialRatingUpdatedAtMs}
+        initialSavedAtMs={catalog.initialSavedAtMs}
+        scoresLastComputedAt={catalog.scoresLastComputedAt}
+        catalogUpdatedLabel={catalog.catalogUpdatedLabel}
+        catalogUpdatedShortLabel={catalog.catalogUpdatedShortLabel}
+        mediaType={catalog.mediaType}
+        sortParam={catalog.sortParam}
+        showLiveActionTab={catalog.showLiveActionTab}
+        initialQuickFilter={parseCatalogQuickFilter(
+          params.filter,
+          catalog.mediaType
+        )}
+        showSubtitle
+      />
     </>
   );
 }
