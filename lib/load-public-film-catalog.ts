@@ -49,9 +49,53 @@ import {
   PUBLIC_CATALOG_FILM_FIELDS_WITHOUT_WATCH,
   isMissingWatchAvailabilityColumnError,
 } from "@/lib/films-select-fields.mjs";
+import { normalizeWatchAvailability } from "@/lib/film-watch-availability.mjs";
 import { Film } from "@/types/film";
+import type { FestivalBadge } from "@/types/festival-badge";
 
-export const PUBLIC_CATALOG_PAGE_SIZE = 100;
+/** Cards are large; keep first paint HTML small. Full list stays in client props for filters. */
+export const PUBLIC_CATALOG_PAGE_SIZE = 24;
+
+/**
+ * Catalog UI only needs "has somewhere to watch" (Watch → Google). Drop regions,
+ * deep links, and badge copy that balloon the RSC/JSON payload (~2MB home HTML).
+ */
+function compactFilmForPublicCatalogClient(film: Film): Film {
+  const watch = normalizeWatchAvailability(film.watch_availability);
+  const watch_availability = watch?.offers.length
+    ? {
+        source: "tmdb" as const,
+        checked_at: watch.checked_at,
+        tmdb_id: watch.tmdb_id,
+        offers: [
+          {
+            provider: "available",
+            type: "flatrate" as const,
+            regions: ["US"],
+          },
+        ],
+      }
+    : null;
+
+  const festival_badges = Array.isArray(film.festival_badges)
+    ? film.festival_badges.map(
+        (badge): FestivalBadge => ({
+          id: badge.id,
+          label: badge.label,
+          fullName: "",
+          description: "",
+          color: "",
+          backgroundColor: "",
+        })
+      )
+    : film.festival_badges;
+
+  return {
+    ...film,
+    watch_availability,
+    festival_badges,
+  };
+}
 
 export type CatalogRankingMode = "smart" | "smart-cross" | "cold-start";
 
@@ -644,8 +688,8 @@ export async function loadPublicFilmCatalog(options?: {
 
   return {
     auth,
-    films,
-    freshTastePicks,
+    films: films.map(compactFilmForPublicCatalogClient),
+    freshTastePicks: freshTastePicks.map(compactFilmForPublicCatalogClient),
     rankingMode,
     awardWinningFilmIds: publicBase.awardWinningFilmIds,
     loadError: publicBase.loadError,

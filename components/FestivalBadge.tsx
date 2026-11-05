@@ -1,8 +1,28 @@
 "use client";
 
-import type { FestivalBadge as FestivalBadgeType } from "@/types/festival-badge";
+import { festivalBadgeFromId } from "@/lib/festival-badge";
+import type {
+  FestivalBadge as FestivalBadgeType,
+  FestivalBadgeId,
+} from "@/types/festival-badge";
 
 const LAUREL_BRANCH_ASSET = "/assets/laurel-branch-left.svg";
+
+function hydrateFestivalBadge(badge: FestivalBadgeType): FestivalBadgeType {
+  // Catalog ships id+label only; restore tooltip copy from the shared registry.
+  if (badge.fullName && badge.description) {
+    return badge;
+  }
+  try {
+    const base = festivalBadgeFromId(badge.id as FestivalBadgeId);
+    return {
+      ...base,
+      label: badge.label || base.label,
+    };
+  } catch {
+    return badge;
+  }
+}
 
 function LaurelBranch({ mirrored = false }: { mirrored?: boolean }) {
   return (
@@ -34,22 +54,23 @@ function LaurelRight() {
 }
 
 function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
-  const tooltipId = `festival-badge-tip-${badge.id}`;
-  const awardLabel = badge.label.includes(" · ")
-    ? badge.label.slice(badge.label.indexOf(" · ") + 3)
+  const resolved = hydrateFestivalBadge(badge);
+  const tooltipId = `festival-badge-tip-${resolved.id}`;
+  const awardLabel = resolved.label.includes(" · ")
+    ? resolved.label.slice(resolved.label.indexOf(" · ") + 3)
     : null;
 
   return (
     <span className="group/badge relative inline-flex">
       <span
-        data-testid={`festival-badge-${badge.id}`}
+        data-testid={`festival-badge-${resolved.id}`}
         tabIndex={0}
         aria-describedby={tooltipId}
         className="inline-flex max-w-full cursor-help items-center gap-0.5 text-xs font-medium text-[#8a5b2d] outline-none"
       >
         <LaurelLeft />
         <span className="min-w-0 text-center tracking-[0.02em]">
-          {badge.label}
+          {resolved.label}
         </span>
         <LaurelRight />
       </span>
@@ -60,7 +81,7 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
         className="pointer-events-none absolute right-0 top-[calc(100%+0.375rem)] z-20 w-max max-w-[16rem] scale-95 rounded-lg border border-gray-200 bg-white px-3 py-2 text-left opacity-0 shadow-lg transition duration-150 group-hover/badge:scale-100 group-hover/badge:opacity-100 group-focus-within/badge:scale-100 group-focus-within/badge:opacity-100"
       >
         <span className="block text-xs font-semibold leading-snug text-gray-900">
-          {badge.fullName}
+          {resolved.fullName}
         </span>
         {awardLabel ? (
           <span className="mt-1 block text-[11px] font-medium leading-snug text-gray-800">
@@ -68,7 +89,7 @@ function FestivalBadgeItem({ badge }: { badge: FestivalBadgeType }) {
           </span>
         ) : null}
         <span className="mt-1 block text-[11px] leading-snug text-gray-600">
-          {badge.description}
+          {resolved.description}
         </span>
       </span>
     </span>
