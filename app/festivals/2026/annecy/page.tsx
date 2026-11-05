@@ -6,11 +6,7 @@ import {
   CURRENT_FESTIVAL_YEAR,
   FESTIVALS_INDEX_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
-import {
-  buildGuideDocumentMetadata,
-  resolveGuideShareImage,
-} from "@/lib/guides/guide-document-seo";
-import { loadGuidePage } from "@/lib/load-guide-page";
+import { buildGuideDocumentMetadata } from "@/lib/guides/guide-document-seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,20 +17,12 @@ const DESCRIPTION =
   ANNECY_2026_FEATURE_AWARDS.metaDescription ??
   ANNECY_2026_FEATURE_AWARDS.intro[0];
 
-export async function generateMetadata(): Promise<Metadata> {
-  const page = await loadGuidePage(ANNECY_2026_FEATURE_AWARDS);
-  const indexable = !page.loadError && page.missingTitles.length === 0;
-
-  return buildGuideDocumentMetadata({
-    h1:
-      ANNECY_2026_FEATURE_AWARDS.documentTitle ??
-      ANNECY_2026_FEATURE_AWARDS.h1,
-    description: DESCRIPTION,
-    path: PATH,
-    indexable,
-    imageUrl: resolveGuideShareImage(page),
-  });
-}
+export const metadata: Metadata = buildGuideDocumentMetadata({
+  h1: ANNECY_2026_FEATURE_AWARDS.documentTitle ?? ANNECY_2026_FEATURE_AWARDS.h1,
+  description: DESCRIPTION,
+  path: PATH,
+  indexable: true,
+});
 
 export default function Annecy2026FeatureAwardsPage() {
   return (
