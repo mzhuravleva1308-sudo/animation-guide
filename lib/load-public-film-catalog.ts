@@ -5,7 +5,10 @@ import {
   timeAsyncStage,
   timeSyncStage,
 } from "@/lib/catalog-page-load-log";
-import { getAuthUserSummary } from "@/lib/auth/session";
+import {
+  getAuthUserSummary,
+  type AuthUserSummary,
+} from "@/lib/auth/session";
 import { canAccessAnimationThreeAxis } from "@/lib/animation-three-axis-access.mjs";
 import { canAccessLiveActionCatalog } from "@/lib/live-action-catalog-access";
 import {
@@ -477,7 +480,7 @@ function ratingUpdatedAtMsFromRows(
   return record;
 }
 
-function resolveCatalogRankingForViewer(
+export function resolveCatalogRankingForViewer(
   rawParams: { media?: string | null; sort?: string | null } | undefined,
   email: string | null | undefined
 ): CatalogRankingParams & { showLiveActionTab: boolean } {
@@ -519,10 +522,18 @@ function resolveCatalogRankingForViewer(
 export async function loadPublicFilmCatalog(options?: {
   media?: string | null;
   sort?: string | null;
+  /**
+   * When the property is present (including `null`), skip session lookup and
+   * reuse this auth — e.g. homepage already resolved auth for the shell.
+   */
+  reuseAuth?: AuthUserSummary | null;
 }) {
   const timer = createCatalogPageLoadTimer();
 
-  const authTimed = await timeAsyncStage(() => getAuthUserSummary());
+  const authTimed =
+    options && Object.prototype.hasOwnProperty.call(options, "reuseAuth")
+      ? { value: options.reuseAuth ?? null, ms: 0 }
+      : await timeAsyncStage(() => getAuthUserSummary());
   const auth = authTimed.value;
   const profileId = auth?.profile?.id ?? null;
 
