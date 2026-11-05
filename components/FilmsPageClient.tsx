@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Bookmark,
   CircleCheck,
@@ -38,6 +45,7 @@ import {
   type MediaType,
 } from "@/lib/media-type";
 import { resolveProfileListTabView } from "@/lib/profile-list-tab-view.mjs";
+import { consumeScrollHomeToTop } from "@/lib/scroll-home-to-top";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import { Film } from "@/types/film";
 
@@ -235,6 +243,13 @@ export default function FilmsPageClient({
   sortParam: _unusedSortParam = "native",
   showLiveActionTab = false,
 }: FilmsPageClientProps) {
+  useLayoutEffect(() => {
+    if (!showSubtitle) return;
+    if (consumeScrollHomeToTop()) {
+      window.scrollTo(0, 0);
+    }
+  }, [showSubtitle]);
+
   const [activeTab, setActiveTab] = useState<CatalogTab>(() =>
     initialMediaType === MEDIA_TYPE.liveAction ? "films" : "all"
   );

@@ -13,6 +13,7 @@ import SiteFooter from "@/components/SiteFooter";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
+import { markScrollHomeToTop } from "@/lib/scroll-home-to-top";
 import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import type { Film } from "@/types/film";
@@ -199,6 +200,13 @@ export default function GuidePageClient({
         <Link
           href={content.cta.href}
           data-testid="guide-cta"
+          scroll
+          onClick={() => {
+            // Soft-nav into the Suspense catalog can keep the guide's scrollY
+            // (or a prior / position) through the short pending shell — land at top.
+            markScrollHomeToTop();
+            window.scrollTo(0, 0);
+          }}
           className="mt-5 inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           {content.cta.label}

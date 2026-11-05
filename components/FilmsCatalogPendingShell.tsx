@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect } from "react";
 import {
   Bookmark,
   CircleCheck,
@@ -18,6 +19,7 @@ import ResonaleBrand, {
 } from "@/components/ResonaleBrand";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
+import { peekScrollHomeToTop } from "@/lib/scroll-home-to-top";
 
 function SkeletonBlock({ className }: { className: string }) {
   return <div className={`animate-pulse rounded-xl bg-gray-200 ${className}`} />;
@@ -61,6 +63,12 @@ export default function FilmsCatalogPendingShell({
   showSubtitle = false,
   mediaType = MEDIA_TYPE.animation,
 }: FilmsCatalogPendingShellProps) {
+  useLayoutEffect(() => {
+    if (peekScrollHomeToTop()) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
   const isLiveAction =
     showLiveActionTab && mediaType === MEDIA_TYPE.liveAction;
   const animationNav = headerNavLabelCollapse(!isLiveAction);
