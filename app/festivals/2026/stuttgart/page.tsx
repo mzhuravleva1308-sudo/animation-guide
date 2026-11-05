@@ -1,19 +1,15 @@
 import type { Metadata } from "next";
-import GuidePageClient from "@/components/guides/GuidePageClient";
+import GuideDocumentPage from "@/components/guides/GuideDocumentPage";
 import { STUTTGART_2026_FEATURE_AWARDS } from "@/lib/festivals/stuttgart-2026-feature-awards.mjs";
 import {
   CURRENT_FESTIVAL_YEAR,
   FESTIVALS_INDEX_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
-import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
 import {
   buildGuideDocumentMetadata,
   resolveGuideShareImage,
-  serializeJsonLd,
 } from "@/lib/guides/guide-document-seo";
-import { listGuideFilmTitles } from "@/lib/guides/resolve-guide-films.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
-import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -38,47 +34,14 @@ export async function generateMetadata(): Promise<Metadata> {
   });
 }
 
-export default async function Stuttgart2026FeatureAwardsPage() {
-  const page = await loadGuidePage(STUTTGART_2026_FEATURE_AWARDS);
-  const showJsonLd = !page.loadError && page.missingTitles.length === 0;
-  const jsonLd = showJsonLd
-    ? buildGuideJsonLd({
-        origin: PUBLIC_SITE_ORIGIN,
-        path: PATH,
-        name: STUTTGART_2026_FEATURE_AWARDS.h1,
-        description: DESCRIPTION,
-        filmTitles: listGuideFilmTitles(STUTTGART_2026_FEATURE_AWARDS),
-      })
-    : null;
-
+export default function Stuttgart2026FeatureAwardsPage() {
   return (
-    <>
-      {jsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: serializeJsonLd(jsonLd),
-          }}
-        />
-      ) : null}
-      <GuidePageClient
-        auth={page.auth}
-        groups={page.groups}
-        missingTitles={page.missingTitles}
-        loadError={page.loadError}
-        content={STUTTGART_2026_FEATURE_AWARDS}
-        postAuthPath={PATH}
-        sectionLink={{
-          href: FESTIVALS_INDEX_PATH,
-          label: "Festivals",
-        }}
-        pageTestId="stuttgart-2026-feature-awards"
-        initialFilmRatings={page.initialFilmRatings}
-        initialSavedFilmIds={page.initialSavedFilmIds}
-        initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
-        initialSavedAtMs={page.initialSavedAtMs}
-        catalogUpdatedLabel={page.catalogUpdatedLabel}
-      />
-    </>
+    <GuideDocumentPage
+      guide={STUTTGART_2026_FEATURE_AWARDS}
+      path={PATH}
+      description={DESCRIPTION}
+      sectionLink={{ href: FESTIVALS_INDEX_PATH, label: "Festivals" }}
+      pageTestId="stuttgart-2026-feature-awards"
+    />
   );
 }
