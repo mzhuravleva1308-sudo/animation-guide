@@ -1,0 +1,31 @@
+{
+  "batch_name": "toys-in-the-attic",
+  "films": [
+    {
+      "title": "Toys in the Attic",
+      "original_title": "Na půdě aneb Kdo má dneska narozeniny?",
+      "year": 2009,
+      "runtime_minutes": 78,
+      "countries": ["Czech Republic", "France", "Japan", "Slovakia"],
+      "directors": ["Jiří Barta"],
+      "synopsis": "In a cluttered attic, a doll named Buttercup lives with a marionette, a teddy bear, a mechanical mouse and a plasticine creature. When she is kidnapped and taken to the Land of Evil, her friends set out on a dangerous rescue mission against the Head of State.",
+      "the_mood": "Whimsical and slightly menacing stop-motion adventure: dusty attic inventiveness, handmade toys, and a fairy-tale quest that keeps a chill under the charm.",
+      "technique": ["stop-motion animation"],
+      "festival_recognitions": [],
+      "image_url": "https://image.tmdb.org/t/p/w500/hjNfQkKDNkZzPKftgQSICBFQb3i.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=Qdz_vYGkQ4k",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "Qdz_vYGkQ4k",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": null,
+        "tmdb": "https://www.themoviedb.org/movie/60949-na-pude-aneb-kdo-ma-dneska-narozeniny",
+        "imdb": "https://www.imdb.com/title/tt1334530/"
+      },
+      "notes": "Added for films-like-Coraline whimsical-dread group. Czech stop-motion by Jiří Barta.",
+      "quick_filters": ["connection"],
+      "catalog_visible": true
+    }
+  ]
+}

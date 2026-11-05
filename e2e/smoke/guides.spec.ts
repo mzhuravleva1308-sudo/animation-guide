@@ -72,6 +72,11 @@ test.describe("Films like Flow guide", () => {
     );
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Coraline",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
         name: "Beautiful animated films",
       })
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
@@ -101,6 +106,132 @@ test.describe("Films like Flow guide", () => {
       ).toBeVisible();
       await expect(
         page.getByText("These films are very quiet", {
+          exact: false,
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Rate 1 out of 10" }).first()
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Add to watchlist" }).first()
+      ).toBeVisible();
+
+      await page.getByRole("button", { name: "Rate 1 out of 10" }).first().click();
+      await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    }
+
+    expect(consoleErrors).toEqual([]);
+  });
+});
+
+const CORALINE_PATH = "/guides/films-like-coraline";
+const CORALINE_TITLE = "9 Movies Like Coraline | Resonale";
+const CORALINE_DESCRIPTION =
+  "Nine films like Coraline to watch next — cozy creepy atmosphere, secret worlds, and whimsical dread that take children seriously.";
+
+test.describe("Films like Coraline guide", () => {
+  test("has dedicated metadata and noindex when the guide is incomplete", async ({
+    request,
+  }) => {
+    const response = await request.get(CORALINE_PATH);
+
+    expect(response.status()).toBe(200);
+    const html = await response.text();
+    const title = (html.match(/<title>([^<]*)<\/title>/)?.[1] ?? "").replaceAll(
+      "&amp;",
+      "&"
+    );
+    expect(title).toBe(CORALINE_TITLE);
+    expect(html).toContain(CORALINE_DESCRIPTION);
+    expect(html).toContain(`https://resonale.com${CORALINE_PATH}`);
+    expect(html).toContain(`property="og:title" content="${CORALINE_TITLE}"`);
+    expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).not.toMatch(/Beautiful Animated Films to Watch Next/i);
+
+    const unavailable = html.includes("This guide is temporarily unavailable.");
+    if (unavailable) {
+      expect(html).toMatch(/noindex/i);
+    } else {
+      expect(html).not.toMatch(/noindex/i);
+      expect(html).toMatch(/CollectionPage/);
+      expect(html).toMatch(/ItemList/);
+    }
+  });
+
+  test("renders as a Resonale catalog page, not a blog article", async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on("pageerror", (error) => consoleErrors.push(error.message));
+
+    await page.goto(CORALINE_PATH);
+
+    await expect(page.getByTestId("guide-page")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Resonale home" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "9 Movies Like Coraline",
+      })
+    ).toBeVisible();
+    await expect(
+      page.getByText("There’s something irresistible about the world of Coraline", {
+        exact: false,
+      })
+    ).toBeVisible();
+    const anchorPoster = page.getByTestId("guide-anchor-poster");
+    if ((await page.getByTestId("film-card").count()) > 0) {
+      await expect(anchorPoster).toBeVisible();
+    }
+    await expect(page.getByTestId("guide-personal-note")).toBeVisible();
+    await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
+    await expect(page.getByTestId("guide-cta")).toHaveText(
+      "Explore more animation in Resonale"
+    );
+    await expect(page.getByTestId("guide-section-link")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(page.getByTestId("guide-related-index")).toHaveAttribute(
+      "href",
+      "/guides"
+    );
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Flow",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Strange festival animated movies",
+      })
+    ).toHaveAttribute("href", "/guides/strange-festival-animated-movies");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Beautiful animated films",
+      })
+    ).toHaveAttribute("href", "/guides/beautiful-animated-films");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "Indie animated movies beyond the studios",
+      })
+    ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
+    await expect(page.getByTestId("nav-films")).toHaveCount(0);
+    await expect(page.getByTestId("nav-saved")).toHaveCount(0);
+    await expect(page.getByTestId("auth-status")).toBeVisible();
+
+    const cards = page.getByTestId("film-card");
+    const cardCount = await cards.count();
+    if (cardCount > 0) {
+      await expect(cards).toHaveCount(9);
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: "If you loved the cozy, creepy atmosphere",
+        })
+      ).toBeVisible();
+      await expect(
+        page.getByText("places that seem to have secrets of their own", {
           exact: false,
         })
       ).toBeVisible();
@@ -193,6 +324,11 @@ test.describe("Beautiful animated films guide", () => {
         name: "9 Movies Like Flow",
       })
     ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Coraline",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
         name: "Strange festival animated movies",
@@ -316,6 +452,11 @@ test.describe("Strange festival animated movies guide", () => {
     ).toHaveAttribute("href", "/guides/films-like-flow");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Coraline",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
         name: "Indie animated movies beyond the studios",
       })
     ).toHaveAttribute("href", "/guides/indie-animated-movies-beyond-studios");
@@ -430,6 +571,11 @@ test.describe("Animation styles guide", () => {
         name: "9 Movies Like Flow",
       })
     ).toHaveAttribute("href", "/guides/films-like-flow");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Coraline",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
         name: "Strange festival animated movies",
@@ -547,6 +693,11 @@ test.describe("Indie animated movies beyond studios guide", () => {
     ).toHaveAttribute("href", "/guides/films-like-flow");
     await expect(
       page.getByTestId("guide-related").getByRole("link", {
+        name: "9 Movies Like Coraline",
+      })
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
+    await expect(
+      page.getByTestId("guide-related").getByRole("link", {
         name: "Beautiful animated films",
       })
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
@@ -618,6 +769,9 @@ test.describe("Guides index", () => {
       "/guides/films-like-flow"
     );
     await expect(
+      page.getByTestId("guides-index-films-like-coraline")
+    ).toHaveAttribute("href", "/guides/films-like-coraline");
+    await expect(
       page.getByTestId("guides-index-beautiful-animated-films")
     ).toHaveAttribute("href", "/guides/beautiful-animated-films");
     await expect(
@@ -628,6 +782,9 @@ test.describe("Guides index", () => {
     ).toHaveAttribute("href", "/guides/animation-styles");
     await expect(
       page.getByTestId("guides-index-cover-films-like-flow")
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-cover-films-like-coraline")
     ).toBeVisible();
     await expect(
       page.getByTestId("guides-index-cover-beautiful-animated-films")

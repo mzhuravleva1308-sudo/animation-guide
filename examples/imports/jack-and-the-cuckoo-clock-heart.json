@@ -1,0 +1,42 @@
+{
+  "batch_name": "jack-and-the-cuckoo-clock-heart",
+  "films": [
+    {
+      "title": "Jack and the Cuckoo-Clock Heart",
+      "original_title": "Jack et la mécanique du cœur",
+      "year": 2014,
+      "runtime_minutes": 94,
+      "countries": ["France", "Belgium"],
+      "directors": ["Mathias Malzieu", "Stéphane Berla"],
+      "synopsis": "Born on the coldest day in Edinburgh’s history with a frozen heart, Jack is saved when a midwife replaces it with a cuckoo clock. To stay alive he must never touch the hands, never lose his temper, and never fall in love — until he meets a street singer named Acacia and follows her across Europe.",
+      "the_mood": "Whimsical gothic romance with ticking urgency: bright steampunk invention, musical melancholy, and a heart that cannot risk feeling too much.",
+      "technique": ["3D computer animation"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Berlin International Film Festival",
+          "festival_year": 2014,
+          "section": "Generation Kplus",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.berlinale.de/en/2014/programme/20146491.html"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/ZSrU2mvlzM5Jr30XtKCU1fziIj.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=v7VHN4hGlk4",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "v7VHN4hGlk4",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.berlinale.de/en/2014/programme/20146491.html",
+        "tmdb": "https://www.themoviedb.org/movie/204436-jack-et-la-mecanique-du-coeur",
+        "imdb": "https://www.imdb.com/title/tt1181840/"
+      },
+      "notes": "Added for the films-like-Coraline guide whimsical-dread group. Not previously in hosted catalog.",
+      "quick_filters": ["connection"],
+      "catalog_visible": true
+    }
+  ]
+}

@@ -66,6 +66,9 @@ test.describe("Public SEO basics", () => {
       "<loc>https://resonale.com/guides/films-like-flow</loc>"
     );
     expect(body).toContain(
+      "<loc>https://resonale.com/guides/films-like-coraline</loc>"
+    );
+    expect(body).toContain(
       "<loc>https://resonale.com/guides/beautiful-animated-films</loc>"
     );
     expect(body).toContain(
