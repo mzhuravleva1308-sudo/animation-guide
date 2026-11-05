@@ -75,6 +75,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         }}
       />
       <FilmsPageClient
+        key="catalog-ready"
         auth={catalog.auth}
         films={catalog.films}
         freshTastePicks={catalog.freshTastePicks}
