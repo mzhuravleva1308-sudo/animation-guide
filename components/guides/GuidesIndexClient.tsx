@@ -112,7 +112,7 @@ export default function GuidesIndexClient({
                   {guide.updatedLabel ? (
                     <p
                       data-testid={`guides-index-updated-${guide.slug}`}
-                      className="mt-2 text-[13px] leading-5 text-[#9a9aab]"
+                      className="mt-2 text-[13px] leading-5 text-[#7a7b90]"
                     >
                       {guide.updatedLabel}
                     </p>

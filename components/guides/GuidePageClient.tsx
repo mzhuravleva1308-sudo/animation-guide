@@ -160,7 +160,7 @@ export default function GuidePageClient({
         {updatedLabel ? (
           <p
             data-testid="guide-updated-label"
-            className="mt-3 text-[13px] leading-5 text-[#9a9aab]"
+            className="mt-3 text-[13px] leading-5 text-[#7a7b90]"
           >
             {updatedLabel}
           </p>
