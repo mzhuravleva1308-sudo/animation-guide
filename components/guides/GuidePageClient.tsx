@@ -18,12 +18,20 @@ import { useCatalogFilmInteraction } from "@/lib/use-catalog-film-interaction";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import type { Film } from "@/types/film";
 
+type GuidePortrait = {
+  src: string;
+  alt: string;
+  credit?: string;
+  creditHref?: string;
+};
+
 type GuidePageContent = {
   h1: string;
   intro: string[];
   personalNote: string;
   cta: { href: string; label: string };
   relatedGuides?: { href: string; label: string }[];
+  portrait?: GuidePortrait;
 };
 
 type GuidePageClientProps = {
@@ -92,8 +100,11 @@ export default function GuidePageClient({
   });
 
   const showGroups = groups.length > 0 && missingTitles.length === 0;
-  const anchorPosterUrl = anchorFilm ? getFilmPosterUrl(anchorFilm) : null;
-  const [firstIntro, ...restIntro] = content.intro;
+  const portrait = content.portrait ?? null;
+  const anchorPosterUrl =
+    !portrait && anchorFilm ? getFilmPosterUrl(anchorFilm) : null;
+  const introImageUrl = portrait?.src ?? anchorPosterUrl;
+  const introImageAlt = portrait?.alt ?? anchorFilm?.title ?? "Flow";
 
   return (
     <main
@@ -124,43 +135,26 @@ export default function GuidePageClient({
             activeYear={yearSwitcher.activeYear}
           />
         ) : null}
-        {anchorPosterUrl ? (
-          <div className="mt-4 flex flex-wrap items-start gap-x-5 gap-y-3 min-[425px]:flex-nowrap min-[425px]:gap-6">
+        <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+          {introImageUrl ? (
             <img
-              src={anchorPosterUrl}
-              alt={anchorFilm?.title || "Flow"}
-              data-testid="guide-anchor-poster"
+              src={introImageUrl}
+              alt={introImageAlt}
+              data-testid={portrait ? "guide-portrait" : "guide-anchor-poster"}
               width={104}
               height={156}
               decoding="async"
               fetchPriority="high"
-              className="aspect-[2/3] w-[104px] shrink-0 rounded-xl object-cover"
+              className="float-left mb-3 mr-5 aspect-[2/3] w-[104px] rounded-xl object-cover object-top"
             />
-            <div className="min-w-0 flex-1 space-y-3 max-[424px]:contents">
-              {firstIntro ? (
-                <p className={`max-[424px]:min-w-0 max-[424px]:flex-1 ${introClassName}`}>
-                  {firstIntro}
-                </p>
-              ) : null}
-              {restIntro.map((paragraph) => (
-                <p
-                  key={paragraph.slice(0, 24)}
-                  className={`max-[424px]:w-full ${introClassName}`}
-                >
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
-            {content.intro.map((paragraph) => (
-              <p key={paragraph.slice(0, 24)} className={introClassName}>
-                {paragraph}
-              </p>
-            ))}
-          </div>
-        )}
+          ) : null}
+          {content.intro.map((paragraph) => (
+            <p key={paragraph.slice(0, 24)} className={introClassName}>
+              {paragraph}
+            </p>
+          ))}
+          {introImageUrl ? <div className="clear-both" aria-hidden="true" /> : null}
+        </div>
       </div>
 
       {loadError ? (

@@ -801,6 +801,12 @@ test.describe("Guides index", () => {
     await expect(
       page.getByTestId("guides-index-cover-indie-animated-movies-beyond-studios")
     ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-adam-elliot-movies")
+    ).toHaveAttribute("href", "/guides/adam-elliot-movies");
+    await expect(
+      page.getByTestId("guides-index-cover-adam-elliot-movies")
+    ).toBeVisible();
   });
 
   test("article titles open the guide pages", async ({ page }) => {

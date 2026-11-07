@@ -13,12 +13,20 @@ import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 import { markScrollHomeToTop } from "@/lib/scroll-home-to-top";
 import type { AuthUserSummary } from "@/lib/auth/session";
 
+type GuidePortrait = {
+  src: string;
+  alt: string;
+  credit?: string;
+  creditHref?: string;
+};
+
 type GuidePageContent = {
   h1: string;
   intro: string[];
   personalNote: string;
   cta: { href: string; label: string };
   relatedGuides?: { href: string; label: string }[];
+  portrait?: GuidePortrait;
 };
 
 type GuidePagePendingShellProps = {
@@ -104,11 +112,17 @@ export default function GuidePagePendingShell({
           />
         ) : null}
         <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+          {content.portrait ? (
+            <SkeletonBlock className="float-left mb-3 mr-5 aspect-[2/3] w-[104px]" />
+          ) : null}
           {content.intro.map((paragraph) => (
             <p key={paragraph.slice(0, 24)} className={introClassName}>
               {paragraph}
             </p>
           ))}
+          {content.portrait ? (
+            <div className="clear-both" aria-hidden="true" />
+          ) : null}
         </div>
       </div>
 

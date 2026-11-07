@@ -37,7 +37,19 @@ type GuidePageContent = {
   groups: {
     heading: string;
     description: string;
-    films: { title: string; note?: string }[];
+    films: (
+      | { title: string; note?: string; kind?: "catalog" }
+      | {
+          kind: "short";
+          title: string;
+          year: number;
+          runtimeLabel: string;
+          watchUrl: string;
+          posterUrl?: string;
+          note?: string;
+        }
+      | { kind: "prose"; text: string }
+    )[];
   }[];
 };
 
@@ -248,7 +260,19 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
     groups: resolved.groups as {
       heading: string;
       description: string;
-      items: { film: Film; note: string | null }[];
+      items: (
+        | { kind: "catalog"; film: Film; note: string | null }
+        | {
+            kind: "short";
+            title: string;
+            year: number;
+            runtimeLabel: string;
+            watchUrl: string;
+            posterUrl: string | null;
+            note: string | null;
+          }
+        | { kind: "prose"; text: string }
+      )[];
     }[],
     missingTitles: resolved.missingTitles as string[],
   };

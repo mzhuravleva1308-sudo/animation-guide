@@ -1,16 +1,31 @@
 "use client";
 
 import FilmCard from "@/components/FilmCard";
+import GuideProseText from "@/components/guides/GuideProseText";
+import GuideShortFilmRow, {
+  type GuideShortFilmItem,
+} from "@/components/guides/GuideShortFilmRow";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 import { MEDIA_TYPE } from "@/lib/media-type";
 import type { PendingFilmActionInput } from "@/lib/pending-film-action";
 import { Film } from "@/types/film";
 
-export type GuideEditorialItem = {
+export type GuideEditorialCatalogItem = {
+  kind?: "catalog";
   film: Film;
   note?: string | null;
 };
+
+export type GuideEditorialProseItem = {
+  kind: "prose";
+  text: string;
+};
+
+export type GuideEditorialItem =
+  | GuideEditorialCatalogItem
+  | GuideShortFilmItem
+  | GuideEditorialProseItem;
 
 export type GuideEditorialGroup = {
   heading: string;
@@ -34,6 +49,14 @@ type GuideEditorialGroupsProps = {
   onAuthRequired?: (action: PendingFilmActionInput) => void;
   currentGuidePath?: string;
 };
+
+function isShortItem(item: GuideEditorialItem): item is GuideShortFilmItem {
+  return item.kind === "short";
+}
+
+function isProseItem(item: GuideEditorialItem): item is GuideEditorialProseItem {
+  return item.kind === "prose";
+}
 
 export default function GuideEditorialGroups({
   groups,
@@ -77,48 +100,80 @@ export default function GuideEditorialGroups({
                   key={paragraph.slice(0, 24)}
                   className="text-[15px] leading-7 text-[#4a4b5c]"
                 >
-                  {paragraph}
+                  <GuideProseText text={paragraph} />
                 </p>
               ))}
             </div>
           </div>
-          {group.items.map((item) => {
-            const index = cardIndex;
-            cardIndex += 1;
-            const card = (
-              <FilmCard
-                mode="catalog"
-                film={item.film}
-                lazyLoadPoster={index >= 1}
-                profileId={profileId}
-                profileSlug={profileSlug}
-                initialRating={filmRatings[item.film.id] ?? null}
-                savedFilmIds={savedFilmIds}
-                onSavedChange={onSavedChange}
-                onRatingChange={onRatingChange}
-                onAuthRequired={onAuthRequired}
-                currentGuidePath={currentGuidePath}
-                ratingOnboardingHint={getHintForIndex(index)}
-                onDismissRatingOnboarding={onDismissRatingOnboarding}
-              />
-            );
+          {group.items.length > 0 ? (
+            <div className="grid gap-8">
+              {group.items.map((item, itemIndex) => {
+                if (isProseItem(item)) {
+                  return (
+                    <div
+                      key={`prose-${itemIndex}-${item.text.slice(0, 24)}`}
+                      data-testid="guide-prose-block"
+                      className={`space-y-3 ${GUIDE_PROSE_CLASS}`}
+                    >
+                      {item.text.split(/\n\n+/).map((paragraph) => (
+                        <p
+                          key={paragraph.slice(0, 24)}
+                          className="text-[15px] leading-7 text-[#4a4b5c]"
+                        >
+                          <GuideProseText text={paragraph} />
+                        </p>
+                      ))}
+                    </div>
+                  );
+                }
 
-            if (!item.note) {
-              return <div key={item.film.id}>{card}</div>;
-            }
+                if (isShortItem(item)) {
+                  return (
+                    <GuideShortFilmRow
+                      key={`${item.title}-${item.year}`}
+                      item={item}
+                    />
+                  );
+                }
 
-            return (
-              <div key={item.film.id} className="grid gap-3">
-                <p
-                  data-testid="guide-film-note"
-                  className={`text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
-                >
-                  {item.note}
-                </p>
-                {card}
-              </div>
-            );
-          })}
+                const index = cardIndex;
+                cardIndex += 1;
+                const card = (
+                  <FilmCard
+                    mode="catalog"
+                    film={item.film}
+                    lazyLoadPoster={index >= 1}
+                    profileId={profileId}
+                    profileSlug={profileSlug}
+                    initialRating={filmRatings[item.film.id] ?? null}
+                    savedFilmIds={savedFilmIds}
+                    onSavedChange={onSavedChange}
+                    onRatingChange={onRatingChange}
+                    onAuthRequired={onAuthRequired}
+                    currentGuidePath={currentGuidePath}
+                    ratingOnboardingHint={getHintForIndex(index)}
+                    onDismissRatingOnboarding={onDismissRatingOnboarding}
+                  />
+                );
+
+                if (!item.note) {
+                  return <div key={item.film.id}>{card}</div>;
+                }
+
+                return (
+                  <div key={item.film.id} className="grid gap-3">
+                    <p
+                      data-testid="guide-film-note"
+                      className={`text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+                    >
+                      <GuideProseText text={item.note} />
+                    </p>
+                    {card}
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </section>
       ))}
     </div>

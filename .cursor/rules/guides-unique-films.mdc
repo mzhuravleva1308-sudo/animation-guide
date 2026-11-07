@@ -7,6 +7,12 @@ alwaysApply: true
 
 When **creating** a guide or **changing its film list**, run both checks **before** writing or shipping titles. Do not pick first and verify later.
 
+## Exception: director / filmography guides
+
+Complete filmography or single-director articles (e.g. Adam Elliot movies) may reuse titles already listed in thematic guides. Do not strip those titles from other articles to “free” them. Competing-listicle check (§2) also does not apply the same way when the article’s job is the full filmography.
+
+Thematic listicles (“movies like…”, “indie beyond studios”, style roundups) still follow §1–§3.
+
 ## 1. Not in our guides
 
 Exact `films.title` (and Flow `anchorTitle`) must not appear in any other `lib/guides/*.mjs` article.

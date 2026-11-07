@@ -5,7 +5,7 @@ import type { FestivalYearOption } from "@/components/festivals/FestivalYearSwit
 import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
-import { listGuideFilmTitles } from "@/lib/guides/resolve-guide-films.mjs";
+import { listGuideItemListTitles } from "@/lib/guides/resolve-guide-films.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
@@ -22,7 +22,19 @@ type GuideContent = {
   groups: {
     heading: string;
     description: string;
-    films: { title: string; note?: string }[];
+    films: (
+      | { title: string; note?: string; kind?: "catalog" }
+      | {
+          kind: "short";
+          title: string;
+          year: number;
+          runtimeLabel: string;
+          watchUrl: string;
+          posterUrl?: string;
+          note?: string;
+        }
+      | { kind: "prose"; text: string }
+    )[];
   }[];
 };
 
@@ -51,7 +63,7 @@ async function GuideDocumentBody({
         path,
         name: guide.h1,
         description,
-        filmTitles: listGuideFilmTitles(guide),
+        filmTitles: listGuideItemListTitles(guide),
       })
     : null;
 
