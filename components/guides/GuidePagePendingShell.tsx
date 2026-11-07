@@ -36,6 +36,7 @@ type GuidePagePendingShellProps = {
   sectionLink?: { href: string; label: string };
   pageTestId?: string;
   yearSwitcher?: { years: FestivalYearOption[]; activeYear: number } | null;
+  updatedLabel?: string | null;
 };
 
 const introClassName =
@@ -71,6 +72,7 @@ export default function GuidePagePendingShell({
   sectionLink = { href: GUIDES_INDEX_PATH, label: "Guides" },
   pageTestId = "guide-page",
   yearSwitcher = null,
+  updatedLabel = null,
 }: GuidePagePendingShellProps) {
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -105,6 +107,14 @@ export default function GuidePagePendingShell({
         <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
           {content.h1}
         </h1>
+        {updatedLabel ? (
+          <p
+            data-testid="guide-updated-label"
+            className="mt-2 text-[13px] leading-5 text-[#9a9aab]"
+          >
+            {updatedLabel}
+          </p>
+        ) : null}
         {yearSwitcher ? (
           <FestivalYearSwitcher
             years={yearSwitcher.years}

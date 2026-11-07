@@ -3,7 +3,11 @@ import GuidePageClient from "@/components/guides/GuidePageClient";
 import GuidePagePendingShell from "@/components/guides/GuidePagePendingShell";
 import type { FestivalYearOption } from "@/components/festivals/FestivalYearSwitcher";
 import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
-import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
+import { formatGuideUpdatedLabel } from "@/lib/guides/guide-dates.mjs";
+import {
+  findPublicGuideLinkBySlug,
+  GUIDES_INDEX_PATH,
+} from "@/lib/guides/public-guide-links.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import { listGuideItemListTitles } from "@/lib/guides/resolve-guide-films.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
@@ -56,6 +60,8 @@ async function GuideDocumentBody({
   yearSwitcher,
 }: GuideDocumentPageProps) {
   const page = await loadGuidePage(guide);
+  const indexMeta = findPublicGuideLinkBySlug(guide.slug);
+  const updatedLabel = formatGuideUpdatedLabel(indexMeta?.updatedAt);
   const showJsonLd = !page.loadError && page.missingTitles.length === 0;
   const jsonLd = showJsonLd
     ? buildGuideJsonLd({
@@ -64,6 +70,8 @@ async function GuideDocumentBody({
         name: guide.h1,
         description,
         filmTitles: listGuideItemListTitles(guide),
+        datePublished: indexMeta?.publishedAt ?? null,
+        dateModified: indexMeta?.updatedAt ?? null,
       })
     : null;
 
@@ -89,6 +97,7 @@ async function GuideDocumentBody({
         pageTestId={pageTestId}
         anchorFilm={page.anchorFilm}
         yearSwitcher={yearSwitcher}
+        updatedLabel={updatedLabel}
         initialFilmRatings={page.initialFilmRatings}
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
@@ -112,6 +121,9 @@ export default function GuideDocumentPage({
   pageTestId = "guide-page",
   yearSwitcher = null,
 }: GuideDocumentPageProps) {
+  const indexMeta = findPublicGuideLinkBySlug(guide.slug);
+  const updatedLabel = formatGuideUpdatedLabel(indexMeta?.updatedAt);
+
   return (
     <Suspense
       fallback={
@@ -122,6 +134,7 @@ export default function GuideDocumentPage({
           sectionLink={sectionLink}
           pageTestId={pageTestId}
           yearSwitcher={yearSwitcher}
+          updatedLabel={updatedLabel}
         />
       }
     >

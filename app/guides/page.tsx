@@ -3,6 +3,7 @@ import GuidesIndexClient from "@/components/guides/GuidesIndexClient";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
+import { formatGuideUpdatedLabel } from "@/lib/guides/guide-dates.mjs";
 import {
   GUIDES_INDEX_PATH,
   PUBLIC_GUIDE_LINKS,
@@ -56,7 +57,7 @@ const jsonLd = {
       "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#itemlist`,
       name: "Guides to Animated Films",
       numberOfItems: PUBLIC_GUIDE_LINKS.length,
-      itemListOrder: "https://schema.org/ItemListOrderAscending",
+      itemListOrder: "https://schema.org/ItemListOrderDescending",
       itemListElement: PUBLIC_GUIDE_LINKS.map((guide, index) => ({
         "@type": "ListItem",
         position: index + 1,
@@ -100,6 +101,7 @@ export default async function GuidesIndexPage() {
       href: guide.href,
       title: guide.title,
       description: guide.description,
+      updatedLabel: formatGuideUpdatedLabel(guide.updatedAt),
       coverPosterUrl: film ? getFilmPosterUrl(film) : null,
     };
   });
