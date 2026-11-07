@@ -131,14 +131,6 @@ export default function GuidePageClient({
         <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
           {content.h1}
         </h1>
-        {updatedLabel ? (
-          <p
-            data-testid="guide-updated-label"
-            className="mt-2 text-[13px] leading-5 text-[#9a9aab]"
-          >
-            {updatedLabel}
-          </p>
-        ) : null}
         {yearSwitcher ? (
           <FestivalYearSwitcher
             years={yearSwitcher.years}
@@ -165,6 +157,14 @@ export default function GuidePageClient({
           ))}
           {introImageUrl ? <div className="clear-both" aria-hidden="true" /> : null}
         </div>
+        {updatedLabel ? (
+          <p
+            data-testid="guide-updated-label"
+            className="mt-3 text-[13px] leading-5 text-[#9a9aab]"
+          >
+            {updatedLabel}
+          </p>
+        ) : null}
       </div>
 
       {loadError ? (

@@ -106,6 +106,9 @@ export default function GuidesIndexClient({
                       {guide.title}
                     </span>
                   </h2>
+                  <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
+                    {guide.description}
+                  </p>
                   {guide.updatedLabel ? (
                     <p
                       data-testid={`guides-index-updated-${guide.slug}`}
@@ -114,9 +117,6 @@ export default function GuidesIndexClient({
                       {guide.updatedLabel}
                     </p>
                   ) : null}
-                  <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
-                    {guide.description}
-                  </p>
                 </div>
               </Link>
             </li>
