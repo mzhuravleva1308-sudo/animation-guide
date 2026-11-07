@@ -36,7 +36,6 @@ type GuidePagePendingShellProps = {
   sectionLink?: { href: string; label: string };
   pageTestId?: string;
   yearSwitcher?: { years: FestivalYearOption[]; activeYear: number } | null;
-  updatedLabel?: string | null;
 };
 
 const introClassName =
@@ -72,7 +71,6 @@ export default function GuidePagePendingShell({
   sectionLink = { href: GUIDES_INDEX_PATH, label: "Guides" },
   pageTestId = "guide-page",
   yearSwitcher = null,
-  updatedLabel = null,
 }: GuidePagePendingShellProps) {
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -126,14 +124,6 @@ export default function GuidePagePendingShell({
             <div className="clear-both" aria-hidden="true" />
           ) : null}
         </div>
-        {updatedLabel ? (
-          <p
-            data-testid="guide-updated-label"
-            className="mt-3 text-[13px] leading-5 text-[#7a7b90]"
-          >
-            {updatedLabel}
-          </p>
-        ) : null}
       </div>
 
       <section className="grid gap-4" data-testid="guide-films-pending">

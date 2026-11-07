@@ -45,7 +45,6 @@ type GuidePageClientProps = {
   pageTestId?: string;
   anchorFilm?: Film | null;
   yearSwitcher?: { years: FestivalYearOption[]; activeYear: number } | null;
-  updatedLabel?: string | null;
   initialFilmRatings?: Record<string, number>;
   initialSavedFilmIds?: string[];
   initialRatingUpdatedAtMs?: Record<string, number>;
@@ -69,7 +68,6 @@ export default function GuidePageClient({
   pageTestId = "guide-page",
   anchorFilm = null,
   yearSwitcher = null,
-  updatedLabel = null,
   initialFilmRatings,
   initialSavedFilmIds,
   initialRatingUpdatedAtMs,
@@ -157,14 +155,6 @@ export default function GuidePageClient({
           ))}
           {introImageUrl ? <div className="clear-both" aria-hidden="true" /> : null}
         </div>
-        {updatedLabel ? (
-          <p
-            data-testid="guide-updated-label"
-            className="mt-3 text-[13px] leading-5 text-[#7a7b90]"
-          >
-            {updatedLabel}
-          </p>
-        ) : null}
       </div>
 
       {loadError ? (

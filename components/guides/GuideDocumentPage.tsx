@@ -3,7 +3,6 @@ import GuidePageClient from "@/components/guides/GuidePageClient";
 import GuidePagePendingShell from "@/components/guides/GuidePagePendingShell";
 import type { FestivalYearOption } from "@/components/festivals/FestivalYearSwitcher";
 import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
-import { formatGuideUpdatedLabel } from "@/lib/guides/guide-dates.mjs";
 import {
   findPublicGuideLinkBySlug,
   GUIDES_INDEX_PATH,
@@ -61,7 +60,6 @@ async function GuideDocumentBody({
 }: GuideDocumentPageProps) {
   const page = await loadGuidePage(guide);
   const indexMeta = findPublicGuideLinkBySlug(guide.slug);
-  const updatedLabel = formatGuideUpdatedLabel(indexMeta?.updatedAt);
   const showJsonLd = !page.loadError && page.missingTitles.length === 0;
   const jsonLd = showJsonLd
     ? buildGuideJsonLd({
@@ -97,7 +95,6 @@ async function GuideDocumentBody({
         pageTestId={pageTestId}
         anchorFilm={page.anchorFilm}
         yearSwitcher={yearSwitcher}
-        updatedLabel={updatedLabel}
         initialFilmRatings={page.initialFilmRatings}
         initialSavedFilmIds={page.initialSavedFilmIds}
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
@@ -121,9 +118,6 @@ export default function GuideDocumentPage({
   pageTestId = "guide-page",
   yearSwitcher = null,
 }: GuideDocumentPageProps) {
-  const indexMeta = findPublicGuideLinkBySlug(guide.slug);
-  const updatedLabel = formatGuideUpdatedLabel(indexMeta?.updatedAt);
-
   return (
     <Suspense
       fallback={
@@ -134,7 +128,6 @@ export default function GuideDocumentPage({
           sectionLink={sectionLink}
           pageTestId={pageTestId}
           yearSwitcher={yearSwitcher}
-          updatedLabel={updatedLabel}
         />
       }
     >

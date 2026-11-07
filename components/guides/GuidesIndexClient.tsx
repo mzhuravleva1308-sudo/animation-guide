@@ -17,7 +17,6 @@ export type GuidesIndexItem = {
   href: string;
   title: string;
   description: string;
-  updatedLabel: string | null;
   coverPosterUrl: string | null;
 };
 
@@ -109,14 +108,6 @@ export default function GuidesIndexClient({
                   <p className="mt-3 text-[15px] leading-7 text-[#4a4b5c]">
                     {guide.description}
                   </p>
-                  {guide.updatedLabel ? (
-                    <p
-                      data-testid={`guides-index-updated-${guide.slug}`}
-                      className="mt-2 text-[13px] leading-5 text-[#7a7b90]"
-                    >
-                      {guide.updatedLabel}
-                    </p>
-                  ) : null}
                 </div>
               </Link>
             </li>

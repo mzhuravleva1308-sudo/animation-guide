@@ -3,7 +3,6 @@ import GuidesIndexClient from "@/components/guides/GuidesIndexClient";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
-import { formatGuideUpdatedLabel } from "@/lib/guides/guide-dates.mjs";
 import {
   GUIDES_INDEX_PATH,
   PUBLIC_GUIDE_LINKS,
@@ -101,7 +100,6 @@ export default async function GuidesIndexPage() {
       href: guide.href,
       title: guide.title,
       description: guide.description,
-      updatedLabel: formatGuideUpdatedLabel(guide.updatedAt),
       coverPosterUrl: film ? getFilmPosterUrl(film) : null,
     };
   });
