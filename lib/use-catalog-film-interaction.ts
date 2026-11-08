@@ -69,6 +69,9 @@ export function useCatalogFilmInteraction({
     null
   );
   const [authModalRating, setAuthModalRating] = useState<number | null>(null);
+  const [authPendingFilmId, setAuthPendingFilmId] = useState<string | null>(
+    null
+  );
   const [modalLockScrollY, setModalLockScrollY] = useState(0);
   const [modalRestoreFocusElement, setModalRestoreFocusElement] =
     useState<HTMLElement | null>(null);
@@ -421,6 +424,7 @@ export function useCatalogFilmInteraction({
       setAuthModalReason(reason);
       setAuthModalFilmTitle(null);
       setAuthModalRating(null);
+      setAuthPendingFilmId(null);
       setModalOpen(true);
     },
     []
@@ -437,6 +441,7 @@ export function useCatalogFilmInteraction({
           ? action.rating
           : null
       );
+      setAuthPendingFilmId(action.type === "rating" ? action.filmId : null);
 
       if (!preAuthSnapshotRef.current) {
         preAuthSnapshotRef.current = cloneInteractionSnapshot(
@@ -473,6 +478,7 @@ export function useCatalogFilmInteraction({
     setAuthModalReason("login");
     setAuthModalFilmTitle(null);
     setAuthModalRating(null);
+    setAuthPendingFilmId(null);
     setModalOpen(false);
   }, [revertPreAuthSnapshot]);
 
@@ -498,6 +504,7 @@ export function useCatalogFilmInteraction({
     authModalReason,
     authModalFilmTitle,
     authModalRating,
+    authPendingFilmId,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,

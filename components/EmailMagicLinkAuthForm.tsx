@@ -183,7 +183,9 @@ export default function EmailMagicLinkAuthForm({
           id={emailFormId}
           className={isModalAppearance ? "mt-5 space-y-3" : "mt-4 space-y-3"}
           onSubmit={handleEmailSubmit}
-          autoComplete="off"
+          // Keep form autocomplete on so Chrome can offer email suggestions on
+          // click. (autoComplete="off" here was suppressing the input's email autofill.)
+          autoComplete="on"
         >
           <div>
             <label
@@ -215,7 +217,12 @@ export default function EmailMagicLinkAuthForm({
                   return;
                 }
 
-                // Keep the field above the mobile keyboard / accessory bar.
+                // Only nudge into view on small touch screens. On desktop this
+                // scrollIntoView was part of the page "jump" when focusing email.
+                if (!window.matchMedia("(max-width: 639px)").matches) {
+                  return;
+                }
+
                 const target = event.currentTarget;
                 window.requestAnimationFrame(() => {
                   target.scrollIntoView({

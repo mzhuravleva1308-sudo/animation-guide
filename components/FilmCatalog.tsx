@@ -38,6 +38,8 @@ type FilmCatalogInteractionProps = {
    * onboarding can detect 7+ ratings even when rated films are hidden.
    */
   ratingOnboardingFilmIds?: Iterable<string>;
+  /** Keep this film visible in unrated queues while guest auth is open. */
+  authPendingFilmId?: string | null;
   onSavedChange: (film: Film, saved: boolean) => void;
   onRatingChange: (
     filmId: string,
@@ -399,6 +401,7 @@ export default function FilmCatalog({
   const currentPage = Math.min(page, totalPages);
 
   const filmRatings = interaction?.filmRatings;
+  const authPendingFilmId = interaction?.authPendingFilmId ?? null;
 
   const visibleFilms = useMemo(() => {
     const excludeHidden = (list: Film[]) =>
@@ -409,7 +412,11 @@ export default function FilmCatalog({
         return list;
       }
 
-      return list.filter((film) => typeof filmRatings[film.id] !== "number");
+      return list.filter(
+        (film) =>
+          typeof filmRatings[film.id] !== "number" ||
+          film.id === authPendingFilmId
+      );
     };
 
     if (isSearchActive && isSearchReady) {
@@ -426,6 +433,7 @@ export default function FilmCatalog({
     isSearchReady,
     activeSearch.films,
     filmRatings,
+    authPendingFilmId,
     hiddenFilmIds,
   ]);
 

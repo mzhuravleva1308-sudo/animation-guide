@@ -287,6 +287,7 @@ export default function FilmsPageClient({
     authModalReason,
     authModalFilmTitle,
     authModalRating,
+    authPendingFilmId,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,
@@ -648,18 +649,33 @@ export default function FilmsPageClient({
 
   // All/Films queues: rated films leave immediately via optimistic
   // filmRatings updates (no reload), and return when the rating is cleared.
+  // Exception: keep the card while the guest auth modal is open for that rating.
+  const isCatalogVisibleWhileAuthPending = useCallback(
+    (filmId: string) =>
+      modalOpen &&
+      authModalReason === "rating" &&
+      authPendingFilmId === filmId,
+    [authModalReason, authPendingFilmId, modalOpen]
+  );
+
   const unratedFilms = useMemo(
     () =>
-      catalogFilms.filter((film) => typeof filmRatings[film.id] !== "number"),
-    [catalogFilms, filmRatings]
+      catalogFilms.filter(
+        (film) =>
+          typeof filmRatings[film.id] !== "number" ||
+          isCatalogVisibleWhileAuthPending(film.id)
+      ),
+    [catalogFilms, filmRatings, isCatalogVisibleWhileAuthPending]
   );
 
   const unratedFreshTastePicks = useMemo(
     () =>
       catalogFreshTastePicks.filter(
-        (film) => typeof filmRatings[film.id] !== "number"
+        (film) =>
+          typeof filmRatings[film.id] !== "number" ||
+          isCatalogVisibleWhileAuthPending(film.id)
       ),
-    [catalogFreshTastePicks, filmRatings]
+    [catalogFreshTastePicks, filmRatings, isCatalogVisibleWhileAuthPending]
   );
 
   const ratingOnboardingFilmIds = useMemo(() => {
@@ -859,6 +875,10 @@ export default function FilmsPageClient({
               filmRatings,
               ratingsReady,
               ratingOnboardingFilmIds,
+              authPendingFilmId:
+                modalOpen && authModalReason === "rating"
+                  ? authPendingFilmId
+                  : null,
               onSavedChange: handleSavedChange,
               onRatingChange: handleRatingChangeAndRefresh,
               onAuthRequired: auth ? undefined : handleAuthRequired,
