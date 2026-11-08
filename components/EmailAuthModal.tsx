@@ -36,6 +36,7 @@ export default function EmailAuthModal({
 }: EmailAuthModalProps) {
   const dialogTitleId = useId();
   const dialogDescriptionId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
   const [step, setStep] = useState<AuthModalStep>("email");
@@ -56,7 +57,18 @@ export default function EmailAuthModal({
         ? document.activeElement
         : null);
 
-    return lockBodyScroll(lockScrollY ?? window.scrollY);
+    const unlockBodyScroll = lockBodyScroll(lockScrollY ?? window.scrollY);
+
+    // Focus the dialog shell, not the email field — autofocusing the input on
+    // mobile opens the keyboard/accessory bar before the form is in view.
+    const focusFrame = window.requestAnimationFrame(() => {
+      panelRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(focusFrame);
+      unlockBodyScroll();
+    };
   }, [lockScrollY, open, restoreFocusElement]);
 
   useEffect(() => {
@@ -103,7 +115,7 @@ export default function EmailAuthModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
       data-testid="email-auth-modal"
       data-auth-reason={reason}
     >
@@ -116,13 +128,15 @@ export default function EmailAuthModal({
       />
 
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
+        tabIndex={-1}
         aria-labelledby={dialogTitleId}
         aria-describedby={
           copy.description ? dialogDescriptionId : undefined
         }
-        className="relative z-10 max-h-[min(100dvh-2rem,40rem)] w-full max-w-[380px] overflow-y-auto rounded-2xl border border-[#e4e2f0] bg-white p-6 shadow-[0_18px_50px_rgba(26,27,46,0.16)]"
+        className="relative z-10 max-h-[min(100dvh-2rem,40rem)] w-full max-w-[380px] overflow-y-auto rounded-2xl border border-[#e4e2f0] bg-white p-6 shadow-[0_18px_50px_rgba(26,27,46,0.16)] outline-none"
         data-testid="email-auth-modal-panel"
       >
         <button
@@ -176,6 +190,7 @@ export default function EmailAuthModal({
           testIdPrefix="email-auth"
           headingMode="embedded"
           appearance="modal"
+          autoFocus={false}
           onStepChange={setStep}
         />
 
