@@ -122,9 +122,9 @@ export default function RatingButtons({
         return;
       }
 
-      setRating(nextRating);
-      ratingRef.current = nextRating;
-      onRatingChange?.(filmId, nextRating);
+      // Do not optimistically write the rating into catalog state for guests.
+      // That removed/resized the card under the auth modal and left the layout
+      // stretched after close. The modal still receives the pending rating.
       onAuthRequired({
         type: "rating",
         filmId,
