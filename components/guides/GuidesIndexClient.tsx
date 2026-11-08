@@ -36,6 +36,7 @@ export default function GuidesIndexClient({
     openAuthModal,
     handleModalClose,
     modalOpen,
+    authModalReason,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,
@@ -121,6 +122,7 @@ export default function GuidesIndexClient({
         open={modalOpen}
         onClose={handleModalClose}
         postAuthPath={GUIDES_INDEX_PATH}
+        reason={authModalReason}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />

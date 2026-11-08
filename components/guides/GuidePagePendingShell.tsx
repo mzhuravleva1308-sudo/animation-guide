@@ -188,6 +188,7 @@ export default function GuidePagePendingShell({
           setModalLockScrollY(undefined);
         }}
         postAuthPath={postAuthPath}
+        reason="login"
         lockScrollY={modalLockScrollY}
         restoreFocusElement={authTriggerRef.current}
       />

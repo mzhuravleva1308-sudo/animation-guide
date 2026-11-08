@@ -24,7 +24,12 @@ export default function FilmsAuthControl({ auth }: FilmsAuthControlProps) {
   return (
     <>
       <AccountMenu onLogin={() => setModalOpen(true)} />
-      <EmailAuthModal open={modalOpen} onClose={() => setModalOpen(false)} postAuthPath="/" />
+      <EmailAuthModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        postAuthPath="/"
+        reason="login"
+      />
     </>
   );
 }

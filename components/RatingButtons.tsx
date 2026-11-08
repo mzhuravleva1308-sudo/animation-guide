@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { PartyPopper, ThumbsDown } from "lucide-react";
 import { persistFilmRating } from "@/lib/film-profile-mutations";
-import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { AuthRequiredAction } from "@/lib/auth/auth-modal-copy";
 import {
   RATING_ONBOARDING_HINT_COPY,
   type RatingOnboardingHint,
@@ -27,6 +27,7 @@ type RatingChangeOptions = {
 
 type RatingButtonsProps = {
   filmId: string;
+  filmTitle?: string;
   profileId?: string;
   initialRating?: number | null;
   onRatingChange?: (
@@ -34,7 +35,7 @@ type RatingButtonsProps = {
     rating: number | null,
     options?: RatingChangeOptions
   ) => void;
-  onAuthRequired?: (action: PendingFilmActionInput) => void;
+  onAuthRequired?: (action: AuthRequiredAction) => void;
 };
 
 type RatingOnboardingHintChipProps = {
@@ -88,6 +89,7 @@ export function RatingOnboardingHintChip({
 
 export default function RatingButtons({
   filmId,
+  filmTitle,
   profileId,
   initialRating = null,
   onRatingChange,
@@ -126,6 +128,7 @@ export default function RatingButtons({
       onAuthRequired({
         type: "rating",
         filmId,
+        filmTitle,
         rating: nextRating,
       });
       return;

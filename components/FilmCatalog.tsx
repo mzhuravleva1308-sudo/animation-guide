@@ -21,7 +21,7 @@ import {
   getQuickFiltersForMedia,
   QUICK_FILTER_DESCRIPTIONS,
 } from "@/lib/quick-film-filters";
-import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { AuthRequiredAction } from "@/lib/auth/auth-modal-copy";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 import { MEDIA_TYPE, type MediaType } from "@/lib/media-type";
 import { useToast } from "@/components/ToastProvider";
@@ -44,7 +44,7 @@ type FilmCatalogInteractionProps = {
     rating: number | null,
     options?: { skipOrderUpdate?: boolean }
   ) => void;
-  onAuthRequired?: (action: PendingFilmActionInput) => void;
+  onAuthRequired?: (action: AuthRequiredAction) => void;
 };
 
 type FilmCatalogProps = {

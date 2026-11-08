@@ -2,6 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
+import {
+  reasonFromPendingAction,
+  toPendingFilmActionInput,
+  type AuthModalReason,
+  type AuthRequiredAction,
+} from "@/lib/auth/auth-modal-copy";
 import { loadActingCatalogState } from "@/lib/auth/resolve-auth-profile";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import { getUserDisplayEmail } from "@/lib/auth/user-display";
@@ -9,7 +15,6 @@ import { createClient } from "@/lib/supabase/client";
 import {
   clearPendingFilmActionFromSession,
   storePendingFilmActionForSession,
-  type PendingFilmActionInput,
 } from "@/lib/pending-film-action";
 import { Film } from "@/types/film";
 
@@ -58,6 +63,12 @@ export function useCatalogFilmInteraction({
 }: UseCatalogFilmInteractionArgs) {
   const [auth, setAuth] = useState(initialAuth);
   const [modalOpen, setModalOpen] = useState(false);
+  const [authModalReason, setAuthModalReason] =
+    useState<AuthModalReason>("login");
+  const [authModalFilmTitle, setAuthModalFilmTitle] = useState<string | null>(
+    null
+  );
+  const [authModalRating, setAuthModalRating] = useState<number | null>(null);
   const [modalLockScrollY, setModalLockScrollY] = useState(0);
   const [modalRestoreFocusElement, setModalRestoreFocusElement] =
     useState<HTMLElement | null>(null);
@@ -400,16 +411,32 @@ export function useCatalogFilmInteraction({
     [bumpInteractionGeneration]
   );
 
-  const openAuthModal = useCallback((restoreFocus: HTMLElement | null = null) => {
-    setModalLockScrollY(window.scrollY);
-    setModalRestoreFocusElement(restoreFocus);
-    setModalOpen(true);
-  }, []);
+  const openAuthModal = useCallback(
+    (
+      restoreFocus: HTMLElement | null = null,
+      reason: AuthModalReason = "login"
+    ) => {
+      setModalLockScrollY(window.scrollY);
+      setModalRestoreFocusElement(restoreFocus);
+      setAuthModalReason(reason);
+      setAuthModalFilmTitle(null);
+      setAuthModalRating(null);
+      setModalOpen(true);
+    },
+    []
+  );
 
   const handleAuthRequired = useCallback(
-    (action: PendingFilmActionInput) => {
+    (action: AuthRequiredAction) => {
       setModalLockScrollY(window.scrollY);
       setModalRestoreFocusElement(null);
+      setAuthModalReason(reasonFromPendingAction(action));
+      setAuthModalFilmTitle(action.filmTitle?.trim() || null);
+      setAuthModalRating(
+        action.type === "rating" && typeof action.rating === "number"
+          ? action.rating
+          : null
+      );
 
       if (!preAuthSnapshotRef.current) {
         preAuthSnapshotRef.current = cloneInteractionSnapshot(
@@ -420,7 +447,7 @@ export function useCatalogFilmInteraction({
         );
       }
 
-      storePendingFilmActionForSession(action);
+      storePendingFilmActionForSession(toPendingFilmActionInput(action));
       setModalOpen(true);
     },
     [filmRatings, ratingUpdatedAtMs, savedAtMs, savedFilmIds]
@@ -443,6 +470,9 @@ export function useCatalogFilmInteraction({
   const handleModalClose = useCallback(() => {
     clearPendingFilmActionFromSession();
     revertPreAuthSnapshot();
+    setAuthModalReason("login");
+    setAuthModalFilmTitle(null);
+    setAuthModalRating(null);
     setModalOpen(false);
   }, [revertPreAuthSnapshot]);
 
@@ -465,6 +495,9 @@ export function useCatalogFilmInteraction({
     openAuthModal,
     handleModalClose,
     modalOpen,
+    authModalReason,
+    authModalFilmTitle,
+    authModalRating,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,

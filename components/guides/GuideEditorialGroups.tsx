@@ -8,7 +8,7 @@ import GuideShortFilmRow, {
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 import { useRatingOnboarding } from "@/lib/use-rating-onboarding";
 import { MEDIA_TYPE } from "@/lib/media-type";
-import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { AuthRequiredAction } from "@/lib/auth/auth-modal-copy";
 import { Film } from "@/types/film";
 
 export type GuideEditorialCatalogItem = {
@@ -46,7 +46,7 @@ type GuideEditorialGroupsProps = {
     rating: number | null,
     options?: { skipOrderUpdate?: boolean }
   ) => void;
-  onAuthRequired?: (action: PendingFilmActionInput) => void;
+  onAuthRequired?: (action: AuthRequiredAction) => void;
   currentGuidePath?: string;
 };
 

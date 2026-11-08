@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import type { AuthModalStep } from "@/lib/auth/auth-modal-copy";
 import {
   canResendMagicLink,
   formatExistingLinkBody,
@@ -19,9 +20,11 @@ type EmailMagicLinkAuthFormProps = {
   postAuthPath?: string;
   testIdPrefix?: "login" | "email-auth";
   autoFocus?: boolean;
+  headingMode?: "standalone" | "embedded";
+  appearance?: "page" | "modal";
+  onStepChange?: (step: AuthModalStep) => void;
 };
 
-type AuthStep = "email" | "sent";
 type LoadingAction = "send" | "resend" | null;
 type LinkDeliveryHint = "sent" | "existing";
 
@@ -29,11 +32,14 @@ export default function EmailMagicLinkAuthForm({
   postAuthPath = POST_AUTH_PATH,
   testIdPrefix = "email-auth",
   autoFocus = true,
+  headingMode = "standalone",
+  appearance = "page",
+  onStepChange,
 }: EmailMagicLinkAuthFormProps) {
   const emailInputRef = useRef<HTMLInputElement>(null);
   const emailFormId = useId();
 
-  const [step, setStep] = useState<AuthStep>("email");
+  const [step, setStep] = useState<AuthModalStep>("email");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<LoadingAction>(null);
@@ -56,6 +62,10 @@ export default function EmailMagicLinkAuthForm({
       : linkDeliveryHint === "sent"
         ? "email-auth-link-sent-message"
         : "email-auth-link-existing-message";
+
+  useEffect(() => {
+    onStepChange?.(step);
+  }, [onStepChange, step]);
 
   useEffect(() => {
     if (!autoFocus || step !== "email") {
@@ -161,17 +171,29 @@ export default function EmailMagicLinkAuthForm({
   const resendAvailable = canResendMagicLink(lastSentAt);
   const resendSeconds = Math.ceil(resendDelayMs / 1000);
 
+  const isModalAppearance = appearance === "modal";
+  const submitLabel = isModalAppearance
+    ? "Send me the link"
+    : "Send sign-in link";
+
   if (step === "email") {
     return (
       <>
         <form
           id={emailFormId}
-          className="mt-4 space-y-3"
+          className={isModalAppearance ? "mt-5 space-y-3" : "mt-4 space-y-3"}
           onSubmit={handleEmailSubmit}
           autoComplete="off"
         >
           <div>
-            <label htmlFor={emailInputTestId} className="sr-only">
+            <label
+              htmlFor={emailInputTestId}
+              className={
+                isModalAppearance
+                  ? "mb-1.5 block text-[13px] font-medium text-[#1A1B2E]"
+                  : "sr-only"
+              }
+            >
               Email address
             </label>
             <input
@@ -187,8 +209,14 @@ export default function EmailMagicLinkAuthForm({
                 setEmail(event.target.value);
                 setMessage(null);
               }}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-              placeholder="Email address"
+              className={
+                isModalAppearance
+                  ? "w-full rounded-xl border border-[#d9d7e5] bg-white px-3.5 py-2.5 text-sm text-[#1A1B2E] outline-none transition placeholder:text-[#9a9baf] focus:border-[#b1a9d9] focus:ring-2 focus:ring-[#b1a9d9]/35"
+                  : "w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              }
+              placeholder={
+                isModalAppearance ? "you@example.com" : "Email address"
+              }
               data-testid={emailInputTestId}
             />
           </div>
@@ -196,10 +224,14 @@ export default function EmailMagicLinkAuthForm({
           <button
             type="submit"
             disabled={isBusy}
-            className="w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            className={
+              isModalAppearance
+                ? "w-full rounded-xl bg-[#1A1B2E] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#2f3040] disabled:opacity-60"
+                : "w-full rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+            }
             data-testid={continueButtonTestId}
           >
-            {loading === "send" ? "Sending link..." : "Send sign-in link"}
+            {loading === "send" ? "Sending link..." : submitLabel}
           </button>
         </form>
 
@@ -220,14 +252,23 @@ export default function EmailMagicLinkAuthForm({
 
   return (
     <>
-      <h3
-        className="mt-4 text-sm font-medium text-gray-900"
-        data-testid={sentHeadingTestId}
-      >
-        Check your inbox
-      </h3>
+      {headingMode === "standalone" ? (
+        <h3
+          className="mt-4 text-sm font-medium text-gray-900"
+          data-testid={sentHeadingTestId}
+        >
+          Check your inbox
+        </h3>
+      ) : null}
 
-      <p className="mt-2 text-sm text-gray-600" data-testid={sentMessageTestId}>
+      <p
+        className={
+          headingMode === "standalone"
+            ? "mt-2 text-sm text-gray-600"
+            : "mt-4 text-sm text-gray-600"
+        }
+        data-testid={sentMessageTestId}
+      >
         {linkDeliveryHint === "sent"
           ? formatLinkSentBody(email)
           : formatExistingLinkBody(email)}

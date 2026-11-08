@@ -12,13 +12,17 @@ import {
   headerNavLabelCollapse,
 } from "@/components/HeaderIconControl";
 import ResonaleBrand from "@/components/ResonaleBrand";
+import type { AuthModalReason } from "@/lib/auth/auth-modal-copy";
 import type { AuthUserSummary } from "@/lib/auth/session";
 import type { RefObject } from "react";
 
 type GuideSectionHeaderProps = {
   auth: AuthUserSummary | null;
   authTriggerRef: RefObject<HTMLButtonElement | null>;
-  openAuthModal: (restoreFocus?: HTMLElement | null) => void;
+  openAuthModal: (
+    restoreFocus?: HTMLElement | null,
+    reason?: AuthModalReason
+  ) => void;
 };
 
 export default function GuideSectionHeader({

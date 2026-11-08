@@ -87,6 +87,9 @@ export default function GuidePageClient({
     openAuthModal,
     handleModalClose,
     modalOpen,
+    authModalReason,
+    authModalFilmTitle,
+    authModalRating,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,
@@ -237,6 +240,9 @@ export default function GuidePageClient({
         open={modalOpen}
         onClose={handleModalClose}
         postAuthPath={postAuthPath}
+        reason={authModalReason}
+        filmTitle={authModalFilmTitle}
+        rating={authModalRating}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />

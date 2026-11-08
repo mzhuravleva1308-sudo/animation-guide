@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { persistFilmSave } from "@/lib/film-profile-mutations";
-import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { AuthRequiredAction } from "@/lib/auth/auth-modal-copy";
 import { useToast } from "@/components/ToastProvider";
 import {
   CATALOG_CONTROL_SIZE_PX,
@@ -12,15 +12,17 @@ import {
 
 type WatchlistButtonProps = {
   filmId: string;
+  filmTitle?: string;
   profileSlug?: string;
   profileId?: string;
   isSaved?: boolean;
   onSavedChange?: (saved: boolean) => void;
-  onAuthRequired?: (action: PendingFilmActionInput) => void;
+  onAuthRequired?: (action: AuthRequiredAction) => void;
 };
 
 export default function WatchlistButton({
   filmId,
+  filmTitle,
   profileSlug = "maria",
   profileId: profileIdFromProps,
   isSaved,
@@ -109,6 +111,7 @@ export default function WatchlistButton({
       onAuthRequired({
         type: "save",
         filmId,
+        filmTitle,
         saved: nextSaved,
       });
       return;

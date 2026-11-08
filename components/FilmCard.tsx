@@ -16,7 +16,7 @@ import {
   getFilmCardMood,
   getFilmCardSynopsis,
 } from "@/lib/film-card-copy.mjs";
-import type { PendingFilmActionInput } from "@/lib/pending-film-action";
+import type { AuthRequiredAction } from "@/lib/auth/auth-modal-copy";
 import type { FilmRatingDetail } from "@/lib/rating-detail";
 import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
@@ -64,7 +64,7 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
     rating: number | null,
     options?: { skipOrderUpdate?: boolean }
   ) => void;
-  onAuthRequired?: (action: PendingFilmActionInput) => void;
+  onAuthRequired?: (action: AuthRequiredAction) => void;
   ratingOnboardingHint?: RatingOnboardingHint;
   onDismissRatingOnboarding?: () => void;
   currentGuidePath?: string;
@@ -342,6 +342,7 @@ export default function FilmCard(props: FilmCardProps) {
       <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 sm:gap-x-6">
         <RatingButtons
           filmId={film.id}
+          filmTitle={film.title}
           profileId={props.profileId}
           initialRating={props.initialRating}
           onRatingChange={props.onRatingChange}
@@ -363,6 +364,7 @@ export default function FilmCard(props: FilmCardProps) {
           ) : null}
           <WatchlistButton
             filmId={film.id}
+            filmTitle={film.title}
             profileSlug={props.profileSlug}
             profileId={props.profileId}
             isSaved={props.savedFilmIds.has(film.id)}

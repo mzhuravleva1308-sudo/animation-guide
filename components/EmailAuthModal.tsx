@@ -1,8 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { X } from "lucide-react";
+import EmailAuthModalHero from "@/components/EmailAuthModalHero";
 import EmailMagicLinkAuthForm from "@/components/EmailMagicLinkAuthForm";
+import {
+  getAuthModalCopy,
+  type AuthModalReason,
+  type AuthModalStep,
+} from "@/lib/auth/auth-modal-copy";
 import { PRIVACY_PATH } from "@/lib/legal/privacy";
 import { lockBodyScroll } from "@/lib/modal-body-scroll-lock";
 
@@ -10,6 +17,9 @@ type EmailAuthModalProps = {
   open: boolean;
   onClose: () => void;
   postAuthPath?: string;
+  reason?: AuthModalReason;
+  filmTitle?: string | null;
+  rating?: number | null;
   lockScrollY?: number;
   restoreFocusElement?: HTMLElement | null;
 };
@@ -18,6 +28,9 @@ export default function EmailAuthModal({
   open,
   onClose,
   postAuthPath = "/",
+  reason = "login",
+  filmTitle = null,
+  rating = null,
   lockScrollY,
   restoreFocusElement = null,
 }: EmailAuthModalProps) {
@@ -25,6 +38,7 @@ export default function EmailAuthModal({
   const dialogDescriptionId = useId();
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
   const wasOpenRef = useRef(false);
+  const [step, setStep] = useState<AuthModalStep>("email");
 
   const handleClose = useCallback(() => {
     onClose();
@@ -35,6 +49,7 @@ export default function EmailAuthModal({
       return;
     }
 
+    setStep("email");
     lastActiveElementRef.current =
       restoreFocusElement ??
       (document.activeElement instanceof HTMLElement
@@ -84,15 +99,18 @@ export default function EmailAuthModal({
     return null;
   }
 
+  const copy = getAuthModalCopy(reason, step, { filmTitle });
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       data-testid="email-auth-modal"
+      data-auth-reason={reason}
     >
       <button
         type="button"
         aria-label="Close sign-in dialog"
-        className="absolute inset-0 bg-black/30"
+        className="absolute inset-0 bg-[#1A1B2E]/30"
         onClick={handleClose}
         data-testid="email-auth-modal-overlay"
       />
@@ -101,49 +119,73 @@ export default function EmailAuthModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={dialogTitleId}
-        aria-describedby={dialogDescriptionId}
-        className="relative z-10 w-full max-w-sm rounded-xl border border-gray-200 bg-white p-5 shadow-xl"
+        aria-describedby={
+          copy.description ? dialogDescriptionId : undefined
+        }
+        className="relative z-10 max-h-[min(100dvh-2rem,40rem)] w-full max-w-[380px] overflow-y-auto rounded-2xl border border-[#e4e2f0] bg-white p-6 shadow-[0_18px_50px_rgba(26,27,46,0.16)]"
         data-testid="email-auth-modal-panel"
       >
-        <div className="flex items-start justify-between gap-3">
-          <div>
+        <button
+          type="button"
+          onClick={handleClose}
+          className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#7a7b90] transition hover:bg-[#f7f6fb] hover:text-[#1A1B2E]"
+          aria-label="Close"
+          data-testid="email-auth-modal-close"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+
+        {step === "email" ? (
+          <div className="pr-6">
+            <EmailAuthModalHero
+              reason={reason}
+              filmTitle={filmTitle}
+              rating={rating}
+            />
             <h2
               id={dialogTitleId}
-              className="text-base font-semibold text-gray-900"
+              className="mt-4 font-sans text-[20px] font-semibold leading-snug tracking-tight text-[#1A1B2E]"
+              data-testid="email-auth-modal-title"
             >
-              Log in
+              {copy.title}
             </h2>
-            <p
-              id={dialogDescriptionId}
-              className="mt-1 text-sm text-gray-600"
-            >
-              Enter your email and we&apos;ll send you a sign-in link.
-            </p>
+            {copy.description ? (
+              <p
+                id={dialogDescriptionId}
+                className="mt-2 text-[14px] leading-6 text-[#5c5d6e]"
+                data-testid="email-auth-modal-description"
+              >
+                {copy.description}
+              </p>
+            ) : null}
           </div>
-
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-md px-2 py-1 text-sm text-gray-500 transition hover:bg-gray-50 hover:text-gray-900"
-            aria-label="Close"
-            data-testid="email-auth-modal-close"
-          >
-            Close
-          </button>
-        </div>
+        ) : (
+          <div className="pr-6">
+            <h2
+              id={dialogTitleId}
+              className="font-sans text-[20px] font-semibold leading-snug tracking-tight text-[#1A1B2E]"
+              data-testid="email-auth-sent-heading"
+            >
+              {copy.title}
+            </h2>
+          </div>
+        )}
 
         <EmailMagicLinkAuthForm
           postAuthPath={postAuthPath}
           testIdPrefix="email-auth"
+          headingMode="embedded"
+          appearance="modal"
+          onStepChange={setStep}
         />
 
-        <p className="mt-4 text-center text-xs text-gray-500">
+        <p className="mt-5 text-center text-xs text-[#7a7b90]">
           <Link
             href={PRIVACY_PATH}
-            className="underline decoration-gray-300 underline-offset-2 hover:text-gray-800"
+            className="underline decoration-[#c5c2d6] underline-offset-2 hover:text-[#1A1B2E]"
             data-testid="email-auth-privacy-link"
           >
-            Privacy Policy
+            Privacy policy
           </Link>
         </p>
       </div>

@@ -77,6 +77,13 @@ test.describe("Films pending actions with Mailpit", () => {
     expect(filmId).toBeTruthy();
 
     await openAuthModalFromSaveAction(page);
+    await expect(page.getByTestId("email-auth-modal")).toHaveAttribute(
+      "data-auth-reason",
+      "save"
+    );
+    await expect(page.getByTestId("email-auth-modal-title")).toHaveText(
+      /^Save .+ for later$/
+    );
     await completeFilmsAuthFromOpenModal(page, email);
 
     await expect(page).toHaveURL(profileGuideUrlPattern());
@@ -110,6 +117,13 @@ test.describe("Films pending actions with Mailpit", () => {
 
     await firstCard.getByRole("button", { name: `Rate ${rating} out of 10` }).click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await expect(page.getByTestId("email-auth-modal")).toHaveAttribute(
+      "data-auth-reason",
+      "rating"
+    );
+    await expect(page.getByTestId("email-auth-modal-title")).toHaveText(
+      /^Save your rating for .+$/
+    );
 
     await completeFilmsAuthFromOpenModal(page, email);
 

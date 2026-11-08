@@ -284,6 +284,9 @@ export default function FilmsPageClient({
     openAuthModal,
     handleModalClose,
     modalOpen,
+    authModalReason,
+    authModalFilmTitle,
+    authModalRating,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,
@@ -550,7 +553,10 @@ export default function FilmsPageClient({
   const handleTabChange = useCallback(
     (tab: CatalogTab) => {
       if ((tab === "saved" || tab === "watched") && !auth) {
-        openAuthModal(authTriggerRef.current);
+        openAuthModal(
+          authTriggerRef.current,
+          tab === "saved" ? "saved_tab" : "watched_tab"
+        );
         return;
       }
 
@@ -832,7 +838,7 @@ export default function FilmsPageClient({
             onVibeSearchAuthRequired={
               auth
                 ? undefined
-                : () => openAuthModal(authTriggerRef.current)
+                : () => openAuthModal(authTriggerRef.current, "vibe_search")
             }
             showArchive={Boolean(auth)}
             filmsPending={
@@ -974,6 +980,9 @@ export default function FilmsPageClient({
         open={modalOpen}
         onClose={handleModalClose}
         postAuthPath={catalogPostAuthPath}
+        reason={authModalReason}
+        filmTitle={authModalFilmTitle}
+        rating={authModalRating}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />

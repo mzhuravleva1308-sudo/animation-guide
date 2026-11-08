@@ -32,6 +32,11 @@ test.describe("Films magic-link auth", () => {
     await page.getByTestId("account-menu-trigger").click();
     await page.getByTestId("account-menu-login").click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await expect(page.getByTestId("email-auth-modal")).toHaveAttribute(
+      "data-auth-reason",
+      "login"
+    );
+    await expect(page.getByTestId("email-auth-modal-title")).toHaveText("Log in");
 
     await page.keyboard.press("Escape");
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
@@ -57,6 +62,17 @@ test.describe("Films magic-link auth", () => {
 
     await watchlistButton.click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await expect(page.getByTestId("email-auth-modal")).toHaveAttribute(
+      "data-auth-reason",
+      "save"
+    );
+    await expect(page.getByTestId("email-auth-modal-title")).toHaveText(
+      /^Save .+ for later$/
+    );
+    await expect(page.getByTestId("email-auth-modal-close")).toHaveAttribute(
+      "aria-label",
+      "Close"
+    );
 
     await page.getByTestId("email-auth-modal-close").click();
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);
@@ -81,6 +97,9 @@ test.describe("Films magic-link auth", () => {
 
     await watchlistButton.click();
     await expect(page.getByTestId("email-auth-modal")).toBeVisible();
+    await expect(page.getByTestId("email-auth-modal-title")).toHaveText(
+      /^Save .+ for later$/
+    );
 
     await page.getByTestId("email-auth-modal-close").click();
     await expect(page.getByTestId("email-auth-modal")).toHaveCount(0);

@@ -41,6 +41,7 @@ export default function FestivalsIndexClient({
     openAuthModal,
     handleModalClose,
     modalOpen,
+    authModalReason,
     modalLockScrollY,
     modalRestoreFocusElement,
     authTriggerRef,
@@ -141,6 +142,7 @@ export default function FestivalsIndexClient({
         open={modalOpen}
         onClose={handleModalClose}
         postAuthPath={FESTIVALS_INDEX_PATH}
+        reason={authModalReason}
         lockScrollY={modalLockScrollY}
         restoreFocusElement={modalRestoreFocusElement}
       />
