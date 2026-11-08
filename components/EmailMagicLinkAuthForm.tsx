@@ -47,17 +47,6 @@ export default function EmailMagicLinkAuthForm({
   const [resendDelayMs, setResendDelayMs] = useState(0);
   const [linkDeliveryHint, setLinkDeliveryHint] =
     useState<LinkDeliveryHint>("sent");
-  // Modal: keep the field locked until a real pointer/touch so Chrome does not
-  // pop the autofill sheet the moment the dialog opens.
-  const emailFieldUnlockedRef = useRef(appearance !== "modal");
-  const [emailFieldUnlocked, setEmailFieldUnlocked] = useState(
-    appearance !== "modal"
-  );
-
-  function unlockEmailField() {
-    emailFieldUnlockedRef.current = true;
-    setEmailFieldUnlocked(true);
-  }
 
   const emailInputTestId =
     testIdPrefix === "login" ? "login-email" : "email-auth-email";
@@ -210,24 +199,19 @@ export default function EmailMagicLinkAuthForm({
             <input
               ref={emailInputRef}
               id={emailInputTestId}
-              name={emailFieldUnlocked ? "email" : "resonale-sign-in"}
+              name="email"
               type="email"
-              autoComplete={emailFieldUnlocked ? "email" : "off"}
+              autoComplete="email"
               inputMode="email"
               enterKeyHint="send"
               required
-              readOnly={!emailFieldUnlocked}
               value={email}
               onChange={(event) => {
                 setEmail(event.target.value);
                 setMessage(null);
               }}
-              onPointerDown={unlockEmailField}
               onFocus={(event) => {
-                if (!emailFieldUnlockedRef.current) {
-                  // Programmatic focus (or unexpected autofocus): stay locked so
-                  // Chrome does not open the address autofill over the CTA.
-                  event.currentTarget.blur();
+                if (!isModalAppearance) {
                   return;
                 }
 
@@ -244,7 +228,7 @@ export default function EmailMagicLinkAuthForm({
               className={
                 isModalAppearance
                   ? // text-base (16px) avoids iOS zoom-on-focus that hides the form
-                    "w-full rounded-xl border border-[#d9d7e5] bg-white px-3.5 py-2.5 text-base text-[#1A1B2E] outline-none transition placeholder:text-[#9a9baf] focus:border-[#b1a9d9] focus:ring-2 focus:ring-[#b1a9d9]/35 read-only:cursor-text"
+                    "w-full rounded-xl border border-[#d9d7e5] bg-white px-3.5 py-2.5 text-base text-[#1A1B2E] outline-none transition placeholder:text-[#9a9baf] focus:border-[#b1a9d9] focus:ring-2 focus:ring-[#b1a9d9]/35"
                   : "w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
               }
               placeholder={
