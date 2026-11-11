@@ -1,0 +1,16 @@
+---
+description: Bump guide updatedAt when shipping substantial article edits
+alwaysApply: true
+---
+
+# Guide updates bump editorial date
+
+When shipping a **substantial** guide/article change (rewritten intros, new or replaced film notes, group copy, film list changes), update `updatedAt` in `lib/guides/public-guide-links.mjs` for that guide’s slug to today’s date (`YYYY-MM-DD`).
+
+`Updated` on the page and `dateModified` SEO come from that field — not from git.
+
+Do **not** bump for typo-only, styling-only, or unrelated infra fixes.
+
+Also update any test that asserts that guide’s `updatedAt` (e.g. `lib/guides/resolve-guide-films.test.mjs`).
+
+Example: rewriting Flow film notes without changing `updatedAt` left the byline on the old date.

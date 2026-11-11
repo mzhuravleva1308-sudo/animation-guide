@@ -255,6 +255,13 @@ test.describe("Films like Coraline guide", () => {
           exact: false,
         })
       ).toBeVisible();
+      await expect(page.getByTestId("guide-film-heading")).toHaveCount(9);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(9);
+      await expect(
+        page.getByText("ordinary house feel full of secrets", {
+          exact: false,
+        })
+      ).toBeVisible();
       await expect(
         page.getByRole("button", { name: "Rate 1 out of 10" }).first()
       ).toBeVisible();
