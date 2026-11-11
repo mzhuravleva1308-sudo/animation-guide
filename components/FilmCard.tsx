@@ -22,7 +22,10 @@ import type { RatingOnboardingHint } from "@/lib/rating-onboarding";
 import { FestivalBadgeList } from "@/components/FestivalBadge";
 import FilmWatchAvailability from "@/components/FilmWatchAvailability";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
-import { getCatalogGuideLink } from "@/lib/guides/catalog-guide-links.mjs";
+import {
+  getCatalogDirectorGuideLink,
+  getCatalogGuideLink,
+} from "@/lib/guides/catalog-guide-links.mjs";
 import { normalizeWatchAvailability } from "@/lib/film-watch-availability.mjs";
 
 type FilmCardBaseProps = {
@@ -101,14 +104,12 @@ export default function FilmCard(props: FilmCardProps) {
   const headerPills = isLiveAction
     ? getMaterialFactPills(film.material_fact)
     : getFilmTechniquePills(film.technique);
-  const metadataLine = [
+  const metadataParts = [
     film.director,
     film.year,
     film.country,
     film.duration_minutes ? `${film.duration_minutes} min` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  ].filter(Boolean);
   const showInteractionControls =
     props.mode === "profile" || props.mode === "catalog";
   const catalogGuideLink =
@@ -117,6 +118,12 @@ export default function FilmCard(props: FilmCardProps) {
     catalogGuideLink &&
       (props.mode !== "catalog" ||
         catalogGuideLink.href !== props.currentGuidePath)
+  );
+  const directorGuideLink = getCatalogDirectorGuideLink(film.director);
+  const currentGuidePath =
+    props.mode === "catalog" ? props.currentGuidePath : undefined;
+  const showDirectorGuideLink = Boolean(
+    directorGuideLink && directorGuideLink.href !== currentGuidePath
   );
   const showWatchButton = Boolean(
     normalizeWatchAvailability(film.watch_availability)?.offers.length
@@ -198,8 +205,32 @@ export default function FilmCard(props: FilmCardProps) {
 
       <CopyableFilmTitle title={film.title} />
 
-      {metadataLine ? (
-        <p className="mt-1 text-sm text-gray-500">{metadataLine}</p>
+      {metadataParts.length > 0 ? (
+        <p className="mt-1 text-sm text-gray-500">
+          {metadataParts.map((part, index) => {
+            const isDirector =
+              showDirectorGuideLink &&
+              directorGuideLink &&
+              part === film.director;
+            return (
+              <span key={`${String(part)}-${index}`}>
+                {index > 0 ? " · " : null}
+                {isDirector ? (
+                  <Link
+                    href={directorGuideLink.href}
+                    data-testid="film-card-director-guide-link"
+                    aria-label={directorGuideLink.label}
+                    className="underline underline-offset-2 transition-colors hover:text-gray-700 focus-visible:text-gray-700"
+                  >
+                    {part}
+                  </Link>
+                ) : (
+                  part
+                )}
+              </span>
+            );
+          })}
+        </p>
       ) : null}
 
       {showCatalogGuideLink && catalogGuideLink ? (
