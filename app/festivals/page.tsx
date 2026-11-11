@@ -4,6 +4,7 @@ import { getAuthUserSummary } from "@/lib/auth/session";
 import { getFilmPosterUrl } from "@/lib/film-poster";
 import { PUBLIC_FESTIVAL_AWARD_LINKS } from "@/lib/festivals/public-festival-award-links.mjs";
 import { FESTIVALS_INDEX_PATH } from "@/lib/festivals/public-festival-paths.mjs";
+import { absolutizeJsonLdUrl } from "@/lib/guides/build-guide-json-ld.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import { findGuideFilmByTitle } from "@/lib/guides/resolve-guide-films.mjs";
 import { loadCatalogUpdatedLabel } from "@/lib/load-catalog-last-updated";
@@ -36,54 +37,82 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "CollectionPage",
-      "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#webpage`,
-      url: `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}`,
-      name: "Animation Festival Winners",
-      description: DESCRIPTION,
-      inLanguage: "en",
-      isPartOf: { "@id": `${PUBLIC_SITE_ORIGIN}/#website` },
-      mainEntity: {
-        "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#itemlist`,
+function buildFestivalsIndexJsonLd(
+  festivals: {
+    href: string;
+    title: string;
+    description: string;
+    coverPosterUrl: string | null;
+  }[]
+) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#webpage`,
+        url: `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}`,
+        name: "Animation Festival Winners",
+        description: DESCRIPTION,
+        inLanguage: "en",
+        isPartOf: { "@id": `${PUBLIC_SITE_ORIGIN}/#website` },
+        mainEntity: {
+          "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#itemlist`,
+        },
       },
-    },
-    {
-      "@type": "ItemList",
-      "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#itemlist`,
-      name: "Animation Festival Winners",
-      numberOfItems: PUBLIC_FESTIVAL_AWARD_LINKS.length,
-      itemListOrder: "https://schema.org/ItemListOrderAscending",
-      itemListElement: PUBLIC_FESTIVAL_AWARD_LINKS.map((festival, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `${PUBLIC_SITE_ORIGIN}${festival.href}`,
-        name: festival.title,
-      })),
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#breadcrumb`,
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: `${PUBLIC_SITE_ORIGIN}/`,
-        },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: "Festivals",
-          item: `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}`,
-        },
-      ],
-    },
-  ],
-};
+      {
+        "@type": "ItemList",
+        "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#itemlist`,
+        name: "Animation Festival Winners",
+        numberOfItems: festivals.length,
+        itemListOrder: "https://schema.org/ItemListOrderAscending",
+        itemListElement: festivals.map((festival, index) => {
+          const url = `${PUBLIC_SITE_ORIGIN}${festival.href}`;
+          const image = absolutizeJsonLdUrl(
+            PUBLIC_SITE_ORIGIN,
+            festival.coverPosterUrl
+          );
+          /** @type {Record<string, unknown>} */
+          const item: Record<string, unknown> = {
+            "@type": "CollectionPage",
+            "@id": `${url}#webpage`,
+            url,
+            name: festival.title,
+            description: festival.description,
+          };
+          if (image) {
+            item.image = image;
+          }
+          return {
+            "@type": "ListItem",
+            position: index + 1,
+            url,
+            name: festival.title,
+            item,
+          };
+        }),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: `${PUBLIC_SITE_ORIGIN}/`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Festivals",
+            item: `${PUBLIC_SITE_ORIGIN}${FESTIVALS_INDEX_PATH}`,
+          },
+        ],
+      },
+    ],
+  };
+}
 
 export default async function FestivalsIndexPage() {
   const [auth, covers, catalogUpdatedLabel] = await Promise.all([
@@ -112,7 +141,7 @@ export default async function FestivalsIndexPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: serializeJsonLd(jsonLd),
+          __html: serializeJsonLd(buildFestivalsIndexJsonLd(festivals)),
         }}
       />
       <FestivalsIndexClient

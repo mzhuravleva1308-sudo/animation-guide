@@ -2,13 +2,15 @@ import { Suspense } from "react";
 import GuidePageClient from "@/components/guides/GuidePageClient";
 import GuidePagePendingShell from "@/components/guides/GuidePagePendingShell";
 import type { FestivalYearOption } from "@/components/festivals/FestivalYearSwitcher";
-import { buildGuideJsonLd } from "@/lib/guides/build-guide-json-ld.mjs";
+import {
+  buildGuideJsonLd,
+  listGuideJsonLdFilms,
+} from "@/lib/guides/build-guide-json-ld.mjs";
 import {
   findPublicGuideLinkBySlug,
   GUIDES_INDEX_PATH,
 } from "@/lib/guides/public-guide-links.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
-import { listGuideItemListTitles } from "@/lib/guides/resolve-guide-films.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
@@ -67,7 +69,7 @@ async function GuideDocumentBody({
         path,
         name: guide.h1,
         description,
-        filmTitles: listGuideItemListTitles(guide),
+        films: listGuideJsonLdFilms(page.groups),
         datePublished: indexMeta?.publishedAt ?? null,
         dateModified: indexMeta?.updatedAt ?? null,
       })

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import GuidesIndexClient from "@/components/guides/GuidesIndexClient";
 import { getAuthUserSummary } from "@/lib/auth/session";
 import { getFilmPosterUrl } from "@/lib/film-poster";
+import { absolutizeJsonLdUrl } from "@/lib/guides/build-guide-json-ld.mjs";
 import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
 import {
   GUIDES_INDEX_PATH,
@@ -38,52 +39,82 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "CollectionPage",
-      "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#webpage`,
-      url: `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}`,
-      name: "Guides to Animated Films",
-      description: DESCRIPTION,
-      inLanguage: "en",
-      isPartOf: { "@id": `${PUBLIC_SITE_ORIGIN}/#website` },
-      mainEntity: { "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#itemlist` },
-    },
-    {
-      "@type": "ItemList",
-      "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#itemlist`,
-      name: "Guides to Animated Films",
-      numberOfItems: PUBLIC_GUIDE_LINKS.length,
-      itemListOrder: "https://schema.org/ItemListOrderDescending",
-      itemListElement: PUBLIC_GUIDE_LINKS.map((guide, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        url: `${PUBLIC_SITE_ORIGIN}${guide.href}`,
-        name: guide.title,
-      })),
-    },
-    {
-      "@type": "BreadcrumbList",
-      "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#breadcrumb`,
-      itemListElement: [
-        {
-          "@type": "ListItem",
-          position: 1,
-          name: "Home",
-          item: `${PUBLIC_SITE_ORIGIN}/`,
+function buildGuidesIndexJsonLd(
+  guides: {
+    href: string;
+    title: string;
+    description: string;
+    coverPosterUrl: string | null;
+  }[]
+) {
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#webpage`,
+        url: `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}`,
+        name: "Guides to Animated Films",
+        description: DESCRIPTION,
+        inLanguage: "en",
+        isPartOf: { "@id": `${PUBLIC_SITE_ORIGIN}/#website` },
+        mainEntity: {
+          "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#itemlist`,
         },
-        {
-          "@type": "ListItem",
-          position: 2,
-          name: "Guides",
-          item: `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}`,
-        },
-      ],
-    },
-  ],
-};
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#itemlist`,
+        name: "Guides to Animated Films",
+        numberOfItems: guides.length,
+        itemListOrder: "https://schema.org/ItemListOrderDescending",
+        itemListElement: guides.map((guide, index) => {
+          const url = `${PUBLIC_SITE_ORIGIN}${guide.href}`;
+          const image = absolutizeJsonLdUrl(
+            PUBLIC_SITE_ORIGIN,
+            guide.coverPosterUrl
+          );
+          /** @type {Record<string, unknown>} */
+          const item: Record<string, unknown> = {
+            "@type": "CollectionPage",
+            "@id": `${url}#webpage`,
+            url,
+            name: guide.title,
+            description: guide.description,
+          };
+          if (image) {
+            item.image = image;
+          }
+          return {
+            "@type": "ListItem",
+            position: index + 1,
+            url,
+            name: guide.title,
+            item,
+          };
+        }),
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Home",
+            item: `${PUBLIC_SITE_ORIGIN}/`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Guides",
+            item: `${PUBLIC_SITE_ORIGIN}${GUIDES_INDEX_PATH}`,
+          },
+        ],
+      },
+    ],
+  };
+}
 
 export default async function GuidesIndexPage() {
   const [auth, covers, catalogUpdatedLabel] = await Promise.all([
@@ -109,7 +140,7 @@ export default async function GuidesIndexPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: serializeJsonLd(jsonLd),
+          __html: serializeJsonLd(buildGuidesIndexJsonLd(guides)),
         }}
       />
       <GuidesIndexClient

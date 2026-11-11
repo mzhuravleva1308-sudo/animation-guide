@@ -74,12 +74,45 @@ const jsonLd = {
       name: `Animation Festivals ${YEAR}`,
       numberOfItems: festivals.length,
       itemListOrder: "https://schema.org/ItemListOrderAscending",
-      itemListElement: festivals.map((festival, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: festival.name,
-        url: festival.url,
-      })),
+      itemListElement: festivals.map((festival, index) => {
+        /** @type {Record<string, unknown>} */
+        const event: Record<string, unknown> = {
+          "@type": "Event",
+          name: festival.name,
+          url: festival.url,
+          description: festival.description,
+          eventAttendanceMode:
+            "https://schema.org/OfflineEventAttendanceMode",
+          eventStatus: "https://schema.org/EventScheduled",
+          location: {
+            "@type": "Place",
+            name: festival.city,
+            address: {
+              "@type": "PostalAddress",
+              addressLocality: festival.city,
+              addressCountry: festival.country,
+            },
+          },
+          organizer: {
+            "@type": "Organization",
+            name: festival.name,
+            url: festival.url,
+          },
+        };
+        if (festival.startDate) {
+          event.startDate = festival.startDate;
+        }
+        if (festival.endDate) {
+          event.endDate = festival.endDate;
+        }
+        return {
+          "@type": "ListItem",
+          position: index + 1,
+          name: festival.name,
+          url: festival.url,
+          item: event,
+        };
+      }),
     },
     {
       "@type": "BreadcrumbList",
