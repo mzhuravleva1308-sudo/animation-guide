@@ -99,7 +99,7 @@ export default function GuideEditorialGroups({
                 {group.description.split(/\n\n+/).map((paragraph) => (
                   <p
                     key={paragraph.slice(0, 24)}
-                    className="text-[15px] leading-7 text-[#4a4b5c]"
+                    className="text-[16px] leading-[1.65] text-[#4a4b5c]"
                   >
                     <GuideProseText text={paragraph} />
                   </p>
@@ -120,7 +120,7 @@ export default function GuideEditorialGroups({
                       {item.text.split(/\n\n+/).map((paragraph) => (
                         <p
                           key={paragraph.slice(0, 24)}
-                          className="text-[15px] leading-7 text-[#4a4b5c]"
+                          className="text-[16px] leading-[1.65] text-[#4a4b5c]"
                         >
                           <GuideProseText text={paragraph} />
                         </p>
@@ -163,13 +163,21 @@ export default function GuideEditorialGroups({
                 }
 
                 return (
-                  <div key={item.film.id} className="grid gap-3">
-                    <p
-                      data-testid="guide-film-note"
-                      className={`text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
-                    >
-                      <GuideProseText text={item.note} />
-                    </p>
+                  <div key={item.film.id} className="grid gap-2.5">
+                    <div className="grid gap-1">
+                      <h3
+                        data-testid="guide-film-heading"
+                        className="font-sans text-[16px] font-medium leading-snug tracking-tight text-[#B1A9D9] antialiased [font-synthesis:none]"
+                      >
+                        {item.film.title}
+                      </h3>
+                      <p
+                        data-testid="guide-film-note"
+                        className={`text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+                      >
+                        <GuideProseText text={item.note} />
+                      </p>
+                    </div>
                     {card}
                   </div>
                 );

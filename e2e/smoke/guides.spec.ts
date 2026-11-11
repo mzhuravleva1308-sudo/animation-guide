@@ -116,7 +116,14 @@ test.describe("Films like Flow guide", () => {
         })
       ).toBeVisible();
       await expect(
-        page.getByText("These films are very quiet", {
+        page.getByText("These films make space for silence", {
+          exact: false,
+        })
+      ).toBeVisible();
+      await expect(page.getByTestId("guide-film-heading")).toHaveCount(9);
+      await expect(page.getByTestId("guide-film-note")).toHaveCount(9);
+      await expect(
+        page.getByText("The adventure begins long before anyone sets sail", {
           exact: false,
         })
       ).toBeVisible();

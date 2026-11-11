@@ -53,7 +53,7 @@ export default function GuideShortFilmRow({ item }: GuideShortFilmRowProps) {
         {item.note ? (
           <p
             data-testid="guide-film-note"
-            className={`text-[15px] leading-7 text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+            className={`text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
           >
             <GuideProseText text={item.note} />
           </p>
