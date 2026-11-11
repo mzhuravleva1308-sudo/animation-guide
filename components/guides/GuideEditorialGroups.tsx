@@ -29,7 +29,7 @@ export type GuideEditorialItem =
 
 export type GuideEditorialGroup = {
   heading: string;
-  description: string;
+  description?: string;
   items: GuideEditorialItem[];
 };
 
@@ -94,16 +94,18 @@ export default function GuideEditorialGroups({
             <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
               {group.heading}
             </h2>
-            <div className={`mt-3 space-y-3 ${GUIDE_PROSE_CLASS}`}>
-              {group.description.split(/\n\n+/).map((paragraph) => (
-                <p
-                  key={paragraph.slice(0, 24)}
-                  className="text-[15px] leading-7 text-[#4a4b5c]"
-                >
-                  <GuideProseText text={paragraph} />
-                </p>
-              ))}
-            </div>
+            {group.description?.trim() ? (
+              <div className={`mt-3 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+                {group.description.split(/\n\n+/).map((paragraph) => (
+                  <p
+                    key={paragraph.slice(0, 24)}
+                    className="text-[15px] leading-7 text-[#4a4b5c]"
+                  >
+                    <GuideProseText text={paragraph} />
+                  </p>
+                ))}
+              </div>
+            ) : null}
           </div>
           {group.items.length > 0 ? (
             <div className="grid gap-8">
