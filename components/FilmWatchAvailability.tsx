@@ -1,5 +1,6 @@
 "use client";
 
+import TrackedExternalLink from "@/components/TrackedExternalLink";
 import { normalizeWatchAvailability } from "@/lib/film-watch-availability.mjs";
 import type { Film } from "@/types/film";
 
@@ -18,17 +19,23 @@ export default function FilmWatchAvailability({ film }: { film: Film }) {
   const href = googleWhereToWatchUrl(film.title);
 
   return (
-    <a
+    <TrackedExternalLink
       href={href}
       target="_blank"
       rel="noreferrer"
       data-testid="film-watch-availability-button"
       aria-label={`Where to watch ${film.title} on Google`}
+      eventName="watch_link_clicked"
+      eventProperties={{
+        film_id: film.id,
+        film_title: film.title,
+        provider: "google_where_to_watch",
+      }}
       onClick={(event) => event.stopPropagation()}
       onPointerDown={(event) => event.stopPropagation()}
       className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-white/35 bg-black/35 px-3 py-1.5 text-sm font-normal leading-none text-white/90 backdrop-blur-sm transition hover:bg-black/45 hover:text-white"
     >
       <span>Watch</span>
-    </a>
+    </TrackedExternalLink>
   );
 }

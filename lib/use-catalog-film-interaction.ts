@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { captureAnalyticsEvent } from "@/lib/analytics";
 import { applyPendingFilmAction } from "@/lib/apply-pending-film-action";
 import {
   reasonFromPendingAction,
@@ -305,13 +306,19 @@ export function useCatalogFilmInteraction({
   useEffect(() => {
     const supabase = createClient();
 
-    async function handleAuthSessionEstablished() {
+    async function handleAuthSessionEstablished(
+      authEvent: "SIGNED_IN" | "INITIAL_SESSION"
+    ) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       if (!user) {
         return;
+      }
+
+      if (authEvent === "SIGNED_IN") {
+        captureAnalyticsEvent("sign_in_completed");
       }
 
       preAuthSnapshotRef.current = null;
@@ -356,7 +363,7 @@ export function useCatalogFilmInteraction({
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        void handleAuthSessionEstablished();
+        void handleAuthSessionEstablished(event);
       }
     });
 
@@ -426,15 +433,17 @@ export function useCatalogFilmInteraction({
       setAuthModalRating(null);
       setAuthPendingFilmId(null);
       setModalOpen(true);
+      captureAnalyticsEvent("auth_modal_opened", { reason });
     },
     []
   );
 
   const handleAuthRequired = useCallback(
     (action: AuthRequiredAction) => {
+      const reason = reasonFromPendingAction(action);
       setModalLockScrollY(window.scrollY);
       setModalRestoreFocusElement(null);
-      setAuthModalReason(reasonFromPendingAction(action));
+      setAuthModalReason(reason);
       setAuthModalFilmTitle(action.filmTitle?.trim() || null);
       setAuthModalRating(
         action.type === "rating" && typeof action.rating === "number"
@@ -454,6 +463,10 @@ export function useCatalogFilmInteraction({
 
       storePendingFilmActionForSession(toPendingFilmActionInput(action));
       setModalOpen(true);
+      captureAnalyticsEvent("auth_modal_opened", {
+        reason,
+        film_id: action.filmId,
+      });
     },
     [filmRatings, ratingUpdatedAtMs, savedAtMs, savedFilmIds]
   );

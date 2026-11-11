@@ -1,4 +1,5 @@
 import GuideProseText from "@/components/guides/GuideProseText";
+import TrackedExternalLink from "@/components/TrackedExternalLink";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 
 export type GuideShortFilmItem = {
@@ -58,11 +59,16 @@ export default function GuideShortFilmRow({ item }: GuideShortFilmRowProps) {
             <GuideProseText text={item.note} />
           </p>
         ) : null}
-        <a
+        <TrackedExternalLink
           href={item.watchUrl}
           target="_blank"
           rel="noreferrer"
           data-testid="guide-short-watch-link"
+          eventName="watch_link_clicked"
+          eventProperties={{
+            film_title: item.title,
+            provider: "guide_short_external",
+          }}
           className="inline-flex w-max items-center gap-1.5 rounded-full bg-[#1A1B2E] px-4 py-2 text-sm font-medium leading-none text-white transition hover:bg-[#2f3040]"
         >
           <svg
@@ -73,7 +79,7 @@ export default function GuideShortFilmRow({ item }: GuideShortFilmRowProps) {
             <path d="M8 5v14l11-7z" />
           </svg>
           Watch
-        </a>
+        </TrackedExternalLink>
       </div>
     </div>
   );

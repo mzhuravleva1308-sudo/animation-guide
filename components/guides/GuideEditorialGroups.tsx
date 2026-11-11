@@ -1,6 +1,7 @@
 "use client";
 
 import FilmCard from "@/components/FilmCard";
+import GuideFilmEngageTracker from "@/components/guides/GuideFilmEngageTracker";
 import GuideProseText from "@/components/guides/GuideProseText";
 import GuideShortFilmRow, {
   type GuideShortFilmItem,
@@ -141,21 +142,27 @@ export default function GuideEditorialGroups({
                 const index = cardIndex;
                 cardIndex += 1;
                 const card = (
-                  <FilmCard
-                    mode="catalog"
-                    film={item.film}
-                    lazyLoadPoster={index >= 1}
-                    profileId={profileId}
-                    profileSlug={profileSlug}
-                    initialRating={filmRatings[item.film.id] ?? null}
-                    savedFilmIds={savedFilmIds}
-                    onSavedChange={onSavedChange}
-                    onRatingChange={onRatingChange}
-                    onAuthRequired={onAuthRequired}
-                    currentGuidePath={currentGuidePath}
-                    ratingOnboardingHint={getHintForIndex(index)}
-                    onDismissRatingOnboarding={onDismissRatingOnboarding}
-                  />
+                  <GuideFilmEngageTracker
+                    filmId={item.film.id}
+                    filmTitle={item.film.title}
+                    guidePath={currentGuidePath ?? ""}
+                  >
+                    <FilmCard
+                      mode="catalog"
+                      film={item.film}
+                      lazyLoadPoster={index >= 1}
+                      profileId={profileId}
+                      profileSlug={profileSlug}
+                      initialRating={filmRatings[item.film.id] ?? null}
+                      savedFilmIds={savedFilmIds}
+                      onSavedChange={onSavedChange}
+                      onRatingChange={onRatingChange}
+                      onAuthRequired={onAuthRequired}
+                      currentGuidePath={currentGuidePath}
+                      ratingOnboardingHint={getHintForIndex(index)}
+                      onDismissRatingOnboarding={onDismissRatingOnboarding}
+                    />
+                  </GuideFilmEngageTracker>
                 );
 
                 if (!item.note) {

@@ -1,3 +1,4 @@
+import { captureAnalyticsEvent } from "@/lib/analytics";
 import { createClient } from "@/lib/supabase/client";
 import { logProfileActivityClient } from "@/lib/log-profile-activity-client";
 import type { FilmRatingDetail } from "@/lib/rating-detail";
@@ -54,6 +55,11 @@ export async function persistFilmRating({
       logProfileActivityClient({ filmId, eventType: "film_watched", eventData: { rating } });
     }
   }
+
+  captureAnalyticsEvent("film_rated", {
+    film_id: filmId,
+    rating,
+  });
 
   return { error: null };
 }
@@ -162,6 +168,10 @@ export async function persistFilmSave({
       eventType: saved ? "film_saved" : "film_unsaved",
     });
   }
+
+  captureAnalyticsEvent(saved ? "film_saved" : "film_unsaved", {
+    film_id: filmId,
+  });
 
   return { error: null };
 }

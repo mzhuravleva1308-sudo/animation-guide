@@ -92,10 +92,19 @@ export default async function PrivacyPage() {
             We also keep activity records of rating and save actions, which may
             include browser user agent.
           </li>
+          <li>
+            <strong className="font-medium text-[#2f3040]">
+              Usage analytics.
+            </strong>{" "}
+            Page views, in-site navigation, approximate time on page, clicks,
+            and product actions such as ratings, saves, watch-link clicks, and
+            sign-in. We do not record session replays (no screen recordings of
+            your visit).
+          </li>
         </ul>
         <p className={bodyClassName}>
           You can browse the public catalog without an account. We do not use
-          advertising cookies or third-party analytics.
+          advertising cookies.
         </p>
 
         <h2 className={sectionTitleClassName}>How we use it</h2>
@@ -107,6 +116,10 @@ export default async function PrivacyPage() {
             marketing email.
           </li>
           <li>Operate, secure, and debug the service.</li>
+          <li>
+            Understand how visitors use Resonale (which pages they open, where
+            they click, and how long they stay) so we can improve the product.
+          </li>
         </ul>
 
         <h2 className={sectionTitleClassName}>Processors</h2>
@@ -122,6 +135,12 @@ export default async function PrivacyPage() {
           <li>
             <strong className="font-medium text-[#2f3040]">Vercel</strong> —
             hosting and server logs.
+          </li>
+          <li>
+            <strong className="font-medium text-[#2f3040]">PostHog</strong> —
+            cookieless product analytics (EU Cloud). Events are associated with
+            a privacy-preserving daily hash rather than a long-lived browser
+            cookie. We do not use PostHog session replay.
           </li>
           <li>
             <strong className="font-medium text-[#2f3040]">OpenAI</strong> — if
@@ -144,8 +163,9 @@ export default async function PrivacyPage() {
           Essential cookies keep you signed in and remember where to return
           after a magic-link sign-in. Local storage may hold a pending save or
           rating until you finish signing in, and whether you dismissed rating
-          hints. These are needed for the site to work; there is no advertising
-          cookie banner because we do not use non-essential tracking cookies.
+          hints. These are needed for the site to work. Product analytics via
+          PostHog runs in cookieless mode and does not set analytics cookies, so
+          there is no advertising or analytics cookie banner.
         </p>
 
         <h2 className={sectionTitleClassName}>How long we keep it</h2>

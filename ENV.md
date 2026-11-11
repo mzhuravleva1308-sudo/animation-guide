@@ -71,6 +71,10 @@ Requires `.env.hosted.local` (copy from `.env.hosted.example`).
 | `NEXT_PUBLIC_SITE_URL` | `https://your-domain.com` | Canonical public origin (https, no trailing slash) |
 | `SUPABASE_SERVICE_ROLE_KEY` | service role JWT | Server-only; optional for some features, required for admin scripts |
 | `ADMIN_USER_ID` | Supabase Auth user UUID | Server-only. Required for `/admin/*` and admin APIs (`/api/import-film`, `/api/films/check-duplicate`). If missing, admin access is denied. Set separately and intentionally for Preview. |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | PostHog project token | Optional. Client product analytics (cookieless). Omit to disable. |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://eu.i.posthog.com` | Optional. Defaults to EU ingestion host in code if unset. |
+
+**PostHog:** create a project on **EU Cloud**, turn on **cookieless / server hash** in project settings (required or events are ignored), set the two `NEXT_PUBLIC_POSTHOG_*` vars on Production. Session replay stays off in app code. No consent banner — tracking uses cookieless mode only.
 
 **Do not set** `ALLOW_LOCAL_STACK_ENV` in Production or Preview. That flag exists only in `.env.e2e` for Playwright builds.
 
