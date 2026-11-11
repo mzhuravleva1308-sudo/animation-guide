@@ -1,3 +1,4 @@
+import { buildGuideDocumentAuthorNode } from "@/lib/guides/guide-document-attribution.mjs";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
 /** Shared homepage / root SEO strings and assets. */
@@ -11,11 +12,12 @@ export const SITE_OG_IMAGE_PATH = "/og.png";
 
 export const SITE_NAME = "Resonale";
 
-/** WebSite + Organization graph; `#website` is referenced from guide/festival JSON-LD. */
+/** WebSite + Organization + Person graph; `#website` / `#maria` are referenced from guides. */
 export function buildSiteJsonLd() {
   const websiteId = `${PUBLIC_SITE_ORIGIN}/#website`;
   const organizationId = `${PUBLIC_SITE_ORIGIN}/#organization`;
   const logoUrl = `${PUBLIC_SITE_ORIGIN}/icon-512.png`;
+  const author = buildGuideDocumentAuthorNode(PUBLIC_SITE_ORIGIN);
 
   return {
     "@context": "https://schema.org",
@@ -40,6 +42,7 @@ export function buildSiteJsonLd() {
         },
         image: `${PUBLIC_SITE_ORIGIN}${SITE_OG_IMAGE_PATH}`,
       },
+      author,
     ],
   };
 }

@@ -21,6 +21,8 @@ test.describe("Public SEO basics", () => {
     expect(html).toContain("application/ld+json");
     expect(html).toContain('"@type":"WebSite"');
     expect(html).toContain('"@type":"Organization"');
+    expect(html).toContain('"@type":"Person"');
+    expect(html).toContain("https://resonale.com/#maria");
   });
 
   test("filter query URLs canonicalize to the homepage", async ({

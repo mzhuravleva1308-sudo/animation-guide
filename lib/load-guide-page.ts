@@ -36,7 +36,7 @@ type GuidePageContent = {
   anchorTitle?: string;
   groups: {
     heading: string;
-    description: string;
+    description?: string;
     films: (
       | { title: string; note?: string; kind?: "catalog" }
       | {
@@ -259,7 +259,7 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
     anchorFilm,
     groups: resolved.groups as {
       heading: string;
-      description: string;
+      description?: string;
       items: (
         | { kind: "catalog"; film: Film; note: string | null }
         | {

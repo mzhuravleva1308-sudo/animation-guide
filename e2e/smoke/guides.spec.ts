@@ -20,6 +20,8 @@ test.describe("Films like Flow guide", () => {
     expect(html).toContain(`https://resonale.com${PATH}`);
     expect(html).toContain(`property="og:title" content="${TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
     expect(html).not.toMatch(/Beautiful Animated Films to Watch Next/i);
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
@@ -29,6 +31,8 @@ test.describe("Films like Flow guide", () => {
       expect(html).not.toMatch(/noindex/i);
       expect(html).toMatch(/CollectionPage/);
       expect(html).toMatch(/ItemList/);
+      expect(html).toContain("https://resonale.com/#maria");
+      expect(html).toMatch(/"@type":"Person"/);
     }
   });
 
@@ -48,6 +52,13 @@ test.describe("Films like Flow guide", () => {
         name: "9 Movies Like Flow",
       })
     ).toBeVisible();
+    await expect(page.getByTestId("guide-attribution")).toBeVisible();
+    await expect(page.getByTestId("guide-attribution-author")).toHaveText(
+      "By Maria"
+    );
+    await expect(page.getByTestId("guide-attribution-updated")).toContainText(
+      "Updated"
+    );
     await expect(
       page.getByText("What struck me most about Flow", {
         exact: false,
@@ -146,6 +157,8 @@ test.describe("Films like Coraline guide", () => {
     expect(html).toContain(`https://resonale.com${CORALINE_PATH}`);
     expect(html).toContain(`property="og:title" content="${CORALINE_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
     expect(html).not.toMatch(/Beautiful Animated Films to Watch Next/i);
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
@@ -272,6 +285,8 @@ test.describe("Beautiful animated films guide", () => {
     expect(html).toContain(`https://resonale.com${BEAUTIFUL_PATH}`);
     expect(html).toContain(`property="og:title" content="${BEAUTIFUL_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
     expect(html).not.toMatch(/Visually Stunning Movies Worth Discovering/);
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
@@ -396,6 +411,8 @@ test.describe("Strange festival animated movies guide", () => {
     expect(html).toContain(`https://resonale.com${STRANGE_PATH}`);
     expect(html).toContain(`property="og:title" content="${STRANGE_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
     if (unavailable) {
@@ -517,6 +534,8 @@ test.describe("Animation styles guide", () => {
     expect(html).toContain(`https://resonale.com${STYLES_PATH}`);
     expect(html).toContain(`property="og:title" content="${STYLES_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
     if (unavailable) {
@@ -639,6 +658,8 @@ test.describe("Indie animated movies beyond studios guide", () => {
     expect(html).toContain(`https://resonale.com${INDIE_PATH}`);
     expect(html).toContain(`property="og:title" content="${INDIE_TITLE}"`);
     expect(html).toContain('property="og:locale" content="en_US"');
+    expect(html).toMatch(/property="og:image"/);
+    expect(html).toContain('name="twitter:card" content="summary_large_image"');
 
     const unavailable = html.includes("This guide is temporarily unavailable.");
     if (unavailable) {

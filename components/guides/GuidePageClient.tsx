@@ -5,6 +5,7 @@ import EmailAuthModal from "@/components/EmailAuthModal";
 import FestivalYearSwitcher, {
   type FestivalYearOption,
 } from "@/components/festivals/FestivalYearSwitcher";
+import GuideDocumentAttribution from "@/components/guides/GuideDocumentAttribution";
 import GuideEditorialGroups, {
   type GuideEditorialGroup,
 } from "@/components/guides/GuideEditorialGroups";
@@ -50,6 +51,8 @@ type GuidePageClientProps = {
   initialRatingUpdatedAtMs?: Record<string, number>;
   initialSavedAtMs?: Record<string, number>;
   catalogUpdatedLabel?: string | null;
+  authorName?: string | null;
+  updatedAt?: string | null;
 };
 
 const introClassName =
@@ -73,6 +76,8 @@ export default function GuidePageClient({
   initialRatingUpdatedAtMs,
   initialSavedAtMs,
   catalogUpdatedLabel = null,
+  authorName = null,
+  updatedAt = null,
 }: GuidePageClientProps) {
   const {
     auth,
@@ -190,7 +195,7 @@ export default function GuidePageClient({
       <div className={`mt-16 ${GUIDE_PROSE_CLASS}`}>
         <p
           data-testid="guide-personal-note"
-          className="font-sans text-[15px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+          className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
         >
           {content.personalNote}
         </p>
@@ -232,6 +237,12 @@ export default function GuidePageClient({
             ))}
           </div>
         </div>
+        {authorName || updatedAt ? (
+          <GuideDocumentAttribution
+            authorName={authorName}
+            updatedAt={updatedAt}
+          />
+        ) : null}
       </div>
 
       <SiteFooter catalogUpdatedLabel={catalogUpdatedLabel} />

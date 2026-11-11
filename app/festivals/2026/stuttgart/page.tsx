@@ -5,7 +5,7 @@ import {
   CURRENT_FESTIVAL_YEAR,
   FESTIVALS_INDEX_PATH,
 } from "@/lib/festivals/public-festival-paths.mjs";
-import { buildGuideDocumentMetadata } from "@/lib/guides/guide-document-seo";
+import { buildGuideRouteMetadata } from "@/lib/guides/guide-document-seo";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,12 +15,14 @@ const DESCRIPTION =
   STUTTGART_2026_FEATURE_AWARDS.metaDescription ??
   STUTTGART_2026_FEATURE_AWARDS.intro[0];
 
-export const metadata: Metadata = buildGuideDocumentMetadata({
-  h1: STUTTGART_2026_FEATURE_AWARDS.documentTitle ?? STUTTGART_2026_FEATURE_AWARDS.h1,
-  description: DESCRIPTION,
-  path: PATH,
-  indexable: true,
-});
+export async function generateMetadata(): Promise<Metadata> {
+  return buildGuideRouteMetadata({
+    guide: STUTTGART_2026_FEATURE_AWARDS,
+    path: PATH,
+    description: DESCRIPTION,
+    titleH1: STUTTGART_2026_FEATURE_AWARDS.documentTitle ?? STUTTGART_2026_FEATURE_AWARDS.h1,
+  });
+}
 
 export default function Stuttgart2026FeatureAwardsPage() {
   return (

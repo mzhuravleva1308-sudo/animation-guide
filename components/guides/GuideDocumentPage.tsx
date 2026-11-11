@@ -10,9 +10,24 @@ import {
   findPublicGuideLinkBySlug,
   GUIDES_INDEX_PATH,
 } from "@/lib/guides/public-guide-links.mjs";
-import { serializeJsonLd } from "@/lib/guides/guide-document-seo";
+import { GUIDE_DOCUMENT_AUTHOR } from "@/lib/guides/guide-document-attribution.mjs";
+import {
+  assertGuideFilmsLoaded,
+  serializeJsonLd,
+} from "@/lib/guides/guide-document-seo";
 import { loadGuidePage } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
+
+function guideAttribution(slug: string) {
+  const indexMeta = findPublicGuideLinkBySlug(slug);
+  if (!indexMeta) {
+    return { authorName: null as string | null, updatedAt: null as string | null };
+  }
+  return {
+    authorName: GUIDE_DOCUMENT_AUTHOR,
+    updatedAt: indexMeta.updatedAt ?? null,
+  };
+}
 
 type GuideContent = {
   slug: string;
@@ -26,7 +41,7 @@ type GuideContent = {
   anchorTitle?: string;
   groups: {
     heading: string;
-    description: string;
+    description?: string;
     films: (
       | { title: string; note?: string; kind?: "catalog" }
       | {
@@ -61,8 +76,10 @@ async function GuideDocumentBody({
   yearSwitcher,
 }: GuideDocumentPageProps) {
   const page = await loadGuidePage(guide);
+  assertGuideFilmsLoaded(page);
   const indexMeta = findPublicGuideLinkBySlug(guide.slug);
-  const showJsonLd = !page.loadError && page.missingTitles.length === 0;
+  const attribution = guideAttribution(guide.slug);
+  const showJsonLd = page.missingTitles.length === 0;
   const jsonLd = showJsonLd
     ? buildGuideJsonLd({
         origin: PUBLIC_SITE_ORIGIN,
@@ -72,6 +89,7 @@ async function GuideDocumentBody({
         films: listGuideJsonLdFilms(page.groups),
         datePublished: indexMeta?.publishedAt ?? null,
         dateModified: indexMeta?.updatedAt ?? null,
+        includeAuthor: Boolean(attribution.authorName),
       })
     : null;
 
@@ -102,6 +120,8 @@ async function GuideDocumentBody({
         initialRatingUpdatedAtMs={page.initialRatingUpdatedAtMs}
         initialSavedAtMs={page.initialSavedAtMs}
         catalogUpdatedLabel={page.catalogUpdatedLabel}
+        authorName={attribution.authorName}
+        updatedAt={attribution.updatedAt}
       />
     </>
   );
@@ -120,6 +140,8 @@ export default function GuideDocumentPage({
   pageTestId = "guide-page",
   yearSwitcher = null,
 }: GuideDocumentPageProps) {
+  const attribution = guideAttribution(guide.slug);
+
   return (
     <Suspense
       fallback={
@@ -130,6 +152,8 @@ export default function GuideDocumentPage({
           sectionLink={sectionLink}
           pageTestId={pageTestId}
           yearSwitcher={yearSwitcher}
+          authorName={attribution.authorName}
+          updatedAt={attribution.updatedAt}
         />
       }
     >

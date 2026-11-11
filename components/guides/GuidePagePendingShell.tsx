@@ -6,6 +6,7 @@ import EmailAuthModal from "@/components/EmailAuthModal";
 import FestivalYearSwitcher, {
   type FestivalYearOption,
 } from "@/components/festivals/FestivalYearSwitcher";
+import GuideDocumentAttribution from "@/components/guides/GuideDocumentAttribution";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
@@ -36,6 +37,8 @@ type GuidePagePendingShellProps = {
   sectionLink?: { href: string; label: string };
   pageTestId?: string;
   yearSwitcher?: { years: FestivalYearOption[]; activeYear: number } | null;
+  authorName?: string | null;
+  updatedAt?: string | null;
 };
 
 const introClassName =
@@ -71,6 +74,8 @@ export default function GuidePagePendingShell({
   sectionLink = { href: GUIDES_INDEX_PATH, label: "Guides" },
   pageTestId = "guide-page",
   yearSwitcher = null,
+  authorName = null,
+  updatedAt = null,
 }: GuidePagePendingShellProps) {
   const authTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -137,7 +142,7 @@ export default function GuidePagePendingShell({
       <div className={`mt-16 ${GUIDE_PROSE_CLASS}`}>
         <p
           data-testid="guide-personal-note"
-          className="font-sans text-[15px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+          className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
         >
           {content.personalNote}
         </p>
@@ -177,6 +182,12 @@ export default function GuidePagePendingShell({
             ))}
           </div>
         </div>
+        {authorName || updatedAt ? (
+          <GuideDocumentAttribution
+            authorName={authorName}
+            updatedAt={updatedAt}
+          />
+        ) : null}
       </div>
 
       <SiteFooter catalogUpdatedLabel={null} />
