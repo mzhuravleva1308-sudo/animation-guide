@@ -1,0 +1,42 @@
+{
+  "batch_name": "the-wonderland",
+  "films": [
+    {
+      "title": "The Wonderland",
+      "original_title": "バースデー・ワンダーランド",
+      "year": 2019,
+      "runtime_minutes": 115,
+      "countries": ["Japan"],
+      "directors": ["Keiichi Hara"],
+      "synopsis": "A shy girl meets an alchemist and his student who take her to a magical realm where she is named its savior.",
+      "the_mood": "Hopeful and tender, with vibrant fantasy landscapes and gentle moments of self-discovery.",
+      "technique": ["anime"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2019,
+          "section": "Official Feature Films",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/about/archives/2019/official-selection:lm"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/psWXyFQfIvcKYx1tzJaqVlHXXzH.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=VdRaUmse47g",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "VdRaUmse47g",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/about/archives/2019/official-selection:lm",
+        "tmdb": "https://www.themoviedb.org/movie/573683",
+        "imdb": null
+      },
+      "notes": "Previously rejected in discovery (primarily_for_children). Imported so films-like-spirited-away can resolve a live catalog card.",
+      "quick_filters": [],
+      "catalog_visible": true
+    }
+  ]
+}
