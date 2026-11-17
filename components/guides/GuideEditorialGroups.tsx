@@ -166,11 +166,23 @@ export default function GuideEditorialGroups({
                 );
 
                 if (!item.note) {
-                  return <div key={item.film.id}>{card}</div>;
+                  return (
+                    <div
+                      key={item.film.id}
+                      id={`guide-film-${item.film.id}`}
+                      className="scroll-mt-24"
+                    >
+                      {card}
+                    </div>
+                  );
                 }
 
                 return (
-                  <div key={item.film.id} className="grid gap-2.5">
+                  <div
+                    key={item.film.id}
+                    id={`guide-film-${item.film.id}`}
+                    className="grid scroll-mt-24 gap-2.5"
+                  >
                     <div className="grid gap-1">
                       <h3
                         data-testid="guide-film-heading"

@@ -9,6 +9,7 @@ import GuideDocumentAttribution from "@/components/guides/GuideDocumentAttributi
 import GuideEditorialGroups, {
   type GuideEditorialGroup,
 } from "@/components/guides/GuideEditorialGroups";
+import GuideIntroPosterCollage from "@/components/guides/GuideIntroPosterCollage";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { getFilmPosterUrl } from "@/lib/film-poster";
@@ -26,6 +27,11 @@ type GuidePortrait = {
   creditHref?: string;
 };
 
+type GuideCollageUnderlay = {
+  src: string;
+  title: string;
+};
+
 type GuidePageContent = {
   h1: string;
   intro: string[];
@@ -33,6 +39,8 @@ type GuidePageContent = {
   cta: { href: string; label: string };
   relatedGuides?: { href: string; label: string }[];
   portrait?: GuidePortrait;
+  collageUnderlay?: GuideCollageUnderlay;
+  collageSize?: "default" | "compact";
 };
 
 type GuidePageClientProps = {
@@ -109,14 +117,48 @@ export default function GuidePageClient({
 
   const showGroups = groups.length > 0 && missingTitles.length === 0;
   const portrait = content.portrait ?? null;
+  const collageFilms =
+    showGroups && anchorFilm
+      ? groups.flatMap((group) =>
+          group.items.flatMap((item) => {
+            if (
+              "kind" in item &&
+              (item.kind === "short" || item.kind === "prose")
+            ) {
+              return [];
+            }
+            const film = "film" in item ? item.film : null;
+            if (!film) return [];
+            const posterUrl = getFilmPosterUrl(film);
+            if (!posterUrl) return [];
+            return [{ id: film.id, title: film.title, posterUrl }];
+          })
+        )
+      : [];
+  const showCollage = collageFilms.length > 0;
+  const collageUnderlayFromPoster =
+    showCollage && anchorFilm
+      ? (() => {
+          const src = getFilmPosterUrl(anchorFilm);
+          return src ? { src, title: anchorFilm.title } : null;
+        })()
+      : null;
+  const collageUnderlay =
+    showCollage && content.collageUnderlay
+      ? content.collageUnderlay
+      : collageUnderlayFromPoster;
   const anchorPosterUrl =
-    !portrait && anchorFilm ? getFilmPosterUrl(anchorFilm) : null;
+    !portrait && !showCollage && anchorFilm
+      ? getFilmPosterUrl(anchorFilm)
+      : null;
   const introImageUrl = portrait?.src ?? anchorPosterUrl;
   const introImageAlt = portrait?.alt ?? anchorFilm?.title ?? "Flow";
 
   return (
     <main
-      className="mx-auto w-full min-w-0 max-w-5xl px-4 py-6 sm:p-8"
+      className={`mx-auto w-full min-w-0 px-4 py-6 sm:p-8 ${
+        showCollage ? "max-w-6xl" : "max-w-5xl"
+      }`}
       data-testid={pageTestId}
       data-ratings-ready={ratingsReady ? "true" : "false"}
     >
@@ -126,43 +168,93 @@ export default function GuidePageClient({
         openAuthModal={openAuthModal}
       />
 
-      <div className="mt-10 mb-8 sm:mt-12 sm:mb-10">
-        <Link
-          href={sectionLink.href}
-          data-testid="guide-section-link"
-          className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
-        >
-          {sectionLink.label}
-        </Link>
-        <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
-          {content.h1}
-        </h1>
-        {yearSwitcher ? (
-          <FestivalYearSwitcher
-            years={yearSwitcher.years}
-            activeYear={yearSwitcher.activeYear}
-          />
-        ) : null}
-        <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
-          {introImageUrl ? (
-            <img
-              src={introImageUrl}
-              alt={introImageAlt}
-              data-testid={portrait ? "guide-portrait" : "guide-anchor-poster"}
-              width={104}
-              height={156}
-              decoding="async"
-              fetchPriority="high"
-              className="float-left mb-3 mr-5 aspect-[2/3] w-[104px] rounded-xl object-cover object-top"
+      <div
+        className={
+          showCollage
+            ? "mt-10 mb-6 sm:mt-12 sm:mb-7"
+            : "mt-10 mb-8 sm:mt-12 sm:mb-10"
+        }
+      >
+        {showCollage ? (
+          <div className="relative flex flex-col items-start gap-4 overflow-visible lg:flex-row lg:gap-5 xl:gap-6">
+            <div
+              data-testid="guide-intro-copy"
+              className="guide-intro-copy relative z-20 min-w-0 w-full shrink-0 bg-white"
+            >
+              <Link
+                href={sectionLink.href}
+                data-testid="guide-section-link"
+                className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
+              >
+                {sectionLink.label}
+              </Link>
+              <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px] lg:text-[34px]">
+                {content.h1}
+              </h1>
+              {yearSwitcher ? (
+                <FestivalYearSwitcher
+                  years={yearSwitcher.years}
+                  activeYear={yearSwitcher.activeYear}
+                />
+              ) : null}
+              <div className="mt-4 space-y-3">
+                {content.intro.map((paragraph) => (
+                  <p key={paragraph.slice(0, 24)} className={introClassName}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <GuideIntroPosterCollage
+              films={collageFilms}
+              underlay={collageUnderlay}
+              size={content.collageSize ?? "default"}
             />
-          ) : null}
-          {content.intro.map((paragraph) => (
-            <p key={paragraph.slice(0, 24)} className={introClassName}>
-              {paragraph}
-            </p>
-          ))}
-          {introImageUrl ? <div className="clear-both" aria-hidden="true" /> : null}
-        </div>
+          </div>
+        ) : (
+          <>
+            <Link
+              href={sectionLink.href}
+              data-testid="guide-section-link"
+              className="text-sm text-[#7a7b90] transition hover:text-[#2f3040]"
+            >
+              {sectionLink.label}
+            </Link>
+            <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+              {content.h1}
+            </h1>
+            {yearSwitcher ? (
+              <FestivalYearSwitcher
+                years={yearSwitcher.years}
+                activeYear={yearSwitcher.activeYear}
+              />
+            ) : null}
+            <div className={`mt-4 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+              {introImageUrl ? (
+                <img
+                  src={introImageUrl}
+                  alt={introImageAlt}
+                  data-testid={
+                    portrait ? "guide-portrait" : "guide-anchor-poster"
+                  }
+                  width={104}
+                  height={156}
+                  decoding="async"
+                  fetchPriority="high"
+                  className="float-left mb-3 mr-5 aspect-[2/3] w-[104px] rounded-xl object-cover object-top"
+                />
+              ) : null}
+              {content.intro.map((paragraph) => (
+                <p key={paragraph.slice(0, 24)} className={introClassName}>
+                  {paragraph}
+                </p>
+              ))}
+              {introImageUrl ? (
+                <div className="clear-both" aria-hidden="true" />
+              ) : null}
+            </div>
+          </>
+        )}
       </div>
 
       {loadError ? (

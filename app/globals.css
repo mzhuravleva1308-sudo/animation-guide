@@ -145,5 +145,38 @@ body {
   }
 }
 
+/* Movies-like intro copy: use space before the collage. */
+@media (min-width: 1024px) {
+  .guide-intro-copy {
+    width: calc(22rem + 2.5cm);
+  }
+}
 
+@media (min-width: 1280px) {
+  .guide-intro-copy {
+    width: calc(24rem + 2.5cm);
+  }
+}
 
+/*
+ * Intro collage: 3-column stack only below 550px.
+ * Absolute desktop collage from 550px up.
+ * (Plain CSS — Tailwind arbitrary min-[550px]:* was not emitted.)
+ */
+.guide-intro-collage-mobile {
+  display: block;
+}
+
+.guide-intro-collage-desktop {
+  display: none;
+}
+
+@media (min-width: 550px) {
+  .guide-intro-collage-mobile {
+    display: none;
+  }
+
+  .guide-intro-collage-desktop {
+    display: block;
+  }
+}

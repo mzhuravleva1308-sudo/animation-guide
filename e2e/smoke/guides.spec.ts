@@ -64,9 +64,15 @@ test.describe("Films like Flow guide", () => {
         exact: false,
       })
     ).toBeVisible();
-    const anchorPoster = page.getByTestId("guide-anchor-poster");
     if ((await page.getByTestId("film-card").count()) > 0) {
-      await expect(anchorPoster).toBeVisible();
+      const collage = page.locator(
+        '[data-testid="guide-intro-poster-collage"]:visible'
+      );
+      const anchorPoster = page.getByTestId("guide-anchor-poster");
+      await expect(collage.or(anchorPoster).first()).toBeVisible();
+      await expect(
+        page.locator('[data-testid="guide-intro-poster"]:visible')
+      ).toHaveCount(9);
     }
     await expect(page.getByTestId("guide-personal-note")).toBeVisible();
     await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
@@ -199,9 +205,15 @@ test.describe("Films like Coraline guide", () => {
         exact: false,
       })
     ).toBeVisible();
-    const anchorPoster = page.getByTestId("guide-anchor-poster");
     if ((await page.getByTestId("film-card").count()) > 0) {
-      await expect(anchorPoster).toBeVisible();
+      const collage = page.locator(
+        '[data-testid="guide-intro-poster-collage"]:visible'
+      );
+      const anchorPoster = page.getByTestId("guide-anchor-poster");
+      await expect(collage.or(anchorPoster).first()).toBeVisible();
+      await expect(
+        page.locator('[data-testid="guide-intro-poster"]:visible')
+      ).toHaveCount(9);
     }
     await expect(page.getByTestId("guide-personal-note")).toBeVisible();
     await expect(page.getByTestId("guide-cta")).toHaveAttribute("href", "/");
