@@ -45,6 +45,9 @@ type GuidePageContent = {
           year: number;
           runtimeLabel: string;
           watchUrl: string;
+          trailerUrl?: string;
+          country?: string;
+          director?: string;
           posterUrl?: string;
           note?: string;
         }
@@ -268,6 +271,9 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
             year: number;
             runtimeLabel: string;
             watchUrl: string;
+            trailerUrl: string | null;
+            country: string | null;
+            director: string | null;
             posterUrl: string | null;
             note: string | null;
           }

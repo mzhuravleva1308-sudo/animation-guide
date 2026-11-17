@@ -1078,7 +1078,12 @@ export async function processFilmImportBatch({
       successfulFilmIds.push(createdFilmId);
       console.log(`[${status}] ${title} — ${createdFilmId}`);
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null
+            ? JSON.stringify(error)
+            : String(error);
       if (createdFilmId) {
         await rollbackCreatedFilm(supabase, createdFilmId);
       }

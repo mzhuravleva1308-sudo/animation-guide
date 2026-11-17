@@ -1,0 +1,31 @@
+{
+  "batch_name": "the-boy-the-mole-the-fox-and-the-horse",
+  "films": [
+    {
+      "title": "The Boy, the Mole, the Fox and the Horse",
+      "original_title": "The Boy, the Mole, the Fox and the Horse",
+      "year": 2022,
+      "runtime_minutes": 35,
+      "countries": ["United Kingdom", "United States"],
+      "directors": ["Peter Baynton", "Charlie Mackesy"],
+      "synopsis": "On a snowy Christmas journey, a boy searching for home is joined by a cake-loving mole, a wary fox, and a gentle horse — four unlikely friends learning kindness, courage, and belonging together.",
+      "the_mood": "Soft and contemplative, with ink-wash winter light, quiet conversation, and a Christmas Eve tenderness that feels handmade rather than loud.",
+      "technique": ["hand-drawn animation"],
+      "festival_recognitions": [],
+      "quick_filters": [],
+      "image_url": "https://image.tmdb.org/t/p/w500/wAKBWRhMmBtrCCuqmFwPm2RGTph.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=Fbdem4g_LEc",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "Fbdem4g_LEc",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": "https://www.bbc.co.uk/programmes/m001gn7t",
+        "festival": "https://www.bbc.co.uk/programmes/m001gn7t",
+        "tmdb": "https://www.themoviedb.org/movie/995133",
+        "imdb": "https://www.imdb.com/title/tt2261427/"
+      },
+      "notes": "Needed for the Christmas/New Year mood guide. Oscar-winning Christmas short feature; exact English title matches TMDB. Festival recognition omitted — Academy Awards lacks normalized_festival_name in import path.",
+      "catalog_visible": true
+    }
+  ]
+}

@@ -86,125 +86,136 @@ export default function GuideEditorialGroups({
 
   return (
     <div data-testid="film-list" className="grid gap-16">
-      {groups.map((group, groupIndex) => (
-        <section key={group.heading} className="grid gap-6">
-          <div>
-            <p className="mb-2 text-[11px] font-semibold tracking-[0.22em] text-[#B1A9D9]">
-              {String(groupIndex + 1).padStart(2, "0")}
-            </p>
-            <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
-              {group.heading}
-            </h2>
-            {group.description?.trim() ? (
-              <div className={`mt-3 space-y-3 ${GUIDE_PROSE_CLASS}`}>
-                {group.description.split(/\n\n+/).map((paragraph) => (
-                  <p
-                    key={paragraph.slice(0, 24)}
-                    className="text-[16px] leading-[1.65] text-[#4a4b5c]"
-                  >
-                    <GuideProseText text={paragraph} />
-                  </p>
-                ))}
+      {groups.map((group, groupIndex) => {
+        const heading = group.heading?.trim() ?? "";
+        const description = group.description?.trim() ?? "";
+        const showGroupHeader = Boolean(heading);
+
+        return (
+          <section
+            key={heading || `group-${groupIndex}`}
+            className={showGroupHeader ? "grid gap-6" : "grid"}
+          >
+            {showGroupHeader ? (
+              <div>
+                <p className="mb-2 text-[11px] font-semibold tracking-[0.22em] text-[#B1A9D9]">
+                  {String(groupIndex + 1).padStart(2, "0")}
+                </p>
+                <h2 className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]">
+                  {heading}
+                </h2>
+                {description ? (
+                  <div className={`mt-3 space-y-3 ${GUIDE_PROSE_CLASS}`}>
+                    {description.split(/\n\n+/).map((paragraph) => (
+                      <p
+                        key={paragraph.slice(0, 24)}
+                        className="text-[16px] leading-[1.65] text-[#4a4b5c]"
+                      >
+                        <GuideProseText text={paragraph} />
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ) : null}
-          </div>
-          {group.items.length > 0 ? (
-            <div className="grid gap-8">
-              {group.items.map((item, itemIndex) => {
-                if (isProseItem(item)) {
-                  return (
-                    <div
-                      key={`prose-${itemIndex}-${item.text.slice(0, 24)}`}
-                      data-testid="guide-prose-block"
-                      className={`space-y-3 ${GUIDE_PROSE_CLASS}`}
+            {group.items.length > 0 ? (
+              <div className="grid gap-8">
+                {group.items.map((item, itemIndex) => {
+                  if (isProseItem(item)) {
+                    return (
+                      <div
+                        key={`prose-${itemIndex}-${item.text.slice(0, 24)}`}
+                        data-testid="guide-prose-block"
+                        className={`space-y-3 ${GUIDE_PROSE_CLASS}`}
+                      >
+                        {item.text.split(/\n\n+/).map((paragraph) => (
+                          <p
+                            key={paragraph.slice(0, 24)}
+                            className="text-[16px] leading-[1.65] text-[#4a4b5c]"
+                          >
+                            <GuideProseText text={paragraph} />
+                          </p>
+                        ))}
+                      </div>
+                    );
+                  }
+
+                  if (isShortItem(item)) {
+                    return (
+                      <GuideShortFilmRow
+                        key={`${item.title}-${item.year}`}
+                        item={item}
+                      />
+                    );
+                  }
+
+                  const index = cardIndex;
+                  cardIndex += 1;
+                  const card = (
+                    <GuideFilmEngageTracker
+                      filmId={item.film.id}
+                      filmTitle={item.film.title}
+                      guidePath={currentGuidePath ?? ""}
                     >
-                      {item.text.split(/\n\n+/).map((paragraph) => (
-                        <p
-                          key={paragraph.slice(0, 24)}
-                          className="text-[16px] leading-[1.65] text-[#4a4b5c]"
-                        >
-                          <GuideProseText text={paragraph} />
-                        </p>
-                      ))}
-                    </div>
+                      <FilmCard
+                        mode="catalog"
+                        film={item.film}
+                        lazyLoadPoster={index >= 1}
+                        profileId={profileId}
+                        profileSlug={profileSlug}
+                        initialRating={filmRatings[item.film.id] ?? null}
+                        savedFilmIds={savedFilmIds}
+                        onSavedChange={onSavedChange}
+                        onRatingChange={onRatingChange}
+                        onAuthRequired={onAuthRequired}
+                        currentGuidePath={currentGuidePath}
+                        ratingOnboardingHint={getHintForIndex(index)}
+                        onDismissRatingOnboarding={onDismissRatingOnboarding}
+                      />
+                    </GuideFilmEngageTracker>
                   );
-                }
 
-                if (isShortItem(item)) {
-                  return (
-                    <GuideShortFilmRow
-                      key={`${item.title}-${item.year}`}
-                      item={item}
-                    />
-                  );
-                }
+                  if (!item.note) {
+                    return (
+                      <div
+                        key={item.film.id}
+                        id={`guide-film-${item.film.id}`}
+                        className="scroll-mt-24"
+                      >
+                        {card}
+                      </div>
+                    );
+                  }
 
-                const index = cardIndex;
-                cardIndex += 1;
-                const card = (
-                  <GuideFilmEngageTracker
-                    filmId={item.film.id}
-                    filmTitle={item.film.title}
-                    guidePath={currentGuidePath ?? ""}
-                  >
-                    <FilmCard
-                      mode="catalog"
-                      film={item.film}
-                      lazyLoadPoster={index >= 1}
-                      profileId={profileId}
-                      profileSlug={profileSlug}
-                      initialRating={filmRatings[item.film.id] ?? null}
-                      savedFilmIds={savedFilmIds}
-                      onSavedChange={onSavedChange}
-                      onRatingChange={onRatingChange}
-                      onAuthRequired={onAuthRequired}
-                      currentGuidePath={currentGuidePath}
-                      ratingOnboardingHint={getHintForIndex(index)}
-                      onDismissRatingOnboarding={onDismissRatingOnboarding}
-                    />
-                  </GuideFilmEngageTracker>
-                );
-
-                if (!item.note) {
                   return (
                     <div
                       key={item.film.id}
                       id={`guide-film-${item.film.id}`}
-                      className="scroll-mt-24"
+                      className="grid scroll-mt-24 gap-2.5"
                     >
+                      <div className="grid gap-1">
+                        <h3
+                          data-testid="guide-film-heading"
+                          className="font-sans text-[16px] font-medium leading-snug tracking-tight text-[#B1A9D9] antialiased [font-synthesis:none]"
+                        >
+                          {item.film.title}
+                        </h3>
+                        <p
+                          data-testid="guide-film-note"
+                          className={`text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+                        >
+                          <GuideProseText text={item.note} />
+                        </p>
+                      </div>
                       {card}
                     </div>
                   );
-                }
-
-                return (
-                  <div
-                    key={item.film.id}
-                    id={`guide-film-${item.film.id}`}
-                    className="grid scroll-mt-24 gap-2.5"
-                  >
-                    <div className="grid gap-1">
-                      <h3
-                        data-testid="guide-film-heading"
-                        className="font-sans text-[16px] font-medium leading-snug tracking-tight text-[#B1A9D9] antialiased [font-synthesis:none]"
-                      >
-                        {item.film.title}
-                      </h3>
-                      <p
-                        data-testid="guide-film-note"
-                        className={`text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
-                      >
-                        <GuideProseText text={item.note} />
-                      </p>
-                    </div>
-                    {card}
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-        </section>
-      ))}
+                })}
+              </div>
+            ) : null}
+          </section>
+        );
+      })}
     </div>
   );
 }

@@ -1,0 +1,44 @@
+{
+  "batch_name": "animal-tales-of-christmas-magic",
+  "films": [
+    {
+      "title": "Animal Tales of Christmas Magic",
+      "original_title": "Le Grand Noël des animaux",
+      "year": 2024,
+      "runtime_minutes": 70,
+      "countries": ["France", "Germany"],
+      "directors": [
+        "Camille Alméras",
+        "Caroline Attia",
+        "Ceylan Beyoğlu",
+        "Haruna Kishi",
+        "Natalia Chernysheva",
+        "Olesya Shchukina"
+      ],
+      "synopsis": "Five poetic animal adventures — from a stranded Santa to a last Christmas tree — celebrate winter generosity across France, Japan, and the Far North.",
+      "the_mood": "Gentle and picture-book warm, with soft winter colours, sparse dialogue, and a playful sense of Christmas magic shared among animals.",
+      "technique": ["2D computer animation"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2024,
+          "section": "Annecy Presents",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/annecy-presents/animal-tales-christmas-magic"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/1ZGnQmQ7B6DTEvqykga32jIrIrB.jpg",
+      "source_urls": {
+        "official": "https://thebureaufilms.com/sales/library/animal-tales-of-christmas-magic/",
+        "festival": "https://www.annecyfestival.com/en/archives/2024/the-festival/2024-official-selection/annecy-presents/animal-tales-christmas-magic",
+        "tmdb": "https://www.themoviedb.org/movie/978102-le-grand-noel-des-animaux",
+        "imdb": "https://www.imdb.com/title/tt33077003/"
+      },
+      "notes": "Needed for the Christmas/New Year mood guide. Annecy Presents 2024 anthology; exact English title matches TMDB.",
+      "catalog_visible": true
+    }
+  ]
+}
