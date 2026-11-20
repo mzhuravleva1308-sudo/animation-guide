@@ -113,11 +113,11 @@ Production SMTP lives in the **Supabase Dashboard** (Authentication → SMTP). I
 
 ### New-user signup notify (production app)
 
-When `/auth/callback` (or `/auth/provision`) creates a **first** profile for an auth user, the app emails the owner via Resend. Skips quietly if unset. Set on **Vercel** (not only GitHub Actions):
+When `/auth/callback` (or `/auth/provision`) creates a **first** profile, the app emails the owner via the same Resend vars as weekly import. Skips quietly if unset. Those vars must also be on **Vercel** (GitHub Actions secrets alone are not enough for the app):
 
 - `RESEND_API_KEY`
-- `NEW_USER_SIGNUP_NOTIFY_EMAIL` (optional; else `WEEKLY_FILM_IMPORT_REPORT_EMAIL`)
-- `NEW_USER_SIGNUP_EMAIL_FROM` (optional; else `WEEKLY_FILM_IMPORT_EMAIL_FROM` / Resend default)
+- `WEEKLY_FILM_IMPORT_REPORT_EMAIL`
+- `WEEKLY_FILM_IMPORT_EMAIL_FROM` (optional)
 
 ### Weekly film import (GitHub Actions)
 
