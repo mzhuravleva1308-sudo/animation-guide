@@ -9,6 +9,7 @@ import {
 } from "@/lib/films-select-fields.mjs";
 import {
   listGuideFilmTitles,
+  listGuidePreviewTitles,
   resolveGuideAnchorFilm,
   resolveGuideFilms,
 } from "@/lib/guides/resolve-guide-films.mjs";
@@ -52,6 +53,13 @@ type GuidePageContent = {
           note?: string;
         }
       | { kind: "prose"; text: string }
+      | {
+          kind: "guidePreview";
+          href: string;
+          label: string;
+          blurb?: string;
+          titles: string[];
+        }
     )[];
   }[];
 };
@@ -59,6 +67,7 @@ type GuidePageContent = {
 function guideTitlesToLoad(guide: GuidePageContent): string[] {
   const titles = [
     ...listGuideFilmTitles(guide),
+    ...listGuidePreviewTitles(guide),
     ...(guide.anchorTitle ? [guide.anchorTitle] : []),
   ];
   return [...new Set(titles.map((title) => String(title ?? "").trim()).filter(Boolean))];
@@ -278,6 +287,13 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
             note: string | null;
           }
         | { kind: "prose"; text: string }
+        | {
+            kind: "guidePreview";
+            href: string;
+            label: string;
+            blurb: string | null;
+            posters: { title: string; posterUrl: string | null }[];
+          }
       )[];
     }[],
     missingTitles: resolved.missingTitles as string[],

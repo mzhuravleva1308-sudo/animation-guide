@@ -2,6 +2,9 @@
 
 import FilmCard from "@/components/FilmCard";
 import GuideFilmEngageTracker from "@/components/guides/GuideFilmEngageTracker";
+import GuideGuidePreview, {
+  type GuideGuidePreviewItem,
+} from "@/components/guides/GuideGuidePreview";
 import GuideProseText from "@/components/guides/GuideProseText";
 import GuideShortFilmRow, {
   type GuideShortFilmItem,
@@ -26,7 +29,8 @@ export type GuideEditorialProseItem = {
 export type GuideEditorialItem =
   | GuideEditorialCatalogItem
   | GuideShortFilmItem
-  | GuideEditorialProseItem;
+  | GuideEditorialProseItem
+  | GuideGuidePreviewItem;
 
 export type GuideEditorialGroup = {
   heading: string;
@@ -57,6 +61,12 @@ function isShortItem(item: GuideEditorialItem): item is GuideShortFilmItem {
 
 function isProseItem(item: GuideEditorialItem): item is GuideEditorialProseItem {
   return item.kind === "prose";
+}
+
+function isGuidePreviewItem(
+  item: GuideEditorialItem
+): item is GuideGuidePreviewItem {
+  return item.kind === "guidePreview";
 }
 
 export default function GuideEditorialGroups({
@@ -144,6 +154,15 @@ export default function GuideEditorialGroups({
                     return (
                       <GuideShortFilmRow
                         key={`${item.title}-${item.year}`}
+                        item={item}
+                      />
+                    );
+                  }
+
+                  if (isGuidePreviewItem(item)) {
+                    return (
+                      <GuideGuidePreview
+                        key={`guide-preview-${item.href}`}
                         item={item}
                       />
                     );

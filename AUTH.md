@@ -44,6 +44,8 @@ Add personal secrets to `.env.local` (see `.env.example`). Local Supabase and Ma
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes (automatic locally) | Browser + server auth client |
 | `NEXT_PUBLIC_SITE_URL` | Recommended for production | Canonical app URL when building redirects outside the browser |
 | `NEXT_PUBLIC_AUTH_OAUTH_PROVIDERS` | No | OAuth buttons on `/login`. Hidden by default; set to `apple,google` (or a subset) when provider credentials are ready. Empty string also hides OAuth. |
+| `RESEND_API_KEY` | For signup notify | Same Resend key as weekly reports; required on Vercel to email the owner on first profile |
+| `NEW_USER_SIGNUP_NOTIFY_EMAIL` | No | Owner inbox for new-user mail; falls back to `WEEKLY_FILM_IMPORT_REPORT_EMAIL` |
 
 `SUPABASE_SERVICE_ROLE_KEY` is **not** used for login. Keep it server-only (E2E reset, scripts).
 

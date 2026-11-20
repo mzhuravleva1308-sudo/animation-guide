@@ -1,0 +1,28 @@
+{
+  "batch_name": "creature-comforts-cover",
+  "films": [
+    {
+      "title": "Creature Comforts",
+      "original_title": "Creature Comforts",
+      "year": 1989,
+      "runtime_minutes": 5,
+      "countries": ["United Kingdom"],
+      "directors": ["Nick Park"],
+      "synopsis": "Zoo animals speak in real British interview voices about housing, weather, and captivity. Nick Park’s Oscar-winning clay short makes ordinary complaints feel handmade and dryly funny.",
+      "the_mood": "Dry, gentle comedy with soft clay animals and the everyday awkwardness of being stuck somewhere that is not quite home.",
+      "technique": ["claymation", "stop motion"],
+      "festival_recognitions": [],
+      "image_url": "https://image.tmdb.org/t/p/w500/Ap8XavPP8AyvW9TDQDAZzEGT200.jpg",
+      "trailer_url": null,
+      "source_urls": {
+        "official": null,
+        "festival": null,
+        "tmdb": "https://www.themoviedb.org/movie/54825-creature-comforts",
+        "imdb": "https://www.imdb.com/title/tt0099317/"
+      },
+      "notes": "Aardman clay short for Clay Animation Movies guide cover.",
+      "quick_filters": ["sarcasm"],
+      "catalog_visible": true
+    }
+  ]
+}

@@ -16,6 +16,7 @@ import {
   resolveCallbackMethod,
 } from "@/lib/auth/callback-params";
 import { ensureAuthProfileForUser } from "@/lib/auth/ensure-auth-profile";
+import { notifyNewUserSignup } from "@/lib/auth/notify-new-user-signup.mjs";
 import {
   appendAuthCallbackErrorToPath,
   resolvePostAuthRedirectPath,
@@ -64,8 +65,12 @@ async function finalizeAuthenticatedCallback(
   await autoLinkE2eProfileForAuthUser(user);
 
   let profile;
+  let profileCreated = false;
   try {
-    ({ profile } = await ensureAuthProfileForUser(supabase, user));
+    ({ profile, created: profileCreated } = await ensureAuthProfileForUser(
+      supabase,
+      user
+    ));
   } catch (error) {
     const errorCode =
       error && typeof error === "object" && "code" in error
@@ -97,6 +102,10 @@ async function finalizeAuthenticatedCallback(
         "profile_provision_failed"
       ),
     };
+  }
+
+  if (profileCreated) {
+    await notifyNewUserSignup({ user, profile });
   }
 
   const pendingAction =

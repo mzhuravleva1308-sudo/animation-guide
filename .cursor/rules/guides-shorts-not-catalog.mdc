@@ -1,0 +1,16 @@
+---
+description: Short films must never be imported into the catalog — guide shorts only
+alwaysApply: true
+---
+
+# Shorts are never catalog films
+
+**Critical.** Theatrical shorts and short-form animation do **not** belong in the `films` catalog.
+
+- Do **not** import shorts via `process-film-batch`, discovery, or manual upsert “so the cover/chip works”.
+- Do **not** list a short as a catalog guide entry (`{ title }` only). Use `kind: "short"` with `watchUrl`, `posterUrl` under `public/guides/…`, and optional `trailerUrl`.
+- Catalog rows are for **features** (and other catalog-eligible long-form titles) that resolve on film pages, search, and ranking.
+- Guide index covers for a short: use static `coverPosterPath` (the short’s guide poster), not a catalog import.
+- If a short was wrongly imported: remove or hide it from hosted/local catalog; keep it only as a guide short entry.
+
+Example: Creature Comforts (5 min) stays a clay-guide short with a static poster — never a `films` row for the cover.

@@ -1,0 +1,31 @@
+{
+  "batch_name": "mark-twain-feature",
+  "films": [
+    {
+      "title": "The Adventures of Mark Twain",
+      "original_title": "The Adventures of Mark Twain",
+      "year": 1985,
+      "runtime_minutes": 86,
+      "countries": ["United States"],
+      "directors": ["Will Vinton"],
+      "synopsis": "Tom Sawyer, Becky Thatcher, and Huck Finn stow away aboard Mark Twain’s interplanetary balloon as the writer, disgusted with humanity, steers toward Halley’s Comet. The children race to change his mind — and save themselves — while a magical portal opens the episodes that shaped Twain’s work, including a darker encounter with the Mysterious Stranger.",
+      "the_mood": "Whimsical Claymation adventure that turns uncanny: steampunk airship wonder, moral unease, and a handmade cosmos that gets stranger the closer it flies to the comet.",
+      "technique": ["claymation", "stop motion"],
+      "festival_recognitions": [],
+      "image_url": "https://image.tmdb.org/t/p/w500/wUYyl69qvIZOTuRJnwK07BbYSyy.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=kAS1-lCF3yM",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "kAS1-lCF3yM",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": null,
+        "tmdb": "https://www.themoviedb.org/movie/19947-the-adventures-of-mark-twain",
+        "imdb": "https://www.imdb.com/title/tt0088678/"
+      },
+      "notes": "Will Vinton Claymation feature (86 min) for Clay Animation Movies — catalog feature, not a short.",
+      "quick_filters": ["connection"],
+      "catalog_visible": true
+    }
+  ]
+}

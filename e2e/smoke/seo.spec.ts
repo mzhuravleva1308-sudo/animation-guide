@@ -82,6 +82,18 @@ test.describe("Public SEO basics", () => {
     expect(body).toContain(
       "<loc>https://resonale.com/guides/indie-animated-movies-beyond-studios</loc>"
     );
+    expect(body).toContain(
+      "<loc>https://resonale.com/guides/best-stop-motion-movies</loc>"
+    );
+    expect(body).toContain(
+      "<loc>https://resonale.com/guides/clay-animation-movies</loc>"
+    );
+    expect(body).toContain(
+      "<loc>https://resonale.com/guides/best-animated-movies-for-adults</loc>"
+    );
+    expect(body).toContain(
+      "<loc>https://resonale.com/guides/tomm-moore-movies</loc>"
+    );
     expect(body).toContain("<lastmod>");
     expect(body).not.toContain("https://resonale.com/privacy");
     expect(body).not.toContain("https://resonale.com/contact");

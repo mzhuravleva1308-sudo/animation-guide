@@ -1,4 +1,5 @@
 import { ensureAuthProfileForUser } from "@/lib/auth/ensure-auth-profile";
+import { notifyNewUserSignup } from "@/lib/auth/notify-new-user-signup.mjs";
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
@@ -20,7 +21,11 @@ export async function POST() {
   }
 
   try {
-    const { profile } = await ensureAuthProfileForUser(supabase, user);
+    const { profile, created } = await ensureAuthProfileForUser(supabase, user);
+
+    if (created) {
+      await notifyNewUserSignup({ user, profile });
+    }
 
     return NextResponse.json({
       ok: true,

@@ -1,0 +1,79 @@
+{
+  "batch_name": "clay-animation-guide-films",
+  "films": [
+    {
+      "title": "The Apostle",
+      "original_title": "O Apóstolo",
+      "year": 2012,
+      "runtime_minutes": 84,
+      "countries": ["Spain"],
+      "directors": ["Fernando Cortizo"],
+      "synopsis": "A recently escaped convict returns to a remote Galician village to recover hidden treasure. Sinister elders, strange disappearances, spirits, and a peculiar priest draw him into a fate worse than the sentence he fled.",
+      "the_mood": "Creepy, tactile clay horror with rural superstition, dark humour, and a handmade Galician chill that never quite lets go.",
+      "technique": ["claymation", "stop motion"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2013,
+          "section": "Feature Films",
+          "recognition_type": "award",
+          "award_name": "Audience Award",
+          "award_result": "winner",
+          "award_level": "category_award",
+          "source_url": "https://www.annecyfestival.com/en/"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/qg1UAkyVqQCqlDmUzk95jzjOWYV.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=nPkQLEq8jIk",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "nPkQLEq8jIk",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": null,
+        "tmdb": "https://www.themoviedb.org/movie/139900-o-apostolo",
+        "imdb": "https://www.imdb.com/title/tt1331294/"
+      },
+      "notes": "Spanish clay stop-motion horror for the Clay Animation Movies guide.",
+      "quick_filters": ["cultures", "distance"],
+      "catalog_visible": true
+    },
+    {
+      "title": "Pos eso",
+      "original_title": "Pos eso",
+      "year": 2015,
+      "runtime_minutes": 83,
+      "countries": ["Spain"],
+      "directors": ["Samuel Ortí Martí"],
+      "synopsis": "Flamenco dancer Trini leaves the stage after her bullfighter husband's death. When her son Damian starts behaving as if possessed, she turns to Padre Lenin, a disgraced Basque priest, for an exorcism that slides into cañí gore comedy.",
+      "the_mood": "Gory, irreverent clay comedy-horror: Spanish pop-culture pastiche, cute carnage, and stop-motion chaos with a satanic wink.",
+      "technique": ["claymation", "stop motion"],
+      "festival_recognitions": [
+        {
+          "festival_name": "Annecy International Animation Film Festival",
+          "festival_year": 2015,
+          "section": "Feature Films Official Competition",
+          "recognition_type": "selection",
+          "award_name": null,
+          "award_result": null,
+          "award_level": null,
+          "source_url": "https://www.annecyfestival.com/about/archives:en/2015:en/2015-programme/index:film-20150371"
+        }
+      ],
+      "image_url": "https://image.tmdb.org/t/p/w500/rxbvbVK8RT7DRvSlaIJi67crw1H.jpg",
+      "trailer_url": "https://www.youtube.com/watch?v=KbNT0KXkhys",
+      "trailer_provider": "youtube",
+      "trailer_video_id": "KbNT0KXkhys",
+      "trailer_source": "auto",
+      "source_urls": {
+        "official": null,
+        "festival": "https://www.annecyfestival.com/about/archives:en/2015:en/2015-programme/index:film-20150371",
+        "tmdb": "https://www.themoviedb.org/movie/337719-pos-eso",
+        "imdb": "https://www.imdb.com/title/tt3740416/"
+      },
+      "notes": "Spanish clay feature (aka Possessed) for the Clay Animation Movies guide. Catalog title kept as Pos eso.",
+      "quick_filters": ["sarcasm"],
+      "catalog_visible": true
+    }
+  ]
+}

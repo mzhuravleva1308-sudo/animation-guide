@@ -111,6 +111,14 @@ NODE_ENV=production npm run env:inspect
 
 Production SMTP lives in the **Supabase Dashboard** (Authentication → SMTP). It is never loaded from this repo.
 
+### New-user signup notify (production app)
+
+When `/auth/callback` (or `/auth/provision`) creates a **first** profile for an auth user, the app emails the owner via Resend. Skips quietly if unset. Set on **Vercel** (not only GitHub Actions):
+
+- `RESEND_API_KEY`
+- `NEW_USER_SIGNUP_NOTIFY_EMAIL` (optional; else `WEEKLY_FILM_IMPORT_REPORT_EMAIL`)
+- `NEW_USER_SIGNUP_EMAIL_FROM` (optional; else `WEEKLY_FILM_IMPORT_EMAIL_FROM` / Resend default)
+
 ### Weekly film import (GitHub Actions)
 
 Scheduled import uses **Resend** for the run report (not Supabase Auth SMTP). Set these as GitHub Actions secrets — see [WEEKLY_FILM_IMPORT.md](./WEEKLY_FILM_IMPORT.md):

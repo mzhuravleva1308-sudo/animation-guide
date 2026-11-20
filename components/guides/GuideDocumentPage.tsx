@@ -54,6 +54,13 @@ type GuideContent = {
           note?: string;
         }
       | { kind: "prose"; text: string }
+      | {
+          kind: "guidePreview";
+          href: string;
+          label: string;
+          blurb?: string;
+          titles: string[];
+        }
     )[];
   }[];
 };

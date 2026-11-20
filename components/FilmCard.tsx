@@ -23,8 +23,8 @@ import { FestivalBadgeList } from "@/components/FestivalBadge";
 import FilmWatchAvailability from "@/components/FilmWatchAvailability";
 import CopyableFilmTitle from "@/components/CopyableFilmTitle";
 import {
-  getCatalogDirectorGuideLink,
   getCatalogGuideLink,
+  listCatalogDirectorCreditParts,
 } from "@/lib/guides/catalog-guide-links.mjs";
 import { normalizeWatchAvailability } from "@/lib/film-watch-availability.mjs";
 
@@ -119,11 +119,11 @@ export default function FilmCard(props: FilmCardProps) {
       (props.mode !== "catalog" ||
         catalogGuideLink.href !== props.currentGuidePath)
   );
-  const directorGuideLink = getCatalogDirectorGuideLink(film.director);
   const currentGuidePath =
     props.mode === "catalog" ? props.currentGuidePath : undefined;
-  const showDirectorGuideLink = Boolean(
-    directorGuideLink && directorGuideLink.href !== currentGuidePath
+  const directorCreditParts = listCatalogDirectorCreditParts(
+    film.director,
+    currentGuidePath
   );
   const showWatchButton = Boolean(
     normalizeWatchAvailability(film.watch_availability)?.offers.length
@@ -208,25 +208,30 @@ export default function FilmCard(props: FilmCardProps) {
       {metadataParts.length > 0 ? (
         <p className="mt-1 text-sm text-gray-500">
           {metadataParts.map((part, index) => {
-            const isDirector =
-              showDirectorGuideLink &&
-              directorGuideLink &&
-              part === film.director;
+            const isDirectorCredit =
+              Boolean(film.director) && part === film.director;
             return (
               <span key={`${String(part)}-${index}`}>
                 {index > 0 ? " · " : null}
-                {isDirector ? (
-                  <Link
-                    href={directorGuideLink.href}
-                    data-testid="film-card-director-guide-link"
-                    aria-label={directorGuideLink.label}
-                    className="underline underline-offset-2 transition-colors hover:text-gray-700 focus-visible:text-gray-700"
-                  >
-                    {part}
-                  </Link>
-                ) : (
-                  part
-                )}
+                {isDirectorCredit
+                  ? directorCreditParts.map((credit, creditIndex) => (
+                      <span key={`${credit.name}-${creditIndex}`}>
+                        {creditIndex > 0 ? ", " : null}
+                        {credit.href && credit.label ? (
+                          <Link
+                            href={credit.href}
+                            data-testid="film-card-director-guide-link"
+                            aria-label={credit.label}
+                            className="underline underline-offset-2 transition-colors hover:text-gray-700 focus-visible:text-gray-700"
+                          >
+                            {credit.name}
+                          </Link>
+                        ) : (
+                          credit.name
+                        )}
+                      </span>
+                    ))
+                  : part}
               </span>
             );
           })}

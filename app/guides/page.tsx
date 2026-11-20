@@ -124,6 +124,10 @@ export default async function GuidesIndexPage() {
   ]);
 
   const guides = PUBLIC_GUIDE_LINKS.map((guide) => {
+    const staticCover =
+      typeof guide.coverPosterPath === "string" && guide.coverPosterPath.trim()
+        ? guide.coverPosterPath.trim()
+        : null;
     const film = findGuideFilmByTitle(covers.films, guide.coverTitle);
 
     return {
@@ -131,7 +135,7 @@ export default async function GuidesIndexPage() {
       href: guide.href,
       title: guide.title,
       description: guide.description,
-      coverPosterUrl: film ? getFilmPosterUrl(film) : null,
+      coverPosterUrl: staticCover ?? (film ? getFilmPosterUrl(film) : null),
     };
   });
 
