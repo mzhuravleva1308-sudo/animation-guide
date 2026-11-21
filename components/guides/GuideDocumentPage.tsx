@@ -51,6 +51,7 @@ type GuideContent = {
           runtimeLabel: string;
           watchUrl: string;
           posterUrl?: string;
+          posterAspect?: "portrait" | "landscape";
           note?: string;
         }
       | { kind: "prose"; text: string }

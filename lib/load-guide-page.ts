@@ -50,6 +50,7 @@ type GuidePageContent = {
           country?: string;
           director?: string;
           posterUrl?: string;
+          posterAspect?: "portrait" | "landscape";
           note?: string;
         }
       | { kind: "prose"; text: string }
@@ -289,6 +290,7 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
             country: string | null;
             director: string | null;
             posterUrl: string | null;
+            posterAspect: "portrait" | "landscape";
             note: string | null;
           }
         | { kind: "prose"; text: string }

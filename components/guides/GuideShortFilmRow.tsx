@@ -2,6 +2,8 @@ import GuideProseText from "@/components/guides/GuideProseText";
 import TrackedExternalLink from "@/components/TrackedExternalLink";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
 
+export type GuideShortPosterAspect = "portrait" | "landscape";
+
 export type GuideShortFilmItem = {
   kind: "short";
   title: string;
@@ -12,6 +14,8 @@ export type GuideShortFilmItem = {
   country: string | null;
   director: string | null;
   posterUrl: string | null;
+  /** Page-level short poster shape. Keep one aspect per guide for visual consistency. */
+  posterAspect: GuideShortPosterAspect;
   note: string | null;
 };
 
@@ -38,22 +42,32 @@ function shortMetaLine(item: GuideShortFilmItem) {
  */
 export default function GuideShortFilmRow({ item }: GuideShortFilmRowProps) {
   const meta = shortMetaLine(item);
+  const portrait = item.posterAspect === "portrait";
 
   return (
     <div
       data-testid="guide-short-film"
-      className="grid gap-4 border-t border-[#e8e6f0] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[240px_minmax(0,1fr)] sm:gap-5"
+      className={
+        portrait
+          ? "grid gap-4 border-t border-[#e8e6f0] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[104px_minmax(0,1fr)] sm:gap-5"
+          : "grid gap-4 border-t border-[#e8e6f0] pt-6 first:border-t-0 first:pt-0 sm:grid-cols-[240px_minmax(0,1fr)] sm:gap-5"
+      }
     >
       <div
         data-testid="guide-short-poster"
-        className="aspect-video w-full max-w-[320px] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4] sm:max-w-none sm:w-[240px]"
+        data-poster-aspect={item.posterAspect}
+        className={
+          portrait
+            ? "aspect-[2/3] w-[104px] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4]"
+            : "aspect-video w-full max-w-[320px] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4] sm:max-w-none sm:w-[240px]"
+        }
       >
         {item.posterUrl ? (
           <img
             src={item.posterUrl}
             alt=""
-            width={240}
-            height={135}
+            width={portrait ? 104 : 240}
+            height={portrait ? 156 : 135}
             decoding="async"
             loading="lazy"
             className="h-full w-full object-cover"
