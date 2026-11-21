@@ -19,6 +19,7 @@ export type GuideEditorialCatalogItem = {
   kind?: "catalog";
   film: Film;
   note?: string | null;
+  awards?: string | null;
 };
 
 export type GuideEditorialProseItem = {
@@ -45,6 +46,7 @@ type GuideEditorialGroupsProps = {
   savedFilmIds: Set<string>;
   filmRatings: Record<string, number | null>;
   ratingsReady: boolean;
+  hideFestivalBadges?: boolean;
   onSavedChange: (film: Film, saved: boolean) => void;
   onRatingChange: (
     filmId: string,
@@ -76,6 +78,7 @@ export default function GuideEditorialGroups({
   savedFilmIds,
   filmRatings,
   ratingsReady,
+  hideFestivalBadges = false,
   onSavedChange,
   onRatingChange,
   onAuthRequired,
@@ -188,13 +191,14 @@ export default function GuideEditorialGroups({
                         onRatingChange={onRatingChange}
                         onAuthRequired={onAuthRequired}
                         currentGuidePath={currentGuidePath}
+                        hideFestivalBadges={hideFestivalBadges}
                         ratingOnboardingHint={getHintForIndex(index)}
                         onDismissRatingOnboarding={onDismissRatingOnboarding}
                       />
                     </GuideFilmEngageTracker>
                   );
 
-                  if (!item.note) {
+                  if (!item.note && !item.awards) {
                     return (
                       <div
                         key={item.film.id}
@@ -212,19 +216,36 @@ export default function GuideEditorialGroups({
                       id={`guide-film-${item.film.id}`}
                       className="grid scroll-mt-24 gap-2.5"
                     >
-                      <div className="grid gap-1">
+                      <div className="grid gap-1.5">
                         <h3
                           data-testid="guide-film-heading"
                           className="font-sans text-[16px] font-medium leading-snug tracking-tight text-[#B1A9D9] antialiased [font-synthesis:none]"
                         >
                           {item.film.title}
                         </h3>
-                        <p
-                          data-testid="guide-film-note"
-                          className={`text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
-                        >
-                          <GuideProseText text={item.note} />
-                        </p>
+                        {item.note ? (
+                          <p
+                            data-testid="guide-film-note"
+                            className={`whitespace-pre-line text-[16px] leading-[1.65] text-[#4a4b5c] ${GUIDE_PROSE_CLASS}`}
+                          >
+                            <GuideProseText text={item.note} />
+                          </p>
+                        ) : null}
+                        {item.awards ? (
+                          <p
+                            data-testid="guide-film-awards"
+                            className={`flex items-start gap-1.5 text-[14px] leading-[1.5] text-[#8a5b2d] ${GUIDE_PROSE_CLASS}`}
+                          >
+                            <svg
+                              aria-hidden="true"
+                              viewBox="0 0 24 24"
+                              className="mt-[0.2em] h-[1em] w-[1em] shrink-0 fill-current"
+                            >
+                              <path d="M7 3h10v2h2.5a1.5 1.5 0 0 1 1.5 1.5V8a5.5 5.5 0 0 1-4.3 5.36A4.5 4.5 0 0 1 13 16.9V18h3v2H8v-2h3v-1.1a4.5 4.5 0 0 1-3.7-3.54A5.5 5.5 0 0 1 3 8V6.5A1.5 1.5 0 0 1 4.5 5H7V3Zm0 4H5v1a3.5 3.5 0 0 0 2.3 3.28A4.49 4.49 0 0 1 7 10V7Zm10 0v3c0 .78-.16 1.52-.46 2.18A3.5 3.5 0 0 0 19 8V7h-2ZM9 5v5a2.5 2.5 0 0 0 5 0V5H9Z" />
+                            </svg>
+                            <span>{item.awards}</span>
+                          </p>
+                        ) : null}
                       </div>
                       {card}
                     </div>

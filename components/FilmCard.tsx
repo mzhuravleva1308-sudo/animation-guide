@@ -71,6 +71,8 @@ type FilmCardCatalogProps = FilmCardBaseProps & {
   ratingOnboardingHint?: RatingOnboardingHint;
   onDismissRatingOnboarding?: () => void;
   currentGuidePath?: string;
+  /** Hide laurel festival chips (e.g. guide pages that list awards in copy). */
+  hideFestivalBadges?: boolean;
   /** Signed-in: hide this title from catalog browse, filters, and search. */
   onVibeHide?: (filmId: string, note: string | null) => void;
   /** Allowlisted Watched: open visual / mood / plot detail scores. */
@@ -128,16 +130,41 @@ export default function FilmCard(props: FilmCardProps) {
   const showWatchButton = Boolean(
     normalizeWatchAvailability(film.watch_availability)?.offers.length
   );
+  const showMediaActions = Boolean(film.trailer_url || showWatchButton);
+
+  const trailerLink = (variant: "overlay" | "inline") =>
+    film.trailer_url ? (
+      <a
+        href={film.trailer_url}
+        target="_blank"
+        rel="noreferrer"
+        data-testid={variant === "overlay" ? "film-trailer-link" : undefined}
+        className={
+          variant === "overlay"
+            ? "pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-medium leading-none text-black shadow-sm backdrop-blur transition hover:bg-white"
+            : "inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium leading-none text-black transition hover:bg-stone-50"
+        }
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          className="h-4 w-4 shrink-0 fill-current"
+        >
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        <span>Trailer</span>
+      </a>
+    ) : null;
 
   return (
     <article
       data-testid="film-card"
       data-film-id={film.id}
-      className="mx-auto w-full max-w-[1520px] overflow-hidden rounded-2xl border border-stone-300 sm:grid sm:grid-cols-[140px_minmax(0,1fr)] md:grid-cols-[190px_minmax(0,1fr)]"
+      className="mx-auto grid w-full max-w-[1520px] grid-cols-[96px_minmax(0,1fr)] gap-x-3 overflow-hidden rounded-2xl border border-stone-300 p-3 min-[900px]:grid-cols-[140px_minmax(0,1fr)] min-[900px]:gap-x-0 min-[900px]:p-0 min-[1100px]:grid-cols-[190px_minmax(0,1fr)]"
     >
       <div
         data-testid="film-poster"
-        className="relative h-72 w-full overflow-hidden bg-gray-100 sm:h-full sm:min-h-full sm:overflow-visible"
+        className="relative aspect-[2/3] w-full self-start overflow-hidden rounded-xl bg-gray-100 min-[900px]:row-span-2 min-[900px]:aspect-auto min-[900px]:h-full min-[900px]:min-h-full min-[900px]:self-stretch min-[900px]:rounded-none min-[900px]:overflow-visible"
       >
         {posterUrl ? (
           <img
@@ -154,273 +181,280 @@ export default function FilmCard(props: FilmCardProps) {
           </div>
         )}
 
-        {(film.trailer_url || showWatchButton) && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center gap-2 px-3">
-            {film.trailer_url ? (
-              <a
-                href={film.trailer_url}
-                target="_blank"
-                rel="noreferrer"
-                data-testid="film-trailer-link"
-                className="pointer-events-auto inline-flex w-max max-w-full items-center gap-1.5 whitespace-nowrap rounded-full bg-white/90 px-3.5 py-1.5 text-sm font-medium leading-none text-black shadow-sm backdrop-blur transition hover:bg-white"
-              >
-                <svg
-                  aria-hidden="true"
-                  viewBox="0 0 24 24"
-                  className="h-4 w-4 shrink-0 fill-current"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                <span>Trailer</span>
-              </a>
-            ) : null}
+        {showMediaActions ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-3 z-10 hidden justify-center gap-2 px-3 min-[900px]:flex">
+            {trailerLink("overlay")}
             {showWatchButton ? <FilmWatchAvailability film={film} /> : null}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="min-w-0 self-start min-[900px]:px-5 min-[900px]:pt-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+          <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
+            {headerPills.length > 0 ? (
+              <div
+                className="mb-1 flex flex-wrap items-center gap-2"
+                data-testid={
+                  isLiveAction
+                    ? "film-material-fact-pills"
+                    : "film-technique-pills"
+                }
+              >
+                {headerPills.map((pill) => (
+                  <span
+                    key={pill}
+                    data-testid={
+                      isLiveAction
+                        ? "film-material-fact-pill"
+                        : "film-technique-pill"
+                    }
+                    className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#8a5b2d]"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            <CopyableFilmTitle title={film.title} />
+
+            {metadataParts.length > 0 ? (
+              <p className="mt-1 text-sm text-gray-500">
+                {metadataParts.map((part, index) => {
+                  const isDirectorCredit =
+                    Boolean(film.director) && part === film.director;
+                  return (
+                    <span key={`${String(part)}-${index}`}>
+                      {index > 0 ? " · " : null}
+                      {isDirectorCredit
+                        ? directorCreditParts.map((credit, creditIndex) => (
+                            <span key={`${credit.name}-${creditIndex}`}>
+                              {creditIndex > 0 ? ", " : null}
+                              {credit.href && credit.label ? (
+                                <Link
+                                  href={credit.href}
+                                  data-testid="film-card-director-guide-link"
+                                  aria-label={credit.label}
+                                  className="underline underline-offset-2 transition-colors hover:text-gray-700 focus-visible:text-gray-700"
+                                >
+                                  {credit.name}
+                                </Link>
+                              ) : (
+                                credit.name
+                              )}
+                            </span>
+                          ))
+                        : part}
+                    </span>
+                  );
+                })}
+              </p>
+            ) : null}
+
+            {showCatalogGuideLink && catalogGuideLink ? (
+              <p className="mt-1 text-xs text-gray-500">
+                in{" "}
+                <Link
+                  href={catalogGuideLink.href}
+                  data-testid="film-card-guide-link"
+                  className="underline-offset-2 transition-colors hover:text-[#8a5b2d] hover:underline focus-visible:text-[#8a5b2d] focus-visible:underline"
+                >
+                  {catalogGuideLink.label}
+                </Link>
+              </p>
+            ) : null}
+
+            {showDebugScores && score && (
+              <div className="mt-2 space-y-0.5 text-xs text-gray-400">
+                <p>total_score: {score.balanced.toFixed(4)}</p>
+                <p>
+                  mood_score:{" "}
+                  {(score.mood_score ?? score.emotional).toFixed(4)}
+                </p>
+                {score.visual_world_score != null ||
+                score.visual_world != null ? (
+                  <p>
+                    visual_world_score:{" "}
+                    {(
+                      score.visual_world_score ??
+                      score.visual_world ??
+                      0
+                    ).toFixed(4)}
+                  </p>
+                ) : null}
+                {score.storytelling_score != null ||
+                score.storytelling != null ? (
+                  <p>
+                    storytelling_score:{" "}
+                    {(
+                      score.storytelling_score ??
+                      score.storytelling ??
+                      0
+                    ).toFixed(4)}
+                  </p>
+                ) : null}
+                <p>Raw material (legacy): {score.material.toFixed(4)}</p>
+              </div>
+            )}
+          </div>
+
+          {props.mode === "catalog" && props.hideFestivalBadges ? null : film
+              .festival_badges?.length ? (
+            <div className="order-1 w-full sm:order-2 sm:-mt-1.5 sm:w-auto sm:shrink-0">
+              <FestivalBadgeList badges={film.festival_badges} />
+            </div>
+          ) : null}
+
+          {film.availability && film.availability !== "unknown" && (
+            <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
+              {film.availability}
+            </span>
+          )}
+        </div>
+
+        {showMediaActions ? (
+          <div className="mt-2.5 flex flex-wrap gap-2 min-[900px]:hidden">
+            {trailerLink("inline")}
+            {showWatchButton ? <FilmWatchAvailability film={film} /> : null}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="col-span-2 flex min-h-0 flex-col pt-3 min-[900px]:col-span-1 min-[900px]:col-start-2 min-[900px]:px-5 min-[900px]:pb-5 min-[900px]:pt-2.5">
+        {(synopsis || mood) && (
+          <div className="space-y-2">
+            {synopsis && (
+              <p className="text-sm leading-6 text-gray-900">{synopsis}</p>
+            )}
+
+            {mood && (
+              <div className="border-l-2 border-[#ead8c7] pl-4">
+                <p className="text-sm italic leading-6 text-[#8a5b2d] [font-style:oblique_7deg]">
+                  {mood}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {showDebugScores && (
+          <div className="mt-4 space-y-3">
+            {moods.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {moods.map((moodTag) => (
+                    <span
+                      key={moodTag}
+                      className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
+                    >
+                      {moodTag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {aestheticTags.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {aestheticTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {narrativeTags.length ? (
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {narrativeTags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {film.technique && (
+              <div>
+                <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
+                  {film.technique}
+                </span>
+              </div>
+            )}
+
+            {film.material_fact && (
+              <div>
+                <span className="inline-flex rounded-full bg-stone-50 px-3 py-1 text-sm text-stone-600">
+                  {film.material_fact}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {showInteractionControls && (
+          <div className="mt-auto flex flex-col gap-2 pt-4">
+            <RatingOnboardingHintChip
+              hint={props.ratingOnboardingHint}
+              onDismiss={props.onDismissRatingOnboarding}
+            />
+            <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 sm:gap-x-6">
+              <RatingButtons
+                filmId={film.id}
+                filmTitle={film.title}
+                profileId={props.profileId}
+                initialRating={props.initialRating}
+                onRatingChange={props.onRatingChange}
+                onAuthRequired={
+                  props.mode === "catalog" ? props.onAuthRequired : undefined
+                }
+              />
+              <div className="flex shrink-0 items-center gap-2">
+                {props.mode === "catalog" &&
+                props.showRatingDetail &&
+                typeof props.initialRating === "number" ? (
+                  <RatingDetailButton
+                    filmId={film.id}
+                    filmTitle={film.title}
+                    overallRating={props.initialRating}
+                    initialDetail={props.ratingDetail ?? null}
+                    onDetailChange={props.onRatingDetailChange}
+                  />
+                ) : null}
+                <WatchlistButton
+                  filmId={film.id}
+                  filmTitle={film.title}
+                  profileSlug={props.profileSlug}
+                  profileId={props.profileId}
+                  isSaved={props.savedFilmIds.has(film.id)}
+                  onSavedChange={(saved) => props.onSavedChange(film, saved)}
+                  onAuthRequired={
+                    props.mode === "catalog" ? props.onAuthRequired : undefined
+                  }
+                />
+                {props.mode === "catalog" && props.onVibeHide ? (
+                  <VibeHideButton
+                    filmId={film.id}
+                    filmTitle={film.title}
+                    onHidden={props.onVibeHide}
+                  />
+                ) : null}
+              </div>
+            </div>
           </div>
         )}
       </div>
-
-      <div className="flex min-h-0 flex-col p-4 sm:px-5 sm:py-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-      <div className="order-2 min-w-0 w-full sm:order-1 sm:flex-1">
-      {headerPills.length > 0 ? (
-        <div
-          className="mb-1 flex flex-wrap items-center gap-2"
-          data-testid={
-            isLiveAction ? "film-material-fact-pills" : "film-technique-pills"
-          }
-        >
-          {headerPills.map((pill) => (
-            <span
-              key={pill}
-              data-testid={
-                isLiveAction ? "film-material-fact-pill" : "film-technique-pill"
-              }
-              className="text-[10px] font-medium uppercase tracking-[0.16em] text-[#8a5b2d]"
-            >
-              {pill}
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <CopyableFilmTitle title={film.title} />
-
-      {metadataParts.length > 0 ? (
-        <p className="mt-1 text-sm text-gray-500">
-          {metadataParts.map((part, index) => {
-            const isDirectorCredit =
-              Boolean(film.director) && part === film.director;
-            return (
-              <span key={`${String(part)}-${index}`}>
-                {index > 0 ? " · " : null}
-                {isDirectorCredit
-                  ? directorCreditParts.map((credit, creditIndex) => (
-                      <span key={`${credit.name}-${creditIndex}`}>
-                        {creditIndex > 0 ? ", " : null}
-                        {credit.href && credit.label ? (
-                          <Link
-                            href={credit.href}
-                            data-testid="film-card-director-guide-link"
-                            aria-label={credit.label}
-                            className="underline underline-offset-2 transition-colors hover:text-gray-700 focus-visible:text-gray-700"
-                          >
-                            {credit.name}
-                          </Link>
-                        ) : (
-                          credit.name
-                        )}
-                      </span>
-                    ))
-                  : part}
-              </span>
-            );
-          })}
-        </p>
-      ) : null}
-
-      {showCatalogGuideLink && catalogGuideLink ? (
-        <p className="mt-1 text-xs text-gray-500">
-          in{" "}
-          <Link
-            href={catalogGuideLink.href}
-            data-testid="film-card-guide-link"
-            className="underline-offset-2 transition-colors hover:text-[#8a5b2d] hover:underline focus-visible:text-[#8a5b2d] focus-visible:underline"
-          >
-            {catalogGuideLink.label}
-          </Link>
-        </p>
-      ) : null}
-
-      {showDebugScores && score && (
-        <div className="mt-2 space-y-0.5 text-xs text-gray-400">
-          <p>total_score: {score.balanced.toFixed(4)}</p>
-          <p>
-            mood_score:{" "}
-            {(score.mood_score ?? score.emotional).toFixed(4)}
-          </p>
-          {score.visual_world_score != null || score.visual_world != null ? (
-            <p>
-              visual_world_score:{" "}
-              {(score.visual_world_score ?? score.visual_world ?? 0).toFixed(4)}
-            </p>
-          ) : null}
-          {score.storytelling_score != null || score.storytelling != null ? (
-            <p>
-              storytelling_score:{" "}
-              {(score.storytelling_score ?? score.storytelling ?? 0).toFixed(4)}
-            </p>
-          ) : null}
-          <p>Raw material (legacy): {score.material.toFixed(4)}</p>
-        </div>
-      )}
-    </div>
-
-    {film.festival_badges?.length ? (
-      <div className="order-1 w-full sm:order-2 sm:-mt-1.5 sm:w-auto sm:shrink-0">
-        <FestivalBadgeList badges={film.festival_badges} />
-      </div>
-    ) : null}
-
-    {film.availability && film.availability !== "unknown" && (
-      <span className="shrink-0 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">
-        {film.availability}
-      </span>
-    )}
-  </div>
-
-  {(synopsis || mood) && (
-    <div className="mt-2.5 space-y-2">
-      {synopsis && (
-        <p className="text-sm leading-6 text-gray-900">{synopsis}</p>
-      )}
-
-      {mood && (
-        <div className="border-l-2 border-[#ead8c7] pl-4">
-          <p className="text-sm italic leading-6 text-[#8a5b2d] [font-style:oblique_7deg]">
-            {mood}
-          </p>
-        </div>
-      )}
-    </div>
-  )}
-
-  {showDebugScores && (
-    <div className="mt-4 space-y-3">
-      {moods.length ? (
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {moods.map((mood) => (
-              <span
-                key={mood}
-                className="rounded-full bg-gray-100 px-3 py-1 text-sm text-gray-700"
-              >
-                {mood}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {aestheticTags.length ? (
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {aestheticTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-700"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {narrativeTags.length ? (
-        <div>
-          <div className="flex flex-wrap gap-2">
-            {narrativeTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-amber-50 px-3 py-1 text-sm text-amber-800"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {film.technique && (
-        <div>
-          <span className="inline-flex rounded-full bg-gray-50 px-3 py-1 text-sm text-gray-500">
-            {film.technique}
-          </span>
-        </div>
-      )}
-
-      {film.material_fact && (
-        <div>
-          <span className="inline-flex rounded-full bg-stone-50 px-3 py-1 text-sm text-stone-600">
-            {film.material_fact}
-          </span>
-        </div>
-      )}
-    </div>
-  )}
-
-  {showInteractionControls && (
-    <div className="mt-auto flex flex-col gap-2 pt-4">
-      <RatingOnboardingHintChip
-        hint={props.ratingOnboardingHint}
-        onDismiss={props.onDismissRatingOnboarding}
-      />
-      <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 sm:gap-x-6">
-        <RatingButtons
-          filmId={film.id}
-          filmTitle={film.title}
-          profileId={props.profileId}
-          initialRating={props.initialRating}
-          onRatingChange={props.onRatingChange}
-          onAuthRequired={
-            props.mode === "catalog" ? props.onAuthRequired : undefined
-          }
-        />
-        <div className="flex shrink-0 items-center gap-2">
-          {props.mode === "catalog" &&
-          props.showRatingDetail &&
-          typeof props.initialRating === "number" ? (
-            <RatingDetailButton
-              filmId={film.id}
-              filmTitle={film.title}
-              overallRating={props.initialRating}
-              initialDetail={props.ratingDetail ?? null}
-              onDetailChange={props.onRatingDetailChange}
-            />
-          ) : null}
-          <WatchlistButton
-            filmId={film.id}
-            filmTitle={film.title}
-            profileSlug={props.profileSlug}
-            profileId={props.profileId}
-            isSaved={props.savedFilmIds.has(film.id)}
-            onSavedChange={(saved) => props.onSavedChange(film, saved)}
-            onAuthRequired={
-              props.mode === "catalog" ? props.onAuthRequired : undefined
-            }
-          />
-          {props.mode === "catalog" && props.onVibeHide ? (
-            <VibeHideButton
-              filmId={film.id}
-              filmTitle={film.title}
-              onHidden={props.onVibeHide}
-            />
-          ) : null}
-        </div>
-      </div>
-    </div>
-  )}
-</div>
     </article>
   );
 }

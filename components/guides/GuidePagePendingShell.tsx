@@ -52,12 +52,14 @@ function SkeletonBlock({ className }: { className: string }) {
 
 function FilmCardSkeleton() {
   return (
-    <div className="grid gap-5 rounded-2xl border border-gray-100 p-5 md:grid-cols-[160px_1fr]">
-      <SkeletonBlock className="h-56 w-full md:h-60" />
-      <div className="space-y-4">
-        <SkeletonBlock className="h-7 w-2/3" />
+    <div className="grid grid-cols-[96px_minmax(0,1fr)] gap-x-3 rounded-2xl border border-gray-100 p-3 min-[900px]:grid-cols-[140px_minmax(0,1fr)] min-[900px]:gap-x-0 min-[900px]:p-0 min-[1100px]:grid-cols-[190px_minmax(0,1fr)]">
+      <SkeletonBlock className="aspect-[2/3] w-full rounded-xl min-[900px]:row-span-2 min-[900px]:aspect-auto min-[900px]:min-h-[12rem] min-[900px]:rounded-none" />
+      <div className="space-y-3 min-[900px]:p-5">
+        <SkeletonBlock className="h-5 w-2/3" />
         <SkeletonBlock className="h-4 w-1/2" />
-        <SkeletonBlock className="h-20 w-full" />
+      </div>
+      <div className="col-span-2 space-y-3 pt-3 min-[900px]:col-span-1 min-[900px]:col-start-2 min-[900px]:px-5 min-[900px]:pb-5 min-[900px]:pt-0">
+        <SkeletonBlock className="h-16 w-full" />
       </div>
     </div>
   );

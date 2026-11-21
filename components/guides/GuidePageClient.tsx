@@ -41,6 +41,7 @@ type GuidePageContent = {
   portrait?: GuidePortrait;
   collageUnderlay?: GuideCollageUnderlay;
   collageSize?: "default" | "compact";
+  hideFilmCardFestivalBadges?: boolean;
 };
 
 type GuidePageClientProps = {
@@ -271,6 +272,7 @@ export default function GuidePageClient({
           savedFilmIds={savedFilmIds}
           filmRatings={filmRatings}
           ratingsReady={ratingsReady}
+          hideFestivalBadges={Boolean(content.hideFilmCardFestivalBadges)}
           onSavedChange={handleSavedChange}
           onRatingChange={handleRatingChange}
           onAuthRequired={auth ? undefined : handleAuthRequired}

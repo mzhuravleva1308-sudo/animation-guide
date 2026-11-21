@@ -273,7 +273,12 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
       heading: string;
       description?: string;
       items: (
-        | { kind: "catalog"; film: Film; note: string | null }
+        | {
+            kind: "catalog";
+            film: Film;
+            note: string | null;
+            awards: string | null;
+          }
         | {
             kind: "short";
             title: string;
