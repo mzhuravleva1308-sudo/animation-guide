@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import {
+  GUIDE_DISPLAY_H1_CLASS,
+  guideDisplayFont,
+} from "@/components/guides/guide-display-font";
 import ResonaleBrand from "@/components/ResonaleBrand";
 import SiteFooter from "@/components/SiteFooter";
 import {
@@ -162,7 +166,7 @@ export default async function AnimationFestivals2026Page() {
           >
             Festivals
           </Link>
-          <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+          <h1 className={GUIDE_DISPLAY_H1_CLASS}>
             Animation Festivals {YEAR}
           </h1>
           <p className={bodyClassName}>
@@ -186,7 +190,9 @@ export default async function AnimationFestivals2026Page() {
                   key={festival.festivalId}
                   data-testid={`festival-${festival.festivalId}`}
                 >
-                  <h2 className="font-sans text-[20px] font-medium leading-[1.3] tracking-tight antialiased [font-synthesis:none]">
+                  <h2
+                    className={`${guideDisplayFont.className} text-[20px] font-semibold leading-[1.3] tracking-[-0.01em] antialiased [font-synthesis:none]`}
+                  >
                     <a
                       href={festival.url}
                       className={titleLinkClassName}

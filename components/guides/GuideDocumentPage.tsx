@@ -39,6 +39,27 @@ type GuideContent = {
   cta: { href: string; label: string };
   relatedGuides?: { href: string; label: string }[];
   anchorTitle?: string;
+  discoveryHero?: {
+    deck: string | string[];
+    prompt?: string;
+    heroImageSrc?: string;
+    heroImageAlt?: string;
+    doors: {
+      label: string;
+      href: string;
+      imageSrc: string;
+      imageAlt: string;
+    }[];
+  };
+  discoveryPromo?: {
+    eyebrow: string;
+    heading: string;
+    body: string;
+    ctaHref: string;
+    ctaLabel: string;
+    imageSrc: string;
+    imageAlt: string;
+  };
   groups: {
     heading: string;
     description?: string;
@@ -53,6 +74,7 @@ type GuideContent = {
           posterUrl?: string;
           posterAspect?: "portrait" | "landscape";
           note?: string;
+          awards?: string;
         }
       | { kind: "prose"; text: string }
       | {
@@ -61,6 +83,15 @@ type GuideContent = {
           label: string;
           blurb?: string;
           titles: string[];
+        }
+      | {
+          kind: "guideCard";
+          href: string;
+          label: string;
+          blurb?: string;
+          imageSrc: string;
+          imageAlt: string;
+          ctaLabel?: string;
         }
     )[];
   }[];

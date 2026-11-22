@@ -7,10 +7,14 @@ import FestivalYearSwitcher, {
   type FestivalYearOption,
 } from "@/components/festivals/FestivalYearSwitcher";
 import GuideDocumentAttribution from "@/components/guides/GuideDocumentAttribution";
+import { GUIDE_DISPLAY_H1_CLASS } from "@/components/guides/guide-display-font";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { GUIDES_INDEX_PATH } from "@/lib/guides/public-guide-links.mjs";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
+import GuideDiscoveryPromo, {
+  type GuideDiscoveryPromoContent,
+} from "@/components/guides/GuideDiscoveryPromo";
 import { markScrollHomeToTop } from "@/lib/scroll-home-to-top";
 import type { AuthUserSummary } from "@/lib/auth/session";
 
@@ -28,6 +32,7 @@ type GuidePageContent = {
   cta: { href: string; label: string };
   relatedGuides?: { href: string; label: string }[];
   portrait?: GuidePortrait;
+  discoveryPromo?: GuideDiscoveryPromoContent;
 };
 
 type GuidePagePendingShellProps = {
@@ -109,9 +114,7 @@ export default function GuidePagePendingShell({
         >
           {sectionLink.label}
         </Link>
-        <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
-          {content.h1}
-        </h1>
+        <h1 className={GUIDE_DISPLAY_H1_CLASS}>{content.h1}</h1>
         {yearSwitcher ? (
           <FestivalYearSwitcher
             years={yearSwitcher.years}
@@ -141,26 +144,39 @@ export default function GuidePagePendingShell({
         <FilmCardSkeleton />
       </section>
 
-      <div className={`mt-16 ${GUIDE_PROSE_CLASS}`}>
-        <p
-          data-testid="guide-personal-note"
-          className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+      {content.discoveryPromo ? (
+        <GuideDiscoveryPromo content={content.discoveryPromo} />
+      ) : null}
+
+      <div
+        className={`${content.discoveryPromo ? "mt-10" : "mt-16"} ${GUIDE_PROSE_CLASS}`}
+      >
+        {!content.discoveryPromo ? (
+          <>
+            <p
+              data-testid="guide-personal-note"
+              className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+            >
+              {content.personalNote}
+            </p>
+            <Link
+              href={content.cta.href}
+              data-testid="guide-cta"
+              scroll
+              onClick={() => {
+                markScrollHomeToTop();
+                window.scrollTo(0, 0);
+              }}
+              className="mt-5 inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {content.cta.label}
+            </Link>
+          </>
+        ) : null}
+        <div
+          className={content.discoveryPromo ? undefined : "mt-8"}
+          data-testid="guide-related"
         >
-          {content.personalNote}
-        </p>
-        <Link
-          href={content.cta.href}
-          data-testid="guide-cta"
-          scroll
-          onClick={() => {
-            markScrollHomeToTop();
-            window.scrollTo(0, 0);
-          }}
-          className="mt-5 inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          {content.cta.label}
-        </Link>
-        <div className="mt-8" data-testid="guide-related">
           <p className="font-sans text-[15px] font-medium leading-[1.65] text-[#1A1B2E] antialiased [font-synthesis:none]">
             More guides
           </p>

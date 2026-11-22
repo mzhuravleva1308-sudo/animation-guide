@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import EmailAuthModal from "@/components/EmailAuthModal";
+import {
+  GUIDE_DISPLAY_H1_CLASS,
+  guideDisplayFont,
+} from "@/components/guides/guide-display-font";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import { GUIDE_PROSE_CLASS } from "@/lib/guides/guide-layout.mjs";
@@ -18,6 +22,7 @@ export type GuidesIndexItem = {
   title: string;
   description: string;
   coverPosterUrl: string | null;
+  pinned?: boolean;
 };
 
 type GuidesIndexClientProps = {
@@ -57,7 +62,7 @@ export default function GuidesIndexClient({
       />
 
       <div className="mt-10 mb-8 sm:mt-12 sm:mb-10">
-        <h1 className="font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+        <h1 className={`${GUIDE_DISPLAY_H1_CLASS} !mt-0`}>
           Guides to Animated Films
         </h1>
         <p
@@ -70,9 +75,17 @@ export default function GuidesIndexClient({
       <ul className="grid gap-8">
         {guides.map((guide, index) => {
           const headingId = `guides-index-heading-${guide.slug}`;
+          const pinned = Boolean(guide.pinned);
 
           return (
-            <li key={guide.href}>
+            <li
+              key={guide.href}
+              className={
+                pinned
+                  ? "-mx-1 rounded-2xl bg-[#f3eee6] px-3 py-4 sm:-mx-2 sm:px-5 sm:py-5"
+                  : undefined
+              }
+            >
               <Link
                 href={guide.href}
                 data-testid={`guides-index-${guide.slug}`}
@@ -82,14 +95,16 @@ export default function GuidesIndexClient({
                 <div
                   data-testid={`guides-index-cover-${guide.slug}`}
                   aria-hidden="true"
-                  className="aspect-[2/3] w-[104px] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4]"
+                  className={`aspect-[2/3] shrink-0 overflow-hidden rounded-xl bg-[#eeeef4] ${
+                    pinned ? "w-[120px] sm:w-[132px]" : "w-[104px]"
+                  }`}
                 >
                   {guide.coverPosterUrl ? (
                     <img
                       src={guide.coverPosterUrl}
                       alt=""
-                      width={104}
-                      height={156}
+                      width={pinned ? 132 : 104}
+                      height={pinned ? 198 : 156}
                       decoding="async"
                       loading={index === 0 ? "eager" : "lazy"}
                       fetchPriority={index === 0 ? "high" : "auto"}
@@ -98,9 +113,18 @@ export default function GuidesIndexClient({
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
+                  {pinned ? (
+                    <p className="mb-1.5 text-[11px] font-semibold tracking-[0.18em] text-[#8a857c] uppercase">
+                      Start here
+                    </p>
+                  ) : null}
                   <h2
                     id={headingId}
-                    className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]"
+                    className={`${guideDisplayFont.className} font-semibold leading-[1.2] tracking-[-0.01em] text-[#1A1B2E] antialiased [font-synthesis:none] ${
+                      pinned
+                        ? "text-[24px] sm:text-[26px]"
+                        : "text-[22px] sm:text-[24px]"
+                    }`}
                   >
                     <span className="underline decoration-[#c5c2d6] underline-offset-4 group-hover:text-[#1A1B2E] group-hover:decoration-[#1A1B2E]">
                       {guide.title}

@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 import EmailAuthModal from "@/components/EmailAuthModal";
+import {
+  GUIDE_DISPLAY_H1_CLASS,
+  GUIDE_DISPLAY_H2_CLASS,
+} from "@/components/guides/guide-display-font";
 import GuideSectionHeader from "@/components/guides/GuideSectionHeader";
 import SiteFooter from "@/components/SiteFooter";
 import {
@@ -64,7 +68,7 @@ export default function FestivalsIndexClient({
       />
 
       <div className="mt-10 mb-8 sm:mt-12 sm:mb-10">
-        <h1 className="font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
+        <h1 className={`${GUIDE_DISPLAY_H1_CLASS} !mt-0`}>
           Animation Festival Winners
         </h1>
         <p
@@ -105,10 +109,7 @@ export default function FestivalsIndexClient({
                   ) : null}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2
-                    id={headingId}
-                    className="font-sans text-[22px] font-medium leading-[1.25] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[24px]"
-                  >
+                  <h2 id={headingId} className={GUIDE_DISPLAY_H2_CLASS}>
                     <span className="underline decoration-[#c5c2d6] underline-offset-4 group-hover:text-[#1A1B2E] group-hover:decoration-[#1A1B2E]">
                       {festival.title}
                     </span>

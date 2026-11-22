@@ -866,6 +866,12 @@ test.describe("Guides index", () => {
     await expect(
       page.getByTestId("guides-index-cover-best-animated-movies-for-adults")
     ).toBeVisible();
+    await expect(
+      page.getByTestId("guides-index-best-stop-motion-movies")
+    ).toHaveAttribute("href", "/guides/best-stop-motion-movies");
+    await expect(
+      page.getByTestId("guides-index-cover-best-stop-motion-movies")
+    ).toBeVisible();
   });
 
   test("article titles open the guide pages", async ({ page }) => {

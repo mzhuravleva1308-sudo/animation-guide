@@ -5,6 +5,16 @@ import EmailAuthModal from "@/components/EmailAuthModal";
 import FestivalYearSwitcher, {
   type FestivalYearOption,
 } from "@/components/festivals/FestivalYearSwitcher";
+import GuideDiscoveryHero, {
+  type GuideDiscoveryHeroContent,
+} from "@/components/guides/GuideDiscoveryHero";
+import GuideDiscoveryPromo, {
+  type GuideDiscoveryPromoContent,
+} from "@/components/guides/GuideDiscoveryPromo";
+import {
+  GUIDE_DISPLAY_H1_CLASS,
+  GUIDE_DISPLAY_H1_COLLAGE_CLASS,
+} from "@/components/guides/guide-display-font";
 import GuideDocumentAttribution from "@/components/guides/GuideDocumentAttribution";
 import GuideEditorialGroups, {
   type GuideEditorialGroup,
@@ -42,6 +52,8 @@ type GuidePageContent = {
   collageUnderlay?: GuideCollageUnderlay;
   collageSize?: "default" | "compact";
   hideFilmCardFestivalBadges?: boolean;
+  discoveryHero?: Omit<GuideDiscoveryHeroContent, "h1">;
+  discoveryPromo?: GuideDiscoveryPromoContent;
 };
 
 type GuidePageClientProps = {
@@ -117,9 +129,12 @@ export default function GuidePageClient({
   });
 
   const showGroups = groups.length > 0 && missingTitles.length === 0;
+  const discoveryHero = content.discoveryHero
+    ? { ...content.discoveryHero, h1: content.h1 }
+    : null;
   const portrait = content.portrait ?? null;
   const collageFilms =
-    showGroups && anchorFilm
+    !discoveryHero && showGroups && anchorFilm
       ? groups.flatMap((group) =>
           group.items.flatMap((item) => {
             if (
@@ -155,10 +170,10 @@ export default function GuidePageClient({
   const introImageUrl = portrait?.src ?? anchorPosterUrl;
   const introImageAlt = portrait?.alt ?? anchorFilm?.title ?? "Flow";
 
-  return (
+  const page = (
     <main
       className={`mx-auto w-full min-w-0 px-4 py-6 sm:p-8 ${
-        showCollage ? "max-w-6xl" : "max-w-5xl"
+        discoveryHero ? "max-w-6xl sm:px-10 sm:py-9" : showCollage ? "max-w-6xl" : "max-w-5xl"
       }`}
       data-testid={pageTestId}
       data-ratings-ready={ratingsReady ? "true" : "false"}
@@ -171,12 +186,19 @@ export default function GuidePageClient({
 
       <div
         className={
-          showCollage
-            ? "mt-10 mb-6 sm:mt-12 sm:mb-7"
-            : "mt-10 mb-8 sm:mt-12 sm:mb-10"
+          discoveryHero
+            ? "mt-5 mb-8 sm:mt-6 sm:mb-10"
+            : showCollage
+              ? "mt-10 mb-6 sm:mt-12 sm:mb-7"
+              : "mt-10 mb-8 sm:mt-12 sm:mb-10"
         }
       >
-        {showCollage ? (
+        {discoveryHero ? (
+          <GuideDiscoveryHero
+            content={discoveryHero}
+            sectionLink={sectionLink}
+          />
+        ) : showCollage ? (
           <div className="relative flex flex-col items-start gap-4 overflow-visible lg:flex-row lg:gap-5 xl:gap-6">
             <div
               data-testid="guide-intro-copy"
@@ -189,9 +211,7 @@ export default function GuidePageClient({
               >
                 {sectionLink.label}
               </Link>
-              <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px] lg:text-[34px]">
-                {content.h1}
-              </h1>
+              <h1 className={GUIDE_DISPLAY_H1_COLLAGE_CLASS}>{content.h1}</h1>
               {yearSwitcher ? (
                 <FestivalYearSwitcher
                   years={yearSwitcher.years}
@@ -221,9 +241,7 @@ export default function GuidePageClient({
             >
               {sectionLink.label}
             </Link>
-            <h1 className="mt-3 font-sans text-[28px] font-medium leading-[1.2] tracking-tight text-[#1A1B2E] antialiased [font-synthesis:none] sm:text-[32px]">
-              {content.h1}
-            </h1>
+            <h1 className={GUIDE_DISPLAY_H1_CLASS}>{content.h1}</h1>
             {yearSwitcher ? (
               <FestivalYearSwitcher
                 years={yearSwitcher.years}
@@ -273,6 +291,7 @@ export default function GuidePageClient({
           filmRatings={filmRatings}
           ratingsReady={ratingsReady}
           hideFestivalBadges={Boolean(content.hideFilmCardFestivalBadges)}
+          hideSectionIndex={Boolean(discoveryHero)}
           onSavedChange={handleSavedChange}
           onRatingChange={handleRatingChange}
           onAuthRequired={auth ? undefined : handleAuthRequired}
@@ -286,28 +305,41 @@ export default function GuidePageClient({
         </p>
       ) : null}
 
-      <div className={`mt-16 ${GUIDE_PROSE_CLASS}`}>
-        <p
-          data-testid="guide-personal-note"
-          className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+      {content.discoveryPromo ? (
+        <GuideDiscoveryPromo content={content.discoveryPromo} />
+      ) : null}
+
+      <div
+        className={`${content.discoveryPromo ? "mt-10" : "mt-16"} ${GUIDE_PROSE_CLASS}`}
+      >
+        {!content.discoveryPromo ? (
+          <>
+            <p
+              data-testid="guide-personal-note"
+              className="font-sans text-[16px] font-normal leading-[1.65] text-[#4a4b5c] antialiased [font-synthesis:none]"
+            >
+              {content.personalNote}
+            </p>
+            <Link
+              href={content.cta.href}
+              data-testid="guide-cta"
+              scroll
+              onClick={() => {
+                // Soft-nav into the Suspense catalog can keep the guide's scrollY
+                // (or a prior / position) through the short pending shell — land at top.
+                markScrollHomeToTop();
+                window.scrollTo(0, 0);
+              }}
+              className="mt-5 inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              {content.cta.label}
+            </Link>
+          </>
+        ) : null}
+        <div
+          className={content.discoveryPromo ? undefined : "mt-8"}
+          data-testid="guide-related"
         >
-          {content.personalNote}
-        </p>
-        <Link
-          href={content.cta.href}
-          data-testid="guide-cta"
-          scroll
-          onClick={() => {
-            // Soft-nav into the Suspense catalog can keep the guide's scrollY
-            // (or a prior / position) through the short pending shell — land at top.
-            markScrollHomeToTop();
-            window.scrollTo(0, 0);
-          }}
-          className="mt-5 inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          {content.cta.label}
-        </Link>
-        <div className="mt-8" data-testid="guide-related">
           <p className="font-sans text-[15px] font-medium leading-[1.65] text-[#1A1B2E] antialiased [font-synthesis:none]">
             More guides
           </p>
@@ -353,4 +385,10 @@ export default function GuidePageClient({
       />
     </main>
   );
+
+  if (!discoveryHero) {
+    return page;
+  }
+
+  return <div className="min-h-full bg-[#f7f2ea]">{page}</div>;
 }

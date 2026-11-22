@@ -136,6 +136,7 @@ export default async function GuidesIndexPage() {
       title: guide.title,
       description: guide.description,
       coverPosterUrl: staticCover ?? (film ? getFilmPosterUrl(film) : null),
+      pinned: Boolean(guide.pinned),
     };
   });
 

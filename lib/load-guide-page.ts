@@ -52,6 +52,7 @@ type GuidePageContent = {
           posterUrl?: string;
           posterAspect?: "portrait" | "landscape";
           note?: string;
+          awards?: string;
         }
       | { kind: "prose"; text: string }
       | {
@@ -60,6 +61,15 @@ type GuidePageContent = {
           label: string;
           blurb?: string;
           titles: string[];
+        }
+      | {
+          kind: "guideCard";
+          href: string;
+          label: string;
+          blurb?: string;
+          imageSrc: string;
+          imageAlt: string;
+          ctaLabel?: string;
         }
     )[];
   }[];
@@ -292,6 +302,7 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
             posterUrl: string | null;
             posterAspect: "portrait" | "landscape";
             note: string | null;
+            awards: string | null;
           }
         | { kind: "prose"; text: string }
         | {
@@ -300,6 +311,15 @@ export const loadGuidePage = cache(async (guide: GuidePageContent) => {
             label: string;
             blurb: string | null;
             posters: { title: string; posterUrl: string | null }[];
+          }
+        | {
+            kind: "guideCard";
+            href: string;
+            label: string;
+            blurb: string | null;
+            imageSrc: string;
+            imageAlt: string;
+            ctaLabel: string;
           }
       )[];
     }[],
