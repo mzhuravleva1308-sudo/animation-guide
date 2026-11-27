@@ -12,7 +12,9 @@ import {
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 import {
   SITE_DESCRIPTION,
+  SITE_OG_IMAGE_HEIGHT,
   SITE_OG_IMAGE_PATH,
+  SITE_OG_IMAGE_WIDTH,
   SITE_TITLE,
   buildSiteJsonLd,
 } from "@/lib/site-seo";
@@ -49,8 +51,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: SITE_OG_IMAGE_PATH,
-        width: 1200,
-        height: 630,
+        width: SITE_OG_IMAGE_WIDTH,
+        height: SITE_OG_IMAGE_HEIGHT,
         alt: "Resonale — Indie & Festival Animation Guide",
       },
     ],
@@ -60,6 +62,11 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     images: [SITE_OG_IMAGE_PATH],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    "max-image-preview": "large" as const,
   },
 };
 

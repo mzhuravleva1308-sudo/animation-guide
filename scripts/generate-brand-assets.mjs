@@ -159,8 +159,10 @@ async function main() {
   fs.writeFileSync(path.join(root, "app/favicon.ico"), encodeIco(favEntries));
   console.log("wrote app/favicon.ico");
 
-  await sharp(ogSvg()).png().toFile(path.join(root, "public/og.png"));
-  console.log("wrote public/og.png");
+  // Homepage / fallback share still is hand-authored: public/og.jpg (R + cat).
+  // Do not regenerate the old landscape mark lockup as public/og.png.
+  void ogSvg;
+  console.log("skipped public/og.png (use public/og.jpg)");
 }
 
 main().catch((err) => {

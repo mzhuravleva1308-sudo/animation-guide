@@ -17,11 +17,13 @@ test.describe("Public SEO basics", () => {
     expect(title).toMatch(/Festival Animation Guide/);
     expect(html).toContain(`content="${EXPECTED_DESCRIPTION}"`);
     expect(html).toContain("og:image");
-    expect(html).toContain("/og.png");
+    expect(html).toContain("/og.jpg");
     expect(html).toContain("application/ld+json");
     expect(html).toContain('"@type":"WebSite"');
+    expect(html).toContain('"@type":"WebPage"');
     expect(html).toContain('"@type":"Organization"');
     expect(html).toContain('"@type":"Person"');
+    expect(html).toContain("primaryImageOfPage");
     expect(html).toContain("https://resonale.com/#maria");
   });
 
