@@ -15,6 +15,7 @@ import {
   assertGuideFilmsLoaded,
   serializeJsonLd,
 } from "@/lib/guides/guide-document-seo";
+import { resolveGuidePrimaryImage } from "@/lib/guides/resolve-guide-primary-image.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 
@@ -119,6 +120,7 @@ async function GuideDocumentBody({
   const indexMeta = findPublicGuideLinkBySlug(guide.slug);
   const attribution = guideAttribution(guide.slug);
   const showJsonLd = page.missingTitles.length === 0;
+  const primaryImageUrl = resolveGuidePrimaryImage(page, { slug: guide.slug });
   const jsonLd = showJsonLd
     ? buildGuideJsonLd({
         origin: PUBLIC_SITE_ORIGIN,
@@ -126,6 +128,7 @@ async function GuideDocumentBody({
         name: guide.h1,
         description,
         films: listGuideJsonLdFilms(page.groups),
+        primaryImageUrl,
         datePublished: indexMeta?.publishedAt ?? null,
         dateModified: indexMeta?.updatedAt ?? null,
         includeAuthor: Boolean(attribution.authorName),

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { getFilmPosterUrl } from "@/lib/film-poster";
 import {
   GUIDE_DOCUMENT_AUTHOR,
 } from "@/lib/guides/guide-document-attribution.mjs";
 import { findPublicGuideLinkBySlug } from "@/lib/guides/public-guide-links.mjs";
+import { resolveGuidePrimaryImage } from "@/lib/guides/resolve-guide-primary-image.mjs";
 import { loadGuidePage } from "@/lib/load-guide-page";
 import { PUBLIC_SITE_ORIGIN } from "@/lib/public-site-origin";
 import { SITE_OG_IMAGE_PATH } from "@/lib/site-seo";
@@ -44,22 +44,18 @@ export function serializeJsonLd(value: unknown) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
-export function resolveGuideShareImage(page: {
-  anchorFilm?: Film | null;
-  groups: { items: Array<{ film?: Film | null } | Record<string, unknown>> }[];
-}): string | null {
-  if (page.anchorFilm) {
-    return getFilmPosterUrl(page.anchorFilm);
-  }
-  for (const group of page.groups ?? []) {
-    for (const item of group.items ?? []) {
-      const film = (item as { film?: Film | null } | null)?.film;
-      if (film) {
-        return getFilmPosterUrl(film);
-      }
-    }
-  }
-  return null;
+/**
+ * Share / OG image for a guide or festival award page.
+ * Prefers `seoImage`, then cover / list fallbacks (see resolveGuidePrimaryImage).
+ */
+export function resolveGuideShareImage(
+  page: {
+    anchorFilm?: Film | null;
+    groups: { items: Array<{ film?: Film | null } | Record<string, unknown>> }[];
+  },
+  options: { slug?: string | null } = {}
+): string | null {
+  return resolveGuidePrimaryImage(page, options);
 }
 
 export function buildGuideDocumentMetadata({
@@ -114,6 +110,7 @@ export function buildGuideDocumentMetadata({
     robots: {
       index: indexable,
       follow: true,
+      "max-image-preview": "large" as const,
     },
   };
 }
@@ -139,7 +136,8 @@ export async function buildGuideRouteMetadata({
   const page = await loadGuidePage(guide);
   assertGuideFilmsLoaded(page);
   const indexable = page.missingTitles.length === 0;
-  const imageUrl = resolveGuideShareImage(page) ?? SITE_OG_IMAGE_PATH;
+  const imageUrl =
+    resolveGuideShareImage(page, { slug: guide.slug }) ?? SITE_OG_IMAGE_PATH;
   const indexMeta = findPublicGuideLinkBySlug(guide.slug);
 
   return buildGuideDocumentMetadata({
